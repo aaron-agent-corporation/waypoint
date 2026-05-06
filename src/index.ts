@@ -74,3 +74,12 @@ export type {
   QuestManifestParseError,
   QuestManifestParseErrorCode,
 } from './quests/manifest'
+
+export { parseRecipeManifest, isRecipeManifest } from './recipes/manifest'
+export type {
+  RecipeManifest,
+  RecipeRuntimeHints,
+  RecipeManifestParseResult,
+  RecipeManifestParseError,
+  RecipeManifestParseErrorCode,
+} from './recipes/manifest'
