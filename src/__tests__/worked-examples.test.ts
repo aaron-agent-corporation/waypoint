@@ -31,6 +31,10 @@ describe('worked examples at repo root', () => {
     expect(recipes.registry.has('reviewer')).toBe(true)
     // Recursive loader also picks up ported GSD recipes under recipes/gsd/.
     expect(recipes.registry.has('gsd-doc-writer')).toBe(true)
+    expect(recipes.registry.has('gsd-assumptions-analyzer')).toBe(true)
+    expect(recipes.registry.has('gsd-advisor-researcher')).toBe(true)
+    expect(recipes.registry.has('gsd-ai-researcher')).toBe(true)
+    expect(recipes.registry.has('gsd-domain-researcher')).toBe(true)
 
     const example = quests.registry.get('example')
     expect(example).toBeDefined()

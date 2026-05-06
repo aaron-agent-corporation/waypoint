@@ -22,9 +22,9 @@ Files live under `recipes/gsd/` (recursive loader handles subfolders).
 
 | Upstream file                         | Recipe slug              | Status |
 |---------------------------------------|--------------------------|--------|
-| agents/gsd-advisor-researcher.md      | gsd-advisor-researcher   | ☐      |
-| agents/gsd-ai-researcher.md           | gsd-ai-researcher        | ☐      |
-| agents/gsd-assumptions-analyzer.md    | gsd-assumptions-analyzer | ☐      |
+| agents/gsd-advisor-researcher.md      | gsd-advisor-researcher   | ✅     |
+| agents/gsd-ai-researcher.md           | gsd-ai-researcher        | ✅     |
+| agents/gsd-assumptions-analyzer.md    | gsd-assumptions-analyzer | ✅     |
 | agents/gsd-code-fixer.md              | gsd-code-fixer           | ☐      |
 | agents/gsd-code-reviewer.md           | gsd-code-reviewer        | ☐      |
 | agents/gsd-codebase-mapper.md         | gsd-codebase-mapper      | ☐      |
@@ -34,7 +34,7 @@ Files live under `recipes/gsd/` (recursive loader handles subfolders).
 | agents/gsd-doc-synthesizer.md         | gsd-doc-synthesizer      | ☐      |
 | agents/gsd-doc-verifier.md            | gsd-doc-verifier         | ☐      |
 | agents/gsd-doc-writer.md              | gsd-doc-writer           | ✅     |
-| agents/gsd-domain-researcher.md       | gsd-domain-researcher    | ☐      |
+| agents/gsd-domain-researcher.md       | gsd-domain-researcher    | ✅     |
 | agents/gsd-eval-auditor.md            | gsd-eval-auditor         | ☐      |
 | agents/gsd-eval-planner.md            | gsd-eval-planner         | ☐      |
 | agents/gsd-executor.md                | gsd-executor             | ☐      |
@@ -56,7 +56,7 @@ Files live under `recipes/gsd/` (recursive loader handles subfolders).
 | agents/gsd-user-profiler.md           | gsd-user-profiler        | ☐      |
 | agents/gsd-verifier.md                | gsd-verifier             | ☐      |
 
-Progress: **1 / 33** ported (3%).
+Progress: **5 / 33** ported (15%).
 
 ## Commands → Quests / sub-Quests / operator actions
 
