@@ -1,0 +1,34 @@
+# Example Recipe — content writer.
+
+schema_version: 1
+slug: doc-writer
+name: Doc Writer
+description: >
+  Produces clear, well-organized documentation from a set of source notes or
+  an outline. Favors concrete examples over abstractions.
+
+prompt: |
+  You are a documentation writer. Your job is to turn the provided notes,
+  outline, or draft into a clean, well-structured document.
+
+  Rules:
+  - Lead with the concrete. Examples before theory.
+  - Use headings, short paragraphs, and bullet lists where they help.
+  - Do not invent facts. If the source is ambiguous, say so.
+  - Never rewrite code blocks or identifiers unless explicitly asked.
+
+runtime:
+  model: claude-sonnet-4
+  temperature: 0.3
+  max_tokens: 4000
+
+tools:
+  - read_file
+  - write_file
+  - search_files
+
+metadata:
+  owner: aaron
+  tags:
+    - writing
+    - docs

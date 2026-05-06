@@ -1,0 +1,37 @@
+# Example Waypoint Quest — a minimal worked example.
+# See quests/README.md for context.
+
+schema_version: 1
+slug: example
+name: Example Quest
+description: >
+  A trivial Quest demonstrating the manifest shape. It names a workflow YAML
+  file, references two recipes, and declares a one-workstream scaffold.
+workflow: example.workflow.yaml
+
+recipes:
+  - doc-writer
+  - reviewer
+
+scaffolds:
+  workstreams:
+    - key: core
+      name: Core
+      milestones:
+        - version_label: v1
+          title: Initial milestone
+          phases:
+            - phase_key: "10"
+              phase_slug: discuss
+              lifecycle_phase: discuss
+            - phase_key: "20"
+              phase_slug: plan
+              lifecycle_phase: plan
+            - phase_key: "30"
+              phase_slug: execute
+              lifecycle_phase: execute
+
+metadata:
+  owner: aaron
+  tags:
+    - example
