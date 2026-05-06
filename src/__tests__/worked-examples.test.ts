@@ -30,11 +30,21 @@ describe('worked examples at repo root', () => {
     expect(recipes.registry.has('doc-writer')).toBe(true)
     expect(recipes.registry.has('reviewer')).toBe(true)
     // Recursive loader also picks up ported GSD recipes under recipes/gsd/.
+    // Full GSD agent library port (33 agents).
+    const gsdSlugs = recipes.registry
+      .list()
+      .map((r) => r.slug)
+      .filter((s) => s.startsWith('gsd-'))
+    expect(gsdSlugs.length).toBe(33)
+    // Spot-check a representative sample across categories.
     expect(recipes.registry.has('gsd-doc-writer')).toBe(true)
     expect(recipes.registry.has('gsd-assumptions-analyzer')).toBe(true)
     expect(recipes.registry.has('gsd-advisor-researcher')).toBe(true)
-    expect(recipes.registry.has('gsd-ai-researcher')).toBe(true)
-    expect(recipes.registry.has('gsd-domain-researcher')).toBe(true)
+    expect(recipes.registry.has('gsd-debugger')).toBe(true)
+    expect(recipes.registry.has('gsd-executor')).toBe(true)
+    expect(recipes.registry.has('gsd-planner')).toBe(true)
+    expect(recipes.registry.has('gsd-verifier')).toBe(true)
+    expect(recipes.registry.has('gsd-security-auditor')).toBe(true)
 
     const example = quests.registry.get('example')
     expect(example).toBeDefined()
