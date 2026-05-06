@@ -29,6 +29,8 @@ describe('worked examples at repo root', () => {
     if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
     expect(recipes.registry.has('doc-writer')).toBe(true)
     expect(recipes.registry.has('reviewer')).toBe(true)
+    // Recursive loader also picks up ported GSD recipes under recipes/gsd/.
+    expect(recipes.registry.has('gsd-doc-writer')).toBe(true)
 
     const example = quests.registry.get('example')
     expect(example).toBeDefined()
