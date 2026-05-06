@@ -97,3 +97,6 @@ export type {
   RecipeRegistryAddResult,
   RecipeRegistryAddErrorCode,
 } from './recipes/registry'
+
+export { resolveQuestRecipes } from './quests/resolve'
+export type { ResolveQuestRecipesResult, ResolveQuestRecipesError } from './quests/resolve'
