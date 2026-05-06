@@ -83,3 +83,17 @@ export type {
   RecipeManifestParseError,
   RecipeManifestParseErrorCode,
 } from './recipes/manifest'
+
+export { createQuestRegistry } from './quests/registry'
+export type {
+  QuestRegistry,
+  QuestRegistryAddResult,
+  QuestRegistryAddErrorCode,
+} from './quests/registry'
+
+export { createRecipeRegistry } from './recipes/registry'
+export type {
+  RecipeRegistry,
+  RecipeRegistryAddResult,
+  RecipeRegistryAddErrorCode,
+} from './recipes/registry'
