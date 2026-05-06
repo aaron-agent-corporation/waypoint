@@ -31,7 +31,7 @@ See `docs/plans/waypoint-quests-and-recipes.md` for the full design.
 2. **Q2** — Add `RecipeManifest` type + YAML parser to `@waypoint/core`.
 3. **Q3** — Add `QuestRegistry` + `RecipeRegistry` with slug resolution.
 4. **Q4** — Core contract tests: Quest parses, recipe references resolve or error cleanly.
-5. **Q5** — `quests/` and `recipes/` directories at waypoint repo root, plus one worked example of each.
+5. **Q5** — `quests/` and `recipes/` directories at waypoint repo root, plus one worked example of each. Directory loaders MUST support **recursive nested folders** (e.g. `quests/dev/`, `quests/research/`, `recipes/writing/`). Flat-only is not acceptable — operator feedback already flagged this as a hard requirement.
 6. **Q6** — Doc pass: update `docs/waypoint-core-integration.md` to explain Quests and Recipes.
 
 **Ends when:** A Quest YAML can be loaded, its Recipe references can be resolved, and the registry rejects malformed or unresolved references with typed errors. No runtime behavior change required.

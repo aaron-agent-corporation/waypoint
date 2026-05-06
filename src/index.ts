@@ -61,3 +61,16 @@ export type {
   WaypointDiscussionAutoResponseHistoryEntry,
   WaypointDiscussionAutoResponseRequestPayload,
 } from './discussion/auto-response-contract'
+
+export { parseQuestManifest, isQuestManifest } from './quests/manifest'
+export type {
+  QuestManifest,
+  QuestScaffolds,
+  QuestScaffoldWorkstream,
+  QuestScaffoldMilestone,
+  QuestScaffoldPhase,
+  QuestScaffoldPlan,
+  QuestManifestParseResult,
+  QuestManifestParseError,
+  QuestManifestParseErrorCode,
+} from './quests/manifest'
