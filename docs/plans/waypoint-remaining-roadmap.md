@@ -91,18 +91,23 @@ As of this refresh:
 
 ---
 
-## Active destination
-
-Track 1 is complete. There is no active implementation track selected in this roadmap yet.
-
 ## Next track selection
 
-Choose the next road explicitly from the later tracks instead of inferring it from nearby files:
+Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mission Control cutover.
 
-- **Track 2 — Mission Control Cutover** if the next priority is consuming the standalone package from Mission Control.
-- **Track 3 — Real Hermes Integration** if the next priority is live Recipe/discussion execution through Hermes.
+## Active destination
 
-Before starting either track, write a destination-driven implementation plan like the Track 1 plan, then execute one phase at a time with source-of-truth verification.
+### Track 3 — Hermes Runtime + Operator Bridge
+
+**Status:** Active — H0 plan complete.
+
+**Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
+
+**Goal:** Make Hermes the real runtime and conversational operator layer for standalone Waypoint folders before bridging Waypoint back into Mission Control.
+
+**Why now:** Aaron chose Hermes first because proving real Recipe execution and operator interaction against the folder host should make the later Mission Control bridge an adapter/UI problem instead of a runtime design problem.
+
+**Boundary:** `.waypoint/` remains the standalone source of truth. Hermes is the agent runtime and operator shell. Telegram is the human review/gate surface. Mission Control bridge remains later.
 
 ---
 
@@ -125,20 +130,24 @@ Before starting either track, write a destination-driven implementation plan lik
 
 ---
 
-### Track 3 — Real Hermes Integration
+### Track 3 — Hermes Runtime + Operator Bridge
 
-**Status:** Later.
+**Status:** Active — H0 plan complete.
 
-**Goal:** Real Hermes gateway receives Waypoint discussion/Recipe requests and posts agent replies back into the host.
+**Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
 
-**Why later:** Folder host first needs a stable local Recipe runtime contract. After that, Hermes can become one runtime adapter instead of being designed against a moving target.
+**Goal:** Make Hermes the real runtime and conversational operator layer for standalone Waypoint folders.
+
+**Why now:** Folder host already stabilized the local source-of-truth model. Hermes now needs to prove real Recipe execution, task discussion, and Telegram gate interaction against `.waypoint/` before Mission Control cutover.
 
 **Likely slices:**
-1. Define Hermes gateway endpoint for Recipe/discussion execution.
-2. Validate HMAC/shared-secret contract.
-3. Route known Recipe slugs to matching agents; unknown slugs fall back to orchestrator.
-4. Post replies back as agent-authored discussion messages.
-5. End-to-end smoke with loop prevention.
+1. **H0 — Integration plan and contract boundary:** define folder-host-first architecture, payload shape, command allowlist, safety rules, and MC-later boundary.
+2. **H1 — Project registry:** map friendly project names to trusted local paths and Waypoint CLI entrypoints.
+3. **H2 — Safe Waypoint command runner:** let Hermes run allowlisted `waypoint` commands and summarize state.
+4. **H3 — Hermes Recipe runtime adapter:** receive the F10 local runtime payload and route Recipe slugs to Hermes/Gary agent behavior.
+5. **H4 — Discussion loop:** append user and agent-authored task-scoped messages with loop prevention.
+6. **H5 — Telegram gate loop:** prompt for approve/reject/revise decisions and apply them through `waypoint gate`.
+7. **H6 — End-to-end Hermes smoke:** prove a real Telegram/Hermes workflow writes durable `.waypoint/` route/task/event/discussion evidence.
 
 ---
 
