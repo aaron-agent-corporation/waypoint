@@ -11,37 +11,37 @@ async function makeTempProject(): Promise<string> {
 }
 
 describe('bundled Waypoint catalog', () => {
-  it('loads bundled Quests and GSD Recipes from the repo root', async () => {
+  it('loads bundled Quests and Waypoint Recipes from the repo root', async () => {
     const catalog = await loadBundledWaypointCatalog()
 
-    expect(catalog.quests.has('gsd')).toBe(true)
-    expect(catalog.questEntries.some((entry) => entry.slug === 'gsd' && entry.relativePath === 'gsd.yaml')).toBe(true)
+    expect(catalog.quests.has('waypoint')).toBe(true)
+    expect(catalog.questEntries.some((entry) => entry.slug === 'waypoint' && entry.relativePath === 'waypoint.yaml')).toBe(true)
 
-    const gsdRecipeEntries = catalog.recipeEntries.filter((entry) => entry.slug.startsWith('gsd-'))
-    expect(gsdRecipeEntries).toHaveLength(33)
-    expect(gsdRecipeEntries.some((entry) => entry.slug === 'gsd-doc-writer')).toBe(true)
+    const waypointRecipeEntries = catalog.recipeEntries.filter((entry) => entry.slug.startsWith('waypoint-'))
+    expect(waypointRecipeEntries).toHaveLength(33)
+    expect(waypointRecipeEntries.some((entry) => entry.slug === 'waypoint-doc-writer')).toBe(true)
   })
 
   it('resolves the Recipes referenced by a bundled Quest', async () => {
     const catalog = await loadBundledWaypointCatalog()
 
-    const resolved = catalog.resolveQuestRecipes('gsd')
+    const resolved = catalog.resolveQuestRecipes('waypoint')
 
     expect(resolved.ok).toBe(true)
     if (!resolved.ok) return
-    expect(resolved.quest.slug).toBe('gsd')
-    expect(resolved.recipes.map((recipe) => recipe.slug)).toContain('gsd-doc-writer')
+    expect(resolved.quest.slug).toBe('waypoint')
+    expect(resolved.recipes.map((recipe) => recipe.slug)).toContain('waypoint-doc-writer')
   })
 
   it('installs a selected Quest and referenced Recipes into a local project', async () => {
     const projectRoot = await makeTempProject()
     const catalog = await loadBundledWaypointCatalog()
 
-    const result = await installQuestCatalog(projectRoot, catalog, { quest: 'gsd' })
+    const result = await installQuestCatalog(projectRoot, catalog, { quest: 'waypoint' })
 
-    expect(result.quest.slug).toBe('gsd')
-    expect(result.installedQuestPaths).toEqual(['.waypoint/quests/gsd.yaml'])
-    expect(result.installedRecipePaths).toContain('.waypoint/recipes/gsd/doc-writer.yaml')
+    expect(result.quest.slug).toBe('waypoint')
+    expect(result.installedQuestPaths).toEqual(['.waypoint/quests/waypoint.yaml'])
+    expect(result.installedRecipePaths).toContain('.waypoint/recipes/waypoint/doc-writer.yaml')
     expect(result.installedRecipePaths).toHaveLength(result.recipes.length)
   })
 })

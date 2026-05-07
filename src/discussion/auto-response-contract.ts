@@ -65,7 +65,7 @@ export interface WaypointDiscussionAutoResponseRequestPayload {
    * Receivers should treat this as opaque and round-trip it verbatim.
    */
   conversation_id: string
-  /** Target agent slug (e.g. `'gsd-doc-drafter'`, `'orchestrator'`). */
+  /** Target agent slug (e.g. `'waypoint-doc-drafter'`, `'orchestrator'`). */
   agent: string
   /** The newly-posted message content that triggered the auto-response. */
   content: string

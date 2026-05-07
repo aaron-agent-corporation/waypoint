@@ -1,19 +1,19 @@
-# Waypoint GSD sub-Quest port from commands/gsd/ultraplan-phase.md.
+# Waypoint source-derived sub-Quest from commands/gsd/ultraplan-phase.md.
 #
 # Current Quest schema has no first-class sub-Quest or node graph field, so
-# command mapping and orchestration intent are preserved in metadata.gsd_port.
+# command mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: ultraplan-phase
 name: Ultraplan Phase Quest
 description: >
   Waypoint sub-Quest port of gsd:ultraplan-phase for offloading planning to a remote cloud planning session and importing the result.
-workflow: workflows/gsd/ultraplan-phase.yaml
+workflow: workflows/waypoint/ultraplan-phase.yaml
 
 recipes:
-  - gsd-phase-researcher
-  - gsd-planner
-  - gsd-plan-checker
+  - waypoint-phase-researcher
+  - waypoint-planner
+  - waypoint-plan-checker
 
 scaffolds:
   workstreams:
@@ -43,9 +43,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - sub-quest
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     source_command: commands/gsd/ultraplan-phase.md
     source_command_name: gsd:ultraplan-phase

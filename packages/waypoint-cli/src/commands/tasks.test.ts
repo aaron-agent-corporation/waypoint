@@ -8,8 +8,8 @@ import { runWaypointCli } from '../bin'
 
 async function startedProject(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'waypoint-cli-tasks-'))
-  await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
-  await runWaypointCli(['start', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['start', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   return cwd
 }
 
@@ -39,7 +39,7 @@ describe('waypoint tasks command', () => {
     expect(output).toContain('total: 12')
     expect(output).toContain('- task-003 discuss-objective')
     expect(output).toContain('  kind: discussion')
-    expect(output).toContain('  agent: gsd-doc-writer')
+    expect(output).toContain('  agent: waypoint-doc-writer')
   })
 
   it('can emit tasks as JSON', async () => {

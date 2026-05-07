@@ -1,6 +1,6 @@
 # Waypoint folder-host Quest example
 
-This example is a minimal project folder for trying the Waypoint folder host against the bundled `gsd` Quest.
+This example is a minimal project folder for trying the Waypoint folder host against the bundled `waypoint` Quest.
 
 The example intentionally does not check in `.waypoint/` state. Run the commands below to generate it locally.
 
@@ -19,11 +19,11 @@ pnpm typecheck
 cd examples/folder-host-quest
 node ../../packages/waypoint-cli/src/bin.ts --help
 node ../../packages/waypoint-cli/src/bin.ts --version
-node ../../packages/waypoint-cli/src/bin.ts init --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint
 node ../../packages/waypoint-cli/src/bin.ts status
 node ../../packages/waypoint-cli/src/bin.ts quests
-node ../../packages/waypoint-cli/src/bin.ts recipes --quest gsd
-node ../../packages/waypoint-cli/src/bin.ts start --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts recipes --quest waypoint
+node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint
 node ../../packages/waypoint-cli/src/bin.ts routes
 node ../../packages/waypoint-cli/src/bin.ts route --route-id route-001
 node ../../packages/waypoint-cli/src/bin.ts route-events --route-id route-001
@@ -52,7 +52,7 @@ Running the walkthrough creates `.waypoint/` in this example folder. Expected fi
 
 ```text
 .waypoint/config.yaml
-.waypoint/quests/gsd.yaml
+.waypoint/quests/waypoint.yaml
 .waypoint/recipes/
 .waypoint/lifecycle/workstreams.yaml
 .waypoint/lifecycle/milestones.yaml
@@ -74,8 +74,8 @@ rm -rf .waypoint
 Then rerun:
 
 ```bash
-node ../../packages/waypoint-cli/src/bin.ts init --quest gsd
-node ../../packages/waypoint-cli/src/bin.ts start --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint
+node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint
 ```
 
 ## Runtime safety

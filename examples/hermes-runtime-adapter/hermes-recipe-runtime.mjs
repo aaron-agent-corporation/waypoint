@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 const KNOWN_ROUTES = new Map([
-  ['gsd-planner', 'planner-capable Hermes/Gary execution'],
-  ['gsd-verifier', 'verifier-capable Hermes/Gary execution'],
-  ['gsd-doc-writer', 'doc-writer-capable Hermes/Gary execution'],
+  ['waypoint-planner', 'planner-capable Hermes/Gary execution'],
+  ['waypoint-verifier', 'verifier-capable Hermes/Gary execution'],
+  ['waypoint-doc-writer', 'doc-writer-capable Hermes/Gary execution'],
 ])
 
 export async function readRecipeRuntimePayloadFromStdin(stdin = process.stdin) {

@@ -43,11 +43,11 @@ Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portabili
 
 - Catalog: [`docs/waypoint-quest-catalog.md`](docs/waypoint-quest-catalog.md)
 - Local folder host: [`docs/waypoint-folder-host.md`](docs/waypoint-folder-host.md) and [`examples/folder-host-quest/README.md`](examples/folder-host-quest/README.md)
-- Operator guide: [`docs/quests/gsd.md`](docs/quests/gsd.md)
-- Human-readable command map: [`docs/quests/gsd-command-map.md`](docs/quests/gsd-command-map.md)
-- Machine-readable command map: [`docs/quests/gsd-command-map.yaml`](docs/quests/gsd-command-map.yaml)
+- Operator guide: [`docs/quests/waypoint.md`](docs/quests/waypoint.md)
+- Human-readable command map: [`docs/quests/waypoint-command-map.md`](docs/quests/waypoint-command-map.md)
+- Machine-readable command map: [`docs/quests/waypoint-command-map.yaml`](docs/quests/waypoint-command-map.yaml)
 
-The GSD Quest preserves the initialize → discuss → plan → execute → verify → ship loop as Waypoint manifests. It does not make GSD the runtime identity; Waypoint remains the unified runtime.
+The Waypoint Quest preserves the initialize → discuss → plan → execute → verify → ship loop as Waypoint manifests. It does not make GSD the runtime identity; Waypoint remains the unified runtime.
 
 ## Host contract
 

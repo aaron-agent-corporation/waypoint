@@ -28,21 +28,21 @@ function makeIo(cwd: string) {
 describe('waypoint start command', () => {
   it('starts the selected Quest in an initialized folder', async () => {
     const cwd = await tempProject()
-    await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+    await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
 
     const { io, stdout, stderr } = makeIo(cwd)
-    expect(await runWaypointCli(['start', '--quest', 'gsd'], io)).toBe(0)
+    expect(await runWaypointCli(['start', '--quest', 'waypoint'], io)).toBe(0)
     expect(stderr).toEqual([])
     const output = stdout.join('\n')
     expect(output).toContain('Started Waypoint route route-001')
-    expect(output).toContain('quest: gsd')
+    expect(output).toContain('quest: waypoint')
     expect(output).toContain('current node: initialize')
     expect(output).toContain('scaffolded lifecycle: 1 workstream, 1 milestone, 6 phases, 12 plans')
 
     const routeYaml = yamlParse(await readFile(join(cwd, '.waypoint/routes/route-001.yaml'), 'utf8')) as {
       route: Record<string, unknown>
     }
-    expect(routeYaml.route).toMatchObject({ id: 'route-001', quest: 'gsd', current_node: 'initialize' })
+    expect(routeYaml.route).toMatchObject({ id: 'route-001', quest: 'waypoint', current_node: 'initialize' })
 
     const eventLines = (await readFile(join(cwd, '.waypoint/events/route-001.jsonl'), 'utf8')).trim().split('\n')
     expect(eventLines).toHaveLength(1)

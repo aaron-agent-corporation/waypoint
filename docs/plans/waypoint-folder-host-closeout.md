@@ -10,9 +10,9 @@ Track 1 makes Waypoint usable against a normal project folder with no Mission Co
 
 A folder can now:
 
-1. adopt the bundled `gsd` Quest with `waypoint init --quest gsd`;
+1. adopt the bundled `waypoint` Quest with `waypoint init --quest waypoint`;
 2. copy Quest and Recipe manifests into project-local `.waypoint/` state;
-3. start a route with `waypoint start --quest gsd`;
+3. start a route with `waypoint start --quest waypoint`;
 4. inspect status, routes, route details, events, and materialized tasks;
 5. append task-scoped discussion messages to local JSONL logs;
 6. pause/resume routes and approve/reject gates;
@@ -35,14 +35,14 @@ Development CLI shorthand from the repo root:
 
 ```bash
 pnpm cli --help
-pnpm cli init --quest gsd
+pnpm cli init --quest waypoint
 ```
 
 Direct Node entrypoint from any project folder:
 
 ```bash
-node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts init --quest gsd
-node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts start --quest gsd
+node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts init --quest waypoint
+node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts start --quest waypoint
 node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts routes
 node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts tasks --route-id route-001
 node /absolute/path/to/waypoint/packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --message "Clarify the objective"

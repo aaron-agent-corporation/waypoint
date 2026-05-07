@@ -30,7 +30,7 @@ describe('Hermes Recipe runtime reference adapter', () => {
   it('accepts the F10 local runtime payload on stdin and emits structured Hermes stdout', async () => {
     const result = await runRuntime({
       schema_version: 1,
-      recipe_slug: 'gsd-doc-writer',
+      recipe_slug: 'waypoint-doc-writer',
       prompt: 'Draft the operator docs.',
       task_id: 'task-003',
       route_id: 'route-001',
@@ -43,20 +43,20 @@ describe('Hermes Recipe runtime reference adapter', () => {
     expect(output).toMatchObject({
       ok: true,
       adapter: 'hermes-recipe-runtime-reference',
-      recipe_slug: 'gsd-doc-writer',
+      recipe_slug: 'waypoint-doc-writer',
       task_id: 'task-003',
       route_id: 'route-001',
       project_root: '/tmp/waypoint-project',
       routed_to: 'doc-writer-capable Hermes/Gary execution',
     })
-    expect(output.summary).toContain('gsd-doc-writer')
+    expect(output.summary).toContain('waypoint-doc-writer')
     expect(output.messages[0].content).toContain('task-003')
   })
 
   it('routes known GSD planner and verifier slugs to named Hermes capabilities', async () => {
     const planner = await runRuntime({
       schema_version: 1,
-      recipe_slug: 'gsd-planner',
+      recipe_slug: 'waypoint-planner',
       prompt: 'Plan the work.',
       task_id: 'task-004',
       route_id: 'route-001',
@@ -64,7 +64,7 @@ describe('Hermes Recipe runtime reference adapter', () => {
     })
     const verifier = await runRuntime({
       schema_version: 1,
-      recipe_slug: 'gsd-verifier',
+      recipe_slug: 'waypoint-verifier',
       prompt: 'Verify the work.',
       task_id: 'task-005',
       route_id: 'route-001',
@@ -94,7 +94,7 @@ describe('Hermes Recipe runtime reference adapter', () => {
   it('fails non-zero for invalid payloads so the local runtime persists task and route failure', async () => {
     const result = await runRuntime({
       schema_version: 1,
-      recipe_slug: 'gsd-doc-writer',
+      recipe_slug: 'waypoint-doc-writer',
       prompt: 'Missing ids',
     })
 

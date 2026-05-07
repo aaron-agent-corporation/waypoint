@@ -15,11 +15,11 @@ describe('initWaypointProject', () => {
   it('creates .waypoint config and required state directories', async () => {
     const projectRoot = await tempProject()
 
-    const result = await initWaypointProject(projectRoot, { quest: 'gsd' })
+    const result = await initWaypointProject(projectRoot, { quest: 'waypoint' })
 
     expect(result.projectRoot).toBe(projectRoot)
     expect(result.waypointDir).toBe(join(projectRoot, '.waypoint'))
-    expect(result.config.quest).toBe('gsd')
+    expect(result.config.quest).toBe('waypoint')
     expect(result.config.enabled).toBe(true)
 
     const configText = await readFile(join(projectRoot, '.waypoint/config.yaml'), 'utf8')
@@ -28,7 +28,7 @@ describe('initWaypointProject', () => {
     expect(config).toMatchObject({
       schema_version: 1,
       enabled: true,
-      quest: 'gsd',
+      quest: 'waypoint',
       runtime: { recipe: null },
     })
     expect(typeof config.created_at).toBe('string')

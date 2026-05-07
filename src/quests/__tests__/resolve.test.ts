@@ -29,7 +29,7 @@ describe('resolveQuestRecipes', () => {
     recipes.add(recipe('doc-writer'))
     recipes.add(recipe('researcher'))
 
-    const q = quest('gsd', ['doc-writer', 'researcher'])
+    const q = quest('waypoint', ['doc-writer', 'researcher'])
     const result = resolveQuestRecipes(q, recipes)
 
     expect(result.ok).toBe(true)
@@ -50,7 +50,7 @@ describe('resolveQuestRecipes', () => {
     const recipes = createRecipeRegistry()
     recipes.add(recipe('doc-writer'))
 
-    const q = quest('gsd', ['doc-writer', 'missing-a', 'missing-b'])
+    const q = quest('waypoint', ['doc-writer', 'missing-a', 'missing-b'])
     const result = resolveQuestRecipes(q, recipes)
 
     expect(result.ok).toBe(false)
@@ -78,7 +78,7 @@ describe('end-to-end parse + registry + resolve', () => {
   it('loads a quest and recipes from YAML and resolves references', () => {
     const questYaml = `
 schema_version: 1
-slug: gsd
+slug: waypoint
 name: GSD Lifecycle
 workflow: gsd.workflow.yaml
 recipes:
@@ -112,7 +112,7 @@ prompt: "review work"
       recipes.add(rp.manifest)
     }
 
-    const loaded = quests.get('gsd')
+    const loaded = quests.get('waypoint')
     expect(loaded).toBeDefined()
     if (!loaded) return
 

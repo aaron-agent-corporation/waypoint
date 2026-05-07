@@ -1,17 +1,17 @@
-# Waypoint GSD catalog Quest port from commands/gsd/review.md.
+# Waypoint source-derived catalog Quest from commands/gsd/review.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: review
 name: External Review Quest
 description: >
   Waypoint catalog Quest port of gsd:review for cross-AI peer review of phase plans.
-workflow: workflows/gsd/review.yaml
+workflow: workflows/waypoint/review.yaml
 
 recipes:
-  - gsd-plan-checker
+  - waypoint-plan-checker
 
 scaffolds:
   workstreams:
@@ -41,9 +41,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: audit_review
     role: audit / review sub-Quest

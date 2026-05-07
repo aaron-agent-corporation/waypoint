@@ -67,7 +67,7 @@ Recipe execution payload over stdin:
 ```json
 {
   "schema_version": 1,
-  "recipe_slug": "gsd-planner",
+  "recipe_slug": "waypoint-planner",
   "prompt": "Recipe prompt text from the local manifest",
   "task_id": "task-003",
   "route_id": "route-001",
@@ -134,7 +134,7 @@ The required rollback switches are:
 From Telegram:
 
 ```text
-Aaron: Gary, start the GSD Quest in the waypoint repo.
+Aaron: Gary, start the Waypoint Quest in the waypoint repo.
 Gary: runs waypoint init/start as needed, reports route-001.
 
 Aaron: Continue until you need me.
@@ -287,9 +287,9 @@ Hermes profile operational wiring remains environment-specific. H3 defines and t
 **Routing rule:**
 
 ```text
-gsd-planner → planner-capable Hermes/Gary execution
-gsd-verifier → verifier-capable Hermes/Gary execution
-gsd-doc-writer → doc-writer-capable Hermes/Gary execution
+waypoint-planner → planner-capable Hermes/Gary execution
+waypoint-verifier → verifier-capable Hermes/Gary execution
+waypoint-doc-writer → doc-writer-capable Hermes/Gary execution
 unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty
 ```
 
@@ -302,7 +302,7 @@ unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty
   "ok": true,
   "adapter": "hermes-recipe-runtime-reference",
   "schema_version": 1,
-  "recipe_slug": "gsd-doc-writer",
+  "recipe_slug": "waypoint-doc-writer",
   "task_id": "task-003",
   "route_id": "route-001",
   "project_root": "/tmp/waypoint-project",
@@ -363,7 +363,7 @@ pnpm exec vitest run examples/hermes-operator-adapter/src/discussion-loop.test.t
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```
 
-Smoke expectation: a temp project started with `waypoint init --quest gsd` and `waypoint start --quest gsd` can append an operator message to `task-003`, invoke a `gsd-doc-writer` discussion runtime, append an agent reply, and list both messages with the same `conversation_id`. No recursive auto-response event is requested for agent-authored messages.
+Smoke expectation: a temp project started with `waypoint init --quest waypoint` and `waypoint start --quest waypoint` can append an operator message to `task-003`, invoke a `waypoint-doc-writer` discussion runtime, append an agent reply, and list both messages with the same `conversation_id`. No recursive auto-response event is requested for agent-authored messages.
 
 ---
 
@@ -413,7 +413,7 @@ pnpm exec vitest run examples/hermes-operator-adapter/src/telegram-gate-loop.tes
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```
 
-Smoke expectation: a temp project started with `waypoint init --quest gsd`, `waypoint start --quest gsd`, and `waypoint auto --route-id route-001 --max-iterations 10` blocks at `plan-approval-gate`; a Telegram `approve` reply maps to `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute`, route state changes from blocked to active, event JSONL contains `route.gate.approved`, and the Hermes response quotes updated route status.
+Smoke expectation: a temp project started with `waypoint init --quest waypoint`, `waypoint start --quest waypoint`, and `waypoint auto --route-id route-001 --max-iterations 10` blocks at `plan-approval-gate`; a Telegram `approve` reply maps to `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute`, route state changes from blocked to active, event JSONL contains `route.gate.approved`, and the Hermes response quotes updated route status.
 
 ---
 
@@ -438,7 +438,7 @@ The H6 reference smoke lives at `examples/hermes-operator-adapter/src/end-to-end
 **Smoke script/user journey:**
 
 1. Register a temp or fixture project through the H1 project registry.
-2. Initialize and start `gsd` in that temp folder.
+2. Initialize and start `waypoint` in that temp folder.
 3. Use H2 safe Waypoint commands for operator-visible route/task/event operations.
 4. Configure `runtime.recipe: local` to call the Hermes runtime adapter.
 5. Run autopilot until the local Recipe runtime executes through the Hermes runtime adapter and emits `route.autopilot.task.executed` evidence.
@@ -448,7 +448,7 @@ The H6 reference smoke lives at `examples/hermes-operator-adapter/src/end-to-end
 9. Approve `plan-approval-gate` through `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute`.
 10. Inspect durable `.waypoint/` route/task/event/discussion evidence, including `route.autopilot.task.executed` and `route.gate.approved`.
 
-Implementation note: the current GSD scaffold includes early plan refs that are not one-to-one Recipe manifest slugs. The H6 smoke uses the null runtime to advance through those scaffold-only tasks, switches to the local Recipe runtime for the discussion agent task that has a real Recipe slug (`gsd-doc-writer`), then switches back to null runtime to reach the human gate. This keeps H6 honest about the present catalog/runtime boundary instead of inventing Recipe manifests for scaffold plan refs.
+Implementation note: the current Waypoint scaffold includes early plan refs that are not one-to-one Recipe manifest slugs. The H6 smoke uses the null runtime to advance through those scaffold-only tasks, switches to the local Recipe runtime for the discussion agent task that has a real Recipe slug (`waypoint-doc-writer`), then switches back to null runtime to reach the human gate. This keeps H6 honest about the present catalog/runtime boundary instead of inventing Recipe manifests for scaffold plan refs.
 
 **Verification gate:**
 

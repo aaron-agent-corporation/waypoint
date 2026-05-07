@@ -1,0 +1,238 @@
+# Waypoint Waypoint Quest — main lifecycle port from get-shit-done-cc.
+#
+# This manifest intentionally uses only the current Quest schema fields.
+# Command/sub-Quest mappings that are not first-class schema yet live under
+# metadata.source_port instead of invented top-level fields.
+
+schema_version: 1
+slug: waypoint
+name: Waypoint Quest
+description: >
+  Waypoint Quest port of the get-shit-done-cc project flow. It models the
+  initialize → discuss → plan → execute → verify → ship journey as a reusable
+  Quest while preserving source command intent in metadata for later runtime
+  and catalog phases.
+workflow: workflows/waypoint.yaml
+
+recipes:
+  - waypoint-doc-writer
+  - waypoint-project-researcher
+  - waypoint-roadmapper
+  - waypoint-assumptions-analyzer
+  - waypoint-codebase-mapper
+  - waypoint-phase-researcher
+  - waypoint-planner
+  - waypoint-plan-checker
+  - waypoint-executor
+  - waypoint-verifier
+  - waypoint-doc-synthesizer
+  - waypoint-code-reviewer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Main Quest loop
+          phases:
+            - phase_key: "00"
+              phase_slug: initialize
+              lifecycle_phase: initialize
+              plans:
+                - plan_ref: initialize-context
+                  title: Gather project context and starting constraints
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: initialize-roadmap
+                  title: Draft initial roadmap and Quest adoption notes
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+            - phase_key: "10"
+              phase_slug: discuss
+              lifecycle_phase: discuss
+              plans:
+                - plan_ref: discuss-objective
+                  title: Run task-scoped discussion to clarify objective and acceptance criteria
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: discussion
+                      discussion:
+                        enabled: true
+                        agent: waypoint-doc-writer
+                - plan_ref: discuss-assumptions
+                  title: Surface assumptions, risks, and open decisions
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-assumptions-analyzer
+            - phase_key: "20"
+              phase_slug: plan
+              lifecycle_phase: plan
+              plans:
+                - plan_ref: plan-research
+                  title: Research the phase and draft an executable plan
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-phase-researcher
+                - plan_ref: plan-approval-gate
+                  title: Human approval gate before execution begins
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: gate
+                      gate:
+                        required: true
+                        kind: plan_approval
+            - phase_key: "30"
+              phase_slug: execute
+              lifecycle_phase: execute
+              plans:
+                - plan_ref: execute-slice
+                  title: Execute approved work in dependency-aware slices
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-executor
+                - plan_ref: execute-checkpoint
+                  title: Checkpoint evidence, commits, and remaining work
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+            - phase_key: "40"
+              phase_slug: verify
+              lifecycle_phase: verify
+              plans:
+                - plan_ref: verify-work
+                  title: Validate deliverables against acceptance criteria
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-verifier
+                - plan_ref: verify-approval-gate
+                  title: Human verification gate and issue triage
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: gate
+                      gate:
+                        required: true
+                        kind: verification
+            - phase_key: "50"
+              phase_slug: ship
+              lifecycle_phase: ship
+              plans:
+                - plan_ref: ship-prep
+                  title: Prepare docs, review notes, and final handoff
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-doc-synthesizer
+                - plan_ref: ship-approval-gate
+                  title: Final human ship approval gate
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: gate
+                      gate:
+                        required: true
+                        kind: ship_approval
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - waypoint-port
+    - quest
+    - lifecycle-port
+  source_port:
+    scope: main_quest_manifest
+    upstream_commands:
+      - commands/gsd/new-project.md
+      - commands/gsd/discuss-phase.md
+      - commands/gsd/plan-phase.md
+      - commands/gsd/execute-phase.md
+      - commands/gsd/verify-work.md
+      - commands/gsd/ship.md
+    phase_entrypoints:
+      - phase: initialize
+        source_command: commands/gsd/new-project.md
+        intent: Gather project context, preferences, requirements, roadmap, and state.
+        primary_recipes:
+          - waypoint-doc-writer
+          - waypoint-project-researcher
+          - waypoint-roadmapper
+        operator_interaction: configuration and approval questions
+      - phase: discuss
+        source_command: commands/gsd/discuss-phase.md
+        intent: Gather phase context and lock decisions before planning.
+        primary_recipes:
+          - waypoint-assumptions-analyzer
+          - waypoint-codebase-mapper
+          - waypoint-doc-writer
+        operator_interaction: task-scoped discussion session
+      - phase: plan
+        source_command: commands/gsd/plan-phase.md
+        intent: Research, draft executable phase plans, and verify plan quality.
+        primary_recipes:
+          - waypoint-phase-researcher
+          - waypoint-planner
+          - waypoint-plan-checker
+        operator_interaction: approval gate for plan readiness
+      - phase: execute
+        source_command: commands/gsd/execute-phase.md
+        intent: Execute phase plans in dependency-aware waves using subagents.
+        primary_recipes:
+          - waypoint-executor
+        operator_interaction: optional pacing/checkpoints only
+      - phase: verify
+        source_command: commands/gsd/verify-work.md
+        intent: Validate built work through UAT-style verification and gap planning.
+        primary_recipes:
+          - waypoint-verifier
+          - waypoint-debugger
+          - waypoint-plan-checker
+        operator_interaction: verification gate and issue triage
+      - phase: ship
+        source_command: commands/gsd/ship.md
+        intent: Prepare the completed work for PR/review/merge after verification passes.
+        primary_recipes:
+          - waypoint-doc-synthesizer
+          - waypoint-code-reviewer
+          - waypoint-executor
+        operator_interaction: final ship approval gate
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - Sub-Quest and command mappings remain metadata until first-class schema support is added.
+      - Operator involvement is concentrated in discussion phases and explicit gates.

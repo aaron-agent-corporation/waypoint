@@ -1,19 +1,19 @@
-# Waypoint GSD catalog Quest port from commands/gsd/quick.md.
+# Waypoint source-derived catalog Quest from commands/gsd/quick.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: quick
 name: Quick Quest
 description: >
   Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
-workflow: workflows/gsd/quick.yaml
+workflow: workflows/waypoint/quick.yaml
 
 recipes:
-  - gsd-planner
-  - gsd-executor
-  - gsd-verifier
+  - waypoint-planner
+  - waypoint-executor
+  - waypoint-verifier
 
 scaffolds:
   workstreams:
@@ -43,9 +43,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: utility_inspection
     role: utility / inspection Quest

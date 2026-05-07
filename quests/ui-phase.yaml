@@ -1,20 +1,20 @@
-# Waypoint GSD sub-Quest port from commands/gsd/ui-phase.md.
+# Waypoint source-derived sub-Quest from commands/gsd/ui-phase.md.
 #
 # Current Quest schema has no first-class sub-Quest or node graph field, so
-# command mapping and orchestration intent are preserved in metadata.gsd_port.
+# command mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: ui-phase
 name: UI Phase Quest
 description: >
   Waypoint sub-Quest port of gsd:ui-phase for generating UI-SPEC design contracts for frontend phases.
-workflow: workflows/gsd/ui-phase.yaml
+workflow: workflows/waypoint/ui-phase.yaml
 
 recipes:
-  - gsd-ui-researcher
-  - gsd-ui-checker
-  - gsd-ui-auditor
-  - gsd-doc-writer
+  - waypoint-ui-researcher
+  - waypoint-ui-checker
+  - waypoint-ui-auditor
+  - waypoint-doc-writer
 
 scaffolds:
   workstreams:
@@ -44,9 +44,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - sub-quest
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     source_command: commands/gsd/ui-phase.md
     source_command_name: gsd:ui-phase

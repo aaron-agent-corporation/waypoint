@@ -1,18 +1,18 @@
-# Waypoint GSD catalog Quest port from commands/gsd/add-tests.md.
+# Waypoint source-derived catalog Quest from commands/gsd/add-tests.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: add-tests
 name: Add Tests Quest
 description: >
   Waypoint catalog Quest port of gsd:add-tests for generate tests for a completed phase from UAT criteria and implementation evidence.
-workflow: workflows/gsd/add-tests.yaml
+workflow: workflows/waypoint/add-tests.yaml
 
 recipes:
-  - gsd-verifier
-  - gsd-executor
+  - waypoint-verifier
+  - waypoint-executor
 
 scaffolds:
   workstreams:
@@ -42,9 +42,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: utility_inspection
     role: sub-Quest

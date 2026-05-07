@@ -1,18 +1,18 @@
-# Waypoint GSD catalog Quest port from commands/gsd/ingest-docs.md.
+# Waypoint source-derived catalog Quest from commands/gsd/ingest-docs.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: ingest-docs
 name: Ingest Docs Quest
 description: >
   Waypoint catalog Quest port of gsd:ingest-docs for bootstrap or merge planning setup from existing ADRs, PRDs, specs, and docs.
-workflow: workflows/gsd/ingest-docs.yaml
+workflow: workflows/waypoint/ingest-docs.yaml
 
 recipes:
-  - gsd-doc-classifier
-  - gsd-doc-synthesizer
+  - waypoint-doc-classifier
+  - waypoint-doc-synthesizer
 
 scaffolds:
   workstreams:
@@ -42,9 +42,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: utility_inspection
     role: sub-Quest

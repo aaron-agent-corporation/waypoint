@@ -26,8 +26,8 @@ function makeIo(cwd: string) {
 
 async function initializedProjectWithRoute(): Promise<string> {
   const cwd = await tempProject()
-  await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
-  await runWaypointCli(['start', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['start', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   return cwd
 }
 
@@ -41,7 +41,7 @@ describe('waypoint route command', () => {
     expect(stderr).toEqual([])
     const output = stdout.join('\n')
     expect(output).toContain('Waypoint route route-001')
-    expect(output).toContain('quest: gsd')
+    expect(output).toContain('quest: waypoint')
     expect(output).toContain('status: active')
     expect(output).toContain('current node: initialize')
     expect(output).toContain('subject: project/local')

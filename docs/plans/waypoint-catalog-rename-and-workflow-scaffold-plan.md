@@ -14,9 +14,9 @@
 
 The H6 workaround exists because the current scaffold conflates lifecycle checkpoints with executable Recipe slugs:
 
-- `quests/gsd.yaml` uses `plan_ref` values like `initialize-context`, `initialize-roadmap`, `plan-research`, and `execute-checkpoint`.
+- `quests/waypoint.yaml` uses `plan_ref` values like `initialize-context`, `initialize-roadmap`, `plan-research`, and `execute-checkpoint`.
 - `packages/waypoint-folder-host/src/autopilot/run.ts` resolves non-discussion task Recipes with `return task.plan_ref`.
-- Local runtime then looks for `.waypoint/recipes/<plan_ref>.yaml`, but bundled Recipes are named `gsd-*` today.
+- Local runtime then looks for `.waypoint/recipes/<plan_ref>.yaml`, but bundled Recipes are named `waypoint-*` today.
 
 The fix is not to make every checkpoint execute an agent. The fix is to separate these concepts:
 
@@ -210,17 +210,17 @@ pnpm exec vitest run packages/waypoint-folder-host/src/autopilot/run.test.ts pac
 **Objective:** Make `waypoint` the canonical Quest slug and file.
 
 **Files:**
-- Rename: `quests/gsd.yaml` → `quests/waypoint.yaml`
+- Rename: `quests/waypoint.yaml` → `quests/waypoint.yaml`
 - Modify: tests referencing `gsd` as the canonical Quest
-- Modify: folder-host smoke/docs/examples using `--quest gsd`
+- Modify: folder-host smoke/docs/examples using `--quest waypoint`
 
 **Implementation:**
 1. Change Quest manifest:
    - `slug: waypoint`
    - `name: Waypoint Quest`
    - `workflow: workflows/waypoint.yaml` if workflow field remains.
-2. Replace `metadata.gsd_port` with `metadata.source_port`.
-3. Replace `tags: [gsd-port]` with source/history wording such as `source-port` or `get-shit-done-cc-source`.
+2. Replace `metadata.source_port` with `metadata.source_port`.
+3. Replace `tags: [waypoint-port]` with source/history wording such as `source-port` or `get-shit-done-cc-source`.
 4. Update all active commands/docs to use:
 
 ```bash
@@ -237,21 +237,21 @@ pnpm exec vitest run src/quests packages/waypoint-folder-host/src/catalog packag
 
 ---
 
-## Phase W4 — Rename Recipes from `gsd-*` to `waypoint-*`
+## Phase W4 — Rename Recipes from `waypoint-*` to `waypoint-*`
 
 **Objective:** Make active Recipe slugs Waypoint-native.
 
 **Files:**
-- Rename directory: `recipes/gsd/` → `recipes/waypoint/`
-- Modify every Recipe manifest slug/name/metadata currently carrying active `gsd-*` branding
+- Rename directory: `recipes/waypoint/` → `recipes/waypoint/`
+- Modify every Recipe manifest slug/name/metadata currently carrying active `waypoint-*` branding
 - Modify Quest recipe refs
-- Modify tests expecting `gsd-*` slugs/counts
+- Modify tests expecting `waypoint-*` slugs/counts
 - Modify Hermes runtime adapter/tests that route known Recipe slugs
 
 **Implementation:**
 1. Rename slugs mechanically:
-   - `gsd-doc-writer` → `waypoint-doc-writer`
-   - `gsd-planner` → `waypoint-planner`
+   - `waypoint-doc-writer` → `waypoint-doc-writer`
+   - `waypoint-planner` → `waypoint-planner`
    - etc.
 2. Update `quests/waypoint.yaml` recipe refs.
 3. Update discussion agent metadata to `waypoint-doc-writer`.
@@ -261,7 +261,7 @@ pnpm exec vitest run src/quests packages/waypoint-folder-host/src/catalog packag
 **Verification:**
 
 ```bash
-pnpm exec vitest run src/__tests__/worked-examples.test.ts src/__tests__/gsd-port.test.ts src/__tests__/gsd-docs.test.ts examples/hermes-runtime-adapter/hermes-recipe-runtime.test.ts
+pnpm exec vitest run src/__tests__/worked-examples.test.ts src/__tests__/waypoint-port.test.ts src/__tests__/waypoint-docs.test.ts examples/hermes-runtime-adapter/hermes-recipe-runtime.test.ts
 ```
 
 Note: test file names can be renamed in this phase or W6. If renamed, include old-file deletion in the commit.
@@ -310,18 +310,18 @@ pnpm exec vitest run packages/waypoint-folder-host/src/tasks/store.test.ts packa
 - `README.md`
 - `WAYPOINT_RESUME_PLAN.md`
 - `docs/waypoint-quest-catalog.md`
-- `docs/quests/gsd.md` → likely `docs/quests/waypoint.md`
-- `docs/quests/gsd-command-map.yaml` → likely `docs/quests/source-command-map.yaml` or `docs/quests/get-shit-done-source-command-map.yaml`
-- `docs/quests/gsd-command-map.md` → renamed equivalent
-- `docs/plans/waypoint-gsd-*` docs → archive/rename or rewrite as source-port history
-- `src/__tests__/gsd-port.test.ts` → `src/__tests__/waypoint-catalog.test.ts`
-- `src/__tests__/gsd-docs.test.ts` → `src/__tests__/waypoint-docs.test.ts`
+- `docs/quests/waypoint.md` → likely `docs/quests/waypoint.md`
+- `docs/quests/waypoint-command-map.yaml` → likely `docs/quests/source-command-map.yaml` or `docs/quests/get-shit-done-source-command-map.yaml`
+- `docs/quests/waypoint-command-map.md` → renamed equivalent
+- `docs/plans/waypoint-waypoint-*` docs → archive/rename or rewrite as source-port history
+- `src/__tests__/waypoint-port.test.ts` → `src/__tests__/waypoint-catalog.test.ts`
+- `src/__tests__/waypoint-docs.test.ts` → `src/__tests__/waypoint-docs.test.ts`
 
 **Rules:**
 1. Active docs say `waypoint`, `waypoint-*`, and “Waypoint Quest.”
 2. Historical docs may say `get-shit-done-cc` only in source attribution sections.
-3. No active command examples should use `--quest gsd`.
-4. No active runtime tests should expect `gsd-*` Recipe slugs.
+3. No active command examples should use `--quest waypoint`.
+4. No active runtime tests should expect `waypoint-*` Recipe slugs.
 
 **Verification:**
 

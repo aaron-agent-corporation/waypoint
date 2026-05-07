@@ -10,7 +10,7 @@ import { appendRouteEvent, readRouteEvents } from './jsonl'
 
 async function tempProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-events-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
   return projectRoot
 }
 
@@ -20,7 +20,7 @@ describe('folder route JSONL events', () => {
 
     const first = await appendRouteEvent(projectRoot, 'route-001', {
       kind: 'route.started',
-      payload: { quest: 'gsd' },
+      payload: { quest: 'waypoint' },
       now: new Date('2026-05-07T13:31:00.000Z'),
     })
     await appendRouteEvent(projectRoot, 'route-001', {
@@ -33,7 +33,7 @@ describe('folder route JSONL events', () => {
       id: 'event-001',
       route_id: 'route-001',
       kind: 'route.started',
-      payload: { quest: 'gsd' },
+      payload: { quest: 'waypoint' },
       created_at: '2026-05-07T13:31:00.000Z',
     })
 
@@ -52,7 +52,7 @@ describe('folder route JSONL events', () => {
     const projectRoot = await tempProject()
     const bus = createRouteEventBus(projectRoot, 'route-001')
 
-    await bus.publish({ type: 'route.started', timestamp: 1778160720, payload: { quest: 'gsd' } })
+    await bus.publish({ type: 'route.started', timestamp: 1778160720, payload: { quest: 'waypoint' } })
 
     const events = await readRouteEvents(projectRoot, 'route-001')
     expect(events.items).toHaveLength(1)
@@ -60,7 +60,7 @@ describe('folder route JSONL events', () => {
       id: 'event-001',
       route_id: 'route-001',
       kind: 'route.started',
-      payload: { quest: 'gsd' },
+      payload: { quest: 'waypoint' },
     })
   })
 })

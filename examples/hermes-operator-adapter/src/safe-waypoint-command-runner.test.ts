@@ -50,7 +50,7 @@ describe('safe Waypoint command runner', () => {
     expect(() => buildSafeWaypointCommand(project, ['sh', '-c', 'rm -rf .waypoint'])).toThrow(
       'Waypoint command is not allowlisted: sh',
     )
-    expect(() => buildSafeWaypointCommand(project, ['init', '--quest', 'gsd'])).toThrow(
+    expect(() => buildSafeWaypointCommand(project, ['init', '--quest', 'waypoint'])).toThrow(
       'Waypoint command is not allowlisted: init',
     )
     expect(() => buildSafeWaypointCommand(project, ['status', '--exec', 'rm -rf .'])).toThrow(

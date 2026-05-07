@@ -5,14 +5,14 @@ describe('parseQuestManifest', () => {
   it('parses a minimal valid manifest', () => {
     const yaml = `
 schema_version: 1
-slug: gsd
+slug: waypoint
 name: GSD Lifecycle
 workflow: gsd.workflow.yaml
 `
     const result = parseQuestManifest(yaml)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.manifest.slug).toBe('gsd')
+    expect(result.manifest.slug).toBe('waypoint')
     expect(result.manifest.name).toBe('GSD Lifecycle')
     expect(result.manifest.schema_version).toBe(1)
     expect(result.manifest.workflow).toBe('gsd.workflow.yaml')

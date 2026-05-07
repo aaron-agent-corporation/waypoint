@@ -5,7 +5,7 @@ import { installQuestCatalog } from '../../../waypoint-folder-host/src/catalog/i
 import type { WaypointCliIo } from '../bin.ts'
 
 export async function runInitCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
-  const quest = readStringOption(args, '--quest') ?? 'gsd'
+  const quest = readStringOption(args, '--quest') ?? 'waypoint'
   const projectRoot = io.cwd ?? process.cwd()
   const catalog = await loadBundledWaypointCatalog()
   const result = await initWaypointProject(projectRoot, { quest })

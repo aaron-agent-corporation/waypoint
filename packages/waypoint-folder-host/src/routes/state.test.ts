@@ -14,7 +14,7 @@ async function tempProject(): Promise<string> {
 
 async function createRoute(projectRoot: string) {
   return createWaypointRoute(projectRoot, {
-    quest: 'gsd',
+    quest: 'waypoint',
     current_node: 'human_plan_gate',
     subject: { type: 'project', id: 'local' },
     now: new Date('2026-05-07T16:30:00.000Z'),

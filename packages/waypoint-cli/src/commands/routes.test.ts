@@ -26,8 +26,8 @@ function makeIo(cwd: string) {
 
 async function initializedProjectWithRoute(): Promise<string> {
   const cwd = await tempProject()
-  await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
-  await runWaypointCli(['start', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['start', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   return cwd
 }
 
@@ -44,7 +44,7 @@ describe('waypoint routes command', () => {
     expect(output).toContain('total: 1')
     expect(output).toContain('- route-001')
     expect(output).toContain('status: active')
-    expect(output).toContain('quest: gsd')
+    expect(output).toContain('quest: waypoint')
     expect(output).toContain('current node: initialize')
   })
 
@@ -56,7 +56,7 @@ describe('waypoint routes command', () => {
 
     expect(stderr).toEqual([])
     expect(JSON.parse(stdout.join('\n'))).toMatchObject({
-      routes: [{ id: 'route-001', status: 'active', quest: 'gsd', current_node: 'initialize' }],
+      routes: [{ id: 'route-001', status: 'active', quest: 'waypoint', current_node: 'initialize' }],
     })
   })
 })

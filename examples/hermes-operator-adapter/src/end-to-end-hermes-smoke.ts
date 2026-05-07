@@ -39,8 +39,8 @@ export async function runEndToEndHermesSmoke(input: RunEndToEndHermesSmokeInput)
   const registry = parseHermesProjectRegistry(input.registryYaml)
   const project = resolveHermesProject(registry, input.projectName)
 
-  await runSetupWaypointCommand(project, ['init', '--quest', 'gsd'])
-  await runSetupWaypointCommand(project, ['start', '--quest', 'gsd'])
+  await runSetupWaypointCommand(project, ['init', '--quest', 'waypoint'])
+  await runSetupWaypointCommand(project, ['start', '--quest', 'waypoint'])
 
   const setupAutopilot = await runSafeWaypointCommand(project, ['auto', '--route-id', 'route-001', '--max-iterations', '2'])
   if (!setupAutopilot.ok) throw new Error(`Initial null-runtime autopilot setup failed: ${setupAutopilot.stderr || setupAutopilot.stdout}`)

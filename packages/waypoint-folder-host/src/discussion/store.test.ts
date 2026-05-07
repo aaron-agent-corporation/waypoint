@@ -12,9 +12,9 @@ import { startQuestRoute } from '../routes/start'
 
 async function startedProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-discussion-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
-  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'gsd' })
-  await startQuestRoute(projectRoot, { quest: 'gsd' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
+  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'waypoint' })
+  await startQuestRoute(projectRoot, { quest: 'waypoint' })
   return projectRoot
 }
 
@@ -38,7 +38,7 @@ describe('Waypoint folder discussion store', () => {
           authored_by: 'user',
           auto_response: {
             requested: false,
-            agent: 'gsd-doc-writer',
+            agent: 'waypoint-doc-writer',
             reason: 'global_disabled',
           },
         },
@@ -64,7 +64,7 @@ describe('Waypoint folder discussion store', () => {
     expect(message.metadata).toMatchObject({
       waypoint: {
         authored_by: 'agent',
-        agent: 'gsd-doc-writer',
+        agent: 'waypoint-doc-writer',
         auto_response: {
           requested: false,
           reason: 'agent_authored',

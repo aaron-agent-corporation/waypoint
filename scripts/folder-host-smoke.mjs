@@ -27,11 +27,11 @@ function requireFile(relativePath) {
 }
 
 try {
-  run(['init', '--quest', 'gsd'])
+  run(['init', '--quest', 'waypoint'])
   run(['status'])
   run(['quests'])
-  run(['recipes', '--quest', 'gsd'])
-  run(['start', '--quest', 'gsd'])
+  run(['recipes', '--quest', 'waypoint'])
+  run(['start', '--quest', 'waypoint'])
   run(['routes'])
   run(['route', '--route-id', 'route-001'])
   run(['tasks', '--route-id', 'route-001'])
@@ -43,7 +43,7 @@ try {
 
   const requiredArtifacts = [
     '.waypoint/config.yaml',
-    '.waypoint/quests/gsd.yaml',
+    '.waypoint/quests/waypoint.yaml',
     '.waypoint/lifecycle/workstreams.yaml',
     '.waypoint/routes/route-001.yaml',
     '.waypoint/events/route-001.jsonl',

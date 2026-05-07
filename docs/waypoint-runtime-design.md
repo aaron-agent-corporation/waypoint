@@ -40,10 +40,10 @@ They are parallel today. Waypoint joins them without disrupting existing FirmVau
 |---|---|---|
 | Waypoint Project | `projects` with lifecycle enabled | A project that can move through structured objectives. |
 | Waypoint Track | project `gsd_track` / future renamed lifecycle track | Domain/default lifecycle mode such as product, ops, legal, FirmVault, custom. |
-| Waypoint Workstream | `gsd_workstreams` | A parallel lane of project work. |
-| Waypoint Milestone | `gsd_milestones` | A major objective or delivery checkpoint. |
-| Waypoint Phase | `gsd_phases` | A lifecycle segment within a milestone. |
-| Waypoint Plan | `gsd_plans` | A concrete unit of planned work inside a phase. |
+| Waypoint Workstream | `waypoint_workstreams` | A parallel lane of project work. |
+| Waypoint Milestone | `waypoint_milestones` | A major objective or delivery checkpoint. |
+| Waypoint Phase | `waypoint_phases` | A lifecycle segment within a milestone. |
+| Waypoint Plan | `waypoint_plans` | A concrete unit of planned work inside a phase. |
 | Waypoint Route | `workflow_instances` bound to a Waypoint subject | The executable DAG used to advance a lifecycle entity. |
 | Waypoint Node | `workflow_node_instances` | A runtime workflow node. |
 | Waypoint Gate | workflow `review`/`gate` node or task gate | A human/agent approval checkpoint. |
@@ -67,7 +67,7 @@ The existing database columns and APIs are still named `gsd_*`. The first Waypoi
 
 ### 3.1 Lifecycle / hierarchy substrate
 
-Documented in `docs/agent-gsd-guide.md` and implemented around `src/lib/gsd-hierarchy.ts` plus migration `053_gsd_hierarchy_foundation`.
+Documented in `docs/agent-waypoint-guide.md` and implemented around `src/lib/waypoint-hierarchy.ts` plus migration `053_gsd_hierarchy_foundation`.
 
 Existing project shell fields:
 
@@ -75,7 +75,7 @@ Existing project shell fields:
 |---|---|
 | `projects.gsd_enabled` | Lifecycle machinery enabled for the project. |
 | `projects.gsd_track` | Default track/domain. |
-| `projects.gsd_phase` | Legacy top-level lifecycle: `discuss -> plan -> execute -> verify -> done`. |
+| `projects.waypoint_phase` | Legacy top-level lifecycle: `discuss -> plan -> execute -> verify -> done`. |
 | `projects.gsd_gate_mode` | Gate policy: currently `manual_approval` or `auto_internal`. |
 | `projects.gsd_updated_at` | Last lifecycle update timestamp. |
 
@@ -83,18 +83,18 @@ Existing hierarchy tables:
 
 | Table | Current role |
 |---|---|
-| `gsd_workstreams` | Project-scoped lanes; status `active`, `paused`, `complete`. |
-| `gsd_milestones` | Project/workstream objectives; status `planned`, `active`, `complete`, `archived`. |
-| `gsd_phases` | Milestone-scoped lifecycle phases; status `planned`, `active`, `complete`, `deferred`. |
-| `gsd_plans` | Phase-scoped work plans; status `todo`, `in_progress`, `review`, `done`, `failed`. |
+| `waypoint_workstreams` | Project-scoped lanes; status `active`, `paused`, `complete`. |
+| `waypoint_milestones` | Project/workstream objectives; status `planned`, `active`, `complete`, `archived`. |
+| `waypoint_phases` | Milestone-scoped lifecycle phases; status `planned`, `active`, `complete`, `deferred`. |
+| `waypoint_plans` | Phase-scoped work plans; status `todo`, `in_progress`, `review`, `done`, `failed`. |
 
 Existing task linkage columns:
 
-- `tasks.gsd_workstream_id`
-- `tasks.gsd_milestone_id`
-- `tasks.gsd_phase_id`
-- `tasks.gsd_plan_id`
-- legacy `tasks.gsd_phase`
+- `tasks.waypoint_workstream_id`
+- `tasks.waypoint_milestone_id`
+- `tasks.waypoint_phase_id`
+- `tasks.waypoint_plan_id`
+- legacy `tasks.waypoint_phase`
 - task gate fields: `gate_required`, `gate_status`, `gate_approved_by`, `gate_approved_at`
 
 Existing transition helpers:
@@ -196,18 +196,18 @@ Waypoint reserves these Workflow Engine subject types:
 | Subject type | Subject ID | Meaning |
 |---|---|---|
 | `waypoint_project` | `projects.id` as string | Route runs against an entire project. |
-| `waypoint_workstream` | `gsd_workstreams.id` as string | Route runs against a workstream. |
-| `waypoint_milestone` | `gsd_milestones.id` as string | Route runs against a milestone. |
-| `waypoint_phase` | `gsd_phases.id` as string | Route runs against a phase. |
-| `waypoint_plan` | `gsd_plans.id` as string | Route runs against a plan. |
+| `waypoint_workstream` | `waypoint_workstreams.id` as string | Route runs against a workstream. |
+| `waypoint_milestone` | `waypoint_milestones.id` as string | Route runs against a milestone. |
+| `waypoint_phase` | `waypoint_phases.id` as string | Route runs against a phase. |
+| `waypoint_plan` | `waypoint_plans.id` as string | Route runs against a plan. |
 
 Compatibility aliases may be accepted during migration:
 
-- `gsd_project`
-- `gsd_workstream`
-- `gsd_milestone`
-- `gsd_phase`
-- `gsd_plan`
+- `waypoint_project`
+- `waypoint_workstream`
+- `waypoint_milestone`
+- `waypoint_phase`
+- `waypoint_plan`
 
 But new Waypoint definitions should prefer `waypoint_*`.
 
@@ -255,10 +255,10 @@ When a Workflow Engine recipe/review node materializes a Mission Control task fo
 | Task field | Source |
 |---|---|
 | `project_id` | materialization input / route vars |
-| `gsd_workstream_id` | route vars or lifecycle parent lookup |
-| `gsd_milestone_id` | route vars or lifecycle parent lookup |
-| `gsd_phase_id` | route vars or lifecycle parent lookup |
-| `gsd_plan_id` | route vars if subject is a plan |
+| `waypoint_workstream_id` | route vars or lifecycle parent lookup |
+| `waypoint_milestone_id` | route vars or lifecycle parent lookup |
+| `waypoint_phase_id` | route vars or lifecycle parent lookup |
+| `waypoint_plan_id` | route vars if subject is a plan |
 | `workflow_instance_id` | existing workflow linkage |
 | `workflow_node_instance_id` | existing workflow linkage |
 | `gate_required` | node config/review policy or lifecycle gate mode |
@@ -316,7 +316,7 @@ This makes the discussion phase a deliberate unit of work in the task queue: the
 
 ### 6.2 Plan status mapping
 
-| Current `gsd_plans.status` | Waypoint meaning | Workflow interaction |
+| Current `waypoint_plans.status` | Waypoint meaning | Workflow interaction |
 |---|---|---|
 | `todo` | planned but not executing | no active execution route required |
 | `in_progress` | actively executing | route instance active/running |
@@ -400,14 +400,14 @@ triggers:
 nodes:
   inspect_context:
     type: recipe
-    recipe: gsd-researcher
+    recipe: waypoint-researcher
     description: Inspect project context, existing lifecycle graph, repo state, and acceptance criteria.
     config:
       task_goal: Produce a concise context brief for this plan.
 
   implement_plan:
     type: recipe
-    recipe: gsd-coder
+    recipe: waypoint-coder
     description: Implement the smallest safe change satisfying the active plan.
     depends_on:
       nodes:
@@ -417,7 +417,7 @@ nodes:
 
   review_plan:
     type: recipe
-    recipe: gsd-reviewer
+    recipe: waypoint-reviewer
     description: Review implementation against the plan and acceptance criteria.
     depends_on:
       nodes:
@@ -435,7 +435,7 @@ nodes:
     description: Human/operator acceptance gate before marking the Waypoint plan done.
 ```
 
-This example intentionally uses existing `gsd-*` recipe slugs as leaf workers until recipe names are renamed or replaced.
+This example intentionally uses existing `waypoint-*` recipe slugs as leaf workers until recipe names are renamed or replaced.
 
 ---
 
@@ -567,13 +567,13 @@ The existing `GET /api/projects/:id/gsd/lifecycle-graph` is the right starting p
 ### Phase 2 — Bind workflow materialization to lifecycle IDs
 
 - Teach `materializeReadyWorkflowNodes()` or a Waypoint wrapper to derive lifecycle IDs from `workflow_instances.vars_json` and `subject_type`.
-- Ensure materialized tasks receive `gsd_workstream_id`, `gsd_milestone_id`, `gsd_phase_id`, and `gsd_plan_id`.
+- Ensure materialized tasks receive `waypoint_workstream_id`, `waypoint_milestone_id`, `waypoint_phase_id`, and `waypoint_plan_id`.
 - Add tests around route-to-task metadata.
 
 ### Phase 3 — Add initial Waypoint route definitions
 
 - Add `waypoint-*` workflow YAML files under `workflows/`.
-- Reuse existing `gsd-*` leaf recipes initially.
+- Reuse existing `waypoint-*` leaf recipes initially.
 - Sync definitions through existing workflow registry.
 - Add workflow engine tests for route validation and materialization.
 
@@ -605,7 +605,7 @@ The existing `GET /api/projects/:id/gsd/lifecycle-graph` is the right starting p
 3. Should route instances be one-per-lifecycle-entity or one-per-operation? Example: one `waypoint_plan` execution route per plan, or separate planning/execution/verification routes per plan.
 4. What is the initial default route when a project enables Waypoint: intake, milestone planning, or no route until explicitly started?
 5. Should `waypoint_*` condition satisfaction be explicit API calls, derived from lifecycle transitions, or both?
-6. How much of the existing `gsd-*` recipe naming should be renamed in the first pass?
+6. How much of the existing `waypoint-*` recipe naming should be renamed in the first pass?
 7. Should FirmVault workflows stay purely domain-specific, or should FirmVault case workflows optionally create/bind Waypoint lifecycle entities for long-running legal matters?
 8. Should task-scoped discussion state live in direct task columns (`discussion_enabled`, `discussion_conversation_id`) or remain in `tasks.metadata` until the model stabilizes?
 9. Should discussion messages be mirrored into comments automatically, only summarized into comments, or kept separate except for explicit operator notes?

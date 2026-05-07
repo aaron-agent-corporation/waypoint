@@ -13,13 +13,13 @@ describe('local recipe runtime', () => {
       projectRoot: '/tmp/project',
       routeId: 'route-001',
       taskId: 'task-003',
-      recipeSlug: 'gsd-doc-writer',
+      recipeSlug: 'waypoint-doc-writer',
       prompt: 'Write docs',
     })
 
     expect(payload).toEqual({
       schema_version: 1,
-      recipe_slug: 'gsd-doc-writer',
+      recipe_slug: 'waypoint-doc-writer',
       prompt: 'Write docs',
       task_id: 'task-003',
       project_root: '/tmp/project',
@@ -43,7 +43,7 @@ describe('local recipe runtime', () => {
       projectRoot: cwd,
       routeId: 'route-001',
       taskId: 'task-003',
-      recipe: 'gsd-doc-writer',
+      recipe: 'waypoint-doc-writer',
       prompt: 'Write docs',
     })
 
@@ -53,7 +53,7 @@ describe('local recipe runtime', () => {
     expect(output.stdout).toContain('local-ok')
     await expect(readFile(payloadPath, 'utf8').then((raw) => JSON.parse(raw))).resolves.toMatchObject({
       schema_version: 1,
-      recipe_slug: 'gsd-doc-writer',
+      recipe_slug: 'waypoint-doc-writer',
       prompt: 'Write docs',
       task_id: 'task-003',
       project_root: cwd,
@@ -71,7 +71,7 @@ describe('local recipe runtime', () => {
       projectRoot: cwd,
       routeId: 'route-001',
       taskId: 'task-003',
-      recipe: 'gsd-doc-writer',
+      recipe: 'waypoint-doc-writer',
       prompt: 'Write docs',
     })
 
@@ -79,7 +79,7 @@ describe('local recipe runtime', () => {
       status: 'failed',
       runtime: 'local',
       exit_code: 7,
-      recipe: 'gsd-doc-writer',
+      recipe: 'waypoint-doc-writer',
       task_id: 'task-003',
       route_id: 'route-001',
     })

@@ -10,7 +10,7 @@ import { createWaypointRoute, listWaypointRoutes } from './store'
 
 async function tempProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-routes-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
   return projectRoot
 }
 
@@ -19,7 +19,7 @@ describe('folder route YAML store', () => {
     const projectRoot = await tempProject()
 
     const route = await createWaypointRoute(projectRoot, {
-      quest: 'gsd',
+      quest: 'waypoint',
       subject: { type: 'project', id: 'project' },
       current_node: 'initialize',
       now: new Date('2026-05-07T13:30:00.000Z'),
@@ -27,7 +27,7 @@ describe('folder route YAML store', () => {
 
     expect(route).toMatchObject({
       id: 'route-001',
-      quest: 'gsd',
+      quest: 'waypoint',
       status: 'active',
       current_node: 'initialize',
       subject: { type: 'project', id: 'project' },
@@ -38,7 +38,7 @@ describe('folder route YAML store', () => {
     }
     expect(yaml.route).toMatchObject({
       id: 'route-001',
-      quest: 'gsd',
+      quest: 'waypoint',
       status: 'active',
       current_node: 'initialize',
       created_at: '2026-05-07T13:30:00.000Z',

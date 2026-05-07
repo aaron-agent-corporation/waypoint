@@ -28,7 +28,7 @@ function makeIo(cwd: string) {
 describe('waypoint lifecycle command', () => {
   it('adds lifecycle records and lists a readable summary', async () => {
     const cwd = await tempProject()
-    await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+    await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
 
     for (const args of [
       ['lifecycle', 'add', 'workstream', '--key', 'core', '--name', 'Core'],

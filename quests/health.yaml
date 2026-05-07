@@ -1,17 +1,17 @@
-# Waypoint GSD catalog Quest port from commands/gsd/health.md.
+# Waypoint source-derived catalog Quest from commands/gsd/health.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: health
 name: Health Quest
 description: >
   Waypoint catalog Quest port of gsd:health for planning-directory and workflow health diagnostic.
-workflow: workflows/gsd/health.yaml
+workflow: workflows/waypoint/health.yaml
 
 recipes:
-  - gsd-verifier
+  - waypoint-verifier
 
 scaffolds:
   workstreams:
@@ -41,9 +41,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: audit_review
     role: audit / review sub-Quest

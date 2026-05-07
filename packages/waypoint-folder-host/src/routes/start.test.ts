@@ -15,8 +15,8 @@ import { startQuestRoute } from './start'
 
 async function tempProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-start-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
-  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'gsd' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
+  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'waypoint' })
   return projectRoot
 }
 
@@ -24,8 +24,8 @@ describe('startQuestRoute', () => {
   it('scaffolds the selected Quest lifecycle idempotently', async () => {
     const projectRoot = await tempProject()
 
-    await startQuestRoute(projectRoot, { quest: 'gsd' })
-    await startQuestRoute(projectRoot, { quest: 'gsd' })
+    await startQuestRoute(projectRoot, { quest: 'waypoint' })
+    await startQuestRoute(projectRoot, { quest: 'waypoint' })
 
     const state = await listLifecycleState(projectRoot)
     expect(state.workstreams.map((entry) => entry.key)).toEqual(['delivery'])
@@ -55,17 +55,17 @@ describe('startQuestRoute', () => {
   it('creates a route and appends a route.started event', async () => {
     const projectRoot = await tempProject()
 
-    const route = await startQuestRoute(projectRoot, { quest: 'gsd' })
+    const route = await startQuestRoute(projectRoot, { quest: 'waypoint' })
 
     expect(route).toMatchObject({
       id: 'route-001',
-      quest: 'gsd',
+      quest: 'waypoint',
       status: 'active',
       current_node: 'initialize',
       subject: { type: 'project', id: 'local' },
     })
 
-    expect(await getWaypointRoute(projectRoot, 'route-001')).toMatchObject({ id: 'route-001', quest: 'gsd' })
+    expect(await getWaypointRoute(projectRoot, 'route-001')).toMatchObject({ id: 'route-001', quest: 'waypoint' })
     expect((await listWaypointRoutes(projectRoot)).map((entry) => entry.id)).toEqual(['route-001'])
 
     const events = await readRouteEvents(projectRoot, route.id)
@@ -75,7 +75,7 @@ describe('startQuestRoute', () => {
       route_id: 'route-001',
       kind: 'route.started',
       payload: {
-        quest: 'gsd',
+        quest: 'waypoint',
         recipes: 12,
         lifecycle: {
           workstreams: 1,

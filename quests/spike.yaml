@@ -1,21 +1,21 @@
-# Waypoint GSD sub-Quest port from commands/gsd/spike.md.
+# Waypoint source-derived sub-Quest from commands/gsd/spike.md.
 #
 # Current Quest schema has no first-class sub-Quest or node graph field, so
-# command mapping and orchestration intent are preserved in metadata.gsd_port.
+# command mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: spike
 name: Spike Quest
 description: >
   Waypoint sub-Quest port of gsd:spike for focused experiential exploration before committing to a build path.
-workflow: workflows/gsd/spike.yaml
+workflow: workflows/waypoint/spike.yaml
 
 recipes:
-  - gsd-project-researcher
-  - gsd-domain-researcher
-  - gsd-assumptions-analyzer
-  - gsd-executor
-  - gsd-doc-synthesizer
+  - waypoint-project-researcher
+  - waypoint-domain-researcher
+  - waypoint-assumptions-analyzer
+  - waypoint-executor
+  - waypoint-doc-synthesizer
 
 scaffolds:
   workstreams:
@@ -45,9 +45,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - sub-quest
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     source_command: commands/gsd/spike.md
     source_command_name: gsd:spike

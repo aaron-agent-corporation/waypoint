@@ -1,20 +1,20 @@
-# Waypoint GSD sub-Quest port from commands/gsd/spec-phase.md.
+# Waypoint source-derived sub-Quest from commands/gsd/spec-phase.md.
 #
 # Current Quest schema has no first-class sub-Quest or node graph field, so
-# command mapping and orchestration intent are preserved in metadata.gsd_port.
+# command mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: spec-phase
 name: Spec Phase Quest
 description: >
   Waypoint sub-Quest port of gsd:spec-phase for clarifying what a phase delivers before planning how to build it.
-workflow: workflows/gsd/spec-phase.yaml
+workflow: workflows/waypoint/spec-phase.yaml
 
 recipes:
-  - gsd-assumptions-analyzer
-  - gsd-codebase-mapper
-  - gsd-doc-writer
-  - gsd-plan-checker
+  - waypoint-assumptions-analyzer
+  - waypoint-codebase-mapper
+  - waypoint-doc-writer
+  - waypoint-plan-checker
 
 scaffolds:
   workstreams:
@@ -44,9 +44,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - sub-quest
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     source_command: commands/gsd/spec-phase.md
     source_command_name: gsd:spec-phase

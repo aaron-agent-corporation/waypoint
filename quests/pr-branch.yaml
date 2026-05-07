@@ -1,17 +1,17 @@
-# Waypoint GSD catalog Quest port from commands/gsd/pr-branch.md.
+# Waypoint source-derived catalog Quest from commands/gsd/pr-branch.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: pr-branch
 name: PR Branch Quest
 description: >
   Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
-workflow: workflows/gsd/pr-branch.yaml
+workflow: workflows/waypoint/pr-branch.yaml
 
 recipes:
-  - gsd-executor
+  - waypoint-executor
 
 scaffolds:
   workstreams:
@@ -41,9 +41,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: utility_inspection
     role: sub-Quest

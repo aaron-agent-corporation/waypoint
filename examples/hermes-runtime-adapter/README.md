@@ -23,7 +23,7 @@ The adapter accepts the F10 Recipe execution payload:
 ```json
 {
   "schema_version": 1,
-  "recipe_slug": "gsd-doc-writer",
+  "recipe_slug": "waypoint-doc-writer",
   "prompt": "Recipe prompt text from the local manifest",
   "task_id": "task-003",
   "route_id": "route-001",
@@ -45,9 +45,9 @@ Required fields:
 Current routing contract:
 
 ```text
-gsd-planner → planner-capable Hermes/Gary execution
-gsd-verifier → verifier-capable Hermes/Gary execution
-gsd-doc-writer → doc-writer-capable Hermes/Gary execution
+waypoint-planner → planner-capable Hermes/Gary execution
+waypoint-verifier → verifier-capable Hermes/Gary execution
+waypoint-doc-writer → doc-writer-capable Hermes/Gary execution
 unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty
 ```
 
@@ -62,7 +62,7 @@ The adapter emits structured JSON stdout:
   "ok": true,
   "adapter": "hermes-recipe-runtime-reference",
   "schema_version": 1,
-  "recipe_slug": "gsd-doc-writer",
+  "recipe_slug": "waypoint-doc-writer",
   "task_id": "task-003",
   "route_id": "route-001",
   "project_root": "/tmp/waypoint-project",
@@ -82,7 +82,7 @@ Invalid JSON or missing required payload fields exit non-zero and write the vali
 ## Example command
 
 ```bash
-printf '%s\n' '{"schema_version":1,"recipe_slug":"gsd-doc-writer","prompt":"Draft docs","task_id":"task-003","route_id":"route-001","project_root":"/tmp/project"}' \
+printf '%s\n' '{"schema_version":1,"recipe_slug":"waypoint-doc-writer","prompt":"Draft docs","task_id":"task-003","route_id":"route-001","project_root":"/tmp/project"}' \
   | node examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs
 ```
 

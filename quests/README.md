@@ -13,7 +13,7 @@ you can organize Quests into subdirectories however you want:
 
 ```
 quests/
-├── gsd.yaml           # top-level
+├── waypoint.yaml           # top-level
 ├── dev/
 │   └── bugfix.yaml
 └── research/

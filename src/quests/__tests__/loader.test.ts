@@ -36,12 +36,12 @@ describe('loadQuestsFromDirectory', () => {
   })
 
   it('loads one quest from a flat layout', async () => {
-    write('gsd.yaml', `schema_version: 1\nslug: gsd\nname: GSD\nworkflow: gsd.wf.yaml\n`)
+    write('waypoint.yaml', `schema_version: 1\nslug: waypoint\nname: GSD\nworkflow: gsd.wf.yaml\n`)
     const result = await loadQuestsFromDirectory(dir)
     expect(result.ok).toBe(true)
     if (!result.ok) throw new Error('expected success')
     expect(result.registry.size).toBe(1)
-    expect(result.registry.has('gsd')).toBe(true)
+    expect(result.registry.has('waypoint')).toBe(true)
   })
 
   it('loads .yml and .yaml extensions', async () => {

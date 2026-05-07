@@ -165,7 +165,7 @@ examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts
 It proves the adapter chain as one operator-visible workflow against a temp `.waypoint/` project:
 
 - Register a temp or fixture project through the project registry;
-- initialize and start `gsd`;
+- initialize and start `waypoint`;
 - use the safe Waypoint command runner for operator-visible commands;
 - configure local Recipe runtime so a task executes through the Hermes runtime adapter;
 - verify route events include `route.autopilot.task.executed` and `hermes-recipe-runtime-reference` output;

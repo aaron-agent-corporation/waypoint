@@ -1,18 +1,18 @@
-# Waypoint GSD sub-Quest port from commands/gsd/debug.md.
+# Waypoint source-derived sub-Quest from commands/gsd/debug.md.
 #
 # Current Quest schema has no first-class sub-Quest or node graph field, so
-# command mapping and orchestration intent are preserved in metadata.gsd_port.
+# command mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: debug
 name: Debug Quest
 description: >
   Waypoint sub-Quest port of gsd:debug for systematic debugging with checkpointable investigation and continuation loops.
-workflow: workflows/gsd/debug.yaml
+workflow: workflows/waypoint/debug.yaml
 
 recipes:
-  - gsd-debug-session-manager
-  - gsd-debugger
+  - waypoint-debug-session-manager
+  - waypoint-debugger
 
 scaffolds:
   workstreams:
@@ -42,9 +42,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - sub-quest
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     source_command: commands/gsd/debug.md
     source_command_name: gsd:debug

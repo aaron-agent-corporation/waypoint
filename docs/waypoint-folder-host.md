@@ -10,7 +10,7 @@ The folder host can currently:
 
 - initialize a project-local `.waypoint/` directory;
 - install bundled Quest and Recipe manifests into that project;
-- start a live route for the bundled `gsd` Quest;
+- start a live route for the bundled `waypoint` Quest;
 - persist route YAML, event JSONL, task YAML, discussion JSONL, and autopilot run JSONL;
 - pause/resume routes and approve/reject gates;
 - run autopilot in the safe null runtime by default;
@@ -69,10 +69,10 @@ Start from an empty project folder.
 ### 1. Initialize the folder
 
 ```bash
-waypoint init --quest gsd
+waypoint init --quest waypoint
 ```
 
-This creates `.waypoint/config.yaml`, installs the bundled `gsd` Quest manifest, installs the Recipes referenced by that Quest, and creates the local state directories.
+This creates `.waypoint/config.yaml`, installs the bundled `waypoint` Quest manifest, installs the Recipes referenced by that Quest, and creates the local state directories.
 
 Check status:
 
@@ -84,15 +84,15 @@ waypoint status
 
 ```bash
 waypoint quests
-waypoint recipes --quest gsd
+waypoint recipes --quest waypoint
 ```
 
-`waypoint quests` lists available bundled Quests. `waypoint recipes --quest gsd` lists Recipes referenced by the `gsd` Quest.
+`waypoint quests` lists available bundled Quests. `waypoint recipes --quest waypoint` lists Recipes referenced by the `waypoint` Quest.
 
 ### 3. Start a Quest route
 
 ```bash
-waypoint start --quest gsd
+waypoint start --quest waypoint
 ```
 
 This creates a route such as `route-001`, appends a `route.started` event, scaffolds local workstream/milestone/phase/plan YAML, and materializes local tasks.
@@ -145,7 +145,7 @@ A project-local folder host state tree looks like this:
 ```text
 .waypoint/
   config.yaml                 # project opt-in, selected Quest, runtime config
-  quests/                     # copied Quest manifests, e.g. gsd.yaml
+  quests/                     # copied Quest manifests, e.g. waypoint.yaml
   recipes/                    # copied Recipe manifests used by the Quest
   lifecycle/
     workstreams.yaml
@@ -199,8 +199,8 @@ rm -rf .waypoint
 Then re-run:
 
 ```bash
-waypoint init --quest gsd
-waypoint start --quest gsd
+waypoint init --quest waypoint
+waypoint start --quest waypoint
 ```
 
 Do not run folder-host smokes from your home directory unless you intentionally want a home-level `.waypoint/` folder.
@@ -209,7 +209,7 @@ Do not run folder-host smokes from your home directory unless you intentionally 
 
 - This is a private development package, not a globally published CLI.
 - The direct Node TypeScript CLI path is the verified development smoke path.
-- The bundled GSD Quest is a catalog/example workflow; it does not make Waypoint a GSD clone.
+- The bundled Waypoint Quest is a catalog/example workflow; it does not make Waypoint a GSD clone.
 - The null runtime is safe by default but does not produce real external agent work.
 - The local runtime is intentionally opt-in because it executes local commands.
 - Packaging, release polish, and final readiness cleanup are tracked separately from this guide.

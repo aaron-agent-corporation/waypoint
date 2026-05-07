@@ -16,8 +16,8 @@ As of this refresh:
 - Bundled Quest/Recipe catalog is present:
   - `37` Quest manifests.
   - `35` Recipe manifests.
-  - `33` GSD-derived Recipe manifests.
-  - `65` GSD source command mappings documented.
+  - `33` Waypoint source-derived Recipe manifests.
+  - `65` source project command mappings documented.
 - Current package shape is a private pnpm workspace with root `@waypoint/core`, internal `@waypoint/folder-host`, and internal `@waypoint/cli`; the CLI remains source-run/development-only, not globally published.
 
 ---
@@ -40,22 +40,22 @@ As of this refresh:
 
 ---
 
-### Track 4 — GSD Quest Port
+### Track 4 — Waypoint Quest Port
 
 **Status:** Complete through P8.
 
 **Delivered:**
-- Main Quest: `quests/gsd.yaml`.
-- Full GSD-derived Recipe library: `recipes/gsd/*.yaml`.
-- Catalog Quest manifests for GSD-derived command workflows.
+- Main Quest: `quests/waypoint.yaml`.
+- Full Waypoint source-derived Recipe library: `recipes/waypoint/*.yaml`.
+- Catalog Quest manifests for Waypoint source-derived command workflows.
 - Machine-readable and human-readable command maps:
-  - `docs/quests/gsd-command-map.yaml`
-  - `docs/quests/gsd-command-map.md`
-- Operator guide: `docs/quests/gsd.md`.
+  - `docs/quests/waypoint-command-map.yaml`
+  - `docs/quests/waypoint-command-map.md`
+- Operator guide: `docs/quests/waypoint.md`.
 - Catalog: `docs/waypoint-quest-catalog.md`.
 - Close-out/status docs:
   - `WAYPOINT_RESUME_PLAN.md`
-  - `docs/plans/waypoint-gsd-port-status.md`
+  - `docs/plans/waypoint-source-port-status.md`
 
 **Explicitly deferred by Track 4:**
 - Folder-host runtime execution.
@@ -103,7 +103,7 @@ Resolved: Aaron selected the cleanup track after Track 3/H6 exposed the scaffold
 
 **Plan:** `docs/plans/waypoint-catalog-rename-and-workflow-scaffold-plan.md`.
 
-**Goal:** Replace active `gsd`/`gsd-*` naming with canonical `waypoint`/`waypoint-*` naming and fix scaffold execution so non-agent workflow checkpoints are not treated as Recipe slugs.
+**Goal:** Replace active `gsd`/`waypoint-*` naming with canonical `waypoint`/`waypoint-*` naming and fix scaffold execution so non-agent workflow checkpoints are not treated as Recipe slugs.
 
 **Why now:** H6 proved the Hermes/operator bridge but had to use a null/local/null runtime workaround because current scaffold `plan_ref` values are lifecycle checkpoint ids, not Recipe slugs. Aaron clarified that not every workflow checkpoint should execute an agent; Waypoint must support Recipe nodes plus gates, waits, delays, timers, dependency joins, checkpoints, and other workflow node semantics.
 
@@ -158,7 +158,7 @@ These are not the next road. They are parking-lot items to pull in when they unb
 - **Package publication:** private registry/GitHub install/tagging once emitted JS build output and global/bin install are tested.
 - **Forgejo remote:** add later if still wanted and credentials are available.
 - **First-class sub-Quest schema:** later schema evolution; current command/sub-Quest intent is metadata-backed.
-- **Optional `ns-*` commands:** deferred from GSD port.
+- **Optional `ns-*` commands:** deferred from Waypoint source port.
 - **Mission Control historical names:** `gsd_enabled` / `gsd_*` renames remain MC-side cleanup, not standalone folder-host work.
 - **Network sync/web UI:** future product tracks after the local folder host works.
 

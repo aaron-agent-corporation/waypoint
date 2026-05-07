@@ -17,7 +17,7 @@ describe('waypoint init/status commands', () => {
     const stdout: string[] = []
     const stderr: string[] = []
 
-    const exitCode = await runWaypointCli(['init', '--quest', 'gsd'], {
+    const exitCode = await runWaypointCli(['init', '--quest', 'waypoint'], {
       cwd,
       stdout: (line) => stdout.push(line),
       stderr: (line) => stderr.push(line),
@@ -28,7 +28,7 @@ describe('waypoint init/status commands', () => {
     expect(stdout.join('\n')).toContain('Initialized Waypoint project')
 
     const config = yamlParse(await readFile(join(cwd, '.waypoint/config.yaml'), 'utf8')) as Record<string, unknown>
-    expect(config.quest).toBe('gsd')
+    expect(config.quest).toBe('waypoint')
     expect(config.enabled).toBe(true)
   })
 
@@ -45,7 +45,7 @@ describe('waypoint init/status commands', () => {
     ).toBe(0)
     expect(beforeOutput.join('\n')).toContain('initialized: false')
 
-    await runWaypointCli(['init', '--quest', 'gsd'], {
+    await runWaypointCli(['init', '--quest', 'waypoint'], {
       cwd,
       stdout: () => undefined,
       stderr: () => undefined,
@@ -63,17 +63,17 @@ describe('waypoint init/status commands', () => {
     const statusText = afterOutput.join('\n')
     expect(statusText).toContain('initialized: true')
     expect(statusText).toContain('enabled: true')
-    expect(statusText).toContain('quest: gsd')
+    expect(statusText).toContain('quest: waypoint')
   })
 
   it('summarizes routes after a Quest starts', async () => {
     const cwd = await tempProject()
-    await runWaypointCli(['init', '--quest', 'gsd'], {
+    await runWaypointCli(['init', '--quest', 'waypoint'], {
       cwd,
       stdout: () => undefined,
       stderr: () => undefined,
     })
-    await runWaypointCli(['start', '--quest', 'gsd'], {
+    await runWaypointCli(['start', '--quest', 'waypoint'], {
       cwd,
       stdout: () => undefined,
       stderr: () => undefined,

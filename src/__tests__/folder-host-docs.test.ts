@@ -35,8 +35,8 @@ describe('folder host documentation', () => {
 
     for (const phrase of [
       'Waypoint folder-host Quest example',
-      'node ../../packages/waypoint-cli/src/bin.ts init --quest gsd',
-      'node ../../packages/waypoint-cli/src/bin.ts start --quest gsd',
+      'node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint',
+      'node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint',
       'node ../../packages/waypoint-cli/src/bin.ts discuss --task-id task-003',
       'node ../../packages/waypoint-cli/src/bin.ts auto --route-id route-001',
       '.waypoint/',
@@ -51,11 +51,11 @@ describe('folder host documentation', () => {
 
     for (const phrase of [
       'Waypoint folder host',
-      'waypoint init --quest gsd',
+      'waypoint init --quest waypoint',
       'waypoint status',
       'waypoint quests',
-      'waypoint recipes --quest gsd',
-      'waypoint start --quest gsd',
+      'waypoint recipes --quest waypoint',
+      'waypoint start --quest waypoint',
       'waypoint routes',
       'waypoint route --route-id route-001',
       'waypoint tasks --route-id route-001',

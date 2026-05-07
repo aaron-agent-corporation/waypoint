@@ -18,7 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(here, '..', '..')
 const questsDir = resolve(repoRoot, 'quests')
 const recipesDir = resolve(repoRoot, 'recipes')
-const commandMapPath = resolve(repoRoot, 'docs', 'quests', 'gsd-command-map.yaml')
+const commandMapPath = resolve(repoRoot, 'docs', 'quests', 'waypoint-command-map.yaml')
 
 type GsdCommandMap = {
   readonly schema_version: number
@@ -37,7 +37,7 @@ describe('worked examples at repo root', () => {
     expect(quests.ok).toBe(true)
     if (!quests.ok) throw new Error('quest load failed')
     expect(quests.registry.has('example')).toBe(true)
-    expect(quests.registry.has('gsd')).toBe(true)
+    expect(quests.registry.has('waypoint')).toBe(true)
     const p3SubQuestSlugs = [
       'debug',
       'spike',
@@ -87,29 +87,29 @@ describe('worked examples at repo root', () => {
     if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
     expect(recipes.registry.has('doc-writer')).toBe(true)
     expect(recipes.registry.has('reviewer')).toBe(true)
-    // Recursive loader also picks up ported GSD recipes under recipes/gsd/.
+    // Recursive loader also picks up ported GSD recipes under recipes/waypoint/.
     // Full GSD agent library port (33 agents).
     const gsdSlugs = recipes.registry
       .list()
       .map((r) => r.slug)
-      .filter((s) => s.startsWith('gsd-'))
+      .filter((s) => s.startsWith('waypoint-'))
     expect(gsdSlugs.length).toBe(33)
     // Spot-check a representative sample across categories.
-    expect(recipes.registry.has('gsd-doc-writer')).toBe(true)
-    expect(recipes.registry.has('gsd-assumptions-analyzer')).toBe(true)
-    expect(recipes.registry.has('gsd-advisor-researcher')).toBe(true)
-    expect(recipes.registry.has('gsd-debugger')).toBe(true)
-    expect(recipes.registry.has('gsd-executor')).toBe(true)
-    expect(recipes.registry.has('gsd-planner')).toBe(true)
-    expect(recipes.registry.has('gsd-verifier')).toBe(true)
-    expect(recipes.registry.has('gsd-security-auditor')).toBe(true)
+    expect(recipes.registry.has('waypoint-doc-writer')).toBe(true)
+    expect(recipes.registry.has('waypoint-assumptions-analyzer')).toBe(true)
+    expect(recipes.registry.has('waypoint-advisor-researcher')).toBe(true)
+    expect(recipes.registry.has('waypoint-debugger')).toBe(true)
+    expect(recipes.registry.has('waypoint-executor')).toBe(true)
+    expect(recipes.registry.has('waypoint-planner')).toBe(true)
+    expect(recipes.registry.has('waypoint-verifier')).toBe(true)
+    expect(recipes.registry.has('waypoint-security-auditor')).toBe(true)
 
     for (const slug of gsdSubQuestSlugs) {
       const subQuest = quests.registry.get(slug)
       expect(subQuest).toBeDefined()
       if (!subQuest) throw new Error(`missing sub-Quest ${slug}`)
-      expect((subQuest.metadata?.gsd_port as { scope?: unknown }).scope).toBe('command_informed_sub_quest')
-      expect((subQuest.metadata?.gsd_port as { source_command?: unknown }).source_command).toBe(
+      expect((subQuest.metadata?.source_port as { scope?: unknown }).scope).toBe('command_informed_sub_quest')
+      expect((subQuest.metadata?.source_port as { source_command?: unknown }).source_command).toBe(
         `commands/gsd/${slug}.md`,
       )
       const resolved = resolveQuestRecipes(subQuest, recipes.registry)
@@ -130,29 +130,29 @@ describe('worked examples at repo root', () => {
     if (!resolved.ok) throw new Error(JSON.stringify(resolved.error))
     expect(resolved.resolved.map((r) => r.slug)).toEqual(['doc-writer', 'reviewer'])
 
-    const gsd = quests.registry.get('gsd')
+    const gsd = quests.registry.get('waypoint')
     expect(gsd).toBeDefined()
     if (!gsd) return
-    expect(gsd.workflow).toBe('workflows/gsd.yaml')
+    expect(gsd.workflow).toBe('workflows/waypoint.yaml')
     expect(gsd.recipes).toEqual([
-      'gsd-doc-writer',
-      'gsd-project-researcher',
-      'gsd-roadmapper',
-      'gsd-assumptions-analyzer',
-      'gsd-codebase-mapper',
-      'gsd-phase-researcher',
-      'gsd-planner',
-      'gsd-plan-checker',
-      'gsd-executor',
-      'gsd-verifier',
-      'gsd-doc-synthesizer',
-      'gsd-code-reviewer',
+      'waypoint-doc-writer',
+      'waypoint-project-researcher',
+      'waypoint-roadmapper',
+      'waypoint-assumptions-analyzer',
+      'waypoint-codebase-mapper',
+      'waypoint-phase-researcher',
+      'waypoint-planner',
+      'waypoint-plan-checker',
+      'waypoint-executor',
+      'waypoint-verifier',
+      'waypoint-doc-synthesizer',
+      'waypoint-code-reviewer',
     ])
     expect(
       gsd.scaffolds?.workstreams?.[0]?.milestones?.[0]?.phases?.map((phase) => phase.phase_slug),
     ).toEqual(['initialize', 'discuss', 'plan', 'execute', 'verify', 'ship'])
     expect(
-      (gsd.metadata?.gsd_port as { phase_entrypoints?: unknown[] } | undefined)?.phase_entrypoints,
+      (gsd.metadata?.source_port as { phase_entrypoints?: unknown[] } | undefined)?.phase_entrypoints,
     ).toHaveLength(6)
     const gsdResolved = resolveQuestRecipes(gsd, recipes.registry)
     expect(gsdResolved.ok).toBe(true)

@@ -15,8 +15,8 @@ describe('folder host Quest example', () => {
 
     expect(gitignore).toContain('.waypoint/')
     expect(readme).toContain('Waypoint folder-host Quest example')
-    expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts init --quest gsd')
-    expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts start --quest gsd')
+    expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint')
+    expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint')
     expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts discuss --task-id task-003')
     expect(readme).toContain('node ../../packages/waypoint-cli/src/bin.ts auto --route-id route-001')
     expect(readme).toContain('rm -rf .waypoint')

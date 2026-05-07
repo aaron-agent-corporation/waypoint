@@ -13,9 +13,9 @@ import { listWaypointTasks } from './store'
 
 async function startedProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-tasks-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
-  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'gsd' })
-  await startQuestRoute(projectRoot, { quest: 'gsd', now: new Date('2026-05-07T12:00:00.000Z') })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
+  await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'waypoint' })
+  await startQuestRoute(projectRoot, { quest: 'waypoint', now: new Date('2026-05-07T12:00:00.000Z') })
   return projectRoot
 }
 
@@ -31,7 +31,7 @@ describe('Waypoint folder task store', () => {
       route_id: 'route-001',
       plan_ref: 'initialize-context',
       status: 'open',
-      kind: 'recipe',
+      kind: 'checkpoint',
     })
     expect(tasks.map((task) => task.plan_ref)).toContain('discuss-objective')
     expect(tasks.find((task) => task.plan_ref === 'discuss-objective')).toMatchObject({
@@ -41,12 +41,16 @@ describe('Waypoint folder task store', () => {
           discussion: {
             enabled: true,
             mode: 'agent_chat',
-            conversation_id: 'task:3:discussion:gsd-doc-writer',
-            agent: 'gsd-doc-writer',
+            conversation_id: 'task:3:discussion:waypoint-doc-writer',
+            agent: 'waypoint-doc-writer',
             status: 'active',
           },
         },
       },
+    })
+    expect(tasks.find((task) => task.plan_ref === 'plan-research')).toMatchObject({
+      kind: 'recipe',
+      metadata: { waypoint: { recipe: { slug: 'waypoint-phase-researcher' } } },
     })
     expect(tasks.find((task) => task.plan_ref === 'plan-approval-gate')).toMatchObject({ kind: 'gate' })
 

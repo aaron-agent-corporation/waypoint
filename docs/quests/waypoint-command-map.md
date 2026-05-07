@@ -1,0 +1,302 @@
+# GSD Command Map
+
+Generated from `docs/quests/waypoint-command-map.yaml`. The YAML file is the machine-readable inventory; this markdown file is the operator-readable view.
+
+This map translates the old get-shit-done-cc command surface into Waypoint artifacts. It does not claim that the old source CLI exists inside this repo. Commands become one of: the main `quests/waypoint.yaml` Quest, standalone Quest manifests, Recipe-backed catalog entries, Waypoint operator actions, or deferred optional namespace work.
+
+## Summary
+
+- Phase entrypoints in the main Waypoint Quest: 6
+- Command-informed sub-Quests: 8
+- Catalog Quests: 27
+- Operator actions: 18
+- Deferred optional namespace commands: 6
+- Total source commands: 65
+
+## Operator-action equivalents
+
+- `commands/gsd/pause-work.md` → `/waypoint pause`
+- `commands/gsd/resume-work.md` → `/waypoint resume`
+- `commands/gsd/autonomous.md` → `/waypoint auto`
+- `commands/gsd/progress.md` → `/waypoint status`
+- `commands/gsd/manager.md` → `/waypoint routes`
+- `commands/gsd/help.md` → `/waypoint help`
+
+## Full command mapping
+
+### Phase entrypoints in the main Waypoint Quest
+
+- `commands/gsd/discuss-phase.md`
+  - Command: `gsd:discuss-phase`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+- `commands/gsd/execute-phase.md`
+  - Command: `gsd:execute-phase`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+- `commands/gsd/new-project.md`
+  - Command: `gsd:new-project`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+- `commands/gsd/plan-phase.md`
+  - Command: `gsd:plan-phase`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+- `commands/gsd/ship.md`
+  - Command: `gsd:ship`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+- `commands/gsd/verify-work.md`
+  - Command: `gsd:verify-work`
+  - Target: `quests/waypoint.yaml metadata`
+  - Status: ported
+
+### Command-informed sub-Quests
+
+- `commands/gsd/ai-integration-phase.md`
+  - Command: `gsd:ai-integration-phase`
+  - Target: `quests/ai-integration-phase.yaml`
+  - Status: ported
+- `commands/gsd/debug.md`
+  - Command: `gsd:debug`
+  - Target: `quests/debug.yaml`
+  - Status: ported
+- `commands/gsd/secure-phase.md`
+  - Command: `gsd:secure-phase`
+  - Target: `quests/secure-phase.yaml`
+  - Status: ported
+- `commands/gsd/spec-phase.md`
+  - Command: `gsd:spec-phase`
+  - Target: `quests/spec-phase.yaml`
+  - Status: ported
+- `commands/gsd/spike.md`
+  - Command: `gsd:spike`
+  - Target: `quests/spike.yaml`
+  - Status: ported
+- `commands/gsd/ui-phase.md`
+  - Command: `gsd:ui-phase`
+  - Target: `quests/ui-phase.yaml`
+  - Status: ported
+- `commands/gsd/ultraplan-phase.md`
+  - Command: `gsd:ultraplan-phase`
+  - Target: `quests/ultraplan-phase.yaml`
+  - Status: ported
+- `commands/gsd/validate-phase.md`
+  - Command: `gsd:validate-phase`
+  - Target: `quests/validate-phase.yaml`
+  - Status: ported
+
+### Catalog Quests
+
+- `commands/gsd/add-tests.md`
+  - Command: `gsd:add-tests`
+  - Target: `quests/add-tests.yaml`
+  - Status: ported
+- `commands/gsd/audit-fix.md`
+  - Command: `gsd:audit-fix`
+  - Target: `quests/audit-fix.yaml`
+  - Status: ported
+- `commands/gsd/audit-milestone.md`
+  - Command: `gsd:audit-milestone`
+  - Target: `quests/audit-milestone.yaml`
+  - Status: ported
+- `commands/gsd/audit-uat.md`
+  - Command: `gsd:audit-uat`
+  - Target: `quests/audit-uat.yaml`
+  - Status: ported
+- `commands/gsd/cleanup.md`
+  - Command: `gsd:cleanup`
+  - Target: `quests/cleanup.yaml`
+  - Status: ported
+- `commands/gsd/code-review.md`
+  - Command: `gsd:code-review`
+  - Target: `quests/code-review.yaml`
+  - Status: ported
+- `commands/gsd/complete-milestone.md`
+  - Command: `gsd:complete-milestone`
+  - Target: `quests/complete-milestone.yaml`
+  - Status: ported
+- `commands/gsd/docs-update.md`
+  - Command: `gsd:docs-update`
+  - Target: `quests/docs-update.yaml`
+  - Status: ported
+- `commands/gsd/eval-review.md`
+  - Command: `gsd:eval-review`
+  - Target: `quests/eval-review.yaml`
+  - Status: ported
+- `commands/gsd/explore.md`
+  - Command: `gsd:explore`
+  - Target: `quests/explore.yaml`
+  - Status: ported
+- `commands/gsd/extract-learnings.md`
+  - Command: `gsd:extract-learnings`
+  - Target: `quests/extract-learnings.yaml`
+  - Status: ported
+- `commands/gsd/fast.md`
+  - Command: `gsd:fast`
+  - Target: `quests/fast.yaml`
+  - Status: ported
+- `commands/gsd/forensics.md`
+  - Command: `gsd:forensics`
+  - Target: `quests/forensics.yaml`
+  - Status: ported
+- `commands/gsd/graphify.md`
+  - Command: `gsd:graphify`
+  - Target: `quests/graphify.yaml`
+  - Status: ported
+- `commands/gsd/health.md`
+  - Command: `gsd:health`
+  - Target: `quests/health.yaml`
+  - Status: ported
+- `commands/gsd/ingest-docs.md`
+  - Command: `gsd:ingest-docs`
+  - Target: `quests/ingest-docs.yaml`
+  - Status: ported
+- `commands/gsd/map-codebase.md`
+  - Command: `gsd:map-codebase`
+  - Target: `quests/map-codebase.yaml`
+  - Status: ported
+- `commands/gsd/milestone-summary.md`
+  - Command: `gsd:milestone-summary`
+  - Target: `quests/milestone-summary.yaml`
+  - Status: ported
+- `commands/gsd/plan-review-convergence.md`
+  - Command: `gsd:plan-review-convergence`
+  - Target: `quests/plan-review-convergence.yaml`
+  - Status: ported
+- `commands/gsd/pr-branch.md`
+  - Command: `gsd:pr-branch`
+  - Target: `quests/pr-branch.yaml`
+  - Status: ported
+- `commands/gsd/profile-user.md`
+  - Command: `gsd:profile-user`
+  - Target: `quests/profile-user.yaml`
+  - Status: ported
+- `commands/gsd/quick.md`
+  - Command: `gsd:quick`
+  - Target: `quests/quick.yaml`
+  - Status: ported
+- `commands/gsd/review.md`
+  - Command: `gsd:review`
+  - Target: `quests/review.yaml`
+  - Status: ported
+- `commands/gsd/review-backlog.md`
+  - Command: `gsd:review-backlog`
+  - Target: `quests/review-backlog.yaml`
+  - Status: ported
+- `commands/gsd/sketch.md`
+  - Command: `gsd:sketch`
+  - Target: `quests/sketch.yaml`
+  - Status: ported
+- `commands/gsd/stats.md`
+  - Command: `gsd:stats`
+  - Target: `quests/stats.yaml`
+  - Status: ported
+- `commands/gsd/ui-review.md`
+  - Command: `gsd:ui-review`
+  - Target: `quests/ui-review.yaml`
+  - Status: ported
+
+### Operator actions
+
+- `commands/gsd/autonomous.md`
+  - Command: `gsd:autonomous`
+  - Target: `/waypoint auto`
+  - Status: documented
+- `commands/gsd/capture.md`
+  - Command: `gsd:capture`
+  - Target: operator backlog capture action
+  - Status: documented
+- `commands/gsd/config.md`
+  - Command: `gsd:config`
+  - Target: config action
+  - Status: documented
+- `commands/gsd/help.md`
+  - Command: `gsd:help`
+  - Target: `/waypoint help`
+  - Status: documented
+- `commands/gsd/import.md`
+  - Command: `gsd:import`
+  - Target: operator import action
+  - Status: documented
+- `commands/gsd/inbox.md`
+  - Command: `gsd:inbox`
+  - Target: operator backlog read action
+  - Status: documented
+- `commands/gsd/manager.md`
+  - Command: `gsd:manager`
+  - Target: `/waypoint routes`
+  - Status: documented
+- `commands/gsd/new-milestone.md`
+  - Command: `gsd:new-milestone`
+  - Target: Quest scaffolding action
+  - Status: documented
+- `commands/gsd/pause-work.md`
+  - Command: `gsd:pause-work`
+  - Target: `/waypoint pause`
+  - Status: documented
+- `commands/gsd/phase.md`
+  - Command: `gsd:phase`
+  - Target: inspection action
+  - Status: documented
+- `commands/gsd/progress.md`
+  - Command: `gsd:progress`
+  - Target: `/waypoint status`
+  - Status: documented
+- `commands/gsd/resume-work.md`
+  - Command: `gsd:resume-work`
+  - Target: `/waypoint resume`
+  - Status: documented
+- `commands/gsd/settings.md`
+  - Command: `gsd:settings`
+  - Target: config action
+  - Status: documented
+- `commands/gsd/thread.md`
+  - Command: `gsd:thread`
+  - Target: discussion-related action
+  - Status: documented
+- `commands/gsd/undo.md`
+  - Command: `gsd:undo`
+  - Target: operator rollback action
+  - Status: documented
+- `commands/gsd/update.md`
+  - Command: `gsd:update`
+  - Target: operator update action
+  - Status: documented
+- `commands/gsd/workspace.md`
+  - Command: `gsd:workspace`
+  - Target: inspection action
+  - Status: documented
+- `commands/gsd/workstreams.md`
+  - Command: `gsd:workstreams`
+  - Target: inspection action
+  - Status: documented
+
+### Deferred optional namespace commands
+
+These are deferred optional namespace commands. They are explicitly not implemented in the first catalog pass because they depend on future namespace/context-management semantics rather than the current Quest schema.
+
+- `commands/gsd/ns-context.md`
+  - Command: `gsd:ns-context`
+  - Target: not ported in first catalog pass
+  - Status: deferred
+- `commands/gsd/ns-ideate.md`
+  - Command: `gsd:ns-ideate`
+  - Target: not ported in first catalog pass
+  - Status: deferred
+- `commands/gsd/ns-manage.md`
+  - Command: `gsd:ns-manage`
+  - Target: not ported in first catalog pass
+  - Status: deferred
+- `commands/gsd/ns-project.md`
+  - Command: `gsd:ns-project`
+  - Target: not ported in first catalog pass
+  - Status: deferred
+- `commands/gsd/ns-review.md`
+  - Command: `gsd:ns-review`
+  - Target: not ported in first catalog pass
+  - Status: deferred
+- `commands/gsd/ns-workflow.md`
+  - Command: `gsd:ns-workflow`
+  - Target: not ported in first catalog pass
+  - Status: deferred

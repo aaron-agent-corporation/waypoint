@@ -116,11 +116,29 @@ function extractScaffoldPlans(scaffolds: unknown): ScaffoldPlan[] {
 
 function taskKindFor(metadata: Record<string, unknown> | undefined): WaypointFolderTaskKind {
   const waypoint = isRecord(metadata?.waypoint) ? metadata.waypoint : {}
+  const node = isRecord(waypoint.node) ? waypoint.node : {}
+  if (isWaypointFolderTaskKind(node.type)) return node.type
+  const recipe = isRecord(waypoint.recipe) ? waypoint.recipe : {}
+  if (typeof recipe.slug === 'string' && recipe.slug.trim()) return 'recipe'
   const discussion = isRecord(waypoint.discussion) ? waypoint.discussion : {}
   if (discussion.enabled === true) return 'discussion'
   const gate = isRecord(waypoint.gate) ? waypoint.gate : {}
   if (gate.required === true) return 'gate'
-  return 'recipe'
+  return 'checkpoint'
+}
+
+function isWaypointFolderTaskKind(value: unknown): value is WaypointFolderTaskKind {
+  return (
+    value === 'recipe' ||
+    value === 'discussion' ||
+    value === 'gate' ||
+    value === 'checkpoint' ||
+    value === 'wait' ||
+    value === 'delay' ||
+    value === 'timer' ||
+    value === 'dependency' ||
+    value === 'system'
+  )
 }
 
 function taskMetadataFor(taskNumber: number, metadata: Record<string, unknown> | undefined): Record<string, unknown> | undefined {

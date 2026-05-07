@@ -80,7 +80,46 @@ export async function runWaypointAutopilot(
       break
     }
 
-    const recipeSlug = recipeForTask(nextTask)
+    if (nextTask.kind === 'checkpoint') {
+      await updateWaypointTask(projectRoot, nextTask.id, {
+        status: 'done',
+        updated_at: timestampFor(options.now),
+      })
+      await updateWaypointRoute(projectRoot, routeId, {
+        status: 'active',
+        current_node: nextTask.plan_ref,
+        updated_at: timestampFor(options.now),
+      })
+      await appendRouteEvent(projectRoot, routeId, {
+        kind: 'route.autopilot.checkpoint.completed',
+        now: options.now,
+        payload: { task_id: nextTask.id, node: nextTask.plan_ref },
+      })
+      completedTasks.push(nextTask.id)
+      continue
+    }
+
+    if (isUnsupportedAutopilotTask(nextTask)) {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await updateWaypointTask(projectRoot, nextTask.id, {
+        status: 'blocked',
+        updated_at: timestampFor(options.now),
+      })
+      await updateWaypointRoute(projectRoot, routeId, {
+        status: 'blocked',
+        current_node: nextTask.plan_ref,
+        updated_at: timestampFor(options.now),
+      })
+      await appendRouteEvent(projectRoot, routeId, {
+        kind: 'route.autopilot.unsupported_node',
+        now: options.now,
+        payload: { task_id: nextTask.id, node: nextTask.plan_ref, kind: nextTask.kind },
+      })
+      break
+    }
+
+    const recipeSlug = recipeSlugForTask(nextTask)
     const recipe = runtime instanceof LocalRecipeRuntime ? await loadRecipeManifest(projectRoot, recipeSlug) : null
     const output = await runtime.runRecipe({
       routeId,
@@ -245,11 +284,23 @@ async function readAllAutopilotRuns(projectRoot: string): Promise<WaypointAutopi
     .map((line) => JSON.parse(line) as WaypointAutopilotRunRecord)
 }
 
-function recipeForTask(task: WaypointFolderTask): string {
+function recipeSlugForTask(task: WaypointFolderTask): string {
   const waypoint = isRecord(task.metadata?.waypoint) ? task.metadata.waypoint : {}
-  const discussion = isRecord(waypoint.discussion) ? waypoint.discussion : {}
-  if (typeof discussion.agent === 'string') return discussion.agent
-  return task.plan_ref
+  if (task.kind === 'discussion') {
+    const discussion = isRecord(waypoint.discussion) ? waypoint.discussion : {}
+    if (typeof discussion.agent === 'string' && discussion.agent.trim()) return discussion.agent.trim()
+    throw new Error(`Discussion task ${task.id} (${task.plan_ref}) is missing metadata.waypoint.discussion.agent`)
+  }
+  if (task.kind === 'recipe') {
+    const recipe = isRecord(waypoint.recipe) ? waypoint.recipe : {}
+    if (typeof recipe.slug === 'string' && recipe.slug.trim()) return recipe.slug.trim()
+    throw new Error(`Recipe task ${task.id} (${task.plan_ref}) is missing metadata.waypoint.recipe.slug`)
+  }
+  throw new Error(`Task ${task.id} (${task.plan_ref}) of kind ${task.kind} is not executable as a Recipe`)
+}
+
+function isUnsupportedAutopilotTask(task: WaypointFolderTask): boolean {
+  return task.kind === 'wait' || task.kind === 'delay' || task.kind === 'timer' || task.kind === 'dependency' || task.kind === 'system'
 }
 
 function mergeTaskMetadata(

@@ -8,8 +8,8 @@ import { runWaypointCli } from '../bin'
 
 async function startedProject(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'waypoint-cli-auto-'))
-  await runWaypointCli(['init', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
-  await runWaypointCli(['start', '--quest', 'gsd'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await runWaypointCli(['start', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   return cwd
 }
 

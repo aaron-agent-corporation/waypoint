@@ -69,7 +69,7 @@ Hosts typically expose two directories (recursive nesting supported):
 
 ```
 quests/
-  gsd.yaml
+  waypoint.yaml
   bugfix.yaml
   research/
     spike.yaml
@@ -85,7 +85,7 @@ recipes/
 
 ```yaml
 schema_version: 1
-slug: gsd
+slug: waypoint
 name: GSD full lifecycle
 description: Discover, plan, execute, verify, ship.
 
@@ -144,7 +144,7 @@ const recipesResult = await loadRecipesFromDirectory('./recipes')
 if (!questsResult.ok) throw new Error('Quest load failed')
 if (!recipesResult.ok) throw new Error('Recipe load failed')
 
-const quest = questsResult.registry.get('gsd')
+const quest = questsResult.registry.get('waypoint')
 if (!quest) throw new Error('Quest gsd not found')
 
 const resolved = resolveQuestRecipes(quest, recipesResult.registry)

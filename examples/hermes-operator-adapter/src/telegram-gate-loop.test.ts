@@ -27,8 +27,8 @@ async function runUnsafeSetupCommand(project: HermesProjectRecord, args: readonl
 
 async function startedBlockedProject(): Promise<{ project: HermesProjectRecord; cleanup: () => void }> {
   const fixture = makeProject()
-  await runUnsafeSetupCommand(fixture.project, ['init', '--quest', 'gsd'])
-  await runUnsafeSetupCommand(fixture.project, ['start', '--quest', 'gsd'])
+  await runUnsafeSetupCommand(fixture.project, ['init', '--quest', 'waypoint'])
+  await runUnsafeSetupCommand(fixture.project, ['start', '--quest', 'waypoint'])
   await runUnsafeSetupCommand(fixture.project, ['auto', '--route-id', 'route-001', '--max-iterations', '10'])
   return fixture
 }

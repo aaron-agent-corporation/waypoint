@@ -13,8 +13,8 @@
 ## Authority stack
 
 1. **Current repo state is source of truth.** At planning time the repo is `main` at `a6823a0`, clean, synced with `origin/main`, with `src/` containing core contracts, Quest/Recipe loaders, command parser, discussion helpers, route helpers, and tests.
-2. **Committed docs define accepted intent.** Relevant docs: `docs/plans/waypoint-folder-host.md`, `docs/plans/waypoint-remaining-roadmap.md`, `docs/waypoint-core-integration.md`, `docs/quests/gsd.md`, `docs/waypoint-quest-catalog.md`.
-3. **Prior chats provide rationale only.** The end goal is not “whatever comes next”; it is a usable folder host: `cd project && waypoint init --quest gsd && waypoint status` backed by real `.waypoint/` state.
+2. **Committed docs define accepted intent.** Relevant docs: `docs/plans/waypoint-folder-host.md`, `docs/plans/waypoint-remaining-roadmap.md`, `docs/waypoint-core-integration.md`, `docs/quests/waypoint.md`, `docs/waypoint-quest-catalog.md`.
+3. **Prior chats provide rationale only.** The end goal is not “whatever comes next”; it is a usable folder host: `cd project && waypoint init --quest waypoint && waypoint status` backed by real `.waypoint/` state.
 
 ---
 
@@ -24,11 +24,11 @@ By the end of this track, a user can run:
 
 ```bash
 cd ~/projects/project-quest
-waypoint init --quest gsd
+waypoint init --quest waypoint
 waypoint status
 waypoint quests
 waypoint recipes
-waypoint start --quest gsd
+waypoint start --quest waypoint
 waypoint routes
 waypoint route --route-id route-001
 waypoint discuss --task-id task-003 --message "Clarify the objective"
@@ -68,7 +68,7 @@ And Waypoint creates/maintains:
 - CLI commands for init/status/catalog/start/routes/route-events/gate/pause/resume/discuss/auto.
 - YAML-backed lifecycle and route state.
 - JSONL append-only route/discussion events.
-- Bundled Quest/Recipe catalog adoption, especially `gsd`.
+- Bundled Quest/Recipe catalog adoption, especially `waypoint`.
 - Null runtime first, then local runtime.
 - Tests proving behavior from a temporary folder, not mocked-only internals.
 
@@ -97,7 +97,7 @@ Phases:
 - F2 — bundled Quest/Recipe catalog commands
 - F3 — lifecycle YAML store and commands
 
-**Gate A:** In a temp folder, `waypoint init --quest gsd`, `waypoint status`, `waypoint quests`, and lifecycle add/list commands work and persist readable YAML.
+**Gate A:** In a temp folder, `waypoint init --quest waypoint`, `waypoint status`, `waypoint quests`, and lifecycle add/list commands work and persist readable YAML.
 
 ### Milestone B — Stateful route runtime with null Recipe execution
 
@@ -111,7 +111,7 @@ Phases:
 - F8 — task materialization and discussion JSONL
 - F9 — null-runtime autopilot
 
-**Gate B:** In a temp folder, `waypoint start --quest gsd`, `waypoint routes`, `waypoint route`, `waypoint route-events`, `waypoint discuss`, `waypoint gate`, and `waypoint auto --max-iterations N` work with all state visible under `.waypoint/`.
+**Gate B:** In a temp folder, `waypoint start --quest waypoint`, `waypoint routes`, `waypoint route`, `waypoint route-events`, `waypoint discuss`, `waypoint gate`, and `waypoint auto --max-iterations N` work with all state visible under `.waypoint/`.
 
 ### Milestone C — Local Recipe execution and operator-ready docs
 
@@ -190,7 +190,7 @@ pnpm typecheck
 ```yaml
 schema_version: 1
 enabled: true
-quest: gsd
+quest: waypoint
 runtime:
   recipe: null
 created_at: "2026-05-06T00:00:00.000Z"
@@ -198,7 +198,7 @@ updated_at: "2026-05-06T00:00:00.000Z"
 ```
 
 **Tasks:**
-1. RED: test `initWaypointProject(tmp, { quest: 'gsd' })` creates `.waypoint/config.yaml` and required subdirectories.
+1. RED: test `initWaypointProject(tmp, { quest: 'waypoint' })` creates `.waypoint/config.yaml` and required subdirectories.
 2. Implement root discovery and safe mkdir/write helpers.
 3. RED: test `readWaypointStatus(tmp)` reports missing/uninitialized before init and enabled after init.
 4. Implement status reader.
@@ -226,11 +226,11 @@ pnpm typecheck
 - Modify: `packages/waypoint-cli/src/commands/init.ts`
 
 **Tasks:**
-1. RED: test bundled loader finds repo-root `quests/gsd.yaml` and 33 `recipes/gsd/*.yaml` from the package/repo root.
+1. RED: test bundled loader finds repo-root `quests/waypoint.yaml` and 33 `recipes/waypoint/*.yaml` from the package/repo root.
 2. Implement catalog root resolution that works in repo dev mode.
-3. RED: test `waypoint quests` lists `gsd` and `waypoint recipes --quest gsd` lists referenced recipes.
+3. RED: test `waypoint quests` lists `waypoint` and `waypoint recipes --quest waypoint` lists referenced recipes.
 4. Implement CLI catalog commands.
-5. RED: test `waypoint init --quest gsd` records `quest: gsd` and installs or records catalog references in `.waypoint/`.
+5. RED: test `waypoint init --quest waypoint` records `quest: waypoint` and installs or records catalog references in `.waypoint/`.
 6. Implement catalog install/reference behavior. Prefer copying manifests into `.waypoint/quests` and `.waypoint/recipes` for local portability unless this creates maintenance pain.
 7. Commit: `feat(folder-host): add bundled Quest and Recipe catalog`.
 
@@ -308,7 +308,7 @@ pnpm typecheck
 
 ## F5 — Start Quest and scaffold project state
 
-**Objective:** `waypoint start --quest gsd` creates a route and scaffolds lifecycle state from the Quest manifest.
+**Objective:** `waypoint start --quest waypoint` creates a route and scaffolds lifecycle state from the Quest manifest.
 
 **Files:**
 - Create: `packages/waypoint-folder-host/src/quests/scaffold.ts`
@@ -316,14 +316,14 @@ pnpm typecheck
 - Create: `packages/waypoint-cli/src/commands/start.ts`
 
 **Tasks:**
-1. RED: starting `gsd` in an initialized temp project creates lifecycle workstreams/milestones/phases/plans from `quests/gsd.yaml` scaffolds.
+1. RED: starting `waypoint` in an initialized temp project creates lifecycle workstreams/milestones/phases/plans from `quests/waypoint.yaml` scaffolds.
 2. Implement scaffold application idempotently: rerunning start must not duplicate lifecycle rows.
-3. RED: starting `gsd` creates `route-001.yaml` and `route.started` event.
+3. RED: starting `waypoint` creates `route-001.yaml` and `route.started` event.
 4. Implement route start using loaded Quest manifest and recipe resolution.
-5. Wire CLI `waypoint start --quest gsd` and alias `waypoint start plan --plan-id P-1` only if the existing command parser supports it cleanly.
+5. Wire CLI `waypoint start --quest waypoint` and alias `waypoint start plan --plan-id P-1` only if the existing command parser supports it cleanly.
 6. Commit: `feat(folder-host): start Quest routes from local folders`.
 
-**Status:** Complete in `3afadee`. `waypoint start --quest gsd` now creates a route, appends `route.started`, and idempotently scaffolds 1 workstream, 1 milestone, 6 phases, and 12 plans from `quests/gsd.yaml`.
+**Status:** Complete in `3afadee`. `waypoint start --quest waypoint` now creates a route, appends `route.started`, and idempotently scaffolds 1 workstream, 1 milestone, 6 phases, and 12 plans from `quests/waypoint.yaml`.
 
 **Verification:**
 ```bash
@@ -414,7 +414,7 @@ pnpm typecheck
 6. Ensure agent-authored loop prevention is represented in metadata even though null runtime does not dispatch.
 7. Commit: `feat(folder-host): add task materialization and discussion logs`.
 
-**Status:** Complete. `waypoint start --quest gsd` now materializes `.waypoint/tasks/tasks.yaml` records for all Quest scaffold plans, including `recipe`, `discussion`, and `gate` task kinds. `waypoint tasks` lists those records, and `waypoint discuss --task-id <id> --message "..."` appends task-scoped JSONL discussion messages. Discussion-enabled tasks carry `waypoint.discussion` metadata with a stable conversation id from core conversation helpers; agent-authored messages record `auto_response.reason: agent_authored` so the local null runtime cannot recursively dispatch.
+**Status:** Complete. `waypoint start --quest waypoint` now materializes `.waypoint/tasks/tasks.yaml` records for all Quest scaffold plans, including `recipe`, `discussion`, and `gate` task kinds. `waypoint tasks` lists those records, and `waypoint discuss --task-id <id> --message "..."` appends task-scoped JSONL discussion messages. Discussion-enabled tasks carry `waypoint.discussion` metadata with a stable conversation id from core conversation helpers; agent-authored messages record `auto_response.reason: agent_authored` so the local null runtime cannot recursively dispatch.
 
 **Verification completed:**
 ```bash
@@ -425,8 +425,8 @@ pnpm typecheck
 
 **Smoke completed:**
 ```bash
-node packages/waypoint-cli/src/bin.ts init --quest gsd
-node packages/waypoint-cli/src/bin.ts start --quest gsd
+node packages/waypoint-cli/src/bin.ts init --quest waypoint
+node packages/waypoint-cli/src/bin.ts start --quest waypoint
 node packages/waypoint-cli/src/bin.ts tasks --route-id route-001
 node packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --message "Need acceptance criteria"
 node packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --author agent --message "Agent reply"
@@ -473,8 +473,8 @@ pnpm typecheck
 
 **Smoke completed:**
 ```bash
-node packages/waypoint-cli/src/bin.ts init --quest gsd
-node packages/waypoint-cli/src/bin.ts start --quest gsd
+node packages/waypoint-cli/src/bin.ts init --quest waypoint
+node packages/waypoint-cli/src/bin.ts start --quest waypoint
 node packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 10
 node packages/waypoint-cli/src/bin.ts auto status
 node packages/waypoint-cli/src/bin.ts tasks --route-id route-001
@@ -532,8 +532,8 @@ pnpm typecheck
 
 **Smoke completed:**
 ```bash
-node packages/waypoint-cli/src/bin.ts init --quest gsd
-node packages/waypoint-cli/src/bin.ts start --quest gsd
+node packages/waypoint-cli/src/bin.ts init --quest waypoint
+node packages/waypoint-cli/src/bin.ts start --quest waypoint
 # overwrite temp `.waypoint/config.yaml` with runtime.recipe: local, command: node, args: ["./capture-runtime.mjs", "./payload.json"]
 node packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 1
 node packages/waypoint-cli/src/bin.ts route-events --route-id route-001 --limit 5
@@ -575,8 +575,8 @@ pnpm typecheck
 **Smoke completed:**
 ```bash
 cd examples/folder-host-quest
-node ../../packages/waypoint-cli/src/bin.ts init --quest gsd
-node ../../packages/waypoint-cli/src/bin.ts start --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint
+node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint
 node ../../packages/waypoint-cli/src/bin.ts routes
 node ../../packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 1
 node ../../packages/waypoint-cli/src/bin.ts auto status
@@ -644,7 +644,7 @@ The track is done when all of these are true and verified in the same closeout t
 
 - `pnpm test` passes.
 - `pnpm typecheck` exits 0.
-- A temp-folder smoke script initializes a project, starts `gsd`, lists routes, posts discussion, handles a gate, and runs null autopilot.
+- A temp-folder smoke script initializes a project, starts `waypoint`, lists routes, posts discussion, handles a gate, and runs null autopilot.
 - The README and folder-host docs tell a new user exactly how to repeat the smoke.
 - `.waypoint/` state is inspectable and contains config, lifecycle, route, event, and task/discussion files.
 - Deferred items are explicitly listed, especially network sync, multi-user collaboration, MC cutover, and real Hermes gateway integration.

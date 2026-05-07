@@ -16,7 +16,7 @@ import {
 
 async function tempProject(): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-lifecycle-'))
-  await initWaypointProject(projectRoot, { quest: 'gsd' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint' })
   return projectRoot
 }
 

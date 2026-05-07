@@ -27,8 +27,8 @@ describe('@waypoint/core discussion/auto-response-contract', () => {
       schema_version: 1,
       task_id: 123,
       project_id: 42,
-      conversation_id: 'task:123:discussion:gsd-doc-drafter',
-      agent: 'gsd-doc-drafter',
+      conversation_id: 'task:123:discussion:waypoint-doc-drafter',
+      agent: 'waypoint-doc-drafter',
       content: 'Please clarify the acceptance criteria.',
       authored_by: 'user',
       requested_at: 1777720000,
@@ -46,7 +46,7 @@ describe('@waypoint/core discussion/auto-response-contract', () => {
     // Required shape present
     expect(payload.schema_version).toBe(1)
     expect(payload.task_id).toBe(123)
-    expect(payload.conversation_id).toBe('task:123:discussion:gsd-doc-drafter')
+    expect(payload.conversation_id).toBe('task:123:discussion:waypoint-doc-drafter')
     expect(payload.authored_by).toBe('user')
 
     // Field type assertions (compile-time)

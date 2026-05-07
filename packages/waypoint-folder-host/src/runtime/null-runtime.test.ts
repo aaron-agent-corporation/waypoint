@@ -10,13 +10,13 @@ describe('NullRecipeRuntime', () => {
       runtime.runRecipe({
         routeId: 'route-001',
         taskId: 'task-001',
-        recipe: 'gsd-doc-writer',
+        recipe: 'waypoint-doc-writer',
         projectRoot: '/tmp/project',
       }),
     ).resolves.toEqual({
       status: 'simulated',
       runtime: 'null',
-      recipe: 'gsd-doc-writer',
+      recipe: 'waypoint-doc-writer',
       task_id: 'task-001',
       route_id: 'route-001',
     })

@@ -21,17 +21,17 @@ describe('createQuestRegistry', () => {
 
   it('adds a manifest and returns ok', () => {
     const r = createQuestRegistry()
-    const result = r.add(sampleQuest('gsd'))
+    const result = r.add(sampleQuest('waypoint'))
     expect(result.ok).toBe(true)
     expect(r.size).toBe(1)
-    expect(r.has('gsd')).toBe(true)
-    expect(r.get('gsd')?.slug).toBe('gsd')
+    expect(r.has('waypoint')).toBe(true)
+    expect(r.get('waypoint')?.slug).toBe('waypoint')
   })
 
   it('returns slug_collision error on duplicate slug', () => {
     const r = createQuestRegistry()
-    r.add(sampleQuest('gsd'))
-    const result = r.add(sampleQuest('gsd'))
+    r.add(sampleQuest('waypoint'))
+    const result = r.add(sampleQuest('waypoint'))
     expect(result.ok).toBe(false)
     if (result.ok) throw new Error('expected failure')
     expect(result.error.code).toBe('slug_collision')
@@ -62,7 +62,7 @@ describe('createQuestRegistry', () => {
 
   it('has returns false for unknown slug', () => {
     const r = createQuestRegistry()
-    r.add(sampleQuest('gsd'))
+    r.add(sampleQuest('waypoint'))
     expect(r.has('other')).toBe(false)
   })
 })

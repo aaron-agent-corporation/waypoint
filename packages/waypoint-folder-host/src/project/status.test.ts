@@ -25,12 +25,12 @@ describe('readWaypointStatus', () => {
 
   it('reports enabled project config after init', async () => {
     const projectRoot = await tempProject()
-    await initWaypointProject(projectRoot, { quest: 'gsd' })
+    await initWaypointProject(projectRoot, { quest: 'waypoint' })
 
     const status = await readWaypointStatus(projectRoot)
 
     expect(status.initialized).toBe(true)
     expect(status.enabled).toBe(true)
-    expect(status.quest).toBe('gsd')
+    expect(status.quest).toBe('waypoint')
   })
 })

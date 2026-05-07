@@ -42,17 +42,17 @@ A Waypoint installation (whether MC-hosted or folder-hosted) exposes:
 ```
 waypoint/
 ├── quests/
-│   ├── gsd.yaml                    # the GSD lifecycle as a Quest
+│   ├── waypoint.yaml                    # the GSD lifecycle as a Quest
 │   ├── bugfix.yaml                 # short-loop bugfix Quest (future)
 │   ├── research-spike.yaml         # research-only Quest (future)
 │   └── content-publish.yaml        # content pipeline Quest (future)
 │
 ├── recipes/
-│   ├── doc-writer.yaml             # ported from gsd-doc-writer
-│   ├── planner.yaml                # ported from gsd-planner
-│   ├── executor.yaml               # ported from gsd-executor
-│   ├── verifier.yaml               # ported from gsd-verifier
-│   ├── debugger.yaml               # ported from gsd-debugger
+│   ├── doc-writer.yaml             # ported from waypoint-doc-writer
+│   ├── planner.yaml                # ported from waypoint-planner
+│   ├── executor.yaml               # ported from waypoint-executor
+│   ├── verifier.yaml               # ported from waypoint-verifier
+│   ├── debugger.yaml               # ported from waypoint-debugger
 │   └── ... (one per ported agent)
 │
 └── templates/                      # optional: per-Quest project templates
@@ -69,12 +69,12 @@ A Quest is a YAML workflow definition with Quest-level metadata at the top.
 ```yaml
 schema_version: 1
 kind: quest
-id: gsd
-name: Get Shit Done
+id: waypoint
+name: Waypoint
 version: 1
 description: |
   Opinionated lifecycle: initialize → discuss → plan → execute → verify → ship.
-  Based on the GSD CLI by @your-source.
+  Based on the source CLI by @your-source.
 
 # what subject type this Quest produces a route for
 subject_type: waypoint_project
@@ -193,7 +193,7 @@ runtime:
 
 # the agent's system prompt
 prompt: |
-  You are a document writer for the Waypoint GSD Quest. Your job is to draft
+  You are a document writer for the Waypoint Waypoint Quest. Your job is to draft
   project documentation based on operator input.
 
   Rules:
@@ -202,7 +202,7 @@ prompt: |
   3. Never invent facts — if a fact is unknown, mark it as TBD.
   4. When done, produce a single coherent markdown document.
 
-  [... full prompt body, ported from gsd-doc-writer.md ...]
+  [... full prompt body, ported from waypoint-doc-writer.md ...]
 
 # tools this recipe is allowed to use
 tools:
@@ -248,24 +248,24 @@ Recipes are **runtime-backend-agnostic** — the Recipe says "here's the prompt 
 ## How a project adopts a Quest
 
 ```
-waypoint init --quest gsd
+waypoint init --quest waypoint
 ```
 
 This:
-1. Reads `quests/gsd.yaml`
+1. Reads `quests/waypoint.yaml`
 2. Scaffolds the lifecycle skeleton in the project (workstream → milestone → phases) per the Quest's `scaffolds:` block
 3. Writes project-local state to `.waypoint/` (folder-host) or DB rows (MC-host)
-4. Sets the project's default Quest to `gsd`
+4. Sets the project's default Quest to `waypoint`
 
 Later:
 
 ```
-waypoint start --quest gsd
+waypoint start --quest waypoint
 ```
 
 Starts a route against the scaffolded plan(s), which drives execution through the DAG.
 
-Projects can also adopt multiple Quests (e.g., a long-running `gsd` Quest for main development plus ad-hoc `bugfix` Quests that run on-demand).
+Projects can also adopt multiple Quests (e.g., a long-running `waypoint` Quest for main development plus ad-hoc `bugfix` Quests that run on-demand).
 
 ## Core contract additions
 
@@ -293,7 +293,7 @@ The existing `workflows/waypoint-plan-execution.yaml` etc. stay valid — they'r
 
 ## Out of scope for this doc
 
-- Exact port of GSD's 33 agents → that's in `waypoint-gsd-quest-port.md`.
+- Exact port of GSD's 33 agents → that's in `waypoint-waypoint-quest-port.md`.
 - Folder-host CLI wiring → that's in `waypoint-folder-host.md`.
 - Recipe runtime backend adapters (Hermes, Claude Code, etc.) → a separate plan.
 
@@ -302,8 +302,8 @@ The existing `workflows/waypoint-plan-execution.yaml` etc. stay valid — they'r
 This plan is "complete" when:
 
 1. `QuestManifest` and `RecipeManifest` types + parsers exist in `@waypoint/core`.
-2. A `quests/gsd.yaml` and at least one `recipes/*.yaml` exist and parse cleanly.
+2. A `quests/waypoint.yaml` and at least one `recipes/*.yaml` exist and parse cleanly.
 3. Core contract tests prove registry resolution works (Quest references valid recipe → ok; Quest references missing recipe → error).
-4. The `gsd-lifecycle-workflow` port plan (`waypoint-gsd-quest-port.md`) is authored and can begin execution.
+4. The `waypoint-lifecycle-workflow` port plan (`waypoint-waypoint-quest-port.md`) is authored and can begin execution.
 
 None of those are done yet. This doc is the design.

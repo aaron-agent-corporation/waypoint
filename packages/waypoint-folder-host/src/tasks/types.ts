@@ -1,5 +1,14 @@
 export type WaypointFolderTaskStatus = 'open' | 'in_progress' | 'blocked' | 'done' | 'failed'
-export type WaypointFolderTaskKind = 'recipe' | 'discussion' | 'gate'
+export type WaypointFolderTaskKind =
+  | 'recipe'
+  | 'discussion'
+  | 'gate'
+  | 'checkpoint'
+  | 'wait'
+  | 'delay'
+  | 'timer'
+  | 'dependency'
+  | 'system'
 
 export interface WaypointFolderTask {
   readonly id: string

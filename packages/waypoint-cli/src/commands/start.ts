@@ -3,7 +3,7 @@ import { startQuestRoute } from '../../../waypoint-folder-host/src/routes/start.
 import type { WaypointCliIo } from '../bin.ts'
 
 export async function runStartCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
-  const quest = readOption(args, '--quest') ?? 'gsd'
+  const quest = readOption(args, '--quest') ?? 'waypoint'
 
   try {
     const route = await startQuestRoute(io.cwd ?? process.cwd(), { quest })

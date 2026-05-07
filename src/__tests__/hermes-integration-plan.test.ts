@@ -116,7 +116,7 @@ describe('Hermes integration plan', () => {
       'H3 status: complete',
       'examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs',
       'F10 Recipe execution payload',
-      'gsd-planner → planner-capable Hermes/Gary execution',
+      'waypoint-planner → planner-capable Hermes/Gary execution',
       'unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty',
       'non-zero adapter exit should be persisted by the existing local runtime as task/route failure',
       'schema_version: 1',

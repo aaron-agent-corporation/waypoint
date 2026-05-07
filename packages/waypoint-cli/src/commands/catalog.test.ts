@@ -24,18 +24,18 @@ describe('catalog commands', () => {
 
     expect(exitCode).toBe(0)
     expect(stderr).toEqual([])
-    expect(stdout.join('\n')).toContain('gsd')
+    expect(stdout.join('\n')).toContain('waypoint')
     expect(stdout.join('\n')).toContain('Waypoint Quests')
   })
 
   it('lists Recipes referenced by a bundled Quest', async () => {
     const { io, stdout, stderr } = makeIo()
 
-    const exitCode = await runWaypointCli(['recipes', '--quest', 'gsd'], io)
+    const exitCode = await runWaypointCli(['recipes', '--quest', 'waypoint'], io)
 
     expect(exitCode).toBe(0)
     expect(stderr).toEqual([])
-    expect(stdout.join('\n')).toContain('Recipes for Quest: gsd')
-    expect(stdout.join('\n')).toContain('gsd-doc-writer')
+    expect(stdout.join('\n')).toContain('Recipes for Quest: waypoint')
+    expect(stdout.join('\n')).toContain('waypoint-doc-writer')
   })
 })

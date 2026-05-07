@@ -19,8 +19,8 @@ function projectRecord(path: string): HermesProjectRecord {
 async function startedProject(): Promise<{ readonly root: string; readonly project: HermesProjectRecord }> {
   const root = mkdtempSync(resolve(tmpdir(), 'waypoint-hermes-discussion-loop-'))
   const project = projectRecord(root)
-  await runUnsafeSetupCommand(project, ['init', '--quest', 'gsd'])
-  await runUnsafeSetupCommand(project, ['start', '--quest', 'gsd'])
+  await runUnsafeSetupCommand(project, ['init', '--quest', 'waypoint'])
+  await runUnsafeSetupCommand(project, ['start', '--quest', 'waypoint'])
   return { root, project }
 }
 
@@ -71,17 +71,17 @@ describe('Hermes discussion loop reference adapter', () => {
 
       expect(result).toMatchObject({
         taskId: 'task-003',
-        conversationId: 'task:3:discussion:gsd-doc-writer',
-        agent: 'gsd-doc-writer',
+        conversationId: 'task:3:discussion:waypoint-doc-writer',
+        agent: 'waypoint-doc-writer',
         userMessageId: 'message-001',
         agentMessageId: 'message-002',
         loopPrevention: { requested: false, reason: 'agent_authored' },
       })
       expect(calls).toEqual([
         {
-          recipeSlug: 'gsd-doc-writer',
+          recipeSlug: 'waypoint-doc-writer',
           taskId: 'task-003',
-          conversationId: 'task:3:discussion:gsd-doc-writer',
+          conversationId: 'task:3:discussion:waypoint-doc-writer',
           userMessage: 'What acceptance criteria do you need?',
         },
       ])
@@ -89,7 +89,7 @@ describe('Hermes discussion loop reference adapter', () => {
       const discussion = await runSafeWaypointCommand(project, ['discuss', '--task-id', 'task-003'])
       expect(discussion.stdout).toContain('- message-001 user')
       expect(discussion.stdout).toContain('- message-002 agent')
-      expect(discussion.stdout).toContain('auto_response: requested=false reason=agent_authored agent=gsd-doc-writer')
+      expect(discussion.stdout).toContain('auto_response: requested=false reason=agent_authored agent=waypoint-doc-writer')
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
@@ -106,8 +106,8 @@ describe('Hermes discussion loop reference adapter', () => {
 
       expect(result).toMatchObject({
         taskId: 'task-003',
-        conversationId: 'task:3:discussion:gsd-doc-writer',
-        agent: 'gsd-doc-writer',
+        conversationId: 'task:3:discussion:waypoint-doc-writer',
+        agent: 'waypoint-doc-writer',
         userMessageId: 'message-001',
         agentMessageId: null,
       })

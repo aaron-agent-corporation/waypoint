@@ -1,19 +1,19 @@
-# Waypoint GSD catalog Quest port from commands/gsd/audit-fix.md.
+# Waypoint source-derived catalog Quest from commands/gsd/audit-fix.md.
 #
 # Current Quest schema has no first-class command graph field, so command
-# mapping and orchestration intent are preserved in metadata.gsd_port.
+# mapping and orchestration intent are preserved in metadata.source_port.
 
 schema_version: 1
 slug: audit-fix
 name: Audit Fix Quest
 description: >
   Waypoint catalog Quest port of gsd:audit-fix for autonomous audit-to-fix pipeline that classifies findings, fixes auto-fixable issues, and verifies results.
-workflow: workflows/gsd/audit-fix.yaml
+workflow: workflows/waypoint/audit-fix.yaml
 
 recipes:
-  - gsd-code-reviewer
-  - gsd-code-fixer
-  - gsd-verifier
+  - waypoint-code-reviewer
+  - waypoint-code-fixer
+  - waypoint-verifier
 
 scaffolds:
   workstreams:
@@ -43,9 +43,9 @@ metadata:
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
     license: MIT
   tags:
-    - gsd-port
+    - waypoint-port
     - quest-catalog
-  gsd_port:
+  source_port:
     scope: command_informed_sub_quest
     category: audit_review
     role: audit / review sub-Quest
