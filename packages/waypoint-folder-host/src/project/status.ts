@@ -57,7 +57,7 @@ function summarizeRoutes(routes: readonly WaypointFolderRoute[]): WaypointProjec
     total: routes.length,
     active: routes.filter((route) => route.status === 'active').length,
     blocked: routes.filter((route) => route.status === 'blocked').length,
-    blockedGates: 0,
+    blockedGates: routes.filter((route) => route.status === 'blocked' && route.current_node?.includes('gate')).length,
   }
 }
 

@@ -52,7 +52,8 @@ export type {
   LifecycleState,
   LifecycleWorkstream,
 } from './lifecycle/types.ts'
-export { createWaypointRoute, getWaypointRoute, listWaypointRoutes } from './routes/store.ts'
+export { createWaypointRoute, getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from './routes/store.ts'
+export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resumeWaypointRoute } from './routes/state.ts'
 export { startQuestRoute } from './routes/start.ts'
 export type { StartQuestRouteOptions, StartedQuestRoute } from './routes/start.ts'
 export { applyQuestScaffold } from './quests/scaffold.ts'

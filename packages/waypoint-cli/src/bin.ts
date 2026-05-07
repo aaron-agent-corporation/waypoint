@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 import rootPackage from '../../../package.json' with { type: 'json' }
+import { runGateCommand } from './commands/gate.ts'
 import { runInitCommand } from './commands/init.ts'
 import { runLifecycleCommand } from './commands/lifecycle.ts'
+import { runPauseCommand } from './commands/pause.ts'
 import { runQuestsCommand } from './commands/quests.ts'
 import { runRouteCommand } from './commands/route.ts'
 import { runRouteEventsCommand } from './commands/route-events.ts'
 import { runRecipesCommand } from './commands/recipes.ts'
+import { runResumeCommand } from './commands/resume.ts'
 import { runRoutesCommand } from './commands/routes.ts'
 import { runStartCommand } from './commands/start.ts'
 import { runStatusCommand } from './commands/status.ts'
@@ -31,6 +34,9 @@ Usage:
   waypoint routes [--json]
   waypoint route --route-id <id> [--json]
   waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
+  waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
+  waypoint pause --route-id <id> [--reason <text>]
+  waypoint resume --route-id <id>
   waypoint lifecycle add workstream --key <key> --name <name>
   waypoint lifecycle add milestone --workstream <key> --key <key> --title <title>
   waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
@@ -85,6 +91,18 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'route-events') {
     return runRouteEventsCommand(args.slice(1), io)
+  }
+
+  if (command === 'gate') {
+    return runGateCommand(args.slice(1), io)
+  }
+
+  if (command === 'pause') {
+    return runPauseCommand(args.slice(1), io)
+  }
+
+  if (command === 'resume') {
+    return runResumeCommand(args.slice(1), io)
   }
 
   io.stderr(`Unknown Waypoint command: ${command}`)

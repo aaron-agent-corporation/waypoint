@@ -57,6 +57,18 @@ export async function getWaypointRoute(projectRoot: string, routeId: string): Pr
   }
 }
 
+export async function updateWaypointRoute(
+  projectRoot: string,
+  routeId: string,
+  patch: Partial<Pick<WaypointFolderRoute, 'status' | 'current_node' | 'updated_at' | 'metadata'>>,
+): Promise<WaypointFolderRoute> {
+  const existing = await getWaypointRoute(projectRoot, routeId)
+  if (!existing) throw new Error(`Route not found: ${routeId}`)
+  const updated: WaypointFolderRoute = { ...existing, ...patch }
+  await writeFile(routeFilePath(projectRoot, routeId), yamlStringify({ schema_version: ROUTE_SCHEMA_VERSION, route: updated }), 'utf8')
+  return updated
+}
+
 async function readRouteFile(filePath: string): Promise<WaypointFolderRoute> {
   const parsed = yamlParse(await readFile(filePath, 'utf8')) as { route?: WaypointFolderRoute } | null
   if (!parsed?.route) {
