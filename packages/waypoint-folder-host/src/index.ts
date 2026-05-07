@@ -53,6 +53,10 @@ export type {
   LifecycleWorkstream,
 } from './lifecycle/types.ts'
 export { createWaypointRoute, getWaypointRoute, listWaypointRoutes } from './routes/store.ts'
+export { startQuestRoute } from './routes/start.ts'
+export type { StartQuestRouteOptions, StartedQuestRoute } from './routes/start.ts'
+export { applyQuestScaffold } from './quests/scaffold.ts'
+export type { AppliedQuestScaffoldSummary, ApplyQuestScaffoldOptions } from './quests/scaffold.ts'
 export type {
   CreateWaypointRouteInput,
   WaypointFolderRoute,
