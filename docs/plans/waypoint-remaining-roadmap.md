@@ -93,21 +93,21 @@ As of this refresh:
 
 ## Next track selection
 
-Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mission Control cutover.
+Resolved: Aaron selected the cleanup track after Track 3/H6 exposed the scaffold execution mismatch and confirmed active GSD naming should be replaced with Waypoint naming.
 
 ## Active destination
 
-### Track 3 — Hermes Runtime + Operator Bridge
+### Cleanup Track — Waypoint Catalog Rename + Workflow Scaffold
 
-**Status:** Active — H6 end-to-end Hermes smoke complete.
+**Status:** Active — plan written after Track 3/H6.
 
-**Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
+**Plan:** `docs/plans/waypoint-catalog-rename-and-workflow-scaffold-plan.md`.
 
-**Goal:** Make Hermes the real runtime and conversational operator layer for standalone Waypoint folders before bridging Waypoint back into Mission Control.
+**Goal:** Replace active `gsd`/`gsd-*` naming with canonical `waypoint`/`waypoint-*` naming and fix scaffold execution so non-agent workflow checkpoints are not treated as Recipe slugs.
 
-**Why now:** Aaron chose Hermes first because proving real Recipe execution and operator interaction against the folder host should make the later Mission Control bridge an adapter/UI problem instead of a runtime design problem.
+**Why now:** H6 proved the Hermes/operator bridge but had to use a null/local/null runtime workaround because current scaffold `plan_ref` values are lifecycle checkpoint ids, not Recipe slugs. Aaron clarified that not every workflow checkpoint should execute an agent; Waypoint must support Recipe nodes plus gates, waits, delays, timers, dependency joins, checkpoints, and other workflow node semantics.
 
-**Boundary:** `.waypoint/` remains the standalone source of truth. Hermes is the agent runtime and operator shell. Telegram is the human review/gate surface. Mission Control bridge remains later.
+**Boundary:** GSD remains source attribution/history only. There is no requirement to preserve active `gsd` slugs or aliases. Mission Control database/table renames remain later MC-side work.
 
 ---
 

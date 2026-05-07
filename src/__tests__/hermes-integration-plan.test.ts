@@ -9,13 +9,14 @@ function readRepoFile(path: string): string {
 }
 
 describe('Hermes integration plan', () => {
-  it('records Track 3 as the selected active destination in the roadmap', () => {
+  it('records the cleanup track as the selected active destination after H6', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
-    expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H6 end-to-end Hermes smoke complete')
-    expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
-    expect(roadmap).toContain('Mission Control bridge remains later')
+    expect(roadmap).toContain('### Cleanup Track — Waypoint Catalog Rename + Workflow Scaffold')
+    expect(roadmap).toContain('**Status:** Active — plan written after Track 3/H6')
+    expect(roadmap).toContain('docs/plans/waypoint-catalog-rename-and-workflow-scaffold-plan.md')
+    expect(roadmap).toContain('not every workflow checkpoint should execute an agent')
+    expect(roadmap).toContain('There is no requirement to preserve active `gsd` slugs or aliases')
   })
 
   it('defines the folder-host first Hermes integration contract boundary', () => {
