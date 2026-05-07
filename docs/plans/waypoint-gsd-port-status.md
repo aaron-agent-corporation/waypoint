@@ -76,7 +76,20 @@ This table tracks only the ported artifacts.
 
 | Upstream command        | Category          | Target artifact                  | Status |
 |-------------------------|-------------------|----------------------------------|--------|
-| (none yet)              |                   |                                  | ☐      |
+| new-project.md          | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| discuss-phase.md        | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| plan-phase.md           | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| execute-phase.md        | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| verify-work.md          | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| ship.md                 | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
+| debug.md                | sub-Quest         | quests/debug.yaml                | ✅     |
+| spike.md                | sub-Quest         | quests/spike.yaml                | ✅     |
+| ui-phase.md             | sub-Quest         | quests/ui-phase.yaml             | ✅     |
+| spec-phase.md           | sub-Quest         | quests/spec-phase.yaml           | ✅     |
+| secure-phase.md         | sub-Quest         | quests/secure-phase.yaml         | ✅     |
+| ai-integration-phase.md | sub-Quest         | quests/ai-integration-phase.yaml | ✅     |
+| ultraplan-phase.md      | sub-Quest         | quests/ultraplan-phase.yaml      | ✅     |
+| validate-phase.md       | sub-Quest         | quests/validate-phase.yaml       | ✅     |
 
 ## Main GSD Quest
 
@@ -89,14 +102,14 @@ under `metadata.gsd_port` in the manifest.
 
 ## Execution order
 
-Per `docs/plans/waypoint-gsd-quest-port.md`:
+Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes the fabricated P2–P8 narrative):
 
-- **P0** — attribution + scaffolding + first worked Recipe port ✅ (this commit)
-- **P1** — Recipe port sweep (remaining 32 agents) ✅
-- **P2** — Main Quest manifest (`quests/gsd.yaml`)
-- **P3** — Sub-Quests (debug, forensics, etc.)
-- **P4** — Discuss-phase wiring (task-discussion integration)
-- **P5** — Execute-phase wiring (multi-plan parallel waves)
-- **P6** — Verify + ship wiring
-- **P7** — End-to-end Quest smoke test (init → ship, headless fixture)
-- **P8** — Docs + public template catalog
+- **P0** — attribution + scaffolding + first worked Recipe port ✅
+- **P1** — Recipe port sweep (33 total GSD Recipes) ✅
+- **P2** — Main Quest manifest (`quests/gsd.yaml`) ✅
+- **P3** — Command-informed first-batch sub-Quests ✅
+- **P4** — Remaining Quest catalog manifests / operator-action mappings ☐
+- **P5** — Structural smoke coverage for the full GSD port ☐
+- **P6** — Operator docs and command mapping ☐
+- **P7** — Catalog close-out and attribution/license check ☐
+- **P8** — Close-out gate ☐

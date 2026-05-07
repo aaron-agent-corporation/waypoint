@@ -1,0 +1,59 @@
+# Waypoint GSD sub-Quest port from commands/gsd/spike.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: spike
+name: Spike Quest
+description: >
+  Waypoint sub-Quest port of gsd:spike for focused experiential exploration before committing to a build path.
+workflow: workflows/gsd/spike.yaml
+
+recipes:
+  - gsd-project-researcher
+  - gsd-domain-researcher
+  - gsd-assumptions-analyzer
+  - gsd-executor
+  - gsd-doc-synthesizer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Spike Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: spike
+              lifecycle_phase: spike
+              plans:
+                - plan_ref: spike-frame
+                  title: Frame idea or frontier opportunity
+                  wave: 10
+                - plan_ref: experiment
+                  title: Build and observe focused experiments
+                  wave: 20
+                - plan_ref: wrap-up
+                  title: Capture findings and handoff knowledge
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/spike.md
+    source_command_name: gsd:spike
+    intent: Explore an idea, validate feasibility, produce verified learnings, and optionally package findings for reuse.
+    operator_interaction: idea selection, research/decomposition gates, wrap-up decision
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

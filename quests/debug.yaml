@@ -1,0 +1,56 @@
+# Waypoint GSD sub-Quest port from commands/gsd/debug.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: debug
+name: Debug Quest
+description: >
+  Waypoint sub-Quest port of gsd:debug for systematic debugging with checkpointable investigation and continuation loops.
+workflow: workflows/gsd/debug.yaml
+
+recipes:
+  - gsd-debug-session-manager
+  - gsd-debugger
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Debug Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: debug
+              lifecycle_phase: debug
+              plans:
+                - plan_ref: debug-intake
+                  title: Capture symptoms and current session state
+                  wave: 10
+                - plan_ref: root-cause-investigation
+                  title: Investigate root cause with debugger recipe
+                  wave: 20
+                - plan_ref: fix-or-report
+                  title: Apply fix or return root cause report
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/debug.md
+    source_command_name: gsd:debug
+    intent: Diagnose and fix issues using a scientific debugging loop with isolated debugger agents and persistent session state.
+    operator_interaction: symptom intake, diagnose-only choice, continuation decisions
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

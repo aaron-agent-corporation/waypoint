@@ -1,0 +1,58 @@
+# Waypoint GSD sub-Quest port from commands/gsd/ui-phase.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: ui-phase
+name: UI Phase Quest
+description: >
+  Waypoint sub-Quest port of gsd:ui-phase for generating UI-SPEC design contracts for frontend phases.
+workflow: workflows/gsd/ui-phase.yaml
+
+recipes:
+  - gsd-ui-researcher
+  - gsd-ui-checker
+  - gsd-ui-auditor
+  - gsd-doc-writer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: UI Phase Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: ui-design-contract
+              lifecycle_phase: ui-design-contract
+              plans:
+                - plan_ref: validate-context
+                  title: Validate frontend phase context
+                  wave: 10
+                - plan_ref: research-ui
+                  title: Research UI patterns and constraints
+                  wave: 20
+                - plan_ref: verify-ui-spec
+                  title: Write and verify UI-SPEC
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/ui-phase.md
+    source_command_name: gsd:ui-phase
+    intent: Validate frontend phase context, research UI direction, write UI-SPEC, and verify the design contract.
+    operator_interaction: phase selection and UI contract approval gate
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

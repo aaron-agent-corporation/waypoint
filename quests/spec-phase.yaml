@@ -1,0 +1,58 @@
+# Waypoint GSD sub-Quest port from commands/gsd/spec-phase.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: spec-phase
+name: Spec Phase Quest
+description: >
+  Waypoint sub-Quest port of gsd:spec-phase for clarifying what a phase delivers before planning how to build it.
+workflow: workflows/gsd/spec-phase.yaml
+
+recipes:
+  - gsd-assumptions-analyzer
+  - gsd-codebase-mapper
+  - gsd-doc-writer
+  - gsd-plan-checker
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Spec Phase Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: specification
+              lifecycle_phase: specification
+              plans:
+                - plan_ref: scout
+                  title: Scout project and code context
+                  wave: 10
+                - plan_ref: interview
+                  title: Reduce ambiguity through questions or defaults
+                  wave: 20
+                - plan_ref: write-spec
+                  title: Write SPEC.md and readiness handoff
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/spec-phase.md
+    source_command_name: gsd:spec-phase
+    intent: Scout current state, run structured ambiguity reduction, and write falsifiable phase requirements.
+    operator_interaction: Socratic interview loop or auto/default approval
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

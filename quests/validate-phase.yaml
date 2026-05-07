@@ -1,0 +1,58 @@
+# Waypoint GSD sub-Quest port from commands/gsd/validate-phase.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: validate-phase
+name: Validate Phase Quest
+description: >
+  Waypoint sub-Quest port of gsd:validate-phase for auditing and filling Nyquist validation gaps after execution.
+workflow: workflows/gsd/validate-phase.yaml
+
+recipes:
+  - gsd-nyquist-auditor
+  - gsd-verifier
+  - gsd-code-fixer
+  - gsd-eval-auditor
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Validate Phase Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: validation-audit
+              lifecycle_phase: validation-audit
+              plans:
+                - plan_ref: locate-validation-artifacts
+                  title: Locate VALIDATION.md, SUMMARY.md, and related evidence
+                  wave: 10
+                - plan_ref: audit-validation-coverage
+                  title: Audit Nyquist coverage and identify gaps
+                  wave: 20
+                - plan_ref: fill-validation-gaps
+                  title: Update validation artifacts and generated tests
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/validate-phase.md
+    source_command_name: gsd:validate-phase
+    intent: Audit validation coverage, reconstruct evidence when needed, and fill missing tests or validation artifacts.
+    operator_interaction: completed-phase selection and validation gap approval
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

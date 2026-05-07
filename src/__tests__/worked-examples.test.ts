@@ -24,6 +24,19 @@ describe('worked examples at repo root', () => {
     if (!quests.ok) throw new Error('quest load failed')
     expect(quests.registry.has('example')).toBe(true)
     expect(quests.registry.has('gsd')).toBe(true)
+    const gsdSubQuestSlugs = [
+      'debug',
+      'spike',
+      'ui-phase',
+      'spec-phase',
+      'secure-phase',
+      'ai-integration-phase',
+      'ultraplan-phase',
+      'validate-phase',
+    ]
+    for (const slug of gsdSubQuestSlugs) {
+      expect(quests.registry.has(slug)).toBe(true)
+    }
 
     const recipes = await loadRecipesFromDirectory(recipesDir)
     expect(recipes.ok).toBe(true)
@@ -46,6 +59,23 @@ describe('worked examples at repo root', () => {
     expect(recipes.registry.has('gsd-planner')).toBe(true)
     expect(recipes.registry.has('gsd-verifier')).toBe(true)
     expect(recipes.registry.has('gsd-security-auditor')).toBe(true)
+
+    for (const slug of gsdSubQuestSlugs) {
+      const subQuest = quests.registry.get(slug)
+      expect(subQuest).toBeDefined()
+      if (!subQuest) throw new Error(`missing sub-Quest ${slug}`)
+      expect((subQuest.metadata?.gsd_port as { scope?: unknown }).scope).toBe('command_informed_sub_quest')
+      expect((subQuest.metadata?.gsd_port as { source_command?: unknown }).source_command).toBe(
+        `commands/gsd/${slug}.md`,
+      )
+      const resolved = resolveQuestRecipes(subQuest, recipes.registry)
+      expect(resolved.ok).toBe(true)
+      if (!resolved.ok) throw new Error(JSON.stringify(resolved.error))
+      expect(resolved.resolved.length).toBe(subQuest.recipes?.length ?? 0)
+      const phases = subQuest.scaffolds?.workstreams?.[0]?.milestones?.[0]?.phases
+      expect(phases).toHaveLength(1)
+      expect(phases?.[0]?.plans?.length).toBeGreaterThan(0)
+    }
 
     const example = quests.registry.get('example')
     expect(example).toBeDefined()

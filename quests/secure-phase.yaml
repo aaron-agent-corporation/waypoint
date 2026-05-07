@@ -1,0 +1,57 @@
+# Waypoint GSD sub-Quest port from commands/gsd/secure-phase.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: secure-phase
+name: Secure Phase Quest
+description: >
+  Waypoint sub-Quest port of gsd:secure-phase for retroactively verifying threat mitigations for completed work.
+workflow: workflows/gsd/secure-phase.yaml
+
+recipes:
+  - gsd-security-auditor
+  - gsd-verifier
+  - gsd-code-fixer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Secure Phase Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: security-verification
+              lifecycle_phase: security-verification
+              plans:
+                - plan_ref: locate-security-artifacts
+                  title: Locate SECURITY.md or threat model artifacts
+                  wave: 10
+                - plan_ref: audit-mitigations
+                  title: Verify mitigations against built work
+                  wave: 20
+                - plan_ref: update-security-record
+                  title: Update SECURITY.md and list gaps
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/secure-phase.md
+    source_command_name: gsd:secure-phase
+    intent: Audit SECURITY.md or phase artifacts, verify mitigations, and update security evidence.
+    operator_interaction: completed-phase selection and mitigation review gate
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

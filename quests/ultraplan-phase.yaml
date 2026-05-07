@@ -1,0 +1,57 @@
+# Waypoint GSD sub-Quest port from commands/gsd/ultraplan-phase.md.
+#
+# Current Quest schema has no first-class sub-Quest or node graph field, so
+# command mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: ultraplan-phase
+name: Ultraplan Phase Quest
+description: >
+  Waypoint sub-Quest port of gsd:ultraplan-phase for offloading planning to a remote cloud planning session and importing the result.
+workflow: workflows/gsd/ultraplan-phase.yaml
+
+recipes:
+  - gsd-phase-researcher
+  - gsd-planner
+  - gsd-plan-checker
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Ultraplan Phase Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: remote-planning
+              lifecycle_phase: remote-planning
+              plans:
+                - plan_ref: prepare-cloud-plan
+                  title: Prepare remote planning context
+                  wave: 10
+                - plan_ref: review-cloud-plan
+                  title: Review and comment on generated plan
+                  wave: 20
+                - plan_ref: import-plan
+                  title: Import accepted plan back into Waypoint context
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - sub-quest
+  gsd_port:
+    scope: command_informed_sub_quest
+    source_command: commands/gsd/ultraplan-phase.md
+    source_command_name: gsd:ultraplan-phase
+    intent: Prepare and review a cloud-authored plan, then import it back into the project planning flow.
+    operator_interaction: browser review, comment loop, import approval
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a standalone Quest fragment using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.
