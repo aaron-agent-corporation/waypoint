@@ -1,0 +1,58 @@
+# Waypoint GSD catalog Quest port from commands/gsd/sketch.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: sketch
+name: Sketch Quest
+description: >
+  Waypoint catalog Quest port of gsd:sketch for explore UI/design directions through throwaway mockups before implementation.
+workflow: workflows/gsd/sketch.yaml
+
+recipes:
+  - gsd-ui-researcher
+  - gsd-ui-auditor
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Sketch Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: sketch
+              lifecycle_phase: sketch
+              plans:
+                - plan_ref: sketch-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: sketch-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: sketch-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: utility / inspection Quest
+    source_command: commands/gsd/sketch.md
+    source_command_name: gsd:sketch
+    intent: Produce and compare design sketches, then hand off viable directions to planning.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

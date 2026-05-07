@@ -1,0 +1,57 @@
+# Waypoint GSD catalog Quest port from commands/gsd/cleanup.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: cleanup
+name: Cleanup Quest
+description: >
+  Waypoint catalog Quest port of gsd:cleanup for archive accumulated phase directories from completed milestones.
+workflow: workflows/gsd/cleanup.yaml
+
+recipes:
+  - gsd-doc-synthesizer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Cleanup Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: cleanup
+              lifecycle_phase: cleanup
+              plans:
+                - plan_ref: cleanup-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: cleanup-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: cleanup-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: maintenance sub-Quest
+    source_command: commands/gsd/cleanup.md
+    source_command_name: gsd:cleanup
+    intent: Prepare a dry-run archive plan and preserve completed milestone artifacts.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

@@ -1,0 +1,59 @@
+# Waypoint GSD catalog Quest port from commands/gsd/audit-fix.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: audit-fix
+name: Audit Fix Quest
+description: >
+  Waypoint catalog Quest port of gsd:audit-fix for autonomous audit-to-fix pipeline that classifies findings, fixes auto-fixable issues, and verifies results.
+workflow: workflows/gsd/audit-fix.yaml
+
+recipes:
+  - gsd-code-reviewer
+  - gsd-code-fixer
+  - gsd-verifier
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Audit Fix Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: audit_fix
+              lifecycle_phase: audit_fix
+              plans:
+                - plan_ref: audit-fix-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: audit-fix-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: audit-fix-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: audit_review
+    role: audit / review sub-Quest
+    source_command: commands/gsd/audit-fix.md
+    source_command_name: gsd:audit-fix
+    intent: Classify audit findings, apply safe fixes, test, and produce an auditable fix report.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

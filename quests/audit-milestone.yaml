@@ -1,0 +1,59 @@
+# Waypoint GSD catalog Quest port from commands/gsd/audit-milestone.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: audit-milestone
+name: Audit Milestone Quest
+description: >
+  Waypoint catalog Quest port of gsd:audit-milestone for milestone completion audit that checks delivered work against original intent before archiving.
+workflow: workflows/gsd/audit-milestone.yaml
+
+recipes:
+  - gsd-verifier
+  - gsd-integration-checker
+  - gsd-assumptions-analyzer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Audit Milestone Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: audit_milestone
+              lifecycle_phase: audit_milestone
+              plans:
+                - plan_ref: audit-milestone-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: audit-milestone-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: audit-milestone-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: audit_review
+    role: audit / review sub-Quest
+    source_command: commands/gsd/audit-milestone.md
+    source_command_name: gsd:audit-milestone
+    intent: Aggregate phase verification, integration coverage, and deferred gaps before milestone close-out.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

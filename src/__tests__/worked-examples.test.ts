@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import { parse as parseYaml } from 'yaml'
 import {
   loadQuestsFromDirectory,
   loadRecipesFromDirectory,
@@ -16,6 +18,18 @@ const here = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(here, '..', '..')
 const questsDir = resolve(repoRoot, 'quests')
 const recipesDir = resolve(repoRoot, 'recipes')
+const commandMapPath = resolve(repoRoot, 'docs', 'quests', 'gsd-command-map.yaml')
+
+type GsdCommandMap = {
+  readonly schema_version: number
+  readonly mappings?: readonly {
+    readonly source_command?: string
+    readonly command?: string
+    readonly category?: string
+    readonly target?: string
+    readonly status?: string
+  }[]
+}
 
 describe('worked examples at repo root', () => {
   it('loads quests/example.yaml and resolves its recipe references', async () => {
@@ -24,7 +38,7 @@ describe('worked examples at repo root', () => {
     if (!quests.ok) throw new Error('quest load failed')
     expect(quests.registry.has('example')).toBe(true)
     expect(quests.registry.has('gsd')).toBe(true)
-    const gsdSubQuestSlugs = [
+    const p3SubQuestSlugs = [
       'debug',
       'spike',
       'ui-phase',
@@ -34,6 +48,36 @@ describe('worked examples at repo root', () => {
       'ultraplan-phase',
       'validate-phase',
     ]
+    const p4CatalogQuestSlugs = [
+      'audit-fix',
+      'audit-milestone',
+      'audit-uat',
+      'code-review',
+      'eval-review',
+      'ui-review',
+      'review',
+      'review-backlog',
+      'plan-review-convergence',
+      'forensics',
+      'health',
+      'explore',
+      'map-codebase',
+      'stats',
+      'graphify',
+      'extract-learnings',
+      'profile-user',
+      'sketch',
+      'fast',
+      'quick',
+      'cleanup',
+      'complete-milestone',
+      'milestone-summary',
+      'docs-update',
+      'ingest-docs',
+      'add-tests',
+      'pr-branch',
+    ]
+    const gsdSubQuestSlugs = [...p3SubQuestSlugs, ...p4CatalogQuestSlugs]
     for (const slug of gsdSubQuestSlugs) {
       expect(quests.registry.has(slug)).toBe(true)
     }
@@ -114,5 +158,36 @@ describe('worked examples at repo root', () => {
     expect(gsdResolved.ok).toBe(true)
     if (!gsdResolved.ok) throw new Error(JSON.stringify(gsdResolved.error))
     expect(gsdResolved.resolved.map((r) => r.slug)).toEqual(gsd.recipes)
+
+    const commandMap = parseYaml(await readFile(commandMapPath, 'utf8')) as GsdCommandMap
+    expect(commandMap.schema_version).toBe(1)
+    expect(commandMap.mappings?.length).toBe(65)
+    const mappings = commandMap.mappings ?? []
+    const mappingTargetsByCommand = new Map(mappings.map((entry) => [entry.source_command, entry]))
+    expect(mappingTargetsByCommand.get('commands/gsd/pause-work.md')).toMatchObject({
+      category: 'operator_action',
+      target: '/waypoint pause',
+      status: 'documented',
+    })
+    expect(mappingTargetsByCommand.get('commands/gsd/resume-work.md')).toMatchObject({
+      category: 'operator_action',
+      target: '/waypoint resume',
+      status: 'documented',
+    })
+    expect(mappingTargetsByCommand.get('commands/gsd/autonomous.md')).toMatchObject({
+      category: 'operator_action',
+      target: '/waypoint auto',
+      status: 'documented',
+    })
+    expect(mappingTargetsByCommand.get('commands/gsd/ns-project.md')).toMatchObject({
+      category: 'deferred_optional',
+      status: 'deferred',
+    })
+    for (const slug of p4CatalogQuestSlugs) {
+      expect(mappingTargetsByCommand.get(`commands/gsd/${slug}.md`)).toMatchObject({
+        target: `quests/${slug}.yaml`,
+        status: 'ported',
+      })
+    }
   })
 })

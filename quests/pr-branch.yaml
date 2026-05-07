@@ -1,0 +1,57 @@
+# Waypoint GSD catalog Quest port from commands/gsd/pr-branch.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: pr-branch
+name: PR Branch Quest
+description: >
+  Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
+workflow: workflows/gsd/pr-branch.yaml
+
+recipes:
+  - gsd-executor
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: PR Branch Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: pr_branch
+              lifecycle_phase: pr_branch
+              plans:
+                - plan_ref: pr-branch-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: pr-branch-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: pr-branch-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: sub-Quest
+    source_command: commands/gsd/pr-branch.md
+    source_command_name: gsd:pr-branch
+    intent: Prepare code-focused branch state for external review while preserving planning history elsewhere.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

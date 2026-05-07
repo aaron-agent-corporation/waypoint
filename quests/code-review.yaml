@@ -1,0 +1,58 @@
+# Waypoint GSD catalog Quest port from commands/gsd/code-review.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: code-review
+name: Code Review Quest
+description: >
+  Waypoint catalog Quest port of gsd:code-review for source review loop for changed files with optional fix iteration.
+workflow: workflows/gsd/code-review.yaml
+
+recipes:
+  - gsd-code-reviewer
+  - gsd-code-fixer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Code Review Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: code_review
+              lifecycle_phase: code_review
+              plans:
+                - plan_ref: code-review-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: code-review-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: code-review-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: audit_review
+    role: audit / review sub-Quest
+    source_command: commands/gsd/code-review.md
+    source_command_name: gsd:code-review
+    intent: Review changed source for bugs, security, and quality issues; optionally route findings to fixes.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

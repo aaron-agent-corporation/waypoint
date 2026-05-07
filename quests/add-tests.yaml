@@ -1,0 +1,58 @@
+# Waypoint GSD catalog Quest port from commands/gsd/add-tests.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: add-tests
+name: Add Tests Quest
+description: >
+  Waypoint catalog Quest port of gsd:add-tests for generate tests for a completed phase from UAT criteria and implementation evidence.
+workflow: workflows/gsd/add-tests.yaml
+
+recipes:
+  - gsd-verifier
+  - gsd-executor
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Add Tests Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: add_tests
+              lifecycle_phase: add_tests
+              plans:
+                - plan_ref: add-tests-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: add-tests-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: add-tests-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: sub-Quest
+    source_command: commands/gsd/add-tests.md
+    source_command_name: gsd:add-tests
+    intent: Classify, generate, and verify unit/E2E tests for completed work.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

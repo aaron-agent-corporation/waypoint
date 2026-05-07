@@ -74,22 +74,73 @@ Progress: **33 / 33** ported (100%).
 Full inventory lives in `docs/plans/waypoint-gsd-quest-port.md`.
 This table tracks only the ported artifacts.
 
-| Upstream command        | Category          | Target artifact                  | Status |
-|-------------------------|-------------------|----------------------------------|--------|
-| new-project.md          | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| discuss-phase.md        | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| plan-phase.md           | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| execute-phase.md        | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| verify-work.md          | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| ship.md                 | phase entrypoint  | quests/gsd.yaml metadata         | ✅     |
-| debug.md                | sub-Quest         | quests/debug.yaml                | ✅     |
-| spike.md                | sub-Quest         | quests/spike.yaml                | ✅     |
-| ui-phase.md             | sub-Quest         | quests/ui-phase.yaml             | ✅     |
-| spec-phase.md           | sub-Quest         | quests/spec-phase.yaml           | ✅     |
-| secure-phase.md         | sub-Quest         | quests/secure-phase.yaml         | ✅     |
-| ai-integration-phase.md | sub-Quest         | quests/ai-integration-phase.yaml | ✅     |
-| ultraplan-phase.md      | sub-Quest         | quests/ultraplan-phase.yaml      | ✅     |
-| validate-phase.md       | sub-Quest         | quests/validate-phase.yaml       | ✅     |
+| Upstream command | Category | Target artifact | Status |
+|---|---|---|---|
+| new-project.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| discuss-phase.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| plan-phase.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| execute-phase.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| verify-work.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| ship.md | phase entrypoint | quests/gsd.yaml metadata | ✅ |
+| debug.md | sub-Quest | quests/debug.yaml | ✅ |
+| spike.md | sub-Quest | quests/spike.yaml | ✅ |
+| ui-phase.md | sub-Quest | quests/ui-phase.yaml | ✅ |
+| spec-phase.md | sub-Quest | quests/spec-phase.yaml | ✅ |
+| secure-phase.md | sub-Quest | quests/secure-phase.yaml | ✅ |
+| ai-integration-phase.md | sub-Quest | quests/ai-integration-phase.yaml | ✅ |
+| ultraplan-phase.md | sub-Quest | quests/ultraplan-phase.yaml | ✅ |
+| validate-phase.md | sub-Quest | quests/validate-phase.yaml | ✅ |
+| audit-fix.md | audit / review Quest | quests/audit-fix.yaml | ✅ |
+| audit-milestone.md | audit / review Quest | quests/audit-milestone.yaml | ✅ |
+| audit-uat.md | audit / review Quest | quests/audit-uat.yaml | ✅ |
+| code-review.md | audit / review Quest | quests/code-review.yaml | ✅ |
+| eval-review.md | audit / review Quest | quests/eval-review.yaml | ✅ |
+| ui-review.md | audit / review Quest | quests/ui-review.yaml | ✅ |
+| review.md | audit / review Quest | quests/review.yaml | ✅ |
+| review-backlog.md | audit / review Quest | quests/review-backlog.yaml | ✅ |
+| plan-review-convergence.md | audit / review Quest | quests/plan-review-convergence.yaml | ✅ |
+| forensics.md | audit / review Quest | quests/forensics.yaml | ✅ |
+| health.md | audit / review Quest | quests/health.yaml | ✅ |
+| explore.md | utility / inspection Quest | quests/explore.yaml | ✅ |
+| map-codebase.md | utility / inspection Quest | quests/map-codebase.yaml | ✅ |
+| stats.md | utility / inspection Quest | quests/stats.yaml | ✅ |
+| graphify.md | utility / inspection Quest | quests/graphify.yaml | ✅ |
+| extract-learnings.md | utility / inspection Quest | quests/extract-learnings.yaml | ✅ |
+| profile-user.md | utility / inspection Quest | quests/profile-user.yaml | ✅ |
+| sketch.md | utility / inspection Quest | quests/sketch.yaml | ✅ |
+| fast.md | utility / inspection Quest | quests/fast.yaml | ✅ |
+| quick.md | utility / inspection Quest | quests/quick.yaml | ✅ |
+| cleanup.md | utility / inspection Quest | quests/cleanup.yaml | ✅ |
+| complete-milestone.md | utility / inspection Quest | quests/complete-milestone.yaml | ✅ |
+| milestone-summary.md | utility / inspection Quest | quests/milestone-summary.yaml | ✅ |
+| docs-update.md | utility / inspection Quest | quests/docs-update.yaml | ✅ |
+| ingest-docs.md | utility / inspection Quest | quests/ingest-docs.yaml | ✅ |
+| add-tests.md | utility / inspection Quest | quests/add-tests.yaml | ✅ |
+| pr-branch.md | utility / inspection Quest | quests/pr-branch.yaml | ✅ |
+| pause-work.md | operator action | /waypoint pause | ✅ documented |
+| resume-work.md | operator action | /waypoint resume | ✅ documented |
+| autonomous.md | operator action | /waypoint auto | ✅ documented |
+| progress.md | operator action | /waypoint status | ✅ documented |
+| manager.md | operator action | /waypoint routes | ✅ documented |
+| capture.md | operator action | operator backlog capture action | ✅ documented |
+| inbox.md | operator action | operator backlog read action | ✅ documented |
+| import.md | operator action | operator import action | ✅ documented |
+| update.md | operator action | operator update action | ✅ documented |
+| new-milestone.md | operator action | Quest scaffolding action | ✅ documented |
+| phase.md | operator action | inspection action | ✅ documented |
+| workstreams.md | operator action | inspection action | ✅ documented |
+| workspace.md | operator action | inspection action | ✅ documented |
+| settings.md | operator action | config action | ✅ documented |
+| config.md | operator action | config action | ✅ documented |
+| help.md | operator action | /waypoint help | ✅ documented |
+| thread.md | operator action | discussion-related action | ✅ documented |
+| undo.md | operator action | operator rollback action | ✅ documented |
+| ns-context.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
+| ns-ideate.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
+| ns-manage.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
+| ns-project.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
+| ns-review.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
+| ns-workflow.md | deferred / optional | not ported in first catalog pass | ⧗ deferred |
 
 ## Main GSD Quest
 
@@ -108,7 +159,7 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 - **P1** — Recipe port sweep (33 total GSD Recipes) ✅
 - **P2** — Main Quest manifest (`quests/gsd.yaml`) ✅
 - **P3** — Command-informed first-batch sub-Quests ✅
-- **P4** — Remaining Quest catalog manifests / operator-action mappings ☐
+- **P4** — Remaining Quest catalog manifests / operator-action mappings ✅
 - **P5** — Structural smoke coverage for the full GSD port ☐
 - **P6** — Operator docs and command mapping ☐
 - **P7** — Catalog close-out and attribution/license check ☐

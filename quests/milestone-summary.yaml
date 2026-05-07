@@ -1,0 +1,57 @@
+# Waypoint GSD catalog Quest port from commands/gsd/milestone-summary.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: milestone-summary
+name: Milestone Summary Quest
+description: >
+  Waypoint catalog Quest port of gsd:milestone-summary for generate a comprehensive completed-milestone summary for onboarding and review.
+workflow: workflows/gsd/milestone-summary.yaml
+
+recipes:
+  - gsd-doc-synthesizer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Milestone Summary Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: milestone_summary
+              lifecycle_phase: milestone_summary
+              plans:
+                - plan_ref: milestone-summary-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: milestone-summary-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: milestone-summary-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: sub-Quest that reports
+    source_command: commands/gsd/milestone-summary.md
+    source_command_name: gsd:milestone-summary
+    intent: Synthesize milestone artifacts into a single reviewable summary.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.

@@ -1,0 +1,59 @@
+# Waypoint GSD catalog Quest port from commands/gsd/quick.md.
+#
+# Current Quest schema has no first-class command graph field, so command
+# mapping and orchestration intent are preserved in metadata.gsd_port.
+
+schema_version: 1
+slug: quick
+name: Quick Quest
+description: >
+  Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
+workflow: workflows/gsd/quick.yaml
+
+recipes:
+  - gsd-planner
+  - gsd-executor
+  - gsd-verifier
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Quick Quest loop
+          phases:
+            - phase_key: "10"
+              phase_slug: quick
+              lifecycle_phase: quick
+              plans:
+                - plan_ref: quick-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                - plan_ref: quick-run
+                  title: Run the mapped Waypoint Recipes
+                  wave: 20
+                - plan_ref: quick-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest-catalog
+  gsd_port:
+    scope: command_informed_sub_quest
+    category: utility_inspection
+    role: utility / inspection Quest
+    source_command: commands/gsd/quick.md
+    source_command_name: gsd:quick
+    intent: Plan and execute small tasks with selectable quality gates.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.
