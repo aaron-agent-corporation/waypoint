@@ -462,6 +462,26 @@ pnpm typecheck
 7. Wire CLI `waypoint auto --max-iterations N` and `waypoint auto status` if status history is persisted.
 8. Commit: `feat(folder-host): add null-runtime autopilot`.
 
+**Status:** Complete. `waypoint auto` now runs a safe null-runtime autopilot over local materialized tasks. Recipe and discussion tasks are marked `done` with `waypoint.autopilot` simulated output metadata; no external commands are invoked. The loop stops on the first human gate by marking the gate task and route blocked, recording `route.autopilot.blocked`, and persisting `.waypoint/autopilot/runs.jsonl`. `waypoint auto status` lists run history.
+
+**Verification completed:**
+```bash
+pnpm exec vitest run packages/waypoint-folder-host/src/runtime/null-runtime.test.ts packages/waypoint-folder-host/src/autopilot/run.test.ts packages/waypoint-cli/src/commands/auto.test.ts
+pnpm test
+pnpm typecheck
+```
+
+**Smoke completed:**
+```bash
+node packages/waypoint-cli/src/bin.ts init --quest gsd
+node packages/waypoint-cli/src/bin.ts start --quest gsd
+node packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 10
+node packages/waypoint-cli/src/bin.ts auto status
+node packages/waypoint-cli/src/bin.ts tasks --route-id route-001
+```
+
+Observed `.waypoint/autopilot/runs.jsonl`, route status `blocked`, blocked node `plan-approval-gate`, completed tasks `task-001` through `task-005`, and blocked gate task `task-006` in the temp folder.
+
 **Verification:**
 ```bash
 pnpm exec vitest run packages/waypoint-folder-host/src/runtime packages/waypoint-folder-host/src/autopilot packages/waypoint-cli/src/commands/auto.test.ts
