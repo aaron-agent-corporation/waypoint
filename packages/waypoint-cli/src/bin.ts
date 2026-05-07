@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import rootPackage from '../../../package.json' with { type: 'json' }
 import { runInitCommand } from './commands/init.ts'
+import { runQuestsCommand } from './commands/quests.ts'
+import { runRecipesCommand } from './commands/recipes.ts'
 import { runStatusCommand } from './commands/status.ts'
 
 const rootPackageVersion = rootPackage.version
@@ -18,8 +20,10 @@ Usage:
   waypoint --version
   waypoint init [--quest <slug>]
   waypoint status
+  waypoint quests
+  waypoint recipes [--quest <slug>]
 
-Commands for catalog/routes land in later Track 1 phases.
+Route/lifecycle commands land in later Track 1 phases.
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -41,6 +45,14 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'status') {
     return runStatusCommand(args.slice(1), io)
+  }
+
+  if (command === 'quests') {
+    return runQuestsCommand(args.slice(1), io)
+  }
+
+  if (command === 'recipes') {
+    return runRecipesCommand(args.slice(1), io)
   }
 
   io.stderr(`Unknown Waypoint command: ${command}`)

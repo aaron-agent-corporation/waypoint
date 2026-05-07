@@ -1,4 +1,4 @@
-import { WAYPOINT_CORE_PACKAGE } from '@waypoint/core'
+const WAYPOINT_CORE_PACKAGE = 'waypoint-core'
 
 export const WAYPOINT_FOLDER_HOST_PACKAGE = '@waypoint/folder-host'
 
@@ -26,3 +26,11 @@ export {
   serializeWaypointProjectConfig,
 } from './project/config.ts'
 export type { WaypointProjectConfig } from './project/config.ts'
+export { loadBundledWaypointCatalog } from './catalog/bundled.ts'
+export type {
+  BundledWaypointCatalog,
+  ResolveCatalogQuestRecipesResult,
+  WaypointCatalogEntry,
+} from './catalog/bundled.ts'
+export { installQuestCatalog } from './catalog/install.ts'
+export type { InstallQuestCatalogOptions, InstallQuestCatalogResult } from './catalog/install.ts'

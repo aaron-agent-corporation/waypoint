@@ -131,8 +131,9 @@ Phases:
 ## Current execution state
 
 - F0 — Package and CLI scaffold: complete in `bf4d140`.
-- F1 — `.waypoint/` config/init/status: complete in this implementation slice.
-- F2 — Bundled Quest/Recipe catalog adoption: next.
+- F1 — `.waypoint/` config/init/status: complete in `9b8ec56`.
+- F2 — Bundled Quest/Recipe catalog adoption: complete in this implementation slice.
+- F3 — Lifecycle YAML store and commands: next.
 
 ## F0 — Package and CLI scaffold
 
