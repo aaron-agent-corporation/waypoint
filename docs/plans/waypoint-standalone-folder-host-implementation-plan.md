@@ -491,9 +491,13 @@ pnpm typecheck
 
 ---
 
-## F10 — Local Recipe runtime
+## F10 — Local Recipe runtime ✅ COMPLETE
 
 **Objective:** Add opt-in local Recipe execution by invoking a configured command with a stable JSON payload.
+
+**Completed:** `2026-05-07`
+
+**Commit:** `2b011ac feat(folder-host): add opt-in local Recipe runtime`
 
 **Files:**
 - Create: `packages/waypoint-folder-host/src/runtime/local-runtime.ts`
@@ -525,6 +529,17 @@ pnpm exec vitest run packages/waypoint-folder-host/src/runtime packages/waypoint
 pnpm test
 pnpm typecheck
 ```
+
+**Smoke completed:**
+```bash
+node packages/waypoint-cli/src/bin.ts init --quest gsd
+node packages/waypoint-cli/src/bin.ts start --quest gsd
+# overwrite temp `.waypoint/config.yaml` with runtime.recipe: local, command: node, args: ["./capture-runtime.mjs", "./payload.json"]
+node packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 1
+node packages/waypoint-cli/src/bin.ts route-events --route-id route-001 --limit 5
+```
+
+Observed `route.autopilot.task.executed`, local runtime metadata with `exit_code: 0`, and stable payload fields `schema_version`, `recipe_slug`, `prompt`, `task_id`, `project_root`, and `route_id` in a temp folder.
 
 ---
 
