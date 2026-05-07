@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 import rootPackage from '../../../package.json' with { type: 'json' }
+import { runInitCommand } from './commands/init.ts'
+import { runStatusCommand } from './commands/status.ts'
 
 const rootPackageVersion = rootPackage.version
 
 export interface WaypointCliIo {
   stdout: (line: string) => void
   stderr: (line: string) => void
+  cwd?: string
 }
 
 const helpText = `Waypoint local folder host
@@ -13,8 +16,10 @@ const helpText = `Waypoint local folder host
 Usage:
   waypoint --help
   waypoint --version
+  waypoint init [--quest <slug>]
+  waypoint status
 
-Commands for init/status/catalog/routes land in later Track 1 phases.
+Commands for catalog/routes land in later Track 1 phases.
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -28,6 +33,14 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
   if (command === undefined || command === '--help' || command === '-h' || command === 'help') {
     io.stdout(helpText.trimEnd())
     return 0
+  }
+
+  if (command === 'init') {
+    return runInitCommand(args.slice(1), io)
+  }
+
+  if (command === 'status') {
+    return runStatusCommand(args.slice(1), io)
   }
 
   io.stderr(`Unknown Waypoint command: ${command}`)
