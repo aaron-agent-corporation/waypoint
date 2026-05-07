@@ -129,11 +129,35 @@ Behavior:
 
 Loop prevention ensures agent-authored replies do not recursively trigger more replies.
 
+## H5 Telegram gate loop
+
+H5 status: complete.
+
+The Hermes Telegram gate loop reference adapter lives at:
+
+```text
+examples/hermes-operator-adapter/src/telegram-gate-loop.ts
+```
+
+It makes human gates usable from Telegram while keeping all state mutations inside the H2 safe Waypoint command runner.
+
+Behavior:
+
+- builds concise blocked-gate prompts like `route-001 is blocked at plan-approval-gate.`;
+- prompts with `Reply: approve, reject, revise, show tasks, or show events.`;
+- maps `approve` to `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute` when a next node is supplied;
+- maps `reject ...` to `waypoint gate --route-id route-001 --node plan-approval-gate --reject --note ...`;
+- maps `revise ...` to rejection with a revision note so the existing gate rejection event records the requested changes;
+- maps `show tasks` to `waypoint tasks --route-id route-001`;
+- maps `show events` to `waypoint route-events --route-id route-001 --limit 20`;
+- Hermes response quotes updated route status after mutation commands.
+
 ## Verification
 
 ```bash
 pnpm exec vitest run examples/hermes-operator-adapter/src/project-registry.test.ts
 pnpm exec vitest run examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts
 pnpm exec vitest run examples/hermes-operator-adapter/src/discussion-loop.test.ts
+pnpm exec vitest run examples/hermes-operator-adapter/src/telegram-gate-loop.test.ts
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```

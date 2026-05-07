@@ -371,6 +371,20 @@ Smoke expectation: a temp project started with `waypoint init --quest gsd` and `
 
 **Objective:** Make human gates usable from Telegram as the standalone replacement for Mission Control gate buttons.
 
+**H5 status: complete.**
+
+**Files changed:**
+
+- Waypoint repo:
+  - `docs/plans/waypoint-hermes-integration-plan.md`
+  - `docs/plans/waypoint-remaining-roadmap.md`
+  - `examples/hermes-operator-adapter/README.md`
+  - `examples/hermes-operator-adapter/src/telegram-gate-loop.ts`
+  - `examples/hermes-operator-adapter/src/telegram-gate-loop.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
+
+The H5 reference adapter lives at `examples/hermes-operator-adapter/src/telegram-gate-loop.ts`.
+
 **Behavior:**
 
 When autopilot blocks at a gate, Hermes sends a concise prompt:
@@ -381,7 +395,7 @@ Summary: ...
 Reply: approve, reject, revise, show tasks, or show events.
 ```
 
-Natural replies map to commands:
+Natural replies map to safe Waypoint command-runner calls:
 
 ```bash
 waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute
@@ -390,11 +404,16 @@ waypoint tasks --route-id route-001
 waypoint route-events --route-id route-001 --limit 20
 ```
 
+`revise` is treated as a rejection with a revision note so the route remains blocked and the requested changes are persisted in the existing `route.gate.rejected` event payload. `show tasks` and `show events` are read-only inspection actions through the same H2 allowlist.
+
 **Verification:**
 
-- route state changes from blocked to active on approval;
-- event JSONL contains `route.gate.approved` or `route.gate.rejected`;
-- Hermes response quotes updated route status.
+```bash
+pnpm exec vitest run examples/hermes-operator-adapter/src/telegram-gate-loop.test.ts
+pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
+```
+
+Smoke expectation: a temp project started with `waypoint init --quest gsd`, `waypoint start --quest gsd`, and `waypoint auto --route-id route-001 --max-iterations 10` blocks at `plan-approval-gate`; a Telegram `approve` reply maps to `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute`, route state changes from blocked to active, event JSONL contains `route.gate.approved`, and the Hermes response quotes updated route status.
 
 ---
 

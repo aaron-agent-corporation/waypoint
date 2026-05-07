@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H4 discussion loop complete')
+    expect(roadmap).toContain('**Status:** Active — H5 Telegram gate loop complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -139,6 +139,25 @@ describe('Hermes integration plan', () => {
       'conversation_id',
       'agent_authored',
       'Loop prevention ensures agent-authored replies do not recursively trigger more replies',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
+  })
+
+  it('records the H5 Hermes Telegram gate loop reference adapter and command mapping boundary', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/src/telegram-gate-loop.ts'))).toBe(true)
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-operator-adapter/README.md')
+    for (const phrase of [
+      'H5 status: complete',
+      'examples/hermes-operator-adapter/src/telegram-gate-loop.ts',
+      'Reply: approve, reject, revise, show tasks, or show events.',
+      'waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute',
+      'waypoint gate --route-id route-001 --node plan-approval-gate --reject --note',
+      'waypoint tasks --route-id route-001',
+      'waypoint route-events --route-id route-001 --limit 20',
+      'Hermes response quotes updated route status',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
