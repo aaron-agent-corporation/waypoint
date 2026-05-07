@@ -332,6 +332,20 @@ Smoke expectation: configure `runtime.recipe: local` to call `node examples/herm
 
 **Objective:** Support task-scoped user↔agent discussion through Hermes without Mission Control comments or UI panels.
 
+**H4 status: complete.**
+
+**Files changed:**
+
+- Waypoint repo:
+  - `docs/plans/waypoint-hermes-integration-plan.md`
+  - `docs/plans/waypoint-remaining-roadmap.md`
+  - `examples/hermes-operator-adapter/README.md`
+  - `examples/hermes-operator-adapter/src/discussion-loop.ts`
+  - `examples/hermes-operator-adapter/src/discussion-loop.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
+
+The H4 reference adapter lives at `examples/hermes-operator-adapter/src/discussion-loop.ts`.
+
 **Behavior:**
 
 1. Hermes reads task and discussion state from `.waypoint/`.
@@ -340,11 +354,16 @@ Smoke expectation: configure `runtime.recipe: local` to call `node examples/herm
 4. Hermes appends agent-authored replies through `waypoint discuss --task-id --author agent`.
 5. Loop prevention ensures agent-authored replies do not recursively trigger more replies.
 
+The reference loop uses the H2 safe Waypoint command runner instead of shelling out through arbitrary commands. It reads the `conversation_id` and selected task discussion agent from the existing `waypoint discuss` output, passes the latest operator message to the injected Hermes discussion runtime, then persists the reply as an agent-authored message. Agent-authored messages retain the folder-host `auto_response.reason: agent_authored` boundary.
+
 **Verification:**
 
-- discussion JSONL contains user and agent-authored messages;
-- route/task summary references the task ID and conversation ID;
-- no recursive auto-response event is requested for agent-authored messages.
+```bash
+pnpm exec vitest run examples/hermes-operator-adapter/src/discussion-loop.test.ts
+pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
+```
+
+Smoke expectation: a temp project started with `waypoint init --quest gsd` and `waypoint start --quest gsd` can append an operator message to `task-003`, invoke a `gsd-doc-writer` discussion runtime, append an agent reply, and list both messages with the same `conversation_id`. No recursive auto-response event is requested for agent-authored messages.
 
 ---
 

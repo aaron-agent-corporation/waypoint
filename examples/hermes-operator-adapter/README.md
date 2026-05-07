@@ -107,10 +107,33 @@ Safety behavior:
 - Mutation commands are explicitly marked;
 - outputs are summarized without dropping route/task IDs by preserving raw stdout and stderr.
 
+## H4 discussion loop
+
+H4 status: complete.
+
+The Hermes discussion loop reference adapter lives at:
+
+```text
+examples/hermes-operator-adapter/src/discussion-loop.ts
+```
+
+It supports task-scoped user↔agent discussion through Hermes while keeping `.waypoint/` as durable truth.
+
+Behavior:
+
+- appends user messages through `waypoint discuss --task-id`;
+- reads the task discussion `conversation_id` and selected agent from Waypoint output;
+- invokes an injected Hermes discussion runtime for the selected Recipe/agent when requested;
+- appends agent-authored replies through `waypoint discuss --task-id --author agent`;
+- relies on the existing folder-host discussion helper so `agent_authored` messages keep `auto_response.requested=false` and do not recursively trigger more replies.
+
+Loop prevention ensures agent-authored replies do not recursively trigger more replies.
+
 ## Verification
 
 ```bash
 pnpm exec vitest run examples/hermes-operator-adapter/src/project-registry.test.ts
 pnpm exec vitest run examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts
+pnpm exec vitest run examples/hermes-operator-adapter/src/discussion-loop.test.ts
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```

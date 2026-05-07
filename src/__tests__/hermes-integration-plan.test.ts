@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H3 Hermes Recipe runtime adapter complete')
+    expect(roadmap).toContain('**Status:** Active — H4 discussion loop complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -120,6 +120,25 @@ describe('Hermes integration plan', () => {
       'non-zero adapter exit should be persisted by the existing local runtime as task/route failure',
       'schema_version: 1',
       'structured JSON stdout',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
+  })
+
+  it('records the H4 Hermes discussion loop reference adapter and loop-prevention boundary', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/src/discussion-loop.ts'))).toBe(true)
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-operator-adapter/README.md')
+    for (const phrase of [
+      'H4 status: complete',
+      'examples/hermes-operator-adapter/src/discussion-loop.ts',
+      'task-scoped user↔agent discussion through Hermes',
+      'appends user messages through `waypoint discuss --task-id`',
+      'appends agent-authored replies through `waypoint discuss --task-id --author agent`',
+      'conversation_id',
+      'agent_authored',
+      'Loop prevention ensures agent-authored replies do not recursively trigger more replies',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
