@@ -52,3 +52,18 @@ export type {
   LifecycleState,
   LifecycleWorkstream,
 } from './lifecycle/types.ts'
+export { createWaypointRoute, getWaypointRoute, listWaypointRoutes } from './routes/store.ts'
+export type {
+  CreateWaypointRouteInput,
+  WaypointFolderRoute,
+  WaypointFolderRouteStatus,
+  WaypointFolderRouteSubject,
+} from './routes/types.ts'
+export { appendRouteEvent, readRouteEvents } from './events/jsonl.ts'
+export { createRouteEventBus } from './events/event-bus.ts'
+export type {
+  AppendRouteEventInput,
+  ReadRouteEventsOptions,
+  RouteEventPage,
+  WaypointFolderRouteEvent,
+} from './events/types.ts'
