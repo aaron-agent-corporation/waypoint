@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import rootPackage from '../../../package.json' with { type: 'json' }
+import { runAutoCommand } from './commands/auto.ts'
 import { runDiscussCommand } from './commands/discuss.ts'
 import { runGateCommand } from './commands/gate.ts'
 import { runInitCommand } from './commands/init.ts'
@@ -38,6 +39,8 @@ Usage:
   waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
   waypoint tasks [--route-id <id>] [--json]
   waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
+  waypoint auto [--route-id <id>] [--max-iterations N] [--json]
+  waypoint auto status [--limit N] [--offset N] [--json]
   waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
   waypoint pause --route-id <id> [--reason <text>]
   waypoint resume --route-id <id>
@@ -103,6 +106,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'discuss') {
     return runDiscussCommand(args.slice(1), io)
+  }
+
+  if (command === 'auto') {
+    return runAutoCommand(args.slice(1), io)
   }
 
   if (command === 'gate') {

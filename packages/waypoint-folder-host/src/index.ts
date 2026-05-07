@@ -66,8 +66,17 @@ export type {
 } from './routes/types.ts'
 export { appendRouteEvent, readRouteEvents } from './events/jsonl.ts'
 export { createRouteEventBus } from './events/event-bus.ts'
-export { getWaypointTask, listWaypointTasks, materializeQuestTasks } from './tasks/store.ts'
+export { getWaypointTask, listWaypointTasks, materializeQuestTasks, updateWaypointTask } from './tasks/store.ts'
 export type { WaypointFolderTask, WaypointFolderTaskKind, WaypointFolderTaskState, WaypointFolderTaskStatus } from './tasks/types.ts'
+export { listWaypointAutopilotRuns, runWaypointAutopilot } from './autopilot/run.ts'
+export { NullRecipeRuntime } from './runtime/null-runtime.ts'
+export type {
+  RunWaypointAutopilotOptions,
+  RunWaypointAutopilotResult,
+  WaypointAutopilotRunPage,
+  WaypointAutopilotRunRecord,
+  WaypointAutopilotRunStatus,
+} from './autopilot/types.ts'
 export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
 export type {
   AppendTaskDiscussionMessageInput,

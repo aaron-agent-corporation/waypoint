@@ -61,6 +61,19 @@ export async function getWaypointTask(projectRoot: string, taskId: string): Prom
   return tasks.find((task) => task.id === taskId) ?? null
 }
 
+export async function updateWaypointTask(
+  projectRoot: string,
+  taskId: string,
+  patch: Partial<Pick<WaypointFolderTask, 'status' | 'updated_at' | 'metadata'>>,
+): Promise<WaypointFolderTask> {
+  const tasks = await listWaypointTasks(projectRoot)
+  const existing = tasks.find((task) => task.id === taskId)
+  if (!existing) throw new Error(`Task not found: ${taskId}`)
+  const updated = { ...existing, ...patch }
+  await writeTaskState(projectRoot, { tasks: tasks.map((task) => (task.id === taskId ? updated : task)) })
+  return updated
+}
+
 async function writeTaskState(projectRoot: string, state: WaypointFolderTaskState): Promise<void> {
   const dir = tasksDirectory(projectRoot)
   await mkdir(dir, { recursive: true })
