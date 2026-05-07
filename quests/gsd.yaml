@@ -1,0 +1,126 @@
+# Waypoint GSD Quest — main lifecycle port from get-shit-done-cc.
+#
+# This manifest intentionally uses only the current Quest schema fields.
+# Command/sub-Quest mappings that are not first-class schema yet live under
+# metadata.gsd_port instead of invented top-level fields.
+
+schema_version: 1
+slug: gsd
+name: GSD Quest
+description: >
+  Waypoint Quest port of the get-shit-done-cc project flow. It models the
+  initialize → discuss → plan → execute → verify → ship journey as a reusable
+  Quest while preserving source command intent in metadata for later runtime
+  and catalog phases.
+workflow: workflows/gsd.yaml
+
+recipes:
+  - gsd-doc-writer
+  - gsd-project-researcher
+  - gsd-roadmapper
+  - gsd-assumptions-analyzer
+  - gsd-codebase-mapper
+  - gsd-phase-researcher
+  - gsd-planner
+  - gsd-plan-checker
+  - gsd-executor
+  - gsd-verifier
+  - gsd-doc-synthesizer
+  - gsd-code-reviewer
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Main Quest loop
+          phases:
+            - phase_key: "00"
+              phase_slug: initialize
+              lifecycle_phase: initialize
+            - phase_key: "10"
+              phase_slug: discuss
+              lifecycle_phase: discuss
+            - phase_key: "20"
+              phase_slug: plan
+              lifecycle_phase: plan
+            - phase_key: "30"
+              phase_slug: execute
+              lifecycle_phase: execute
+            - phase_key: "40"
+              phase_slug: verify
+              lifecycle_phase: verify
+            - phase_key: "50"
+              phase_slug: ship
+              lifecycle_phase: ship
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main
+    license: MIT
+  tags:
+    - gsd-port
+    - quest
+    - lifecycle-port
+  gsd_port:
+    scope: main_quest_manifest
+    upstream_commands:
+      - commands/gsd/new-project.md
+      - commands/gsd/discuss-phase.md
+      - commands/gsd/plan-phase.md
+      - commands/gsd/execute-phase.md
+      - commands/gsd/verify-work.md
+      - commands/gsd/ship.md
+    phase_entrypoints:
+      - phase: initialize
+        source_command: commands/gsd/new-project.md
+        intent: Gather project context, preferences, requirements, roadmap, and state.
+        primary_recipes:
+          - gsd-doc-writer
+          - gsd-project-researcher
+          - gsd-roadmapper
+        operator_interaction: configuration and approval questions
+      - phase: discuss
+        source_command: commands/gsd/discuss-phase.md
+        intent: Gather phase context and lock decisions before planning.
+        primary_recipes:
+          - gsd-assumptions-analyzer
+          - gsd-codebase-mapper
+          - gsd-doc-writer
+        operator_interaction: task-scoped discussion session
+      - phase: plan
+        source_command: commands/gsd/plan-phase.md
+        intent: Research, draft executable phase plans, and verify plan quality.
+        primary_recipes:
+          - gsd-phase-researcher
+          - gsd-planner
+          - gsd-plan-checker
+        operator_interaction: approval gate for plan readiness
+      - phase: execute
+        source_command: commands/gsd/execute-phase.md
+        intent: Execute phase plans in dependency-aware waves using subagents.
+        primary_recipes:
+          - gsd-executor
+        operator_interaction: optional pacing/checkpoints only
+      - phase: verify
+        source_command: commands/gsd/verify-work.md
+        intent: Validate built work through UAT-style verification and gap planning.
+        primary_recipes:
+          - gsd-verifier
+          - gsd-debugger
+          - gsd-plan-checker
+        operator_interaction: verification gate and issue triage
+      - phase: ship
+        source_command: commands/gsd/ship.md
+        intent: Prepare the completed work for PR/review/merge after verification passes.
+        primary_recipes:
+          - gsd-doc-synthesizer
+          - gsd-code-reviewer
+          - gsd-executor
+        operator_interaction: final ship approval gate
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - Sub-Quest and command mappings remain metadata until first-class schema support is added.
+      - Operator involvement is concentrated in discussion phases and explicit gates.

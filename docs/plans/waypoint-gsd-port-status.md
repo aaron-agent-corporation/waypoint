@@ -80,10 +80,12 @@ This table tracks only the ported artifacts.
 
 ## Main GSD Quest
 
-`quests/gsd.yaml` — **status: ☐ not started**.
+`quests/gsd.yaml` — **status: ✅ ported, manifest exists and resolves its recipe references**.
 
 The main Quest composes the phase-entrypoint recipes into the full
-discuss → plan → execute → verify → ship loop.
+initialize → discuss → plan → execute → verify → ship loop. Runtime-specific
+command and sub-Quest mappings that are not first-class Quest schema yet live
+under `metadata.gsd_port` in the manifest.
 
 ## Execution order
 

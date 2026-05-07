@@ -23,6 +23,7 @@ describe('worked examples at repo root', () => {
     expect(quests.ok).toBe(true)
     if (!quests.ok) throw new Error('quest load failed')
     expect(quests.registry.has('example')).toBe(true)
+    expect(quests.registry.has('gsd')).toBe(true)
 
     const recipes = await loadRecipesFromDirectory(recipesDir)
     expect(recipes.ok).toBe(true)
@@ -54,5 +55,34 @@ describe('worked examples at repo root', () => {
     expect(resolved.ok).toBe(true)
     if (!resolved.ok) throw new Error(JSON.stringify(resolved.error))
     expect(resolved.resolved.map((r) => r.slug)).toEqual(['doc-writer', 'reviewer'])
+
+    const gsd = quests.registry.get('gsd')
+    expect(gsd).toBeDefined()
+    if (!gsd) return
+    expect(gsd.workflow).toBe('workflows/gsd.yaml')
+    expect(gsd.recipes).toEqual([
+      'gsd-doc-writer',
+      'gsd-project-researcher',
+      'gsd-roadmapper',
+      'gsd-assumptions-analyzer',
+      'gsd-codebase-mapper',
+      'gsd-phase-researcher',
+      'gsd-planner',
+      'gsd-plan-checker',
+      'gsd-executor',
+      'gsd-verifier',
+      'gsd-doc-synthesizer',
+      'gsd-code-reviewer',
+    ])
+    expect(
+      gsd.scaffolds?.workstreams?.[0]?.milestones?.[0]?.phases?.map((phase) => phase.phase_slug),
+    ).toEqual(['initialize', 'discuss', 'plan', 'execute', 'verify', 'ship'])
+    expect(
+      (gsd.metadata?.gsd_port as { phase_entrypoints?: unknown[] } | undefined)?.phase_entrypoints,
+    ).toHaveLength(6)
+    const gsdResolved = resolveQuestRecipes(gsd, recipes.registry)
+    expect(gsdResolved.ok).toBe(true)
+    if (!gsdResolved.ok) throw new Error(JSON.stringify(gsdResolved.error))
+    expect(gsdResolved.resolved.map((r) => r.slug)).toEqual(gsd.recipes)
   })
 })
