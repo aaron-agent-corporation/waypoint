@@ -160,6 +160,15 @@ P6 added (implementation commit `4be4ef1`):
 - README links to the GSD Quest operator docs and command maps.
 - `src/__tests__/gsd-docs.test.ts` — docs smoke coverage for the guide, links, and all 65 command mappings.
 
+## P7 catalog close-out and attribution/license check
+
+P7 added (implementation commit `4f83277`):
+
+- `docs/waypoint-quest-catalog.md` — loader-backed catalog of all current Quest and Recipe manifests.
+- README link to the Quest/Recipe catalog.
+- Extended `src/__tests__/gsd-docs.test.ts` to assert catalog counts against the real recursive loaders and to require the preserved GSD license/notice references.
+- Re-read upstream `/Users/aaronwhaley/Downloads/get-shit-done-main/LICENSE` during P7. It is MIT licensed with `Copyright (c) 2025 Lex Christopherson`; attribution is preserved under `third_party/gsd/LICENSE` and `third_party/gsd/NOTICE.md`.
+
 ## Execution order
 
 Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes the fabricated P2–P8 narrative):
@@ -171,5 +180,5 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 - **P4** — Remaining Quest catalog manifests / operator-action mappings ✅
 - **P5** — Structural smoke coverage for the full GSD port ✅
 - **P6** — Operator docs and command mapping ✅
-- **P7** — Catalog close-out and attribution/license check ☐
+- **P7** — Catalog close-out and attribution/license check ✅
 - **P8** — Close-out gate ☐

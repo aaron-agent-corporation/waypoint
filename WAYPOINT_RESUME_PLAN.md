@@ -3,7 +3,7 @@
 **Date:** 2026-05-06
 **Author:** Hermes (on behalf of Aaron Whaley)
 **Context:** Recovery plan after 2026-05-06 gsd-orchestrator fabrication incident
-**Status:** Execution in progress; P2–P6 complete in real git history
+**Status:** Execution in progress; P2–P7 complete in real git history
 
 ---
 
@@ -283,7 +283,7 @@ No "Proceeding to P3 next" as the final line of a response. Either do it now wit
 | P4    | complete | c77471b | 2026-05-06 |
 | P5    | complete | e0d10dc | 2026-05-07 |
 | P6    | complete | 4be4ef1 | 2026-05-07 |
-| P7    | pending | —      | —    |
+| P7    | complete | 4f83277 | 2026-05-07 |
 | P8    | pending | —      | —    |
 
 Gary updates this table as real phases land, with real commit hashes from `git log`.
