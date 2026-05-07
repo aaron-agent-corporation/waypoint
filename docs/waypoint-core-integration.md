@@ -212,6 +212,11 @@ built-in, which is the primary long-term guard against regressions.
 See also `examples/quest-recipe-demo/` (end-to-end Quest + Recipe
 loading, resolution, and scaffolding walkthrough).
 
+For a concrete folder-backed host adapter, see `docs/waypoint-folder-host.md` and
+`examples/folder-host-quest/README.md`. The folder host stores route YAML,
+event JSONL, task YAML, discussion JSONL, and autopilot run history directly
+under a project-local `.waypoint/` directory.
+
 ## Recommended integration patterns
 
 - **Thin host adapters:** Keep host-specific code out of core. The more

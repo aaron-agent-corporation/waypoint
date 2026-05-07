@@ -17,6 +17,7 @@ src/                          # @waypoint/core — portable runtime
   boundaries.ts               # runtime guard — keeps core free of host-specific imports
 
 examples/host-minimal/        # reference external host (no MC, no Next.js)
+examples/folder-host-quest/   # runnable Local folder host walkthrough
 
 docs/
   waypoint-runtime-design.md
@@ -40,6 +41,7 @@ pnpm typecheck
 Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portability example and batteries-included workflow library:
 
 - Catalog: [`docs/waypoint-quest-catalog.md`](docs/waypoint-quest-catalog.md)
+- Local folder host: [`docs/waypoint-folder-host.md`](docs/waypoint-folder-host.md) and [`examples/folder-host-quest/README.md`](examples/folder-host-quest/README.md)
 - Operator guide: [`docs/quests/gsd.md`](docs/quests/gsd.md)
 - Human-readable command map: [`docs/quests/gsd-command-map.md`](docs/quests/gsd-command-map.md)
 - Machine-readable command map: [`docs/quests/gsd-command-map.yaml`](docs/quests/gsd-command-map.yaml)

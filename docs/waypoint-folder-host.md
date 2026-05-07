@@ -1,0 +1,219 @@
+# Waypoint folder host
+
+The Waypoint folder host runs a Quest against a normal project directory without Mission Control, a database, or a server. It stores project-local state in a human-readable `.waypoint/` folder and exposes the journey through the development CLI in `packages/waypoint-cli/src/bin.ts`.
+
+This is a private development package and not a globally published CLI. The examples below use either `waypoint ...` as shorthand or the direct Node entrypoint when you are running from this repository.
+
+## Current status
+
+The folder host can currently:
+
+- initialize a project-local `.waypoint/` directory;
+- install bundled Quest and Recipe manifests into that project;
+- start a live route for the bundled `gsd` Quest;
+- persist route YAML, event JSONL, task YAML, discussion JSONL, and autopilot run JSONL;
+- pause/resume routes and approve/reject gates;
+- run autopilot in the safe null runtime by default;
+- run Recipes through an explicitly configured local command runtime.
+
+It does not claim global installation, package publishing, cloud sync, or production packaging yet.
+
+## Development invocation
+
+From this repository, the safest smoke pattern is to run the CLI by absolute path from a temporary project directory:
+
+```bash
+repo=/Users/aaronwhaley/Github/waypoint
+tmp=$(mktemp -d)
+cd "$tmp"
+node "$repo/packages/waypoint-cli/src/bin.ts" --help
+```
+
+If you have installed or aliased the development CLI yourself, the shorthand command is:
+
+```bash
+waypoint --help
+```
+
+The CLI help registry currently exposes these commands:
+
+```text
+waypoint --help
+waypoint --version
+waypoint init [--quest <slug>]
+waypoint status
+waypoint quests
+waypoint recipes [--quest <slug>]
+waypoint start [--quest <slug>]
+waypoint routes [--json]
+waypoint route --route-id <id> [--json]
+waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
+waypoint tasks [--route-id <id>] [--json]
+waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
+waypoint auto [--route-id <id>] [--max-iterations N] [--json]
+waypoint auto status [--limit N] [--offset N] [--json]
+waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
+waypoint pause --route-id <id> [--reason <text>]
+waypoint resume --route-id <id>
+waypoint lifecycle add workstream --key <key> --name <name>
+waypoint lifecycle add milestone --workstream <key> --key <key> --title <title>
+waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
+waypoint lifecycle add plan --phase <key> --ref <ref> --title <title>
+waypoint lifecycle list
+```
+
+## Operator journey
+
+Start from an empty project folder.
+
+### 1. Initialize the folder
+
+```bash
+waypoint init --quest gsd
+```
+
+This creates `.waypoint/config.yaml`, installs the bundled `gsd` Quest manifest, installs the Recipes referenced by that Quest, and creates the local state directories.
+
+Check status:
+
+```bash
+waypoint status
+```
+
+### 2. Inspect bundled catalog content
+
+```bash
+waypoint quests
+waypoint recipes --quest gsd
+```
+
+`waypoint quests` lists available bundled Quests. `waypoint recipes --quest gsd` lists Recipes referenced by the `gsd` Quest.
+
+### 3. Start a Quest route
+
+```bash
+waypoint start --quest gsd
+```
+
+This creates a route such as `route-001`, appends a `route.started` event, scaffolds local workstream/milestone/phase/plan YAML, and materializes local tasks.
+
+Inspect route state:
+
+```bash
+waypoint routes
+waypoint route --route-id route-001
+waypoint route-events --route-id route-001
+waypoint tasks --route-id route-001
+```
+
+### 4. Use task discussion locally
+
+```bash
+waypoint discuss --task-id task-001 --message "Clarify the acceptance criteria before planning."
+```
+
+Task discussion is stored locally. Agent-authored messages are recorded as agent-authored and do not recursively request auto-response.
+
+### 5. Run safe autopilot
+
+```bash
+waypoint auto --route-id route-001
+waypoint auto status
+```
+
+By default, autopilot uses the null runtime. It simulates Recipe/discussion tasks, writes runtime metadata, appends events, and stops at the first human gate instead of executing external commands.
+
+### 6. Decide a gate
+
+When autopilot blocks on a gate, approve or reject it explicitly:
+
+```bash
+waypoint gate --route-id route-001 --node plan-approval-gate --approve --note "Plan accepted."
+```
+
+You can also pause and resume a route:
+
+```bash
+waypoint pause --route-id route-001 --reason "Waiting for owner review."
+waypoint resume --route-id route-001
+```
+
+## `.waypoint/` folder layout
+
+A project-local folder host state tree looks like this:
+
+```text
+.waypoint/
+  config.yaml                 # project opt-in, selected Quest, runtime config
+  quests/                     # copied Quest manifests, e.g. gsd.yaml
+  recipes/                    # copied Recipe manifests used by the Quest
+  lifecycle/
+    workstreams.yaml
+    milestones.yaml
+    phases.yaml
+    plans.yaml
+  routes/
+    route-001.yaml            # live route state
+  events/
+    route-001.jsonl           # append-only route event log
+  tasks/
+    tasks.yaml                # materialized task records
+    task-001-discussion.jsonl # task-scoped discussion messages
+  autopilot/
+    runs.jsonl                # append-only autopilot run history
+```
+
+Key path prefixes are `.waypoint/routes/`, `.waypoint/events/`, `.waypoint/tasks/`, and `.waypoint/autopilot/runs.jsonl`.
+
+These files are intended to be readable and inspectable. A project may choose to commit or ignore `.waypoint/` depending on whether the route state is part of the repo's audit trail.
+
+## Runtime modes
+
+### null runtime
+
+The null runtime is the default. It does not execute external commands. Autopilot marks eligible tasks as simulated/done and blocks at human gate tasks.
+
+### opt-in local runtime
+
+The local runtime executes local commands only when `.waypoint/config.yaml` explicitly sets `runtime.recipe: local` with a command and optional args:
+
+```yaml
+runtime:
+  recipe: local
+  command: node
+  args:
+    - ./capture-runtime.mjs
+    - ./payload.json
+```
+
+Safety rule: `runtime.recipe: local` executes local commands. Only enable it in a project folder where you control the command, arguments, and input script. The runtime sends a stable JSON payload on stdin and captures stdout, stderr, exit code, and signal in task runtime metadata.
+
+## Reset workflow
+
+For temporary smoke folders, reset by deleting local state:
+
+```bash
+rm -rf .waypoint
+```
+
+Then re-run:
+
+```bash
+waypoint init --quest gsd
+waypoint start --quest gsd
+```
+
+Do not run folder-host smokes from your home directory unless you intentionally want a home-level `.waypoint/` folder.
+
+## Limitations
+
+- This is a private development package, not a globally published CLI.
+- The direct Node TypeScript CLI path is the verified development smoke path.
+- The bundled GSD Quest is a catalog/example workflow; it does not make Waypoint a GSD clone.
+- The null runtime is safe by default but does not produce real external agent work.
+- The local runtime is intentionally opt-in because it executes local commands.
+- Packaging, release polish, and final readiness cleanup are tracked separately from this guide.
+
+## Reference example
+
+See [`examples/folder-host-quest/README.md`](../examples/folder-host-quest/README.md) for a copy/paste walkthrough that can be run from scratch.
