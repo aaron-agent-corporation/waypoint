@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { parseRecipeManifest } from '../../../../src/recipes/manifest.ts'
+import { parseRecipeManifest } from '@waypoint/core'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { readWaypointProjectConfig } from '../project/config.ts'
 import { getWaypointProjectPaths } from '../project/root.ts'
@@ -10,7 +10,7 @@ import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
 import { LocalRecipeRuntime } from '../runtime/local-runtime.ts'
 import { NullRecipeRuntime } from '../runtime/null-runtime.ts'
 
-import type { RecipeManifest } from '../../../../src/recipes/manifest.ts'
+import type { RecipeManifest } from '@waypoint/core'
 import type {
   RunWaypointAutopilotOptions,
   RunWaypointAutopilotResult,

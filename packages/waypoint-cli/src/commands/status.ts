@@ -1,4 +1,4 @@
-import { readWaypointStatus } from '../../../waypoint-folder-host/src/project/status.ts'
+import { readWaypointStatus } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

@@ -22,16 +22,22 @@ describe('folder host closeout', () => {
     expect(workspace).toContain("'packages/*'")
   })
 
-  it('keeps package manifests private and workspace-linked without claiming publication', () => {
+  it('keeps package manifests private and workspace-linked while targeting built CLI output', () => {
+    const rootPackage = JSON.parse(readRepoFile('package.json'))
     const cliPackage = JSON.parse(readRepoFile('packages/waypoint-cli/package.json'))
     const hostPackage = JSON.parse(readRepoFile('packages/waypoint-folder-host/package.json'))
 
+    expect(rootPackage.private).toBe(true)
+    expect(rootPackage.main).toBe('./dist/src/index.js')
+    expect(rootPackage.scripts.build).toBe('tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs')
+
     expect(cliPackage.private).toBe(true)
-    expect(cliPackage.bin.waypoint).toBe('./src/bin.ts')
+    expect(cliPackage.bin.waypoint).toBe('./dist/bin.js')
     expect(cliPackage.dependencies['@waypoint/core']).toBe('workspace:*')
     expect(cliPackage.dependencies['@waypoint/folder-host']).toBe('workspace:*')
 
     expect(hostPackage.private).toBe(true)
+    expect(hostPackage.main).toBe('./dist/index.js')
     expect(hostPackage.dependencies['@waypoint/core']).toBe('workspace:*')
   })
 
@@ -56,12 +62,13 @@ describe('folder host closeout', () => {
     }
   })
 
-  it('marks Track 1 complete in the remaining roadmap without choosing the next road by vibes', () => {
+  it('marks Track 1 complete and records package readiness as the active roadmap destination', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 1 — Standalone Folder Host + CLI')
     expect(roadmap).toContain('**Status:** Complete through F12')
     expect(roadmap).toContain('docs/plans/waypoint-folder-host-closeout.md')
-    expect(roadmap).toContain('Next track selection')
+    expect(roadmap).toContain('### Track 5 — Package + Install Readiness')
+    expect(roadmap).toContain('**Status:** Active — selected by Aaron after cleanup close-out.')
   })
 })

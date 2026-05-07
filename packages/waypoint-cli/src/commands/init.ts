@@ -1,6 +1,4 @@
-import { initWaypointProject } from '../../../waypoint-folder-host/src/project/init.ts'
-import { loadBundledWaypointCatalog } from '../../../waypoint-folder-host/src/catalog/bundled.ts'
-import { installQuestCatalog } from '../../../waypoint-folder-host/src/catalog/install.ts'
+import { initWaypointProject, installQuestCatalog, loadBundledWaypointCatalog } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

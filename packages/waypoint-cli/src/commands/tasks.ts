@@ -1,4 +1,4 @@
-import { listWaypointTasks } from '../../../waypoint-folder-host/src/tasks/store.ts'
+import { listWaypointTasks } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

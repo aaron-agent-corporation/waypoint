@@ -1,5 +1,5 @@
-import { appendTaskDiscussionMessage, readTaskDiscussionMessages } from '../../../waypoint-folder-host/src/discussion/store.ts'
-import { getWaypointTask } from '../../../waypoint-folder-host/src/tasks/store.ts'
+import { appendTaskDiscussionMessage, readTaskDiscussionMessages } from '@waypoint/folder-host'
+import { getWaypointTask } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

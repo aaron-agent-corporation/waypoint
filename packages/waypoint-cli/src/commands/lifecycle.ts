@@ -4,7 +4,7 @@ import {
   addLifecyclePlan,
   addLifecycleWorkstream,
   listLifecycleState,
-} from '../../../waypoint-folder-host/src/lifecycle/store.ts'
+} from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

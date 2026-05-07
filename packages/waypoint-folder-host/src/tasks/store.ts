@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { buildWaypointTaskDiscussionConversationId } from '../../../../src/discussion/conversation.ts'
+import { buildWaypointTaskDiscussionConversationId } from '@waypoint/core'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
 import { getWaypointProjectPaths } from '../project/root.ts'

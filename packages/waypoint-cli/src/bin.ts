@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import rootPackage from '../../../package.json' with { type: 'json' }
+import cliPackage from '../package.json' with { type: 'json' }
 import { runAutoCommand } from './commands/auto.ts'
 import { runDiscussCommand } from './commands/discuss.ts'
 import { runGateCommand } from './commands/gate.ts'
@@ -16,7 +16,7 @@ import { runStartCommand } from './commands/start.ts'
 import { runStatusCommand } from './commands/status.ts'
 import { runTasksCommand } from './commands/tasks.ts'
 
-const rootPackageVersion = rootPackage.version
+const rootPackageVersion = cliPackage.version
 
 export interface WaypointCliIo {
   stdout: (line: string) => void

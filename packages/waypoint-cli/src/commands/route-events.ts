@@ -1,5 +1,5 @@
-import { readRouteEvents } from '../../../waypoint-folder-host/src/events/jsonl.ts'
-import { getWaypointRoute } from '../../../waypoint-folder-host/src/routes/store.ts'
+import { readRouteEvents } from '@waypoint/folder-host'
+import { getWaypointRoute } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

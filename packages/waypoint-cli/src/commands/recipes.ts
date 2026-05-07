@@ -1,4 +1,4 @@
-import { loadBundledWaypointCatalog } from '../../../waypoint-folder-host/src/catalog/bundled.ts'
+import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

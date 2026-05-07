@@ -1,4 +1,4 @@
-import { approveRouteGate, rejectRouteGate } from '../../../waypoint-folder-host/src/routes/state.ts'
+import { approveRouteGate, rejectRouteGate } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
