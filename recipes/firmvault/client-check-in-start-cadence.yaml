@@ -1,0 +1,19 @@
+# FirmVault placeholder Recipe for Part One catalog resolution.
+# Full prompt/source SOP port is deferred to FVP2.
+
+schema_version: 1
+slug: firmvault-client-check-in-start-cadence
+name: FirmVault Client Check In Start Cadence
+description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+prompt: Safe placeholder for the FirmVault folder-host port. Do not send external communications or modify external
+  systems. Produce local draft/handoff artifacts only.
+tools:
+- file_read
+- file_write
+metadata:
+  source_port:
+    status: placeholder_until_fvp2
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflows:
+    - workflows/firmvault-client-check-in-cadence.yaml
+    external_side_effects: forbidden

@@ -1,0 +1,137 @@
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
+import { describe, expect, it } from 'vitest'
+import { parse as parseYaml } from 'yaml'
+
+import { runWaypointCli } from '../../packages/waypoint-cli/src/bin.ts'
+
+type ScaffoldPlan = {
+  readonly plan_ref?: string
+  readonly title?: string
+  readonly metadata?: {
+    readonly waypoint?: {
+      readonly node?: { readonly type?: string }
+      readonly recipe?: { readonly slug?: string }
+      readonly gate?: { readonly required?: boolean; readonly kind?: string }
+      readonly wait?: unknown
+    }
+    readonly source_port?: {
+      readonly allow_plan_ref_recipe_slug?: boolean
+    }
+  }
+}
+
+type ScaffoldPhase = {
+  readonly phase_slug?: string
+  readonly plans?: readonly ScaffoldPlan[]
+}
+
+type ScaffoldQuest = {
+  readonly scaffolds?: {
+    readonly workstreams?: readonly {
+      readonly milestones?: readonly {
+        readonly phases?: readonly ScaffoldPhase[]
+      }[]
+    }[]
+  }
+}
+
+function flattenPhases(quest: ScaffoldQuest): readonly ScaffoldPhase[] {
+  return (quest.scaffolds?.workstreams ?? []).flatMap((workstream) =>
+    (workstream.milestones ?? []).flatMap((milestone) => milestone.phases ?? []),
+  )
+}
+
+function flattenPlans(quest: ScaffoldQuest): readonly ScaffoldPlan[] {
+  return flattenPhases(quest).flatMap((phase) => phase.plans ?? [])
+}
+
+async function tempProject(): Promise<string> {
+  return mkdtemp(join(tmpdir(), 'firmvault-waypoint-case-'))
+}
+
+describe('FirmVault Quest skeleton', () => {
+  it('loads through the bundled catalog and resolves all explicit recipe references', async () => {
+    const catalog = await loadBundledWaypointCatalog()
+    expect(catalog.quests.has('firmvault')).toBe(true)
+
+    const resolved = catalog.resolveQuestRecipes('firmvault')
+    expect(resolved.ok, resolved.ok ? undefined : resolved.message).toBe(true)
+    if (!resolved.ok) throw new Error(resolved.message)
+
+    const quest = resolved.quest as typeof resolved.quest & ScaffoldQuest
+    const questRecipeSlugs = new Set(quest.recipes ?? [])
+    const phases = flattenPhases(quest)
+    const phaseSlugs = phases.map((phase) => phase.phase_slug)
+    expect(phaseSlugs).toEqual([
+      'onboarding',
+      'file-setup',
+      'treatment-monitoring',
+      'records-bills',
+      'demand',
+      'negotiation',
+      'settlement',
+      'liens',
+      'close',
+    ])
+
+    const plans = flattenPlans(quest)
+    const planRefs = plans.map((plan) => plan.plan_ref)
+    expect(new Set(planRefs).size).toBe(planRefs.length)
+
+    const recipePlans = plans.filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+    expect(recipePlans.length).toBeGreaterThan(0)
+    for (const plan of recipePlans) {
+      const recipeSlug = plan.metadata?.waypoint?.recipe?.slug
+      expect(recipeSlug, `${plan.plan_ref} explicit recipe slug`).toEqual(expect.any(String))
+      expect(questRecipeSlugs.has(recipeSlug ?? ''), `${plan.plan_ref} recipe listed in Quest recipes`).toBe(true)
+      expect(recipeSlug === plan.plan_ref && !plan.metadata?.source_port?.allow_plan_ref_recipe_slug).toBe(false)
+    }
+
+    const gatePlans = plans.filter((plan) => plan.metadata?.waypoint?.node?.type === 'gate')
+    expect(gatePlans.length).toBeGreaterThan(0)
+    for (const plan of gatePlans) {
+      expect(plan.metadata?.waypoint?.gate?.required, `${plan.plan_ref} gate required`).toBe(true)
+    }
+
+    const waitPlans = plans.filter((plan) => plan.metadata?.waypoint?.node?.type === 'wait')
+    expect(waitPlans.length).toBeGreaterThan(0)
+    for (const plan of waitPlans) {
+      expect(plan.metadata?.waypoint?.wait, `${plan.plan_ref} wait metadata`).toBeDefined()
+    }
+  })
+
+  it('installs and starts inside a temp FirmVault-style case folder without touching the repo root', async () => {
+    const cwd = await tempProject()
+    const repoRoot = join(__dirname, '..', '..')
+
+    expect(await runWaypointCli(['quests'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+    expect(await runWaypointCli(['init', '--quest', 'firmvault'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+    expect(await runWaypointCli(['status'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+    expect(await runWaypointCli(['start', '--quest', 'firmvault'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+    expect(await runWaypointCli(['routes'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+    expect(await runWaypointCli(['tasks', '--route-id', 'route-001'], { cwd, stdout: () => undefined, stderr: () => undefined })).toBe(0)
+
+    await expect(readFile(join(cwd, '.waypoint/config.yaml'), 'utf8')).resolves.toContain('quest: firmvault')
+    await expect(readFile(join(cwd, '.waypoint/quests/firmvault.yaml'), 'utf8')).resolves.toContain('slug: firmvault')
+    await expect(readFile(join(cwd, '.waypoint/routes/route-001.yaml'), 'utf8')).resolves.toContain('quest: firmvault')
+
+    const eventLines = (await readFile(join(cwd, '.waypoint/events/route-001.jsonl'), 'utf8')).trim().split('\n')
+    expect(eventLines.some((line) => JSON.parse(line).kind === 'route.started')).toBe(true)
+
+    const taskState = parseYaml(await readFile(join(cwd, '.waypoint/tasks/tasks.yaml'), 'utf8')) as {
+      readonly tasks?: readonly { readonly kind?: string }[]
+    }
+    const taskKinds = new Set((taskState.tasks ?? []).map((task) => task.kind))
+    expect((taskState.tasks ?? []).length).toBeGreaterThan(0)
+    expect(taskKinds.has('recipe')).toBe(true)
+    expect(taskKinds.has('gate')).toBe(true)
+    expect(taskKinds.has('wait')).toBe(true)
+    expect(taskKinds.has('checkpoint')).toBe(true)
+
+    await expect(readFile(join(repoRoot, '.waypoint/config.yaml'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+})

@@ -1,0 +1,744 @@
+schema_version: 1
+kind: firmvault_workflow_port_map
+source:
+  repositories:
+    mission_control:
+      path: /Users/aaronwhaley/Github/mission-control
+      branch: feat/waypoint-runtime-slice
+      head: 5585a59
+  workflow_glob: workflows/firmvault*.yaml
+  passive_landmarks_source: src/lib/firmvault-passive-landmarks.ts
+workflows:
+- id: firmvault-accident-report
+  phase: file-setup
+  wave: 1-file-setup
+  status: initial_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-accident-report.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 5
+  recipe_slugs:
+  - firmvault-accident-report-analyze
+  trigger_landmarks:
+  - full_intake_complete
+  output_landmarks:
+  - accident_report_number_identified
+  - accident_report_obtained
+  - accident_report_requested
+  - accident_report_reviewed
+  - accident_report_status_checked
+  - accident_reporting_agency_identified
+  human_gates:
+  - confirm_accident_report
+  waits:
+  - 14d
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-bi-claim-setup
+  phase: treatment-monitoring
+  wave: 2-insurance-and-treatment
+  status: mapped_for_later_wave
+  source_priority: standalone
+  source_files:
+  - workflows/firmvault-bi-claim-setup.yaml
+  node_count: 5
+  recipe_slugs:
+  - firmvault-insurance-bi-identify-carrier
+  - firmvault-insurance-bi-prepare-lor
+  - firmvault-insurance-bi-process-acknowledgment
+  trigger_landmarks:
+  - accident_report_obtained
+  - at_fault_insurance_identified
+  output_landmarks:
+  - at_fault_insurance_identified
+  - bi_acknowledgment_checked
+  - bi_lor_prepared
+  - bi_lor_sent
+  human_gates:
+  - human_send_bi_lor
+  waits:
+  - 5d
+  canonical_paths:
+  - accident/accident.md
+  - accident/liability.md
+  - accident/police-report.md
+  - activity/
+  - client/intake.md
+  - contacts/<carrier-or-adjuster-slug>.md
+  - documents/generated/insurance/
+  - documents/generated/insurance/bi-<carrier-slug>-lor.md
+  - documents/sent/insurance/bi-<carrier-slug>-lor-sent.md
+  - documents/shadows/insurance/
+  - insurance/bi-<carrier-slug>.md
+  - workflow-log/
+  notes: []
+- id: firmvault-case-setup
+  phase: onboarding
+  wave: 0-onboarding
+  status: initial_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-case-setup.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-case-setup-create-shell
+  - firmvault-document-collection-review-intake
+  trigger_landmarks:
+  - new_case_intake_started
+  output_landmarks:
+  - case_setup_complete
+  - case_setup_confirmed
+  - case_setup_requested
+  - case_setup_reviewed
+  - case_workspace_created
+  - client_info_received
+  human_gates:
+  - confirm_case_setup
+  - human_case_setup_review
+  - recognize_new_case
+  waits: []
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-client-check-in-cadence
+  phase: treatment-monitoring
+  wave: 1-file-setup
+  status: initial_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-client-check-in-cadence.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 4
+  recipe_slugs:
+  - firmvault-client-check-in-prepare-handoff
+  - firmvault-client-check-in-start-cadence
+  - firmvault-medical-provider-setup-case
+  trigger_landmarks:
+  - case_active
+  - full_intake_complete
+  output_landmarks:
+  - client_check_in_active
+  - client_check_in_prepared
+  - client_contact_attempted
+  - provider_referral_needed
+  human_gates:
+  - human_client_contact
+  waits:
+  - 14d
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-close-case
+  phase: close
+  wave: 6-close
+  status: mapped_for_later_wave
+  source_priority: standalone
+  source_files:
+  - workflows/firmvault-close-case.yaml
+  node_count: 5
+  recipe_slugs:
+  - firmvault-close-case-document-closure
+  - firmvault-close-case-prepare-letter
+  - firmvault-close-case-verify-readiness
+  trigger_landmarks:
+  - final_distribution_complete
+  output_landmarks:
+  - all_obligations_verified
+  - case_archived
+  - case_closed
+  - final_letter_prepared
+  - final_letter_sent
+  human_gates:
+  - human_archive_file
+  - human_send_closing_letter
+  waits: []
+  canonical_paths: []
+  notes: []
+- id: firmvault-demand-readiness
+  phase: demand
+  wave: 3-demand
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-demand-readiness.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-demand-gather-materials
+  - firmvault-workflow-task
+  trigger_landmarks:
+  - all_bills_received
+  - all_records_received
+  - treatment_complete
+  output_landmarks:
+  - all_bills_received
+  - all_records_received
+  - damages_calculated
+  - demand_materials_gathered
+  - demand_readiness_reviewed
+  human_gates:
+  - confirm_demand_readiness
+  waits: []
+  canonical_paths:
+  - accident/
+  - activity/
+  - demand/readiness.md
+  - insurance/
+  - liens/
+  - medical-providers/
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-document-collection
+  phase: onboarding
+  wave: 0-onboarding
+  status: initial_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-document-collection.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 5
+  recipe_slugs:
+  - firmvault-document-collection-request-missing-documents
+  - firmvault-document-collection-review-intake
+  - firmvault-document-collection-send-signature-packets
+  trigger_landmarks:
+  - case_setup_complete
+  output_landmarks:
+  - full_intake_complete
+  - onboarding_document_checklist_loaded
+  - onboarding_documents_requested
+  - onboarding_signature_packets_sent
+  human_gates:
+  - confirm_onboarding_documents
+  waits:
+  - 7d
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-draft-demand
+  phase: demand
+  wave: 3-demand
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-draft-demand.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-demand-check-final-lien-process
+  - firmvault-demand-draft-letter
+  - firmvault-workflow-task
+  trigger_landmarks:
+  - damages_calculated
+  - demand_readiness_reviewed
+  output_landmarks:
+  - attorney_reviewed_demand
+  - demand_drafted
+  - demand_lien_process_checked
+  human_gates:
+  - attorney_review_demand
+  waits: []
+  canonical_paths:
+  - accident/
+  - activity/
+  - demand/damages-summary.md
+  - demand/demand-letter.md
+  - demand/demand-package.md
+  - demand/readiness.md
+  - documents/shadows/accident/
+  - insurance/
+  - liens/
+  - medical-providers/
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-early-lien-identification
+  phase: liens
+  wave: 2-insurance-and-treatment
+  status: mapped_for_later_wave
+  source_priority: standalone
+  source_files:
+  - workflows/firmvault-early-lien-identification.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-lien-identify-potential
+  trigger_landmarks:
+  - providers_setup
+  output_landmarks:
+  - health_coverage_categorized
+  - lien_clues_reviewed
+  - lien_inventory_reviewed
+  - liens_identified
+  human_gates:
+  - human_lien_inventory_review
+  waits: []
+  canonical_paths:
+  - activity/
+  - client/check-ins.md
+  - client/intake.md
+  - documents/received/
+  - documents/shadows/
+  - insurance/
+  - liens/
+  - medical-providers/<provider-slug>/documents/
+  - medical-providers/<provider-slug>/provider.md
+  - medical-providers/<provider-slug>/records-bills.md
+  - workflow-log/
+  notes: []
+- id: firmvault-final-distribution
+  phase: settlement
+  wave: 5-settlement-and-liens
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-final-distribution.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 4
+  recipe_slugs:
+  - firmvault-final-distribution-prepare-statement
+  - firmvault-final-distribution-zero-trust
+  trigger_landmarks:
+  - funds_received
+  - liens_negotiated
+  output_landmarks:
+  - client_distributed
+  - client_distribution_issued
+  - final_distribution_complete
+  - final_distribution_statement_prepared
+  - trust_account_zeroed
+  human_gates:
+  - confirm_receipt
+  - human_confirm_client_receipt
+  - human_issue_client_distribution
+  - issue_additional_distribution
+  waits: []
+  canonical_paths:
+  - activity/
+  - documents/generated/settlement/
+  - documents/sent/settlement/
+  - expenses/
+  - liens/
+  - settlement/distribution.md
+  - settlement/settlement.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-lien-resolution
+  phase: liens
+  wave: 5-settlement-and-liens
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-lien-resolution.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 7
+  recipe_slugs:
+  - firmvault-lien-resolution-document-final-amount
+  - firmvault-lien-resolution-document-payment
+  - firmvault-lien-resolution-prepare-final-request
+  - firmvault-lien-resolution-review-inventory
+  trigger_landmarks:
+  - liens_identified
+  - phase_or_track_active
+  output_landmarks:
+  - final_amount_request_prepared
+  - final_amounts_received
+  - final_amounts_requested
+  - lien_payment_authorized
+  - liens_identified
+  - liens_negotiated
+  - liens_opened
+  - liens_paid
+  human_gates:
+  - human_lien_payment_review
+  - human_send_final_lien_request
+  waits:
+  - 30d
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-medical-provider-setup
+  phase: file-setup
+  wave: 1-file-setup
+  status: initial_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-medical-provider-setup.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-medical-provider-setup-case
+  trigger_landmarks:
+  - full_intake_complete
+  output_landmarks:
+  - injury_summary_recorded
+  - medical_provider_setup_reviewed
+  - provider_treatment_dates_recorded
+  - providers_setup
+  human_gates:
+  - confirm_medical_provider_setup
+  waits: []
+  canonical_paths:
+  - accident/accident.md
+  - accident/police-report.md
+  - client/check-ins.md
+  - client/intake.md
+  - contacts/<provider-slug>.md
+  - documents/shadows/accident/
+  - medical-providers/<provider-slug>/chronology.md
+  - medical-providers/<provider-slug>/provider.md
+  - medical-providers/<provider-slug>/records-bills.md
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-medical-provider-status
+  phase: treatment-monitoring
+  wave: 2-insurance-and-treatment
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-medical-provider-status.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 3
+  recipe_slugs:
+  - firmvault-medical-provider-review-status
+  - firmvault-workflow-task
+  trigger_landmarks:
+  - providers_setup
+  output_landmarks:
+  - provider_followups_flagged
+  - provider_list_reviewed
+  - provider_status_updated
+  - treatment_complete
+  - treatment_status_reviewed
+  human_gates:
+  - human_treatment_status_review
+  waits:
+  - 30d
+  canonical_paths:
+  - activity/
+  - client/check-ins.md
+  - medical-providers/<provider-slug>/chronology.md
+  - medical-providers/<provider-slug>/provider.md
+  - medical-providers/<provider-slug>/records-bills.md
+  - medical-providers/<provider-slug>/treatment.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-negotiate-claim
+  phase: negotiation
+  wave: 4-negotiation
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-negotiate-claim.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 3
+  recipe_slugs:
+  - firmvault-negotiation-document-response
+  - firmvault-negotiation-prepare-response
+  trigger_landmarks:
+  - offer_decision_documented
+  output_landmarks:
+  - negotiation_response_human_sent
+  - negotiation_response_prepared
+  - negotiation_result_documented
+  - settlement_reached
+  human_gates:
+  - human_send_negotiation_response
+  waits: []
+  canonical_paths:
+  - activity/
+  - documents/generated/insurance/
+  - documents/sent/insurance/
+  - insurance/
+  - negotiation/offer-evaluation.md
+  - negotiation/offers.md
+  - settlement/
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-offer-evaluation
+  phase: negotiation
+  wave: 4-negotiation
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-offer-evaluation.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 3
+  recipe_slugs:
+  - firmvault-negotiation-document-client-decision
+  - firmvault-negotiation-offer-evaluation
+  trigger_landmarks:
+  - offer_documented
+  output_landmarks:
+  - client_advised_of_offer
+  - net_to_client_prepared
+  - offer_decision_documented
+  - offer_evaluated
+  human_gates:
+  - client_offer_decision
+  waits: []
+  canonical_paths:
+  - activity/
+  - demand/damages-summary.md
+  - demand/demand-package.md
+  - demand/readiness.md
+  - insurance/
+  - liens/
+  - medical-providers/
+  - negotiation/offer-evaluation.md
+  - negotiation/offers.md
+  - settlement/
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-pip-claim-setup
+  phase: treatment-monitoring
+  wave: 2-insurance-and-treatment
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-pip-claim-setup.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 7
+  recipe_slugs:
+  - firmvault-insurance-pip-open-claim
+  - firmvault-pip-confirm-approval
+  - firmvault-pip-file-application
+  - firmvault-pip-track-exhaustion
+  trigger_landmarks:
+  - accident_report_obtained
+  - pip_track_active
+  output_landmarks:
+  - pip_acknowledgment_checked
+  - pip_application_filed
+  - pip_application_prepared
+  - pip_approved
+  - pip_benefits_exhausted
+  - pip_carrier_identified
+  - pip_lor_prepared
+  - pip_lor_sent
+  - pip_status_checked
+  - pip_track_active
+  human_gates:
+  - human_send_pip_packet
+  waits:
+  - 10d
+  - 30d
+  canonical_paths:
+  - accident/accident.md
+  - accident/liability.md
+  - accident/police-report.md
+  - activity/
+  - client/intake.md
+  - contacts/<carrier-or-adjuster-slug>.md
+  - documents/generated/insurance/
+  - documents/generated/insurance/pip-<carrier-slug>-application.md
+  - documents/generated/insurance/pip-<carrier-slug>-lor.md
+  - documents/received/insurance/
+  - documents/sent/insurance/
+  - documents/sent/insurance/pip-<carrier-slug>-application-sent.md
+  - documents/sent/insurance/pip-<carrier-slug>-lor-sent.md
+  - documents/shadows/insurance/
+  - insurance/pip-<carrier-slug>.md
+  - insurance/uim-<carrier-slug>.md
+  - insurance/um-<carrier-slug>.md
+  - medical-providers/<provider-slug>/records-bills.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-request-medical-records
+  phase: records-bills
+  wave: 2-insurance-and-treatment
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-request-medical-records.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 14
+  recipe_slugs:
+  - firmvault-medical-chronology-update
+  - firmvault-medical-records-escalate-delay
+  - firmvault-medical-records-first-follow-up
+  - firmvault-medical-records-prepare-request
+  - firmvault-medical-records-receive-and-process
+  - firmvault-medical-records-second-follow-up
+  - firmvault-medical-records-send-request
+  - firmvault-medical-records-verify-authorization
+  - firmvault-request-records-bills-follow-up
+  - firmvault-request-records-bills-prepare-request
+  - firmvault-request-records-bills-send-request
+  trigger_landmarks:
+  - law_firm.provider.treatment_complete
+  - treatment_complete
+  output_landmarks:
+  - all_records_received
+  - law_firm.provider.first_records_follow_up_complete
+  - law_firm.provider.medical_chronology_updated
+  - law_firm.provider.medical_records_request_workflow_complete
+  - law_firm.provider.records_and_bills_processed
+  - law_firm.provider.records_request_escalated
+  - law_firm.provider.records_request_packet_prepared
+  - law_firm.provider.records_request_sent
+  - law_firm.provider.second_records_follow_up_complete
+  - law_firm.provider.third_records_follow_up_complete
+  - medical_auth_signed
+  - medical_auth_verified
+  - records_request_packet_prepared
+  - records_requested_all_providers
+  human_gates:
+  - confirm_provider_records_workflow_complete
+  - human_review_records
+  waits:
+  - 14d
+  - 15d
+  - 7d
+  - 9d
+  canonical_paths: []
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-send-demand
+  phase: demand
+  wave: 3-demand
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-send-demand.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 3
+  recipe_slugs:
+  - firmvault-demand-identify-recipients
+  - firmvault-demand-send-package
+  - firmvault-workflow-task
+  trigger_landmarks:
+  - attorney_reviewed_demand
+  output_landmarks:
+  - demand_recipients_identified
+  - demand_sent
+  human_gates:
+  - send_demand_package
+  waits:
+  - 30d
+  canonical_paths:
+  - activity/
+  - contacts/
+  - demand/damages-summary.md
+  - demand/demand-letter.md
+  - demand/demand-package.md
+  - documents/generated/insurance/
+  - documents/sent/insurance/
+  - insurance/
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-settlement-lien-negotiation
+  phase: liens
+  wave: 5-settlement-and-liens
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-settlement-lien-negotiation.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 3
+  recipe_slugs:
+  - firmvault-settlement-lien-audit
+  - firmvault-settlement-lien-document-result
+  trigger_landmarks:
+  - settlement_reached
+  output_landmarks:
+  - lien_available_funds_calculated
+  - liens_negotiated
+  - liens_prioritized
+  - settlement_lien_strategy_reviewed
+  - settlement_liens_audited
+  human_gates:
+  - human_lien_strategy_review
+  waits: []
+  canonical_paths:
+  - activity/
+  - demand/readiness.md
+  - documents/generated/settlement/
+  - documents/received/liens/
+  - insurance/
+  - liens/
+  - medical-providers/
+  - negotiation/offers.md
+  - settlement/distribution.md
+  - settlement/settlement.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-settlement-processing
+  phase: settlement
+  wave: 5-settlement-and-liens
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-settlement-processing.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 6
+  recipe_slugs:
+  - firmvault-settlement-document-funds
+  - firmvault-settlement-prepare-authorization
+  - firmvault-settlement-prepare-statement
+  trigger_landmarks:
+  - settlement_reached
+  output_landmarks:
+  - authorization_to_settle_prepared
+  - client_authorized
+  - funds_received
+  - release_executed
+  - settlement_statement_prepared
+  human_gates:
+  - execute_release
+  - get_client_signature
+  waits:
+  - 14d
+  canonical_paths:
+  - activity/
+  - documents/generated/settlement/
+  - documents/received/settlement/
+  - expenses/
+  - insurance/
+  - liens/
+  - negotiation/offers.md
+  - settlement/distribution.md
+  - settlement/settlement.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.
+- id: firmvault-track-offers
+  phase: negotiation
+  wave: 4-negotiation
+  status: mapped_for_later_wave
+  source_priority: standalone_then_aggregate
+  source_files:
+  - workflows/firmvault-track-offers.yaml
+  - workflows/firmvault-workflows.yaml
+  node_count: 2
+  recipe_slugs:
+  - firmvault-negotiation-track-offer
+  - firmvault-workflow-task
+  trigger_landmarks:
+  - demand_sent
+  output_landmarks:
+  - initial_offer_received
+  - offer_documented
+  human_gates: []
+  waits:
+  - 30d
+  canonical_paths:
+  - activity/
+  - demand/demand-package.md
+  - documents/received/insurance/
+  - documents/shadows/insurance/
+  - insurance/
+  - negotiation/offers.md
+  - workflow-log/
+  notes:
+  - Standalone workflow source is preferred for executable node names.

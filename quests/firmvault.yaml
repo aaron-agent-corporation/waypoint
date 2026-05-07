@@ -1,0 +1,326 @@
+# FirmVault Quest skeleton for case-folder-local Waypoint operation.
+# Uses only current Quest schema fields; source mapping lives in metadata.source_port.
+
+schema_version: 1
+slug: firmvault
+name: FirmVault Case Workflow
+description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
+workflow: workflows/firmvault.yaml
+recipes:
+- firmvault-case-setup-create-shell
+- firmvault-document-collection-review-intake
+- firmvault-document-collection-request-missing-documents
+- firmvault-document-collection-send-signature-packets
+- firmvault-accident-report-analyze
+- firmvault-medical-provider-setup-case
+- firmvault-client-check-in-start-cadence
+- firmvault-client-check-in-prepare-handoff
+scaffolds:
+  workstreams:
+  - key: case
+    name: FirmVault Case
+    milestones:
+    - version_label: part-one
+      title: FirmVault folder workflow skeleton
+      phases:
+      - phase_key: '00'
+        phase_slug: onboarding
+        lifecycle_phase: onboarding
+        plans:
+        - plan_ref: firmvault-case-setup-create-shell-task
+          title: Create or verify the FirmVault case folder shell
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-case-setup-create-shell
+            source_port:
+              workflow_id: firmvault-case-setup
+              source_node: create_case_workspace
+        - plan_ref: firmvault-case-setup-human-review
+          title: Human review of case setup before downstream work
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_case_setup_review
+            source_port:
+              workflow_id: firmvault-case-setup
+              source_node: human_case_setup_review
+        - plan_ref: firmvault-document-collection-review-intake-task
+          title: Review onboarding document checklist from canonical local evidence
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-collection-review-intake
+            source_port:
+              workflow_id: firmvault-document-collection
+              source_node: load_document_checklist
+        - plan_ref: firmvault-document-collection-missing-documents-handoff
+          title: Prepare handoff for missing onboarding documents
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-collection-request-missing-documents
+            source_port:
+              workflow_id: firmvault-document-collection
+              source_node: request_missing_documents
+        - plan_ref: firmvault-document-collection-signature-packet-handoff
+          title: Prepare signature packet handoff without sending externally
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-collection-send-signature-packets
+            source_port:
+              workflow_id: firmvault-document-collection
+              source_node: send_signature_packets
+        - plan_ref: firmvault-document-collection-wait-signed-documents
+          title: Wait/checkpoint for signed onboarding documents
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: passive_landmark_or_time
+                landmark: contract_signed_and_medical_auth_signed
+                days: 7
+            source_port:
+              workflow_id: firmvault-document-collection
+              source_node: wait_for_signed_documents
+        - plan_ref: firmvault-document-collection-human-confirmation
+          title: Human confirmation of onboarding document completion
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_onboarding_documents
+            source_port:
+              workflow_id: firmvault-document-collection
+              source_node: confirm_onboarding_documents
+      - phase_key: '10'
+        phase_slug: file-setup
+        lifecycle_phase: file-setup
+        plans:
+        - plan_ref: firmvault-accident-report-analyze-request-task
+          title: Analyze/request accident report from local evidence
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-accident-report-analyze
+            source_port:
+              workflow_id: firmvault-accident-report
+              source_node: identify_report_status
+        - plan_ref: firmvault-accident-report-wait
+          title: Wait/checkpoint for accident report receipt
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: passive_landmark_or_time
+                landmark: accident_report_received
+                days: 14
+            source_port:
+              workflow_id: firmvault-accident-report
+              source_node: wait_for_accident_report
+        - plan_ref: firmvault-accident-report-human-confirmation
+          title: Human confirmation of accident report workflow
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_accident_report
+            source_port:
+              workflow_id: firmvault-accident-report
+              source_node: confirm_accident_report
+        - plan_ref: firmvault-medical-provider-setup-task
+          title: Create or normalize medical provider ledgers
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-provider-setup-case
+            source_port:
+              workflow_id: firmvault-medical-provider-setup
+              source_node: create_provider_ledgers
+        - plan_ref: firmvault-medical-provider-setup-human-gate
+          title: Human confirmation of provider setup
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_medical_provider_setup
+            source_port:
+              workflow_id: firmvault-medical-provider-setup
+              source_node: confirm_medical_provider_setup
+        - plan_ref: firmvault-client-check-in-start-cadence-task
+          title: Start client check-in cadence from local case state
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-client-check-in-start-cadence
+            source_port:
+              workflow_id: firmvault-client-check-in-cadence
+              source_node: start_check_in_cadence
+        - plan_ref: firmvault-client-check-in-prepare-handoff-task
+          title: Prepare client contact handoff
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-client-check-in-prepare-handoff
+            source_port:
+              workflow_id: firmvault-client-check-in-cadence
+              source_node: prepare_check_in_handoff
+        - plan_ref: firmvault-client-check-in-human-contact-gate
+          title: Human client contact checkpoint
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_client_contact
+            source_port:
+              workflow_id: firmvault-client-check-in-cadence
+              source_node: human_client_contact
+      - phase_key: '20'
+        phase_slug: treatment-monitoring
+        lifecycle_phase: treatment-monitoring
+        plans:
+        - plan_ref: firmvault-treatment-monitoring-deferred
+          title: Checkpoint deferred treatment-monitoring expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-medical-provider-status
+              status: deferred_after_part_one
+      - phase_key: '30'
+        phase_slug: records-bills
+        lifecycle_phase: records-bills
+        plans:
+        - plan_ref: firmvault-records-bills-deferred
+          title: Checkpoint deferred records and bills workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              status: deferred_after_part_one
+      - phase_key: '40'
+        phase_slug: demand
+        lifecycle_phase: demand
+        plans:
+        - plan_ref: firmvault-demand-deferred
+          title: Checkpoint deferred demand workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-demand-readiness
+              status: deferred_after_part_one
+      - phase_key: '50'
+        phase_slug: negotiation
+        lifecycle_phase: negotiation
+        plans:
+        - plan_ref: firmvault-negotiation-deferred
+          title: Checkpoint deferred negotiation workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-offer-evaluation
+              status: deferred_after_part_one
+      - phase_key: '60'
+        phase_slug: settlement
+        lifecycle_phase: settlement
+        plans:
+        - plan_ref: firmvault-settlement-deferred
+          title: Checkpoint deferred settlement workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              status: deferred_after_part_one
+      - phase_key: '70'
+        phase_slug: liens
+        lifecycle_phase: liens
+        plans:
+        - plan_ref: firmvault-liens-deferred
+          title: Checkpoint deferred lien workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              status: deferred_after_part_one
+      - phase_key: '80'
+        phase_slug: close
+        lifecycle_phase: close
+        plans:
+        - plan_ref: firmvault-close-deferred
+          title: Checkpoint deferred close-case workflow expansion after Part One
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
+            source_port:
+              workflow_id: firmvault-close-case
+              status: deferred_after_part_one
+metadata:
+  source_port:
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    workflow_map: docs/quests/firmvault-workflow-map.yaml
+    status: part_one_skeleton
+    external_side_effects: forbidden

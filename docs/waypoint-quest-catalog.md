@@ -4,8 +4,8 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 
 ## Loader-backed counts
 
-- Total Quests loaded from disk: 37
-- Total Recipes loaded from disk: 35
+- Total Quests loaded from disk: 38
+- Total Recipes loaded from disk: 43
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -27,198 +27,195 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 
 ## Quests
 
-### Main Quest
-
-- `waypoint` — Waypoint Quest
-  - Path: `quests/waypoint.yaml`
-  - Description: Waypoint Quest port of the get-shit-done-cc project flow. It models the initialize → discuss → plan → execute → verify → ship journey as a reusable Quest while preserving source command intent in metadata for later runtime and catalog phases.
-  - Recipes: `waypoint-doc-writer`, `waypoint-project-researcher`, `waypoint-roadmapper`, `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`, `waypoint-executor`, `waypoint-verifier`, `waypoint-doc-synthesizer`, `waypoint-code-reviewer`
-  - Waypoint source port scope: `main_quest_manifest`
-
-### Waypoint source-derived catalog Quests
-
 - `add-tests` — Add Tests Quest
   - Path: `quests/add-tests.yaml`
   - Description: Waypoint catalog Quest port of gsd:add-tests for generate tests for a completed phase from UAT criteria and implementation evidence.
   - Recipes: `waypoint-verifier`, `waypoint-executor`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `ai-integration-phase` — AI Integration Phase Quest
   - Path: `quests/ai-integration-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:ai-integration-phase for generating AI-SPEC contracts for AI-system phases.
   - Recipes: `waypoint-framework-selector`, `waypoint-ai-researcher`, `waypoint-domain-researcher`, `waypoint-eval-planner`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `audit-fix` — Audit Fix Quest
   - Path: `quests/audit-fix.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-fix for autonomous audit-to-fix pipeline that classifies findings, fixes auto-fixable issues, and verifies results.
   - Recipes: `waypoint-code-reviewer`, `waypoint-code-fixer`, `waypoint-verifier`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `audit-milestone` — Audit Milestone Quest
   - Path: `quests/audit-milestone.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-milestone for milestone completion audit that checks delivered work against original intent before archiving.
   - Recipes: `waypoint-verifier`, `waypoint-integration-checker`, `waypoint-assumptions-analyzer`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `audit-uat` — Audit UAT Quest
   - Path: `quests/audit-uat.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-uat for cross-phase audit of outstanding UAT and verification items.
   - Recipes: `waypoint-verifier`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `cleanup` — Cleanup Quest
   - Path: `quests/cleanup.yaml`
   - Description: Waypoint catalog Quest port of gsd:cleanup for archive accumulated phase directories from completed milestones.
   - Recipes: `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `code-review` — Code Review Quest
   - Path: `quests/code-review.yaml`
   - Description: Waypoint catalog Quest port of gsd:code-review for source review loop for changed files with optional fix iteration.
   - Recipes: `waypoint-code-reviewer`, `waypoint-code-fixer`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `complete-milestone` — Complete Milestone Quest
   - Path: `quests/complete-milestone.yaml`
   - Description: Waypoint catalog Quest port of gsd:complete-milestone for archive a completed milestone and prepare the project for the next version.
   - Recipes: `waypoint-roadmapper`, `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `debug` — Debug Quest
   - Path: `quests/debug.yaml`
   - Description: Waypoint sub-Quest port of gsd:debug for systematic debugging with checkpointable investigation and continuation loops.
   - Recipes: `waypoint-debug-session-manager`, `waypoint-debugger`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `docs-update` — Docs Update Quest
   - Path: `quests/docs-update.yaml`
   - Description: Waypoint catalog Quest port of gsd:docs-update for generate or verify project documentation against the codebase.
   - Recipes: `waypoint-doc-writer`, `waypoint-doc-verifier`
-  - Waypoint source port scope: `command_informed_sub_quest`
+  - Source port scope/status: `command_informed_sub_quest`
 - `eval-review` — Evaluation Review Quest
   - Path: `quests/eval-review.yaml`
   - Description: Waypoint catalog Quest port of gsd:eval-review for audit AI/evaluation coverage for a completed AI phase.
   - Recipes: `waypoint-eval-auditor`, `waypoint-eval-planner`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `explore` — Explore Quest
-  - Path: `quests/explore.yaml`
-  - Description: Waypoint catalog Quest port of gsd:explore for socratic ideation and idea-routing session before committing to a plan.
-  - Recipes: `waypoint-advisor-researcher`, `waypoint-domain-researcher`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `extract-learnings` — Extract Learnings Quest
-  - Path: `quests/extract-learnings.yaml`
-  - Description: Waypoint catalog Quest port of gsd:extract-learnings for extract decisions, lessons, patterns, and surprises from completed phase artifacts.
-  - Recipes: `waypoint-doc-synthesizer`, `waypoint-pattern-mapper`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `fast` — Fast Quest
-  - Path: `quests/fast.yaml`
-  - Description: Waypoint catalog Quest port of gsd:fast for trivial task execution path with minimal planning overhead.
-  - Recipes: `waypoint-executor`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `forensics` — Forensics Quest
-  - Path: `quests/forensics.yaml`
-  - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
-  - Recipes: `waypoint-debugger`, `waypoint-codebase-mapper`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `graphify` — Graphify Quest
-  - Path: `quests/graphify.yaml`
-  - Description: Waypoint catalog Quest port of gsd:graphify for knowledge graph build and inspection flow for project planning context.
-  - Recipes: `waypoint-pattern-mapper`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `health` — Health Quest
-  - Path: `quests/health.yaml`
-  - Description: Waypoint catalog Quest port of gsd:health for planning-directory and workflow health diagnostic.
-  - Recipes: `waypoint-verifier`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `ingest-docs` — Ingest Docs Quest
-  - Path: `quests/ingest-docs.yaml`
-  - Description: Waypoint catalog Quest port of gsd:ingest-docs for bootstrap or merge planning setup from existing ADRs, PRDs, specs, and docs.
-  - Recipes: `waypoint-doc-classifier`, `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `map-codebase` — Map Codebase Quest
-  - Path: `quests/map-codebase.yaml`
-  - Description: Waypoint catalog Quest port of gsd:map-codebase for parallel codebase analysis producing structured codebase intelligence.
-  - Recipes: `waypoint-codebase-mapper`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `milestone-summary` — Milestone Summary Quest
-  - Path: `quests/milestone-summary.yaml`
-  - Description: Waypoint catalog Quest port of gsd:milestone-summary for generate a comprehensive completed-milestone summary for onboarding and review.
-  - Recipes: `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `plan-review-convergence` — Plan Review Convergence Quest
-  - Path: `quests/plan-review-convergence.yaml`
-  - Description: Waypoint catalog Quest port of gsd:plan-review-convergence for iterative plan-review convergence loop until high concerns are resolved.
-  - Recipes: `waypoint-planner`, `waypoint-plan-checker`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `pr-branch` — PR Branch Quest
-  - Path: `quests/pr-branch.yaml`
-  - Description: Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
-  - Recipes: `waypoint-executor`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `profile-user` — Profile User Quest
-  - Path: `quests/profile-user.yaml`
-  - Description: Waypoint catalog Quest port of gsd:profile-user for generate developer behavior and preference profile artifacts with consent gates.
-  - Recipes: `waypoint-user-profiler`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `quick` — Quick Quest
-  - Path: `quests/quick.yaml`
-  - Description: Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
-  - Recipes: `waypoint-planner`, `waypoint-executor`, `waypoint-verifier`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `review` — External Review Quest
-  - Path: `quests/review.yaml`
-  - Description: Waypoint catalog Quest port of gsd:review for cross-AI peer review of phase plans.
-  - Recipes: `waypoint-plan-checker`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `review-backlog` — Review Backlog Quest
-  - Path: `quests/review-backlog.yaml`
-  - Description: Waypoint catalog Quest port of gsd:review-backlog for review and promote backlog items into active planning.
-  - Recipes: `waypoint-roadmapper`, `waypoint-planner`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `secure-phase` — Secure Phase Quest
-  - Path: `quests/secure-phase.yaml`
-  - Description: Waypoint sub-Quest port of gsd:secure-phase for retroactively verifying threat mitigations for completed work.
-  - Recipes: `waypoint-security-auditor`, `waypoint-verifier`, `waypoint-code-fixer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `sketch` — Sketch Quest
-  - Path: `quests/sketch.yaml`
-  - Description: Waypoint catalog Quest port of gsd:sketch for explore UI/design directions through throwaway mockups before implementation.
-  - Recipes: `waypoint-ui-researcher`, `waypoint-ui-auditor`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `spec-phase` — Spec Phase Quest
-  - Path: `quests/spec-phase.yaml`
-  - Description: Waypoint sub-Quest port of gsd:spec-phase for clarifying what a phase delivers before planning how to build it.
-  - Recipes: `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-doc-writer`, `waypoint-plan-checker`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `spike` — Spike Quest
-  - Path: `quests/spike.yaml`
-  - Description: Waypoint sub-Quest port of gsd:spike for focused experiential exploration before committing to a build path.
-  - Recipes: `waypoint-project-researcher`, `waypoint-domain-researcher`, `waypoint-assumptions-analyzer`, `waypoint-executor`, `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `stats` — Stats Quest
-  - Path: `quests/stats.yaml`
-  - Description: Waypoint catalog Quest port of gsd:stats for project statistics report for phases, plans, requirements, git metrics, and timeline.
-  - Recipes: `waypoint-doc-synthesizer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `ui-phase` — UI Phase Quest
-  - Path: `quests/ui-phase.yaml`
-  - Description: Waypoint sub-Quest port of gsd:ui-phase for generating UI-SPEC design contracts for frontend phases.
-  - Recipes: `waypoint-ui-researcher`, `waypoint-ui-checker`, `waypoint-ui-auditor`, `waypoint-doc-writer`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `ui-review` — UI Review Quest
-  - Path: `quests/ui-review.yaml`
-  - Description: Waypoint catalog Quest port of gsd:ui-review for retroactive UI and visual quality audit.
-  - Recipes: `waypoint-ui-auditor`, `waypoint-ui-checker`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `ultraplan-phase` — Ultraplan Phase Quest
-  - Path: `quests/ultraplan-phase.yaml`
-  - Description: Waypoint sub-Quest port of gsd:ultraplan-phase for offloading planning to a remote cloud planning session and importing the result.
-  - Recipes: `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`
-  - Waypoint source port scope: `command_informed_sub_quest`
-- `validate-phase` — Validate Phase Quest
-  - Path: `quests/validate-phase.yaml`
-  - Description: Waypoint sub-Quest port of gsd:validate-phase for auditing and filling Nyquist validation gaps after execution.
-  - Recipes: `waypoint-nyquist-auditor`, `waypoint-verifier`, `waypoint-code-fixer`, `waypoint-eval-auditor`
-  - Waypoint source port scope: `command_informed_sub_quest`
-
-### Examples
-
+  - Source port scope/status: `command_informed_sub_quest`
 - `example` — Example Quest
   - Path: `quests/example.yaml`
   - Description: A trivial Quest demonstrating the manifest shape. It names a workflow YAML file, references two recipes, and declares a one-workstream scaffold.
   - Recipes: `doc-writer`, `reviewer`
+- `explore` — Explore Quest
+  - Path: `quests/explore.yaml`
+  - Description: Waypoint catalog Quest port of gsd:explore for socratic ideation and idea-routing session before committing to a plan.
+  - Recipes: `waypoint-advisor-researcher`, `waypoint-domain-researcher`
+  - Source port scope/status: `command_informed_sub_quest`
+- `extract-learnings` — Extract Learnings Quest
+  - Path: `quests/extract-learnings.yaml`
+  - Description: Waypoint catalog Quest port of gsd:extract-learnings for extract decisions, lessons, patterns, and surprises from completed phase artifacts.
+  - Recipes: `waypoint-doc-synthesizer`, `waypoint-pattern-mapper`
+  - Source port scope/status: `command_informed_sub_quest`
+- `fast` — Fast Quest
+  - Path: `quests/fast.yaml`
+  - Description: Waypoint catalog Quest port of gsd:fast for trivial task execution path with minimal planning overhead.
+  - Recipes: `waypoint-executor`
+  - Source port scope/status: `command_informed_sub_quest`
+- `firmvault` — FirmVault Case Workflow
+  - Path: `quests/firmvault.yaml`
+  - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`
+  - Source port scope/status: `part_one_skeleton`
+- `forensics` — Forensics Quest
+  - Path: `quests/forensics.yaml`
+  - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
+  - Recipes: `waypoint-debugger`, `waypoint-codebase-mapper`
+  - Source port scope/status: `command_informed_sub_quest`
+- `graphify` — Graphify Quest
+  - Path: `quests/graphify.yaml`
+  - Description: Waypoint catalog Quest port of gsd:graphify for knowledge graph build and inspection flow for project planning context.
+  - Recipes: `waypoint-pattern-mapper`
+  - Source port scope/status: `command_informed_sub_quest`
+- `health` — Health Quest
+  - Path: `quests/health.yaml`
+  - Description: Waypoint catalog Quest port of gsd:health for planning-directory and workflow health diagnostic.
+  - Recipes: `waypoint-verifier`
+  - Source port scope/status: `command_informed_sub_quest`
+- `ingest-docs` — Ingest Docs Quest
+  - Path: `quests/ingest-docs.yaml`
+  - Description: Waypoint catalog Quest port of gsd:ingest-docs for bootstrap or merge planning setup from existing ADRs, PRDs, specs, and docs.
+  - Recipes: `waypoint-doc-classifier`, `waypoint-doc-synthesizer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `map-codebase` — Map Codebase Quest
+  - Path: `quests/map-codebase.yaml`
+  - Description: Waypoint catalog Quest port of gsd:map-codebase for parallel codebase analysis producing structured codebase intelligence.
+  - Recipes: `waypoint-codebase-mapper`
+  - Source port scope/status: `command_informed_sub_quest`
+- `milestone-summary` — Milestone Summary Quest
+  - Path: `quests/milestone-summary.yaml`
+  - Description: Waypoint catalog Quest port of gsd:milestone-summary for generate a comprehensive completed-milestone summary for onboarding and review.
+  - Recipes: `waypoint-doc-synthesizer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `plan-review-convergence` — Plan Review Convergence Quest
+  - Path: `quests/plan-review-convergence.yaml`
+  - Description: Waypoint catalog Quest port of gsd:plan-review-convergence for iterative plan-review convergence loop until high concerns are resolved.
+  - Recipes: `waypoint-planner`, `waypoint-plan-checker`
+  - Source port scope/status: `command_informed_sub_quest`
+- `pr-branch` — PR Branch Quest
+  - Path: `quests/pr-branch.yaml`
+  - Description: Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
+  - Recipes: `waypoint-executor`
+  - Source port scope/status: `command_informed_sub_quest`
+- `profile-user` — Profile User Quest
+  - Path: `quests/profile-user.yaml`
+  - Description: Waypoint catalog Quest port of gsd:profile-user for generate developer behavior and preference profile artifacts with consent gates.
+  - Recipes: `waypoint-user-profiler`
+  - Source port scope/status: `command_informed_sub_quest`
+- `quick` — Quick Quest
+  - Path: `quests/quick.yaml`
+  - Description: Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
+  - Recipes: `waypoint-planner`, `waypoint-executor`, `waypoint-verifier`
+  - Source port scope/status: `command_informed_sub_quest`
+- `review` — External Review Quest
+  - Path: `quests/review.yaml`
+  - Description: Waypoint catalog Quest port of gsd:review for cross-AI peer review of phase plans.
+  - Recipes: `waypoint-plan-checker`
+  - Source port scope/status: `command_informed_sub_quest`
+- `review-backlog` — Review Backlog Quest
+  - Path: `quests/review-backlog.yaml`
+  - Description: Waypoint catalog Quest port of gsd:review-backlog for review and promote backlog items into active planning.
+  - Recipes: `waypoint-roadmapper`, `waypoint-planner`
+  - Source port scope/status: `command_informed_sub_quest`
+- `secure-phase` — Secure Phase Quest
+  - Path: `quests/secure-phase.yaml`
+  - Description: Waypoint sub-Quest port of gsd:secure-phase for retroactively verifying threat mitigations for completed work.
+  - Recipes: `waypoint-security-auditor`, `waypoint-verifier`, `waypoint-code-fixer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `sketch` — Sketch Quest
+  - Path: `quests/sketch.yaml`
+  - Description: Waypoint catalog Quest port of gsd:sketch for explore UI/design directions through throwaway mockups before implementation.
+  - Recipes: `waypoint-ui-researcher`, `waypoint-ui-auditor`
+  - Source port scope/status: `command_informed_sub_quest`
+- `spec-phase` — Spec Phase Quest
+  - Path: `quests/spec-phase.yaml`
+  - Description: Waypoint sub-Quest port of gsd:spec-phase for clarifying what a phase delivers before planning how to build it.
+  - Recipes: `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-doc-writer`, `waypoint-plan-checker`
+  - Source port scope/status: `command_informed_sub_quest`
+- `spike` — Spike Quest
+  - Path: `quests/spike.yaml`
+  - Description: Waypoint sub-Quest port of gsd:spike for focused experiential exploration before committing to a build path.
+  - Recipes: `waypoint-project-researcher`, `waypoint-domain-researcher`, `waypoint-assumptions-analyzer`, `waypoint-executor`, `waypoint-doc-synthesizer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `stats` — Stats Quest
+  - Path: `quests/stats.yaml`
+  - Description: Waypoint catalog Quest port of gsd:stats for project statistics report for phases, plans, requirements, git metrics, and timeline.
+  - Recipes: `waypoint-doc-synthesizer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `ui-phase` — UI Phase Quest
+  - Path: `quests/ui-phase.yaml`
+  - Description: Waypoint sub-Quest port of gsd:ui-phase for generating UI-SPEC design contracts for frontend phases.
+  - Recipes: `waypoint-ui-researcher`, `waypoint-ui-checker`, `waypoint-ui-auditor`, `waypoint-doc-writer`
+  - Source port scope/status: `command_informed_sub_quest`
+- `ui-review` — UI Review Quest
+  - Path: `quests/ui-review.yaml`
+  - Description: Waypoint catalog Quest port of gsd:ui-review for retroactive UI and visual quality audit.
+  - Recipes: `waypoint-ui-auditor`, `waypoint-ui-checker`
+  - Source port scope/status: `command_informed_sub_quest`
+- `ultraplan-phase` — Ultraplan Phase Quest
+  - Path: `quests/ultraplan-phase.yaml`
+  - Description: Waypoint sub-Quest port of gsd:ultraplan-phase for offloading planning to a remote cloud planning session and importing the result.
+  - Recipes: `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`
+  - Source port scope/status: `command_informed_sub_quest`
+- `validate-phase` — Validate Phase Quest
+  - Path: `quests/validate-phase.yaml`
+  - Description: Waypoint sub-Quest port of gsd:validate-phase for auditing and filling Nyquist validation gaps after execution.
+  - Recipes: `waypoint-nyquist-auditor`, `waypoint-verifier`, `waypoint-code-fixer`, `waypoint-eval-auditor`
+  - Source port scope/status: `command_informed_sub_quest`
+- `waypoint` — Waypoint Quest
+  - Path: `quests/waypoint.yaml`
+  - Description: Waypoint Quest port of the get-shit-done-cc project flow. It models the initialize → discuss → plan → execute → verify → ship journey as a reusable Quest while preserving source command intent in metadata for later runtime and catalog phases.
+  - Recipes: `waypoint-doc-writer`, `waypoint-project-researcher`, `waypoint-roadmapper`, `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`, `waypoint-executor`, `waypoint-verifier`, `waypoint-doc-synthesizer`, `waypoint-code-reviewer`
+  - Source port scope/status: `main_quest_manifest`
 
 ## Recipes
 
@@ -227,15 +224,12 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `waypoint-advisor-researcher` — Advisor Researcher
   - Path: `recipes/waypoint/advisor-researcher.yaml`
   - Description: Researches a single gray area decision and returns a structured comparison table with rationale. Spawned by discuss-phase advisor mode.
-  - Source: `agents/waypoint-advisor-researcher.md` (MIT)
 - `waypoint-ai-researcher` — Ai Researcher
   - Path: `recipes/waypoint/ai-researcher.yaml`
   - Description: Researches a chosen AI framework's official docs to produce implementation-ready guidance — best practices, syntax, core patterns, and pitfalls distilled for the specific use case. Writes the Framework Quick Reference and Implementation Guidance sections of AI-SPEC.md. Spawned by /waypoint-ai-integration-phase orchestrator.
-  - Source: `agents/waypoint-ai-researcher.md` (MIT)
 - `waypoint-assumptions-analyzer` — Assumptions Analyzer
   - Path: `recipes/waypoint/assumptions-analyzer.yaml`
   - Description: Deeply analyzes codebase for a phase and returns structured assumptions with evidence. Spawned by discuss-phase assumptions mode.
-  - Source: `agents/waypoint-assumptions-analyzer.md` (MIT)
 - `waypoint-code-fixer` — Code Fixer
   - Path: `recipes/waypoint/code-fixer.yaml`
   - Description: Applies fixes to code review findings from REVIEW.md. Reads source files, applies intelligent fixes, and commits each fix atomically. Spawned by /waypoint-code-review --fix.
@@ -263,11 +257,9 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `waypoint-doc-writer` — Doc Writer
   - Path: `recipes/waypoint/doc-writer.yaml`
   - Description: Writes and updates project documentation files. Spawned with a doc_assignment block specifying doc type, mode (create / update / supplement / fix), and project context. Ported from the GSD waypoint-doc-writer agent.
-  - Source: `agents/waypoint-doc-writer.md` (MIT)
 - `waypoint-domain-researcher` — Domain Researcher
   - Path: `recipes/waypoint/domain-researcher.yaml`
   - Description: Researches the business domain and real-world application context of the AI system being built. Surfaces domain expert evaluation criteria, industry-specific failure modes, regulatory context, and what "good" looks like for practitioners in this field — before the eval-planner turns it into measurable rubrics. Spawned by /waypoint-ai-integration-phase orchestrator.
-  - Source: `agents/waypoint-domain-researcher.md` (MIT)
 - `waypoint-eval-auditor` — Eval Auditor
   - Path: `recipes/waypoint/eval-auditor.yaml`
   - Description: Retroactive audit of an implemented AI phase's evaluation coverage. Checks implementation against the AI-SPEC.md evaluation plan. Scores each eval dimension as COVERED/PARTIAL/MISSING. Produces a scored EVAL-REVIEW.md with findings, gaps, and remediation guidance. Spawned by /waypoint-eval-review orchestrator.
@@ -329,16 +321,49 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/waypoint/verifier.yaml`
   - Description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
 
+### FirmVault placeholder Recipes
+
+- `firmvault-accident-report-analyze` — FirmVault Accident Report Analyze
+  - Path: `recipes/firmvault/accident-report-analyze.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-case-setup-create-shell` — FirmVault Case Setup Create Shell
+  - Path: `recipes/firmvault/case-setup-create-shell.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-client-check-in-prepare-handoff` — FirmVault Client Check In Prepare Handoff
+  - Path: `recipes/firmvault/client-check-in-prepare-handoff.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-client-check-in-start-cadence` — FirmVault Client Check In Start Cadence
+  - Path: `recipes/firmvault/client-check-in-start-cadence.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-request-missing-documents` — FirmVault Document Collection Request Missing Documents
+  - Path: `recipes/firmvault/document-collection-request-missing-documents.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-review-intake` — FirmVault Document Collection Review Intake
+  - Path: `recipes/firmvault/document-collection-review-intake.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-send-signature-packets` — FirmVault Document Collection Send Signature Packets
+  - Path: `recipes/firmvault/document-collection-send-signature-packets.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+- `firmvault-medical-provider-setup-case` — FirmVault Medical Provider Setup Case
+  - Path: `recipes/firmvault/medical-provider-setup-case.yaml`
+  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - External side effects: `forbidden`
+
 ### Non-source-derived example Recipes
 
 - `doc-writer` — Doc Writer
   - Path: `recipes/doc-writer.yaml`
   - Description: Produces clear, well-organized documentation from a set of source notes or an outline. Favors concrete examples over abstractions.
-  - Tools: `read_file`, `write_file`, `search_files`
 - `reviewer` — Reviewer
   - Path: `recipes/reviewer.yaml`
   - Description: Reviews completed work for correctness, completeness, and adherence to stated acceptance criteria. Produces a pass/fail verdict with specific issues to address when failing.
-  - Tools: `read_file`, `search_files`
 
 ## Deferred / not implemented in this repo
 
@@ -346,3 +371,4 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - No first-class sub-Quest schema field exists yet; command mapping intent lives in metadata/docs.
 - No built-in recipe executor is shipped in the standalone core package yet; hosts provide `IRecipeRuntime`.
 - Namespace commands from the upstream source CLI (`ns-*`) remain deferred optional mappings, documented in `docs/quests/waypoint-command-map.md`.
+- FirmVault placeholder recipes are safe Part One catalog manifests; full prompt/SOP ports are deferred to FVP2.
