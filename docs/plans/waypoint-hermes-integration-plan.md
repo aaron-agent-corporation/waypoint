@@ -206,17 +206,25 @@ Hermes-side operational registry wiring remains a later environment-specific ste
 
 **Objective:** Let Hermes operate a folder-host project through a narrow Waypoint command allowlist.
 
-**Files likely to change:**
+**H2 status: complete.**
+
+**Files changed:**
 
 - Waypoint repo:
-  - `examples/hermes-runtime-adapter/` or `examples/hermes-operator-adapter/`
-  - `src/__tests__/hermes-integration-plan.test.ts` or new adapter contract tests
-- Hermes profile:
-  - operational script/skill that runs the CLI from a registered project root
+  - `docs/plans/waypoint-hermes-integration-plan.md`
+  - `docs/plans/waypoint-remaining-roadmap.md`
+  - `examples/hermes-operator-adapter/README.md`
+  - `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`
+  - `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
 
 **Behavior:**
 
-Natural-language operator requests map to allowed CLI calls such as:
+The H2 reference adapter exports a safe Waypoint command runner at `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`.
+
+Natural-language operator requests must be converted by Hermes into explicit allowlisted Waypoint argument arrays before execution. H2 does not execute arbitrary shell strings.
+
+Allowed read-only commands include:
 
 ```bash
 waypoint status
@@ -226,7 +234,7 @@ waypoint tasks --route-id route-001
 waypoint route-events --route-id route-001 --limit 20
 ```
 
-Mutation commands require intent to be clear:
+Mutation commands are explicitly marked and require clear command intent:
 
 ```bash
 waypoint discuss --task-id task-003 --message "..."
@@ -236,11 +244,23 @@ waypoint pause --route-id route-001 --reason "..."
 waypoint resume --route-id route-001
 ```
 
+Safety behavior:
+
+- command allowlist rejects non-Waypoint shell commands;
+- command allowlist rejects Waypoint commands outside H2 scope, including `init`, `start`, `quests`, `recipes`, and `lifecycle`;
+- each allowed command has a narrow flag allowlist;
+- missing required flag values fail before execution;
+- `gate` requires exactly one of `--approve` or `--reject`;
+- outputs are summarized without dropping route/task IDs by preserving raw stdout and stderr in the command result.
+
 **Verification:**
 
-- temp-project CLI smoke through the adapter;
-- command allowlist rejects non-Waypoint shell commands;
-- outputs are summarized without dropping route/task IDs.
+```bash
+pnpm exec vitest run examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts
+pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
+```
+
+Hermes-side operational command parsing remains a later environment-specific step. H2 defines and tests the portable command-runner contract in the Waypoint repo.
 
 ---
 

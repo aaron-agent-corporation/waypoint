@@ -99,7 +99,7 @@ Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mis
 
 ### Track 3 — Hermes Runtime + Operator Bridge
 
-**Status:** Active — H1 project registry complete.
+**Status:** Active — H2 safe command runner complete.
 
 **Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
 
@@ -132,7 +132,7 @@ Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mis
 
 ### Track 3 — Hermes Runtime + Operator Bridge
 
-**Status:** Active — H1 project registry complete.
+**Status:** Active — H2 safe command runner complete.
 
 **Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
 

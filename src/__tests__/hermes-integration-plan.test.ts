@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H1 project registry complete')
+    expect(roadmap).toContain('**Status:** Active — H2 safe command runner complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -79,6 +79,27 @@ describe('Hermes integration plan', () => {
       'No arbitrary path execution from natural language',
       'project name → absolute path + CLI entrypoint',
       'waypoint_cli',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
+  })
+
+  it('records the H2 safe command runner reference adapter and allowlist boundary', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts'))).toBe(
+      true,
+    )
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-operator-adapter/README.md')
+    for (const phrase of [
+      'H2 status: complete',
+      'examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts',
+      'safe Waypoint command runner',
+      'command allowlist rejects non-Waypoint shell commands',
+      'Mutation commands are explicitly marked',
+      'outputs are summarized without dropping route/task IDs',
+      'waypoint route-events --route-id',
+      'waypoint auto status',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
