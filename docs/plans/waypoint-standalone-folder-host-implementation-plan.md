@@ -31,7 +31,7 @@ waypoint recipes
 waypoint start --quest gsd
 waypoint routes
 waypoint route --route-id route-001
-waypoint discuss --task-id task-001 --message "Clarify the objective"
+waypoint discuss --task-id task-003 --message "Clarify the objective"
 waypoint gate --route-id route-001 --node human_plan_gate --approve --note "Plan accepted"
 waypoint auto --max-iterations 10
 ```
@@ -410,7 +410,7 @@ pnpm typecheck
 2. Implement task id generation and YAML persistence.
 3. RED: discussion message appends to `tasks/task-001-discussion.jsonl` with author/content/timestamp.
 4. Implement discussion store using core conversation helpers.
-5. Wire CLI `waypoint tasks` and `waypoint discuss --task-id task-001 --message "..."`.
+5. Wire CLI `waypoint tasks` and `waypoint discuss --task-id <discussion-task-id> --message "..."`.
 6. Ensure agent-authored loop prevention is represented in metadata even though null runtime does not dispatch.
 7. Commit: `feat(folder-host): add task materialization and discussion logs`.
 
@@ -607,6 +607,8 @@ rm -rf .waypoint
 
 **Verification:**
 ```bash
+pnpm exec vitest run src/__tests__/folder-host-closeout.test.ts
+pnpm smoke:folder-host
 pnpm test
 pnpm typecheck
 git status --short --branch

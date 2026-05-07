@@ -1,7 +1,7 @@
 # Waypoint — Remaining Roadmap
 
-**Status:** Roadmap refreshed after Track 4 close-out  
-**Date:** 2026-05-06  
+**Status:** Roadmap refreshed after Track 1 close-out  
+**Date:** 2026-05-07  
 **Purpose:** Keep the project pointed at a defined destination instead of choosing the next road segment after each slice.
 
 ---
@@ -11,14 +11,14 @@
 As of this refresh:
 
 - Standalone repo exists at `/Users/aaronwhaley/Github/waypoint`.
-- `main` is synced with `origin/main` at `a6823a0 docs(gsd-port): record P8 close-out commit`.
+- `main` has completed Track 1 locally through F12; push status must be verified with `git status --short --branch` before release claims.
 - `@waypoint/core` lives in `src/` and exports host-agnostic contracts, command parser, route helpers, discussion helpers, Quest/Recipe parsers, registries, loaders, and resolution helpers.
 - Bundled Quest/Recipe catalog is present:
   - `37` Quest manifests.
   - `35` Recipe manifests.
   - `33` GSD-derived Recipe manifests.
   - `65` GSD source command mappings documented.
-- Current package shape is still a single private package named `@waypoint/core`; there is no installable `waypoint` CLI yet.
+- Current package shape is a private pnpm workspace with root `@waypoint/core`, internal `@waypoint/folder-host`, and internal `@waypoint/cli`; the CLI remains source-run/development-only, not globally published.
 
 ---
 
@@ -65,74 +65,44 @@ As of this refresh:
 
 ---
 
-## Active destination
+### Track 1 — Standalone Folder Host + CLI
 
-## Track 1 — Standalone Folder Host + CLI
-
-**Status:** Next active track.
+**Status:** Complete through F12.
 
 **Plan:** `docs/plans/waypoint-standalone-folder-host-implementation-plan.md`.
 
-**Older context plan:** `docs/plans/waypoint-folder-host.md` remains as historical design input, but the implementation plan above is now the controlling roadmap for execution.
+**Close-out:** `docs/plans/waypoint-folder-host-closeout.md`.
 
-**Goal:** Run Waypoint on any project folder with no Mission Control, no database, and no HTTP server.
+**Delivered:**
+- Private pnpm workspace package shape for root core, folder host, and CLI packages.
+- `waypoint init/status/quests/recipes/lifecycle/start/routes/route/route-events/tasks/discuss/gate/pause/resume/auto` development CLI surface.
+- Project-local `.waypoint/` config, catalog, lifecycle YAML, route YAML, event JSONL, task YAML, discussion JSONL, and autopilot run history.
+- Safe null-runtime autopilot by default.
+- Opt-in local Recipe command runtime through `runtime.recipe: local`.
+- Runnable example project and operator guide.
+- `pnpm smoke:folder-host` temp-project smoke script.
 
-**North-star command flow:**
+**Explicitly deferred by Track 1:**
+- Global/public CLI publication.
+- Emitted JS package build/publish pipeline.
+- Network sync, multi-user collaboration, and web UI.
+- Mission Control cutover to the standalone package.
+- Real Hermes gateway integration.
 
-```bash
-cd ~/projects/project-quest
-waypoint init --quest gsd
-waypoint status
-waypoint quests
-waypoint recipes
-waypoint start --quest gsd
-waypoint routes
-waypoint route --route-id route-001
-waypoint discuss --task-id task-001 --message "Clarify the objective"
-waypoint gate --route-id route-001 --node human_plan_gate --approve --note "Plan accepted"
-waypoint auto --max-iterations 10
-```
+---
 
-**Track 1 milestones:**
+## Active destination
 
-### Milestone A — Installable local shell, no route execution yet
+Track 1 is complete. There is no active implementation track selected in this roadmap yet.
 
-**Goal:** A project folder can be initialized, enabled, and inspected.
+## Next track selection
 
-Phases:
-- **F0:** package/CLI scaffold.
-- **F1:** `.waypoint/` config/init/status.
-- **F2:** bundled Quest/Recipe catalog commands.
-- **F3:** lifecycle YAML store and commands.
+Choose the next road explicitly from the later tracks instead of inferring it from nearby files:
 
-**Gate A:** In a temp folder, `waypoint init --quest gsd`, `waypoint status`, `waypoint quests`, and lifecycle add/list commands work and persist readable YAML.
+- **Track 2 — Mission Control Cutover** if the next priority is consuming the standalone package from Mission Control.
+- **Track 3 — Real Hermes Integration** if the next priority is live Recipe/discussion execution through Hermes.
 
-### Milestone B — Stateful route runtime with null Recipe execution
-
-**Goal:** A Quest can start a Route, materialize tasks/events, and advance through manual gates without calling external agents.
-
-Phases:
-- **F4:** route store and event log.
-- **F5:** Quest start/scaffold instantiation.
-- **F6:** route detail/events/status.
-- **F7:** gate/pause/resume state transitions.
-- **F8:** task materialization and discussion JSONL.
-- **F9:** null-runtime autopilot.
-
-**Gate B:** In a temp folder, `waypoint start --quest gsd`, `waypoint routes`, `waypoint route`, `waypoint route-events`, `waypoint discuss`, `waypoint gate`, and `waypoint auto --max-iterations N` work with all state visible under `.waypoint/`.
-
-### Milestone C — Local Recipe execution and operator-ready docs
-
-**Goal:** Waypoint can invoke configured local agent commands from Recipe manifests and has a documented example project.
-
-Phases:
-- **F10:** local Recipe runtime adapter.
-- **F11:** generated/example project and docs.
-- **F12:** release/readiness cleanup.
-
-**Gate C:** Example project runs from scratch using documented commands. Full tests/typecheck pass. Docs explain null vs local runtime and rollback/deletion of `.waypoint/`.
-
-**Ends when:** A new folder can adopt the bundled GSD Quest, persist `.waypoint/` state, start/list/inspect routes, handle gates, record discussion, and run null-runtime autopilot locally. Local Recipe runtime is opt-in and documented.
+Before starting either track, write a destination-driven implementation plan like the Track 1 plan, then execute one phase at a time with source-of-truth verification.
 
 ---
 
@@ -176,9 +146,7 @@ Phases:
 
 These are not the next road. They are parking-lot items to pull in when they unblock the active track.
 
-- **Package shape:** decide whether to introduce `pnpm-workspace.yaml` or keep internal package folders under the root TS config for now.
-- **Package publication:** private registry/GitHub install/tagging once folder host has a stable CLI.
-- **Root package metadata:** current root package is private `@waypoint/core`; Track 1 will need CLI package metadata but should not claim publication until tested.
+- **Package publication:** private registry/GitHub install/tagging once emitted JS build output and global/bin install are tested.
 - **Forgejo remote:** add later if still wanted and credentials are available.
 - **First-class sub-Quest schema:** later schema evolution; current command/sub-Quest intent is metadata-backed.
 - **Optional `ns-*` commands:** deferred from GSD port.
@@ -195,8 +163,8 @@ These are not the next road. They are parking-lot items to pull in when they unb
 4. **Gate A review:** run temp-folder smoke and update docs if command shape changed.
 5. **Track 1 / F4–F9:** build stateful route runtime, gates, discussion, and null autopilot.
 6. **Gate B review:** temp-folder end-to-end with `.waypoint/` artifacts inspected.
-7. **Track 1 / F10–F12:** local Recipe runtime, example project, docs, close-out.
-8. **Then choose between Track 2 and Track 3 based on actual need.**
+7. **Track 1 / F10–F12:** local Recipe runtime, example project, docs, close-out. ✅ Complete.
+8. **Then choose between Track 2 and Track 3 based on actual need.** This is now the next decision.
 
 ---
 

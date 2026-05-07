@@ -109,7 +109,7 @@ waypoint tasks --route-id route-001
 ### 4. Use task discussion locally
 
 ```bash
-waypoint discuss --task-id task-001 --message "Clarify the acceptance criteria before planning."
+waypoint discuss --task-id task-003 --message "Clarify the acceptance criteria before planning."
 ```
 
 Task discussion is stored locally. Agent-authored messages are recorded as agent-authored and do not recursively request auto-response.
@@ -158,7 +158,7 @@ A project-local folder host state tree looks like this:
     route-001.jsonl           # append-only route event log
   tasks/
     tasks.yaml                # materialized task records
-    task-001-discussion.jsonl # task-scoped discussion messages
+    task-003-discussion.jsonl # task-scoped discussion messages
   autopilot/
     runs.jsonl                # append-only autopilot run history
 ```

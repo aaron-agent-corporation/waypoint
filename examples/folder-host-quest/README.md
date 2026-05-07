@@ -28,7 +28,7 @@ node ../../packages/waypoint-cli/src/bin.ts routes
 node ../../packages/waypoint-cli/src/bin.ts route --route-id route-001
 node ../../packages/waypoint-cli/src/bin.ts route-events --route-id route-001
 node ../../packages/waypoint-cli/src/bin.ts tasks --route-id route-001
-node ../../packages/waypoint-cli/src/bin.ts discuss --task-id task-001 --message "Clarify the goal."
+node ../../packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --message "Clarify the goal."
 node ../../packages/waypoint-cli/src/bin.ts auto --route-id route-001
 node ../../packages/waypoint-cli/src/bin.ts auto status
 ```
@@ -61,7 +61,7 @@ Running the walkthrough creates `.waypoint/` in this example folder. Expected fi
 .waypoint/routes/route-001.yaml
 .waypoint/events/route-001.jsonl
 .waypoint/tasks/tasks.yaml
-.waypoint/tasks/task-001-discussion.jsonl
+.waypoint/tasks/task-003-discussion.jsonl
 .waypoint/autopilot/runs.jsonl
 ```
 

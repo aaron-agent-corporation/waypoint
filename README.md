@@ -30,9 +30,10 @@ docs/
 ## Quick start
 
 ```bash
-pnpm install          # or npm install
+pnpm install
 pnpm test             # runs vitest across core + example host
 pnpm typecheck
+pnpm smoke:folder-host # temp-folder CLI smoke for the local folder host
 ```
 
 
