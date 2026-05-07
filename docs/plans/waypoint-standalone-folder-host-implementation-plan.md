@@ -135,7 +135,7 @@ Phases:
 - F2 — Bundled Quest/Recipe catalog adoption: complete in `32620db`.
 - F3 — Lifecycle YAML store and commands: complete in `4ba9013`.
 - F4 — Route and event persistence: complete in `d0b048d`.
-- F5 — Start Quest and scaffold project state: complete; implementation commit pending log verification.
+- F5 — Start Quest and scaffold project state: complete in `3afadee`.
 - F6 — Route status, list, detail, events: next.
 
 ## F0 — Package and CLI scaffold
@@ -320,7 +320,7 @@ pnpm typecheck
 5. Wire CLI `waypoint start --quest gsd` and alias `waypoint start plan --plan-id P-1` only if the existing command parser supports it cleanly.
 6. Commit: `feat(folder-host): start Quest routes from local folders`.
 
-**Status:** Complete; implementation commit pending log verification. `waypoint start --quest gsd` now creates a route, appends `route.started`, and idempotently scaffolds 1 workstream, 1 milestone, 6 phases, and 12 plans from `quests/gsd.yaml`.
+**Status:** Complete in `3afadee`. `waypoint start --quest gsd` now creates a route, appends `route.started`, and idempotently scaffolds 1 workstream, 1 milestone, 6 phases, and 12 plans from `quests/gsd.yaml`.
 
 **Verification:**
 ```bash
