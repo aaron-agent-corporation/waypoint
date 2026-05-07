@@ -15,5 +15,9 @@
   "dependencies": {
     "@waypoint/core": "workspace:*",
     "yaml": "^2.6.1"
-  }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }
