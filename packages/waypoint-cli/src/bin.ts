@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import rootPackage from '../../../package.json' with { type: 'json' }
+import { runDiscussCommand } from './commands/discuss.ts'
 import { runGateCommand } from './commands/gate.ts'
 import { runInitCommand } from './commands/init.ts'
 import { runLifecycleCommand } from './commands/lifecycle.ts'
@@ -12,6 +13,7 @@ import { runResumeCommand } from './commands/resume.ts'
 import { runRoutesCommand } from './commands/routes.ts'
 import { runStartCommand } from './commands/start.ts'
 import { runStatusCommand } from './commands/status.ts'
+import { runTasksCommand } from './commands/tasks.ts'
 
 const rootPackageVersion = rootPackage.version
 
@@ -34,6 +36,8 @@ Usage:
   waypoint routes [--json]
   waypoint route --route-id <id> [--json]
   waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
+  waypoint tasks [--route-id <id>] [--json]
+  waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
   waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
   waypoint pause --route-id <id> [--reason <text>]
   waypoint resume --route-id <id>
@@ -91,6 +95,14 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'route-events') {
     return runRouteEventsCommand(args.slice(1), io)
+  }
+
+  if (command === 'tasks') {
+    return runTasksCommand(args.slice(1), io)
+  }
+
+  if (command === 'discuss') {
+    return runDiscussCommand(args.slice(1), io)
   }
 
   if (command === 'gate') {

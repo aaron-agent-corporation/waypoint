@@ -66,6 +66,15 @@ export type {
 } from './routes/types.ts'
 export { appendRouteEvent, readRouteEvents } from './events/jsonl.ts'
 export { createRouteEventBus } from './events/event-bus.ts'
+export { getWaypointTask, listWaypointTasks, materializeQuestTasks } from './tasks/store.ts'
+export type { WaypointFolderTask, WaypointFolderTaskKind, WaypointFolderTaskState, WaypointFolderTaskStatus } from './tasks/types.ts'
+export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
+export type {
+  AppendTaskDiscussionMessageInput,
+  TaskDiscussionMessagePage,
+  WaypointDiscussionAuthor,
+  WaypointTaskDiscussionMessage,
+} from './discussion/types.ts'
 export type {
   AppendRouteEventInput,
   ReadRouteEventsOptions,

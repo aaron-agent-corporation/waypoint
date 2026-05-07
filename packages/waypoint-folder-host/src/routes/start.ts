@@ -9,6 +9,7 @@ import { getWaypointProjectPaths } from '../project/root.ts'
 import { createWaypointRoute } from './store.ts'
 import type { WaypointFolderRoute } from './types.ts'
 import { applyQuestScaffold, type AppliedQuestScaffoldSummary } from '../quests/scaffold.ts'
+import { materializeQuestTasks } from '../tasks/store.ts'
 
 export interface StartQuestRouteOptions {
   readonly quest: string
@@ -53,6 +54,8 @@ export async function startQuestRoute(projectRoot: string, options: StartQuestRo
     },
     now: options.now,
   })
+
+  await materializeQuestTasks(projectRoot, { route, quest: localQuest, now: options.now })
 
   return { ...route, scaffold }
 }
