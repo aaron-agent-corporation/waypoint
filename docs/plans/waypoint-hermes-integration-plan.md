@@ -163,13 +163,16 @@ End-state proof for Track 3:
 
 **Objective:** Give Hermes a safe way to map friendly project names to local folder paths without guessing.
 
-**Files likely to change:**
+**H1 status: complete.**
+
+**Files changed:**
 
 - Waypoint repo:
   - `docs/plans/waypoint-hermes-integration-plan.md`
-  - optional `examples/hermes-runtime-adapter/README.md`
-- Hermes profile/config side:
-  - project registry skill/script/config under the Hermes profile, exact path to be discovered before implementation
+  - `examples/hermes-operator-adapter/README.md`
+  - `examples/hermes-operator-adapter/src/project-registry.ts`
+  - `examples/hermes-operator-adapter/src/project-registry.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
 
 **Deliverables:**
 
@@ -183,16 +186,19 @@ projects:
 ```
 
 - Read-only lookup behavior: project name → absolute path + CLI entrypoint.
-- Clear failure if a project is unknown.
+- Reference module: `examples/hermes-operator-adapter/src/project-registry.ts`.
+- Friendly project names to trusted local paths, with safe project-name validation.
+- Unknown project names fail closed.
 - No arbitrary path execution from natural language.
 
 **Verification:**
 
 ```bash
+pnpm exec vitest run examples/hermes-operator-adapter/src/project-registry.test.ts
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```
 
-Hermes-side verification depends on where the registry is implemented.
+Hermes-side operational registry wiring remains a later environment-specific step; H1 defines and tests the portable registry contract in the Waypoint repo.
 
 ---
 

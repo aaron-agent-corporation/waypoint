@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H0 plan complete')
+    expect(roadmap).toContain('**Status:** Active — H1 project registry complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -63,5 +63,24 @@ describe('Hermes integration plan', () => {
     expect(plan).toContain('Mission Control can later become a rich UI and database adapter')
     expect(plan).toContain('Folder host adapter: state → `.waypoint/`')
     expect(plan).toContain('Mission Control adapter: state → MC database/API/UI')
+  })
+
+  it('records the H1 project registry reference adapter and keeps it read-only', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/src/project-registry.ts'))).toBe(true)
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/README.md'))).toBe(true)
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-operator-adapter/README.md')
+    for (const phrase of [
+      'H1 status: complete',
+      'examples/hermes-operator-adapter/src/project-registry.ts',
+      'friendly project names to trusted local paths',
+      'Unknown project names fail closed',
+      'No arbitrary path execution from natural language',
+      'project name → absolute path + CLI entrypoint',
+      'waypoint_cli',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
   })
 })
