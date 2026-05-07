@@ -153,7 +153,7 @@ under `metadata.gsd_port` in the manifest.
 
 ## P6 operator documentation
 
-P6 added:
+P6 added (implementation commit `4be4ef1`):
 
 - `docs/quests/gsd.md` — operator guide for the GSD Quest.
 - `docs/quests/gsd-command-map.md` — human-readable command map generated from `docs/quests/gsd-command-map.yaml`.

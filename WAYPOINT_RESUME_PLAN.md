@@ -282,7 +282,7 @@ No "Proceeding to P3 next" as the final line of a response. Either do it now wit
 | P3    | complete | bb87b48 | 2026-05-06 |
 | P4    | complete | c77471b | 2026-05-06 |
 | P5    | complete | e0d10dc | 2026-05-07 |
-| P6    | pending | —      | —    |
+| P6    | complete | 4be4ef1 | 2026-05-07 |
 | P7    | pending | —      | —    |
 | P8    | pending | —      | —    |
 
