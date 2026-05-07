@@ -1,0 +1,19 @@
+{
+  "name": "@waypoint/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Command-line interface for the Waypoint local folder host.",
+  "type": "module",
+  "bin": {
+    "waypoint": "./src/bin.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@waypoint/core": "workspace:*",
+    "@waypoint/folder-host": "workspace:*"
+  }
+}

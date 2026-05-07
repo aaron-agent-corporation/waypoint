@@ -128,6 +128,11 @@ Phases:
 
 ## Implementation phases and tasks
 
+## Current execution state
+
+- F0 — Package and CLI scaffold: complete in this implementation slice.
+- F1 — `.waypoint/` config/init/status: next.
+
 ## F0 — Package and CLI scaffold
 
 **Objective:** Establish the package layout and prove the CLI can run without host-specific imports leaking into core/folder-host.

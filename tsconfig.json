@@ -23,9 +23,11 @@
     "outDir": "./dist",
     "noEmit": true,
     "paths": {
-      "@waypoint/core": ["./src/index.ts"]
+      "@waypoint/core": ["./src/index.ts"],
+      "@waypoint/folder-host": ["./packages/waypoint-folder-host/src/index.ts"],
+      "@waypoint/cli": ["./packages/waypoint-cli/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "examples/**/*.ts"],
+  "include": ["src/**/*.ts", "examples/**/*.ts", "packages/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

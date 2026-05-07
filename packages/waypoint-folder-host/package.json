@@ -1,0 +1,16 @@
+{
+  "name": "@waypoint/folder-host",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Filesystem-backed local folder host for Waypoint projects.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@waypoint/core": "workspace:*",
+    "yaml": "^2.6.1"
+  }
+}
