@@ -268,14 +268,21 @@ Hermes-side operational command parsing remains a later environment-specific ste
 
 **Objective:** Make `runtime.recipe: local` invoke a Hermes adapter that receives the F10 Recipe execution payload and runs the matching agent/Recipe behavior.
 
-**Files likely to change:**
+**H3 status: complete.**
+
+**Files changed:**
 
 - Waypoint repo:
+  - `docs/plans/waypoint-hermes-integration-plan.md`
+  - `docs/plans/waypoint-remaining-roadmap.md`
   - `examples/hermes-runtime-adapter/README.md`
-  - `examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs` or equivalent reference adapter
-  - tests for payload/adapter contract expectations
-- Hermes profile:
-  - actual operational Recipe routing skill/script
+  - `examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs`
+  - `examples/hermes-runtime-adapter/hermes-recipe-runtime.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
+
+The H3 reference adapter lives at `examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs`.
+
+Hermes profile operational wiring remains environment-specific. H3 defines and tests the portable stdin/stdout adapter contract in the Waypoint repo.
 
 **Routing rule:**
 
@@ -286,26 +293,38 @@ gsd-doc-writer → doc-writer-capable Hermes/Gary execution
 unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty
 ```
 
-**Input:** Recipe execution payload with `schema_version: 1`.
+**Input:** F10 Recipe execution payload with `schema_version: 1`.
 
-**Output:** Initial implementation may return plain text on stdout. Preferred structured stdout once stable:
+**Output:** The reference adapter emits structured JSON stdout:
 
 ```json
 {
   "ok": true,
+  "adapter": "hermes-recipe-runtime-reference",
+  "schema_version": 1,
+  "recipe_slug": "gsd-doc-writer",
+  "task_id": "task-003",
+  "route_id": "route-001",
+  "project_root": "/tmp/waypoint-project",
+  "routed_to": "doc-writer-capable Hermes/Gary execution",
   "summary": "What the agent did",
   "artifacts": [],
   "messages": []
 }
 ```
 
+Waypoint must still persist stdout/stderr/exit code/signal exactly as the F10 local runtime does today.
+
 **Failure behavior:** non-zero adapter exit should be persisted by the existing local runtime as task/route failure.
 
 **Verification:**
 
-- local runtime test proving payload reaches adapter stdin;
-- smoke proving a task records `runtime: local` and Hermes-flavored stdout;
-- non-zero adapter exit marks route/task failed.
+```bash
+pnpm exec vitest run examples/hermes-runtime-adapter/hermes-recipe-runtime.test.ts
+pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
+```
+
+Smoke expectation: configure `runtime.recipe: local` to call `node examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs`; a Recipe task records `runtime: local` and Hermes-flavored structured JSON stdout, while invalid payload/non-zero adapter exits mark the task/route failed through the existing local runtime.
 
 ---
 

@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H2 safe command runner complete')
+    expect(roadmap).toContain('**Status:** Active — H3 Hermes Recipe runtime adapter complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -100,6 +100,26 @@ describe('Hermes integration plan', () => {
       'outputs are summarized without dropping route/task IDs',
       'waypoint route-events --route-id',
       'waypoint auto status',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
+  })
+
+  it('records the H3 Hermes Recipe runtime reference adapter and payload boundary', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs'))).toBe(true)
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-runtime-adapter/README.md'))).toBe(true)
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-runtime-adapter/README.md')
+    for (const phrase of [
+      'H3 status: complete',
+      'examples/hermes-runtime-adapter/hermes-recipe-runtime.mjs',
+      'F10 Recipe execution payload',
+      'gsd-planner → planner-capable Hermes/Gary execution',
+      'unknown recipe_slug → Gary/orchestrator fallback with explicit uncertainty',
+      'non-zero adapter exit should be persisted by the existing local runtime as task/route failure',
+      'schema_version: 1',
+      'structured JSON stdout',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
