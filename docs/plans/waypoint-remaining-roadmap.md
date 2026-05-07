@@ -1,7 +1,7 @@
 # Waypoint — Remaining Roadmap
 
-**Status:** Roadmap refreshed after Track 1 close-out  
-**Date:** 2026-05-07  
+**Status:** Roadmap refreshed after cleanup close-out and package-readiness selection
+**Date:** 2026-05-07
 **Purpose:** Keep the project pointed at a defined destination instead of choosing the next road segment after each slice.
 
 ---
@@ -11,7 +11,7 @@
 As of this refresh:
 
 - Standalone repo exists at `/Users/aaronwhaley/Github/waypoint`.
-- `main` has completed Track 1 locally through F12; push status must be verified with `git status --short --branch` before release claims.
+- `main` is pushed to `origin/main` through `26b041a` (`feat(folder-host): rename catalog to waypoint`), verified during the package-readiness planning turn.
 - `@waypoint/core` lives in `src/` and exports host-agnostic contracts, command parser, route helpers, discussion helpers, Quest/Recipe parsers, registries, loaders, and resolution helpers.
 - Bundled Quest/Recipe catalog is present:
   - `37` Quest manifests.
@@ -91,23 +91,62 @@ As of this refresh:
 
 ---
 
-## Next track selection
+## Finished integration / cleanup tracks
 
-Resolved: Aaron selected the cleanup track after Track 3/H6 exposed the scaffold execution mismatch and confirmed active GSD naming should be replaced with Waypoint naming.
+### Track 3 — Hermes Runtime + Operator Bridge
 
-## Active destination
+**Status:** Complete through H6 as a reference bridge.
+
+**Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
+
+**Delivered:**
+- Trusted project registry for local Waypoint projects.
+- Safe allowlisted Waypoint command runner.
+- Hermes Recipe runtime reference adapter.
+- Task discussion loop with agent-authored loop prevention.
+- Telegram gate-loop reference adapter.
+- End-to-end Hermes operator smoke against one temp `.waypoint/` project.
+
+**Boundary:** This is a reference bridge and smoke-proven adapter layer, not a production Hermes gateway service.
+
+---
 
 ### Cleanup Track — Waypoint Catalog Rename + Workflow Scaffold
 
-**Status:** Active — plan written after Track 3/H6.
+**Status:** Complete.
 
 **Plan:** `docs/plans/waypoint-catalog-rename-and-workflow-scaffold-plan.md`.
 
-**Goal:** Replace active `gsd`/`waypoint-*` naming with canonical `waypoint`/`waypoint-*` naming and fix scaffold execution so non-agent workflow checkpoints are not treated as Recipe slugs.
+**Delivered:**
+- Active Quest slug/path renamed to `waypoint` / `quests/waypoint.yaml`.
+- Active Recipe path/slugs renamed to `recipes/waypoint/*.yaml` / `waypoint-*`.
+- Active docs/tests/smokes updated to use `--quest waypoint`.
+- Scaffold task semantics now distinguish `checkpoint`, `discussion`, `recipe`, and `gate` instead of treating `plan_ref` as an executable Recipe slug.
+- Folder-host smoke proves checkpoint events complete without recipe fallback and recipe tasks use explicit metadata bindings.
 
-**Why now:** H6 proved the Hermes/operator bridge but had to use a null/local/null runtime workaround because current scaffold `plan_ref` values are lifecycle checkpoint ids, not Recipe slugs. Aaron clarified that not every workflow checkpoint should execute an agent; Waypoint must support Recipe nodes plus gates, waits, delays, timers, dependency joins, checkpoints, and other workflow node semantics.
+**Close-out evidence:** cleanup landed in `26b041a` and was pushed to `origin/main` during the package-readiness planning turn.
 
-**Boundary:** GSD remains source attribution/history only. There is no requirement to preserve active `gsd` slugs or aliases. Mission Control database/table renames remain later MC-side work.
+---
+
+## Active destination
+
+### Track 5 — Package + Install Readiness
+
+**Status:** Active — selected by Aaron after cleanup close-out.
+
+**Plan:** `docs/plans/waypoint-package-install-readiness-plan.md`.
+
+**Goal:** Make Waypoint consumable as installable built packages, with emitted JS/declaration output and an installed CLI smoke before Mission Control consumes it.
+
+**Why now:** Mission Control cutover should depend on a stable package/install shape, not on source-run TypeScript entrypoints or local path assumptions.
+
+**Likely slices:**
+1. **B0 — Roadmap/plan refresh:** commit this selected destination.
+2. **B1 — Build pipeline:** emit JS/declarations and point package exports/bin at built files.
+3. **B2 — Built-output boundaries:** verify core/folder-host/CLI built imports and CLI bin without Vitest aliases.
+4. **B3 — Local install smoke:** pack/install into a temp project and run the installed `waypoint` bin through the folder-host journey.
+5. **B4 — Consumption strategy:** document GitHub/private registry/git dependency/local-path options and rollback rules.
+6. **B5 — Release candidate gate:** run build/test/typecheck/smokes and tag a package-readiness candidate if approved.
 
 ---
 
@@ -115,39 +154,18 @@ Resolved: Aaron selected the cleanup track after Track 3/H6 exposed the scaffold
 
 ### Track 2 — Mission Control Cutover
 
-**Status:** Later.
+**Status:** Later — next major destination after Track 5.
 
 **Goal:** Mission Control consumes external `@waypoint/core`/Waypoint package instead of a local copy/path alias.
 
-**Why later:** Folder host should stabilize package boundaries first. Cutting MC over before the CLI/folder-host package shape settles would create churn.
+**Why later:** Track 5 must stabilize package boundaries first. Cutting MC over before the CLI/folder-host package shape is install-smoke-proven would create churn.
 
 **Likely slices:**
-1. Decide package publication/versioning strategy.
-2. Publish or install from GitHub/private registry.
-3. Update Mission Control dependency and imports.
-4. Run full MC regression.
-5. Document release/bump process.
-
----
-
-### Track 3 — Hermes Runtime + Operator Bridge
-
-**Status:** Active — H6 end-to-end Hermes smoke complete.
-
-**Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
-
-**Goal:** Make Hermes the real runtime and conversational operator layer for standalone Waypoint folders.
-
-**Why now:** Folder host already stabilized the local source-of-truth model. Hermes now needs to prove real Recipe execution, task discussion, and Telegram gate interaction against `.waypoint/` before Mission Control cutover.
-
-**Likely slices:**
-1. **H0 — Integration plan and contract boundary:** define folder-host-first architecture, payload shape, command allowlist, safety rules, and MC-later boundary.
-2. **H1 — Project registry:** map friendly project names to trusted local paths and Waypoint CLI entrypoints.
-3. **H2 — Safe Waypoint command runner:** let Hermes run allowlisted `waypoint` commands and summarize state.
-4. **H3 — Hermes Recipe runtime adapter:** receive the F10 local runtime payload and route Recipe slugs to Hermes/Gary agent behavior.
-5. **H4 — Discussion loop:** append user and agent-authored task-scoped messages with loop prevention.
-6. **H5 — Telegram gate loop:** prompt for approve/reject/revise decisions and apply them through `waypoint gate`.
-7. **H6 — End-to-end Hermes smoke:** prove a real Telegram/Hermes workflow writes durable `.waypoint/` route/task/event/discussion evidence.
+1. Consume the selected package source from Track 5.
+2. Update Mission Control dependency and imports.
+3. Run full MC regression.
+4. Document release/bump process.
+5. Record rollback pin/tag.
 
 ---
 
@@ -166,14 +184,13 @@ These are not the next road. They are parking-lot items to pull in when they unb
 
 ## Recommended execution order
 
-1. **Commit this roadmap refresh and the detailed Track 1 implementation plan.**
-2. **Track 1 / F0:** scaffold folder-host and CLI packages.
-3. **Track 1 / F1–F3:** get local project init/status/catalog/lifecycle working.
-4. **Gate A review:** run temp-folder smoke and update docs if command shape changed.
-5. **Track 1 / F4–F9:** build stateful route runtime, gates, discussion, and null autopilot.
-6. **Gate B review:** temp-folder end-to-end with `.waypoint/` artifacts inspected.
-7. **Track 1 / F10–F12:** local Recipe runtime, example project, docs, close-out. ✅ Complete.
-8. **Then choose between Track 2 and Track 3 based on actual need.** This is now the next decision.
+1. **B0:** commit this roadmap refresh and the Package + Install Readiness implementation plan.
+2. **B1:** add emitted JS/declaration build output and package exports/bin that point at built files.
+3. **B2:** verify built-output import boundaries without TypeScript source execution or Vitest aliases.
+4. **B3:** add a local tarball/install smoke that runs the installed `waypoint` bin in a temp project.
+5. **B4:** document the private consumption strategy and rollback rule for Mission Control.
+6. **B5:** run build/test/typecheck/smokes and create a package-readiness candidate tag if approved.
+7. **Then start Track 2 — Mission Control Cutover** using the proven package/install shape.
 
 ---
 

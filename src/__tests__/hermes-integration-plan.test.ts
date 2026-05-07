@@ -9,14 +9,17 @@ function readRepoFile(path: string): string {
 }
 
 describe('Hermes integration plan', () => {
-  it('records the cleanup track as the selected active destination after H6', () => {
+  it('records cleanup as complete and package readiness as the selected active destination', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Cleanup Track — Waypoint Catalog Rename + Workflow Scaffold')
-    expect(roadmap).toContain('**Status:** Active — plan written after Track 3/H6')
+    expect(roadmap).toContain('**Status:** Complete.')
     expect(roadmap).toContain('docs/plans/waypoint-catalog-rename-and-workflow-scaffold-plan.md')
-    expect(roadmap).toContain('not every workflow checkpoint should execute an agent')
-    expect(roadmap).toContain('There is no requirement to preserve active `gsd` slugs or aliases')
+    expect(roadmap).toContain('Scaffold task semantics now distinguish `checkpoint`, `discussion`, `recipe`, and `gate`')
+    expect(roadmap).toContain('### Track 5 — Package + Install Readiness')
+    expect(roadmap).toContain('**Status:** Active — selected by Aaron after cleanup close-out.')
+    expect(roadmap).toContain('docs/plans/waypoint-package-install-readiness-plan.md')
+    expect(roadmap).toContain('Mission Control cutover should depend on a stable package/install shape')
   })
 
   it('defines the folder-host first Hermes integration contract boundary', () => {
