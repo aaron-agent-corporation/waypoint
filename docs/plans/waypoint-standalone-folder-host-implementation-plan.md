@@ -561,11 +561,26 @@ Observed `route.autopilot.task.executed`, local runtime metadata with `exit_code
 4. Add docs smoke test that command names in guide match actual CLI command registry.
 5. Commit: `docs(folder-host): add guide and example project`.
 
-**Verification:**
+**Completed:** yes.
+
+**Commit:** `e9123e8 docs(folder-host): add guide and example project`
+
+**Verification completed:**
 ```bash
 pnpm exec vitest run src/__tests__/folder-host-docs.test.ts examples/folder-host-quest
 pnpm test
 pnpm typecheck
+```
+
+**Smoke completed:**
+```bash
+cd examples/folder-host-quest
+node ../../packages/waypoint-cli/src/bin.ts init --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts start --quest gsd
+node ../../packages/waypoint-cli/src/bin.ts routes
+node ../../packages/waypoint-cli/src/bin.ts auto --route-id route-001 --max-iterations 1
+node ../../packages/waypoint-cli/src/bin.ts auto status
+rm -rf .waypoint
 ```
 
 ---
