@@ -20,7 +20,8 @@
     "smoke:folder-host": "node scripts/folder-host-smoke.mjs",
     "build": "tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs",
     "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
-    "prepack": "pnpm clean && pnpm build"
+    "prepack": "pnpm clean && pnpm build",
+    "verify:built-imports": "node scripts/verify-built-package-imports.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
