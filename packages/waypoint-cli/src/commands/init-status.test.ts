@@ -65,4 +65,32 @@ describe('waypoint init/status commands', () => {
     expect(statusText).toContain('enabled: true')
     expect(statusText).toContain('quest: gsd')
   })
+
+  it('summarizes routes after a Quest starts', async () => {
+    const cwd = await tempProject()
+    await runWaypointCli(['init', '--quest', 'gsd'], {
+      cwd,
+      stdout: () => undefined,
+      stderr: () => undefined,
+    })
+    await runWaypointCli(['start', '--quest', 'gsd'], {
+      cwd,
+      stdout: () => undefined,
+      stderr: () => undefined,
+    })
+
+    const output: string[] = []
+    expect(
+      await runWaypointCli(['status'], {
+        cwd,
+        stdout: (line) => output.push(line),
+        stderr: (line) => output.push(line),
+      }),
+    ).toBe(0)
+
+    const statusText = output.join('\n')
+    expect(statusText).toContain('routes: 1')
+    expect(statusText).toContain('active routes: 1')
+    expect(statusText).toContain('blocked gates: 0')
+  })
 })
