@@ -276,6 +276,7 @@ Final close-out state for the accepted Track 4 recovery plan:
   - `pnpm test`
   - `pnpm typecheck`
 - Latest verified pre-P8 commit: `790ccb5` (`docs(gsd-port): record P7 catalog close-out`)
+- P8 close-out implementation commit: `7d76a47` (`docs(gsd-port): add P8 close-out gate`)
 
 Explicit deferred work:
 
@@ -305,6 +306,6 @@ No "Proceeding to P3 next" as the final line of a response. Either do it now wit
 | P5    | complete | e0d10dc | 2026-05-07 |
 | P6    | complete | 4be4ef1 | 2026-05-07 |
 | P7    | complete | 4f83277 | 2026-05-07 |
-| P8    | complete | pending close-out commit | 2026-05-06 |
+| P8    | complete | 7d76a47 | 2026-05-06 |
 
 Gary updates this table as real phases land, with real commit hashes from `git log`.

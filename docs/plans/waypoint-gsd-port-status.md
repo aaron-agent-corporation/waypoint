@@ -182,6 +182,7 @@ P8 records the final close-out state for the Track 4 GSD Quest/Recipe port.
   - `pnpm test`
   - `pnpm typecheck`
 - Latest verified pre-P8 commit: `790ccb5` (`docs(gsd-port): record P7 catalog close-out`)
+- P8 close-out implementation commit: `7d76a47` (`docs(gsd-port): add P8 close-out gate`)
 
 Explicit deferred work:
 
