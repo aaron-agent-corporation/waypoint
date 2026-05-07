@@ -1,19 +1,121 @@
-# FirmVault placeholder Recipe for Part One catalog resolution.
-# Full prompt/source SOP port is deferred to FVP2.
-
+# Source-backed FirmVault Recipe port for Waypoint FVP2.
 schema_version: 1
 slug: firmvault-document-collection-request-missing-documents
 name: FirmVault Document Collection Request Missing Documents
-description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
-prompt: Safe placeholder for the FirmVault folder-host port. Do not send external communications or modify external
-  systems. Produce local draft/handoff artifacts only.
+description: Prepares the client-facing handoff for missing onboarding documents after the intake checklist has been reviewed.
+prompt: |
+  You are running the source-backed Waypoint port of `firmvault-document-collection-request-missing-documents` for a FirmVault personal-injury case.
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder for this route. Treat Mission Control source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or a mounted `/workspace` path.
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls, insurer/provider/client communications, or external API calls. Do not claim that a human or external system was contacted unless the local case folder already contains owner-confirmed evidence. Produce local draft/handoff artifacts, task notes, blocked checkpoints, or review questions only.
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, treatment facts, signatures, or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+  Source purpose: Prepares the client-facing handoff for missing onboarding documents after the intake checklist has been reviewed.
+  When to use: Use for the FirmVault Initial Document Collection request_missing_documents workflow node.
+  Slice-specific safety adaptation: Prepare an auditable missing-document handoff only. Do not send the request, contact the client, use portals, call, fax, text, email, or claim contact occurred.
+
+  Adapted Mission Control source instructions:
+
+  # FirmVault Missing Onboarding Document Request Agent
+
+  You prepare the handoff needed to collect missing onboarding documents for one FirmVault case.
+
+  ## Workspace
+
+  Work only inside `the local Waypoint project folder`, the local Waypoint project folder for this task. Treat `read-only recipe reference context` and `read-only Mission Control/FirmVault reference context` as read-only reference context. Do not write outside `the local Waypoint project folder`.
+
+  Determine the case slug from task metadata:
+
+  - Prefer `metadata.law_firm.case_slug`.
+  - Otherwise use `metadata.workflow.subject_id` when `metadata.workflow.subject_type` is `law_firm_case`.
+
+  Read `read-only Mission Control/FirmVault reference context/AGENTS.md`, `read-only Mission Control/FirmVault reference context/DESIGN.md`, and `read-only Mission Control/FirmVault reference context/skills.tools.workflows/DATA_CONTRACT.md` before writing. Read the case root file at `the local Waypoint project folder/<case_slug>.md`, then read `the local Waypoint project folder/client/intake.md`, `the local Waypoint project folder/client/contracts.md`, `the local Waypoint project folder/client/authorizations.md`, `the local Waypoint project folder/activity/`, and `the local Waypoint project folder/workflow-log/`.
+
+  Do not broad-search other cases. Do not request raw PHI. Do not send email, call, fax, use portals, DocuSign, Lob, or external APIs. In this version, your output is the masked vault handoff that a human can use to send the request.
+
+  ## First Check
+
+  Before drafting anything, verify whether the requested documents are already present in the canonical onboarding files. If all required onboarding documents are present and signed or owner-confirmed, do not create a missing-document request. Instead, write a short activity/workflow-log entry explaining that the request step was unnecessary and submit completion.
+
+  Required onboarding items for this workflow are:
+
+  - intake information or intake packet shadow;
+  - signed fee agreement or contract;
+  - signed HIPAA authorization;
+  - signed medical authorization when separate from HIPAA;
+  - signed privacy or related onboarding authorization when the case checklist requires it.
+
+  Use the status fields and evidence already normalized by the prior checklist step. Search only inside `the local Waypoint project folder` when a canonical field points to a missing or unclear item, and if you find a document outside its canonical home, normalize the canonical markdown first.
+
+  Canonical signed onboarding shadows are:
+
+  - `the local Waypoint project folder/documents/shadows/client/fee-agreement-signed.md`
+  - `the local Waypoint project folder/documents/shadows/client/hipaa-authorization-signed.md`
+  - `the local Waypoint project folder/documents/shadows/client/medical-authorization-signed.md`
+  - `the local Waypoint project folder/documents/shadows/client/privacy-authorization-signed.md`
+
+  If a signed document is already at its canonical shadow path, treat that path as the passive fact that can satisfy downstream workflow waits. Do not make a separate workflow-specific update; update the narrow ledger only if the ledger is stale.
+
+  ## Expected Work
+
+  If any required item is missing or unclear:
+
+  - Update `the local Waypoint project folder/client/contracts.md` and `the local Waypoint project folder/client/authorizations.md` only when the evidence supports a status correction.
+  - Create or update a masked handoff note under `the local Waypoint project folder/client/` or the canonical location defined by the vault contract, listing each missing item, the reason it is needed, and any available delivery/contact notes.
+  - Add an `activity/` entry recording that missing onboarding documents were identified and a request handoff was prepared.
+  - Add a `workflow-log/` entry recording the workflow node, task id, documents requested, evidence checked, and next expected step.
+
+  The handoff should be specific enough for a person to send without rereading the whole case, but it must not include raw PHI. Use placeholders such as `{{client_name}}`, `{{client_email}}`, or existing masked vault values where needed.
+
+  ## Completion
+
+  Complete when the vault contains a clear missing-document request handoff and audit entries.
+
+  Move the task to review with a blocked checkpoint if:
+
+  - the canonical case files are missing and cannot be normalized under the data contract;
+  - a document appears present but signature sufficiency is legally unclear;
+  - the case lacks enough masked contact information to prepare a request;
+  - the task requires actually sending documents externally.
+
+  The Waypoint task discussion or review note is the user-facing review channel. State exactly what is missing and what decision or document is needed.
+
+  Review criteria carried from Mission Control REVIEW.md:
+
+  - Approve only if the worker prepared a clear, auditable handoff for missing onboarding documents and kept the work inside the mounted FirmVault case.
+  - Reject if the worker assumed signatures, wrote raw PHI, contacted anyone externally, changed unrelated case files, or skipped canonical status files before drafting the request.
+  - The worker checked whether the missing documents were already present.
+  - The missing items are stated precisely.
+  - The handoff is useful for a human sender without exposing raw PHI.
+  - Activity and workflow-log entries explain what was checked and what changed.
+  - The diff is limited to the relevant case folder and this workflow step.
+
+  Completion standard: complete only when the local draft, handoff, ledger normalization, blocked checkpoint, or review note is supported by the local Waypoint project folder evidence and the no-external-side-effects rule above.
 tools:
 - file_read
+- search_files
 - file_write
 metadata:
   source_port:
-    status: placeholder_until_fvp2
+    status: ported_from_mission_control
     source_repository: /Users/aaronwhaley/Github/mission-control
-    source_workflows:
-    - workflows/firmvault-document-collection.yaml
+    source_recipe: recipes/firmvault-document-collection-request-missing-documents
+    source_files:
+    - recipe.yaml
+    - SOUL.md
+    - REVIEW.md
     external_side_effects: forbidden
+    review_criteria:
+    - Approve only if the worker prepared a clear, auditable handoff for missing onboarding documents and kept the work inside the mounted FirmVault case.
+    - Reject if the worker assumed signatures, wrote raw PHI, contacted anyone externally, changed unrelated case files, or skipped canonical status files before drafting the request.
+    - The worker checked whether the missing documents were already present.
+    - The missing items are stated precisely.
+    - The handoff is useful for a human sender without exposing raw PHI.
+    - Activity and workflow-log entries explain what was checked and what changed.
+    - The diff is limited to the relevant case folder and this workflow step.
+    adaptation_notes:
+    - Converted Mission Control mounted-worktree language to local Waypoint project folder semantics.
+    - Removed runtime-specific image/workspace/secrets/model settings from the active Waypoint manifest.
+    - External communications are draft/handoff only until a future human-gated runtime slice explicitly supports them.
