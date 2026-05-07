@@ -136,7 +136,8 @@ Phases:
 - F3 — Lifecycle YAML store and commands: complete in `4ba9013`.
 - F4 — Route and event persistence: complete in `d0b048d`.
 - F5 — Start Quest and scaffold project state: complete in `3afadee`.
-- F6 — Route status, list, detail, events: next.
+- F6 — Route status, list, detail, events: complete in `905c29a`.
+- F7 — Gate decisions, pause, resume, state transitions: next.
 
 ## F0 — Package and CLI scaffold
 
@@ -350,6 +351,8 @@ pnpm typecheck
 6. Implement route-events command.
 7. Extend `waypoint status` to summarize project enabled state, active quest, route counts, and blocked gates.
 8. Commit: `feat(folder-host): add route inspection commands`.
+
+**Status:** Complete in `905c29a`. `waypoint routes`, `waypoint route --route-id`, and `waypoint route-events --route-id` now inspect route YAML and JSONL event state. `waypoint status` now includes route counts, active routes, blocked routes, and blocked-gate placeholder count pending F7 gate state.
 
 **Verification:**
 ```bash
