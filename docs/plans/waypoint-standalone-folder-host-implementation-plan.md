@@ -138,7 +138,8 @@ Phases:
 - F5 — Start Quest and scaffold project state: complete in `3afadee`.
 - F6 — Route status, list, detail, events: complete in `905c29a`.
 - F7 — Gate decisions, pause, resume, state transitions: complete in `fcd8d12`.
-- F8 — Task materialization and local discussion logs: next.
+- F8 — Task materialization and local discussion logs: complete in `43e0921`.
+- F9 — Null-runtime autopilot: next.
 
 ## F0 — Package and CLI scaffold
 
@@ -412,6 +413,26 @@ pnpm typecheck
 5. Wire CLI `waypoint tasks` and `waypoint discuss --task-id task-001 --message "..."`.
 6. Ensure agent-authored loop prevention is represented in metadata even though null runtime does not dispatch.
 7. Commit: `feat(folder-host): add task materialization and discussion logs`.
+
+**Status:** Complete. `waypoint start --quest gsd` now materializes `.waypoint/tasks/tasks.yaml` records for all Quest scaffold plans, including `recipe`, `discussion`, and `gate` task kinds. `waypoint tasks` lists those records, and `waypoint discuss --task-id <id> --message "..."` appends task-scoped JSONL discussion messages. Discussion-enabled tasks carry `waypoint.discussion` metadata with a stable conversation id from core conversation helpers; agent-authored messages record `auto_response.reason: agent_authored` so the local null runtime cannot recursively dispatch.
+
+**Verification completed:**
+```bash
+pnpm exec vitest run packages/waypoint-folder-host/src/tasks/store.test.ts packages/waypoint-folder-host/src/discussion/store.test.ts packages/waypoint-cli/src/commands/tasks.test.ts packages/waypoint-cli/src/commands/discuss.test.ts
+pnpm test
+pnpm typecheck
+```
+
+**Smoke completed:**
+```bash
+node packages/waypoint-cli/src/bin.ts init --quest gsd
+node packages/waypoint-cli/src/bin.ts start --quest gsd
+node packages/waypoint-cli/src/bin.ts tasks --route-id route-001
+node packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --message "Need acceptance criteria"
+node packages/waypoint-cli/src/bin.ts discuss --task-id task-003 --author agent --message "Agent reply"
+```
+
+Observed `.waypoint/tasks/tasks.yaml` and `.waypoint/tasks/task-003-discussion.jsonl` in the temp folder.
 
 **Verification:**
 ```bash
