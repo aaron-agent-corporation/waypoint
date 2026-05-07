@@ -134,7 +134,8 @@ Phases:
 - F1 — `.waypoint/` config/init/status: complete in `9b8ec56`.
 - F2 — Bundled Quest/Recipe catalog adoption: complete in `32620db`.
 - F3 — Lifecycle YAML store and commands: complete in `4ba9013`.
-- F4 — Route and event persistence: next.
+- F4 — Route and event persistence: complete in `d0b048d`.
+- F5 — Start Quest and scaffold project state: next.
 
 ## F0 — Package and CLI scaffold
 
