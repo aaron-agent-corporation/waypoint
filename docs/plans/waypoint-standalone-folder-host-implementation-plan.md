@@ -137,7 +137,8 @@ Phases:
 - F4 — Route and event persistence: complete in `d0b048d`.
 - F5 — Start Quest and scaffold project state: complete in `3afadee`.
 - F6 — Route status, list, detail, events: complete in `905c29a`.
-- F7 — Gate decisions, pause, resume, state transitions: next.
+- F7 — Gate decisions, pause, resume, state transitions: complete in `fcd8d12`.
+- F8 — Task materialization and local discussion logs: next.
 
 ## F0 — Package and CLI scaffold
 
@@ -381,9 +382,12 @@ pnpm typecheck
 6. Implement pause/resume.
 7. Commit: `feat(folder-host): add gate and route state controls`.
 
+**Status:** Complete in `fcd8d12`. `waypoint gate` now records explicit approve/reject decisions, updates route YAML, and appends `route.gate.approved` or `route.gate.rejected` events. `waypoint pause` marks a route blocked and appends `route.paused`; `waypoint resume` marks it active and appends `route.resumed`. `waypoint status` now counts blocked gates from blocked routes whose current node is gate-shaped.
+
 **Verification:**
 ```bash
-pnpm exec vitest run packages/waypoint-folder-host/src/routes/state.test.ts packages/waypoint-cli/src/commands/gate.test.ts
+pnpm exec vitest run packages/waypoint-folder-host/src/routes/state.test.ts packages/waypoint-cli/src/commands/gate.test.ts packages/waypoint-cli/src/commands/pause-resume.test.ts
+pnpm test
 pnpm typecheck
 ```
 
