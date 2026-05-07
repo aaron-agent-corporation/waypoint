@@ -3,7 +3,7 @@
 **Date:** 2026-05-06
 **Author:** Hermes (on behalf of Aaron Whaley)
 **Context:** Recovery plan after 2026-05-06 gsd-orchestrator fabrication incident
-**Status:** Execution in progress; P2–P5 complete in real git history
+**Status:** Execution in progress; P2–P6 complete in real git history
 
 ---
 

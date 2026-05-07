@@ -34,6 +34,17 @@ pnpm test             # runs vitest across core + example host
 pnpm typecheck
 ```
 
+
+## Quest and Recipe catalog
+
+Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portability example and batteries-included workflow library:
+
+- Operator guide: [`docs/quests/gsd.md`](docs/quests/gsd.md)
+- Human-readable command map: [`docs/quests/gsd-command-map.md`](docs/quests/gsd-command-map.md)
+- Machine-readable command map: [`docs/quests/gsd-command-map.yaml`](docs/quests/gsd-command-map.yaml)
+
+The GSD Quest preserves the initialize → discuss → plan → execute → verify → ship loop as Waypoint manifests. It does not make GSD the runtime identity; Waypoint remains the unified runtime.
+
 ## Host contract
 
 To embed Waypoint in a new system, implement these interfaces from `@waypoint/core`:

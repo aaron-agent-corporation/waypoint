@@ -151,6 +151,15 @@ initialize → discuss → plan → execute → verify → ship loop. Runtime-sp
 command and sub-Quest mappings that are not first-class Quest schema yet live
 under `metadata.gsd_port` in the manifest.
 
+## P6 operator documentation
+
+P6 added:
+
+- `docs/quests/gsd.md` — operator guide for the GSD Quest.
+- `docs/quests/gsd-command-map.md` — human-readable command map generated from `docs/quests/gsd-command-map.yaml`.
+- README links to the GSD Quest operator docs and command maps.
+- `src/__tests__/gsd-docs.test.ts` — docs smoke coverage for the guide, links, and all 65 command mappings.
+
 ## Execution order
 
 Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes the fabricated P2–P8 narrative):
@@ -161,6 +170,6 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 - **P3** — Command-informed first-batch sub-Quests ✅
 - **P4** — Remaining Quest catalog manifests / operator-action mappings ✅
 - **P5** — Structural smoke coverage for the full GSD port ✅
-- **P6** — Operator docs and command mapping ☐
+- **P6** — Operator docs and command mapping ✅
 - **P7** — Catalog close-out and attribution/license check ☐
 - **P8** — Close-out gate ☐
