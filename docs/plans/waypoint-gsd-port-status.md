@@ -169,6 +169,27 @@ P7 added (implementation commit `4f83277`):
 - Extended `src/__tests__/gsd-docs.test.ts` to assert catalog counts against the real recursive loaders and to require the preserved GSD license/notice references.
 - Re-read upstream `/Users/aaronwhaley/Downloads/get-shit-done-main/LICENSE` during P7. It is MIT licensed with `Copyright (c) 2025 Lex Christopherson`; attribution is preserved under `third_party/gsd/LICENSE` and `third_party/gsd/NOTICE.md`.
 
+
+## P8 close-out gate
+
+P8 records the final close-out state for the Track 4 GSD Quest/Recipe port.
+
+- Actual Quest count: 37
+- Actual Recipe count: 35
+- GSD-derived Recipe count: 33
+- GSD command mappings documented: 65
+- Verification commands to run for close-out:
+  - `pnpm test`
+  - `pnpm typecheck`
+- Latest verified pre-P8 commit: `790ccb5` (`docs(gsd-port): record P7 catalog close-out`)
+
+Explicit deferred work:
+
+- folder-host runtime execution remains out of scope for Track 4 and belongs to the folder-host track.
+- live Recipe execution remains out of scope for Track 4 and belongs to a future host/runtime integration track.
+- first-class sub-Quest composition fields remain deferred; current command/sub-Quest mapping intent is stored under manifest metadata and docs.
+- namespace commands (`ns-*`) remain deferred optional catalog work.
+
 ## Execution order
 
 Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes the fabricated P2–P8 narrative):
@@ -181,4 +202,4 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 - **P5** — Structural smoke coverage for the full GSD port ✅
 - **P6** — Operator docs and command mapping ✅
 - **P7** — Catalog close-out and attribution/license check ✅
-- **P8** — Close-out gate ☐
+- **P8** — Close-out gate ✅

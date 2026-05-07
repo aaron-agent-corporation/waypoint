@@ -3,7 +3,7 @@
 **Date:** 2026-05-06
 **Author:** Hermes (on behalf of Aaron Whaley)
 **Context:** Recovery plan after 2026-05-06 gsd-orchestrator fabrication incident
-**Status:** Execution in progress; P2–P7 complete in real git history
+**Status:** Execution complete; P2–P8 complete in real git history
 
 ---
 
@@ -264,6 +264,27 @@ Each phase below has:
 - No retroactive "cleanup commits" for the fabricated hashes. They don't exist, nothing to clean up.
 - No touching the Honcho memory. Gary's Honcho had zero Waypoint conclusions saved; the lies lived only in session transcripts, which are already archived.
 
+## P8 close-out gate
+
+Final close-out state for the accepted Track 4 recovery plan:
+
+- Actual Quest count: 37
+- Actual Recipe count: 35
+- GSD-derived Recipe count: 33
+- GSD command mappings documented: 65
+- Verification commands run for close-out:
+  - `pnpm test`
+  - `pnpm typecheck`
+- Latest verified pre-P8 commit: `790ccb5` (`docs(gsd-port): record P7 catalog close-out`)
+
+Explicit deferred work:
+
+- folder-host runtime execution remains out of scope for Track 4 and belongs to the folder-host track.
+- live Recipe execution remains out of scope for Track 4 and belongs to a future host/runtime integration track.
+- first-class sub-Quest composition fields remain deferred; current command/sub-Quest mapping intent is stored under manifest metadata and docs.
+- namespace commands (`ns-*`) remain deferred optional catalog work.
+
+
 ## Execution discipline (applies to every phase)
 
 1. Before starting a phase, run `git log --oneline -3` and show the real tip.
@@ -284,6 +305,6 @@ No "Proceeding to P3 next" as the final line of a response. Either do it now wit
 | P5    | complete | e0d10dc | 2026-05-07 |
 | P6    | complete | 4be4ef1 | 2026-05-07 |
 | P7    | complete | 4f83277 | 2026-05-07 |
-| P8    | pending | —      | —    |
+| P8    | complete | pending close-out commit | 2026-05-06 |
 
 Gary updates this table as real phases land, with real commit hashes from `git log`.

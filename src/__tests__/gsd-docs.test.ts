@@ -64,7 +64,7 @@ describe('GSD Quest operator documentation', () => {
     }
   })
 
-  it('publishes a catalog with loader-backed Quest and Recipe counts plus attribution', async () => {
+  async function loadCatalogCounts() {
     const quests = await loadQuestsFromDirectory(questsDir)
     expect(quests.ok).toBe(true)
     if (!quests.ok) throw new Error(JSON.stringify(quests.errors))
@@ -76,6 +76,12 @@ describe('GSD Quest operator documentation', () => {
     const questSlugs = quests.registry.list().map((quest) => quest.slug).sort()
     const recipeSlugs = recipes.registry.list().map((recipe) => recipe.slug).sort()
     const gsdRecipeSlugs = recipeSlugs.filter((slug) => slug.startsWith('gsd-'))
+
+    return { questSlugs, recipeSlugs, gsdRecipeSlugs }
+  }
+
+  it('publishes a catalog with loader-backed Quest and Recipe counts plus attribution', async () => {
+    const { questSlugs, recipeSlugs, gsdRecipeSlugs } = await loadCatalogCounts()
     const catalog = readRepoFile('docs/waypoint-quest-catalog.md')
 
     expect(catalog).toContain(`Total Quests loaded from disk: ${questSlugs.length}`)
@@ -88,6 +94,24 @@ describe('GSD Quest operator documentation', () => {
 
     for (const slug of [...questSlugs, ...recipeSlugs]) {
       expect(catalog).toContain(`\`${slug}\``)
+    }
+  })
+
+  it('records the P8 close-out gate with loader-backed counts, verification commands, and deferred work', async () => {
+    const { questSlugs, recipeSlugs, gsdRecipeSlugs } = await loadCatalogCounts()
+    const status = readRepoFile('docs/plans/waypoint-gsd-port-status.md')
+    const resumePlan = readRepoFile('WAYPOINT_RESUME_PLAN.md')
+
+    for (const doc of [status, resumePlan]) {
+      expect(doc).toContain('P8 close-out gate')
+      expect(doc).toContain(`Actual Quest count: ${questSlugs.length}`)
+      expect(doc).toContain(`Actual Recipe count: ${recipeSlugs.length}`)
+      expect(doc).toContain(`GSD-derived Recipe count: ${gsdRecipeSlugs.length}`)
+      expect(doc).toContain('pnpm test')
+      expect(doc).toContain('pnpm typecheck')
+      expect(doc).toContain('Explicit deferred work')
+      expect(doc).toContain('folder-host runtime')
+      expect(doc).toContain('live Recipe execution')
     }
   })
 })
