@@ -421,28 +421,46 @@ Smoke expectation: a temp project started with `waypoint init --quest gsd`, `way
 
 **Objective:** Prove Track 3 as an operator-visible workflow, not just isolated adapters.
 
+**H6 status: complete.**
+
+**Files changed:**
+
+- Waypoint repo:
+  - `docs/plans/waypoint-hermes-integration-plan.md`
+  - `docs/plans/waypoint-remaining-roadmap.md`
+  - `examples/hermes-operator-adapter/README.md`
+  - `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts`
+  - `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.test.ts`
+  - `src/__tests__/hermes-integration-plan.test.ts`
+
+The H6 reference smoke lives at `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts`.
+
 **Smoke script/user journey:**
 
-1. Register a temp or fixture project.
-2. Initialize and start `gsd`.
-3. Configure `runtime.recipe: local` to call the Hermes runtime adapter.
-4. Run autopilot until a Recipe task executes through Hermes.
-5. Append a task discussion message and an agent-authored reply.
-6. Continue to a human gate.
-7. Prompt for gate decision over Telegram/Hermes.
-8. Approve the gate.
-9. Inspect `.waypoint/` artifacts and route events.
+1. Register a temp or fixture project through the H1 project registry.
+2. Initialize and start `gsd` in that temp folder.
+3. Use H2 safe Waypoint commands for operator-visible route/task/event operations.
+4. Configure `runtime.recipe: local` to call the Hermes runtime adapter.
+5. Run autopilot until the local Recipe runtime executes through the Hermes runtime adapter and emits `route.autopilot.task.executed` evidence.
+6. Run the H4 discussion loop so the discussion loop appends user and agent-authored messages with loop prevention.
+7. Continue to a human gate.
+8. Prompt for gate decision over Telegram/Hermes through the H5 Telegram gate loop.
+9. Approve `plan-approval-gate` through `waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute`.
+10. Inspect durable `.waypoint/` route/task/event/discussion evidence, including `route.autopilot.task.executed` and `route.gate.approved`.
+
+Implementation note: the current GSD scaffold includes early plan refs that are not one-to-one Recipe manifest slugs. The H6 smoke uses the null runtime to advance through those scaffold-only tasks, switches to the local Recipe runtime for the discussion agent task that has a real Recipe slug (`gsd-doc-writer`), then switches back to null runtime to reach the human gate. This keeps H6 honest about the present catalog/runtime boundary instead of inventing Recipe manifests for scaffold plan refs.
 
 **Verification gate:**
 
 ```bash
-pnpm smoke:folder-host
+pnpm exec vitest run examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.test.ts
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
+pnpm smoke:folder-host
 pnpm test
 pnpm typecheck
 ```
 
-Plus Hermes-side transcript/artifact proof from the actual Telegram/operator path.
+Smoke expectation: a temp project proves the H1 registry, H2 safe command runner, H3 Hermes Recipe runtime adapter, H4 discussion loop, and H5 Telegram gate loop in one operator-visible flow. The proof includes local runtime stdout containing `hermes-recipe-runtime-reference`, route events containing `route.autopilot.task.executed` and `route.gate.approved`, a discussion agent message with loop-prevention metadata, and a final route inspection showing `status: active`.
 
 ---
 

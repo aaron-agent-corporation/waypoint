@@ -152,6 +152,29 @@ Behavior:
 - maps `show events` to `waypoint route-events --route-id route-001 --limit 20`;
 - Hermes response quotes updated route status after mutation commands.
 
+## H6 end-to-end Hermes smoke
+
+H6 status: complete.
+
+The end-to-end Hermes operator smoke reference lives at:
+
+```text
+examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts
+```
+
+It proves the adapter chain as one operator-visible workflow against a temp `.waypoint/` project:
+
+- Register a temp or fixture project through the project registry;
+- initialize and start `gsd`;
+- use the safe Waypoint command runner for operator-visible commands;
+- configure local Recipe runtime so a task executes through the Hermes runtime adapter;
+- verify route events include `route.autopilot.task.executed` and `hermes-recipe-runtime-reference` output;
+- run the discussion loop so it appends user and agent-authored messages;
+- preserve loop prevention on the agent-authored reply;
+- continue to `plan-approval-gate`;
+- Telegram gate loop approves `plan-approval-gate` through the Telegram gate loop;
+- verify durable `.waypoint/` route/task/event/discussion evidence, including `route.gate.approved` and final route `status: active`.
+
 ## Verification
 
 ```bash
@@ -159,5 +182,6 @@ pnpm exec vitest run examples/hermes-operator-adapter/src/project-registry.test.
 pnpm exec vitest run examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts
 pnpm exec vitest run examples/hermes-operator-adapter/src/discussion-loop.test.ts
 pnpm exec vitest run examples/hermes-operator-adapter/src/telegram-gate-loop.test.ts
+pnpm exec vitest run examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.test.ts
 pnpm exec vitest run src/__tests__/hermes-integration-plan.test.ts
 ```

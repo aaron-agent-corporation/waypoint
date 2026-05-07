@@ -99,7 +99,7 @@ Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mis
 
 ### Track 3 — Hermes Runtime + Operator Bridge
 
-**Status:** Active — H5 Telegram gate loop complete.
+**Status:** Active — H6 end-to-end Hermes smoke complete.
 
 **Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
 
@@ -132,7 +132,7 @@ Resolved: Aaron selected Track 3 — Hermes Runtime + Operator Bridge before Mis
 
 ### Track 3 — Hermes Runtime + Operator Bridge
 
-**Status:** Active — H5 Telegram gate loop complete.
+**Status:** Active — H6 end-to-end Hermes smoke complete.
 
 **Plan:** `docs/plans/waypoint-hermes-integration-plan.md`.
 

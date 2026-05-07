@@ -13,7 +13,7 @@ describe('Hermes integration plan', () => {
     const roadmap = readRepoFile('docs/plans/waypoint-remaining-roadmap.md')
 
     expect(roadmap).toContain('### Track 3 — Hermes Runtime + Operator Bridge')
-    expect(roadmap).toContain('**Status:** Active — H5 Telegram gate loop complete')
+    expect(roadmap).toContain('**Status:** Active — H6 end-to-end Hermes smoke complete')
     expect(roadmap).toContain('docs/plans/waypoint-hermes-integration-plan.md')
     expect(roadmap).toContain('Mission Control bridge remains later')
   })
@@ -158,6 +158,26 @@ describe('Hermes integration plan', () => {
       'waypoint tasks --route-id route-001',
       'waypoint route-events --route-id route-001 --limit 20',
       'Hermes response quotes updated route status',
+    ]) {
+      expect(`${plan}\n${readme}`).toContain(phrase)
+    }
+  })
+
+  it('records the H6 end-to-end Hermes smoke and artifact boundary', () => {
+    expect(existsSync(resolve(repoRoot, 'examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts'))).toBe(true)
+
+    const plan = readRepoFile('docs/plans/waypoint-hermes-integration-plan.md')
+    const readme = readRepoFile('examples/hermes-operator-adapter/README.md')
+    for (const phrase of [
+      'H6 status: complete',
+      'examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts',
+      'Register a temp or fixture project',
+      'local Recipe runtime executes through the Hermes runtime adapter',
+      'discussion loop appends user and agent-authored messages',
+      'Telegram gate loop approves `plan-approval-gate`',
+      'route.autopilot.task.executed',
+      'route.gate.approved',
+      'durable `.waypoint/` route/task/event/discussion evidence',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
