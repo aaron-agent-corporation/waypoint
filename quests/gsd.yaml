@@ -39,21 +39,83 @@ scaffolds:
             - phase_key: "00"
               phase_slug: initialize
               lifecycle_phase: initialize
+              plans:
+                - plan_ref: initialize-context
+                  title: Gather project context and starting constraints
+                  wave: 10
+                - plan_ref: initialize-roadmap
+                  title: Draft initial roadmap and Quest adoption notes
+                  wave: 20
             - phase_key: "10"
               phase_slug: discuss
               lifecycle_phase: discuss
+              plans:
+                - plan_ref: discuss-objective
+                  title: Run task-scoped discussion to clarify objective and acceptance criteria
+                  wave: 10
+                  metadata:
+                    waypoint:
+                      discussion:
+                        enabled: true
+                        agent: gsd-doc-writer
+                - plan_ref: discuss-assumptions
+                  title: Surface assumptions, risks, and open decisions
+                  wave: 20
             - phase_key: "20"
               phase_slug: plan
               lifecycle_phase: plan
+              plans:
+                - plan_ref: plan-research
+                  title: Research the phase and draft an executable plan
+                  wave: 10
+                - plan_ref: plan-approval-gate
+                  title: Human approval gate before execution begins
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      gate:
+                        required: true
+                        kind: plan_approval
             - phase_key: "30"
               phase_slug: execute
               lifecycle_phase: execute
+              plans:
+                - plan_ref: execute-slice
+                  title: Execute approved work in dependency-aware slices
+                  wave: 10
+                - plan_ref: execute-checkpoint
+                  title: Checkpoint evidence, commits, and remaining work
+                  wave: 20
             - phase_key: "40"
               phase_slug: verify
               lifecycle_phase: verify
+              plans:
+                - plan_ref: verify-work
+                  title: Validate deliverables against acceptance criteria
+                  wave: 10
+                - plan_ref: verify-approval-gate
+                  title: Human verification gate and issue triage
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      gate:
+                        required: true
+                        kind: verification
             - phase_key: "50"
               phase_slug: ship
               lifecycle_phase: ship
+              plans:
+                - plan_ref: ship-prep
+                  title: Prepare docs, review notes, and final handoff
+                  wave: 10
+                - plan_ref: ship-approval-gate
+                  title: Final human ship approval gate
+                  wave: 20
+                  metadata:
+                    waypoint:
+                      gate:
+                        required: true
+                        kind: ship_approval
 
 metadata:
   source:

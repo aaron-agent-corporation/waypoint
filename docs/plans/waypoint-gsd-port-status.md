@@ -160,7 +160,7 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 - **P2** — Main Quest manifest (`quests/gsd.yaml`) ✅
 - **P3** — Command-informed first-batch sub-Quests ✅
 - **P4** — Remaining Quest catalog manifests / operator-action mappings ✅
-- **P5** — Structural smoke coverage for the full GSD port ☐
+- **P5** — Structural smoke coverage for the full GSD port ✅
 - **P6** — Operator docs and command mapping ☐
 - **P7** — Catalog close-out and attribution/license check ☐
 - **P8** — Close-out gate ☐
