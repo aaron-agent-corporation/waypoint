@@ -78,6 +78,9 @@ export type {
   WaypointAutopilotRunStatus,
 } from './autopilot/types.ts'
 export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
+export { LocalRecipeRuntime } from './runtime/local-runtime.ts'
+export type { LocalRecipePayload, LocalRecipePayloadInput } from './runtime/payload.ts'
+export { buildLocalRecipePayload } from './runtime/payload.ts'
 export type {
   AppendTaskDiscussionMessageInput,
   TaskDiscussionMessagePage,

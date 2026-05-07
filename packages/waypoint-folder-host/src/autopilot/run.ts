@@ -1,12 +1,16 @@
-import { appendFile, mkdir, readFile } from 'node:fs/promises'
+import { appendFile, mkdir, readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import { parseRecipeManifest } from '../../../../src/recipes/manifest.ts'
 import { appendRouteEvent } from '../events/jsonl.ts'
+import { readWaypointProjectConfig } from '../project/config.ts'
 import { getWaypointProjectPaths } from '../project/root.ts'
 import { getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from '../routes/store.ts'
 import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
+import { LocalRecipeRuntime } from '../runtime/local-runtime.ts'
 import { NullRecipeRuntime } from '../runtime/null-runtime.ts'
 
+import type { RecipeManifest } from '../../../../src/recipes/manifest.ts'
 import type {
   RunWaypointAutopilotOptions,
   RunWaypointAutopilotResult,
@@ -31,7 +35,7 @@ export async function runWaypointAutopilot(
     throw new Error(`Autopilot max iterations must be a positive integer: ${maxIterations}`)
   }
 
-  const runtime = new NullRecipeRuntime()
+  const runtime = await createRecipeRuntime(projectRoot)
   const completedTasks: string[] = []
   let iterations = 0
   let status: WaypointAutopilotRunStatus = 'complete'
@@ -76,12 +80,34 @@ export async function runWaypointAutopilot(
       break
     }
 
+    const recipeSlug = recipeForTask(nextTask)
+    const recipe = runtime instanceof LocalRecipeRuntime ? await loadRecipeManifest(projectRoot, recipeSlug) : null
     const output = await runtime.runRecipe({
       routeId,
       taskId: nextTask.id,
-      recipe: recipeForTask(nextTask),
+      recipe: recipe?.slug ?? recipeSlug,
+      prompt: recipe?.prompt ?? '',
       projectRoot,
     })
+    if (output.status === 'failed') {
+      status = 'failed'
+      await updateWaypointTask(projectRoot, nextTask.id, {
+        status: 'failed',
+        updated_at: timestampFor(options.now),
+        metadata: mergeTaskMetadata(nextTask.metadata, { autopilot: output }),
+      })
+      await updateWaypointRoute(projectRoot, routeId, {
+        status: 'failed',
+        current_node: nextTask.plan_ref,
+        updated_at: timestampFor(options.now),
+      })
+      await appendRouteEvent(projectRoot, routeId, {
+        kind: 'route.autopilot.task.failed',
+        now: options.now,
+        payload: { task_id: nextTask.id, node: nextTask.plan_ref, runtime: output },
+      })
+      break
+    }
     await updateWaypointTask(projectRoot, nextTask.id, {
       status: 'done',
       updated_at: timestampFor(options.now),
@@ -93,7 +119,7 @@ export async function runWaypointAutopilot(
       updated_at: timestampFor(options.now),
     })
     await appendRouteEvent(projectRoot, routeId, {
-      kind: 'route.autopilot.task.simulated',
+      kind: output.runtime === 'local' ? 'route.autopilot.task.executed' : 'route.autopilot.task.simulated',
       now: options.now,
       payload: { task_id: nextTask.id, node: nextTask.plan_ref, runtime: output },
     })
@@ -131,6 +157,37 @@ export async function listWaypointAutopilotRuns(
   if (!Number.isInteger(offset) || offset < 0) throw new Error(`Autopilot run offset must be a non-negative integer: ${offset}`)
   const runs = await readAllAutopilotRuns(projectRoot)
   return { items: runs.slice(offset, offset + limit), total: runs.length, limit, offset }
+}
+
+async function createRecipeRuntime(projectRoot: string): Promise<NullRecipeRuntime | LocalRecipeRuntime> {
+  const paths = getWaypointProjectPaths(projectRoot)
+  const config = await readWaypointProjectConfig(paths.configPath)
+  if (config.runtime.recipe !== 'local') return new NullRecipeRuntime()
+  if (!config.runtime.command) throw new Error('Local Recipe runtime requires runtime.command in .waypoint/config.yaml')
+  return new LocalRecipeRuntime({ command: config.runtime.command, args: config.runtime.args ?? [] })
+}
+
+async function loadRecipeManifest(projectRoot: string, recipeSlug: string): Promise<RecipeManifest> {
+  const recipeDirectory = join(getWaypointProjectPaths(projectRoot).waypointDir, 'recipes')
+  for (const filePath of await walkYamlFiles(recipeDirectory)) {
+    const parsed = parseRecipeManifest(await readFile(filePath, 'utf8'))
+    if (parsed.ok && parsed.manifest.slug === recipeSlug) return parsed.manifest
+  }
+  throw new Error(`Recipe not found in local catalog: ${recipeSlug}`)
+}
+
+async function walkYamlFiles(root: string): Promise<string[]> {
+  const out: string[] = []
+  const entries = await readdir(root, { withFileTypes: true })
+  for (const entry of entries) {
+    const full = join(root, entry.name)
+    if (entry.isDirectory()) {
+      out.push(...(await walkYamlFiles(full)))
+    } else if (entry.isFile() && (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))) {
+      out.push(full)
+    }
+  }
+  return out.sort()
 }
 
 async function defaultRouteId(projectRoot: string): Promise<string> {

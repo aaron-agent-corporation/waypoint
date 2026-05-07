@@ -41,6 +41,7 @@ Usage:
   waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
   waypoint auto [--route-id <id>] [--max-iterations N] [--json]
   waypoint auto status [--limit N] [--offset N] [--json]
+  # Safety: local Recipe runtime executes configured commands only when .waypoint/config.yaml explicitly sets runtime.recipe: local.
   waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
   waypoint pause --route-id <id> [--reason <text>]
   waypoint resume --route-id <id>

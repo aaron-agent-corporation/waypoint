@@ -2,6 +2,7 @@ export interface NullRecipeRuntimeInput {
   readonly routeId: string
   readonly taskId: string
   readonly recipe: string
+  readonly prompt?: string
   readonly projectRoot: string
 }
 

@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises'
+import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -54,5 +54,67 @@ describe('folder host autopilot', () => {
       status: 'iteration_cap',
       iterations: 3,
     })
+  })
+
+  it('uses the configured local runtime when explicitly enabled', async () => {
+    const cwd = await startedProject()
+    const payloadPath = join(cwd, 'payload.json')
+    const scriptPath = join(cwd, 'capture.mjs')
+    await writeFile(
+      join(cwd, '.waypoint', 'config.yaml'),
+      `schema_version: 1\nenabled: true\nquest: gsd\nruntime:\n  recipe: local\n  command: ${JSON.stringify(process.execPath)}\n  args:\n    - ${JSON.stringify(scriptPath)}\n    - ${JSON.stringify(payloadPath)}\ncreated_at: '2026-01-01T00:00:00.000Z'\nupdated_at: '2026-01-01T00:00:00.000Z'\n`,
+      'utf8',
+    )
+    await writeFile(
+      scriptPath,
+      `import { writeFile } from 'node:fs/promises'\nlet input = ''\nfor await (const chunk of process.stdin) input += chunk\nawait writeFile(process.argv[2], input)\nconsole.log('ok')\n`,
+      'utf8',
+    )
+    await chmod(scriptPath, 0o755)
+    await writeFile(
+      join(cwd, '.waypoint', 'recipes', 'initialize-context.yaml'),
+      `schema_version: 1\nslug: initialize-context\nname: Initialize Context\nprompt: Local prompt\n`,
+      'utf8',
+    )
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 1 })
+
+    expect(result.status).toBe('iteration_cap')
+    await expect(readFile(payloadPath, 'utf8').then((raw) => JSON.parse(raw))).resolves.toMatchObject({
+      recipe_slug: 'initialize-context',
+      prompt: 'Local prompt',
+      task_id: 'task-001',
+      route_id: 'route-001',
+      project_root: cwd,
+    })
+    const tasks = await listWaypointTasks(cwd)
+    const firstTask = tasks.find((task) => task.id === 'task-001')
+    expect(firstTask?.metadata?.waypoint).toMatchObject({ autopilot: { runtime: 'local', status: 'success' } })
+  })
+
+  it('records local runtime failure without corrupting route YAML', async () => {
+    const cwd = await startedProject()
+    const scriptPath = join(cwd, 'fail.mjs')
+    await writeFile(
+      join(cwd, '.waypoint', 'config.yaml'),
+      `schema_version: 1\nenabled: true\nquest: gsd\nruntime:\n  recipe: local\n  command: ${JSON.stringify(process.execPath)}\n  args:\n    - ${JSON.stringify(scriptPath)}\ncreated_at: '2026-01-01T00:00:00.000Z'\nupdated_at: '2026-01-01T00:00:00.000Z'\n`,
+      'utf8',
+    )
+    await writeFile(scriptPath, `console.error('runtime exploded')\nprocess.exit(9)\n`, 'utf8')
+    await writeFile(
+      join(cwd, '.waypoint', 'recipes', 'initialize-context.yaml'),
+      `schema_version: 1\nslug: initialize-context\nname: Initialize Context\nprompt: Local prompt\n`,
+      'utf8',
+    )
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 1 })
+
+    expect(result.status).toBe('failed')
+    const route = await getWaypointRoute(cwd, 'route-001')
+    expect(route).toMatchObject({ status: 'failed', current_node: 'initialize-context' })
+    const tasks = await listWaypointTasks(cwd)
+    expect(tasks.find((task) => task.id === 'task-001')?.status).toBe('failed')
+    const events = await readRouteEvents(cwd, 'route-001', { limit: 20 })
+    expect(events.items.map((event) => event.kind)).toContain('route.autopilot.task.failed')
   })
 })
