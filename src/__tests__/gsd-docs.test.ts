@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { loadQuestsFromDirectory, loadRecipesFromDirectory } from '../index.js'
 
 const repoRoot = resolve(__dirname, '../..')
+const questsDir = resolve(repoRoot, 'quests')
+const recipesDir = resolve(repoRoot, 'recipes')
 
 function readRepoFile(path: string): string {
   return readFileSync(resolve(repoRoot, path), 'utf8')
@@ -58,6 +61,33 @@ describe('GSD Quest operator documentation', () => {
       '`quests/gsd.yaml`',
     ]) {
       expect(markdownMap).toContain(phrase)
+    }
+  })
+
+  it('publishes a catalog with loader-backed Quest and Recipe counts plus attribution', async () => {
+    const quests = await loadQuestsFromDirectory(questsDir)
+    expect(quests.ok).toBe(true)
+    if (!quests.ok) throw new Error(JSON.stringify(quests.errors))
+
+    const recipes = await loadRecipesFromDirectory(recipesDir)
+    expect(recipes.ok).toBe(true)
+    if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
+
+    const questSlugs = quests.registry.list().map((quest) => quest.slug).sort()
+    const recipeSlugs = recipes.registry.list().map((recipe) => recipe.slug).sort()
+    const gsdRecipeSlugs = recipeSlugs.filter((slug) => slug.startsWith('gsd-'))
+    const catalog = readRepoFile('docs/waypoint-quest-catalog.md')
+
+    expect(catalog).toContain(`Total Quests loaded from disk: ${questSlugs.length}`)
+    expect(catalog).toContain(`Total Recipes loaded from disk: ${recipeSlugs.length}`)
+    expect(catalog).toContain(`GSD-derived Recipes: ${gsdRecipeSlugs.length}`)
+    expect(catalog).toContain('MIT License')
+    expect(catalog).toContain('Copyright (c) 2025 Lex Christopherson')
+    expect(catalog).toContain('third_party/gsd/LICENSE')
+    expect(catalog).toContain('third_party/gsd/NOTICE.md')
+
+    for (const slug of [...questSlugs, ...recipeSlugs]) {
+      expect(catalog).toContain(`\`${slug}\``)
     }
   })
 })

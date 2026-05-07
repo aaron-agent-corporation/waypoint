@@ -39,6 +39,7 @@ pnpm typecheck
 
 Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portability example and batteries-included workflow library:
 
+- Catalog: [`docs/waypoint-quest-catalog.md`](docs/waypoint-quest-catalog.md)
 - Operator guide: [`docs/quests/gsd.md`](docs/quests/gsd.md)
 - Human-readable command map: [`docs/quests/gsd-command-map.md`](docs/quests/gsd-command-map.md)
 - Machine-readable command map: [`docs/quests/gsd-command-map.yaml`](docs/quests/gsd-command-map.yaml)
