@@ -34,3 +34,21 @@ export type {
 } from './catalog/bundled.ts'
 export { installQuestCatalog } from './catalog/install.ts'
 export type { InstallQuestCatalogOptions, InstallQuestCatalogResult } from './catalog/install.ts'
+export {
+  addLifecycleMilestone,
+  addLifecyclePhase,
+  addLifecyclePlan,
+  addLifecycleWorkstream,
+  listLifecycleState,
+} from './lifecycle/store.ts'
+export type {
+  AddLifecycleMilestoneInput,
+  AddLifecyclePhaseInput,
+  AddLifecyclePlanInput,
+  AddLifecycleWorkstreamInput,
+  LifecycleMilestone,
+  LifecyclePhase,
+  LifecyclePlan,
+  LifecycleState,
+  LifecycleWorkstream,
+} from './lifecycle/types.ts'
