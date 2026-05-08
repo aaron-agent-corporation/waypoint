@@ -51,6 +51,17 @@ const firmVaultRecipeSlugs = [
   'firmvault-negotiation-document-client-decision',
   'firmvault-negotiation-prepare-response',
   'firmvault-negotiation-document-response',
+  'firmvault-settlement-prepare-statement',
+  'firmvault-settlement-prepare-authorization',
+  'firmvault-settlement-document-funds',
+  'firmvault-settlement-lien-audit',
+  'firmvault-settlement-lien-document-result',
+  'firmvault-lien-resolution-review-inventory',
+  'firmvault-lien-resolution-prepare-final-request',
+  'firmvault-lien-resolution-document-final-amount',
+  'firmvault-lien-resolution-document-payment',
+  'firmvault-final-distribution-prepare-statement',
+  'firmvault-final-distribution-zero-trust',
 ] as const
 
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const

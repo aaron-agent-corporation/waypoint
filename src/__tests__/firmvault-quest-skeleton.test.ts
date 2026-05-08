@@ -282,21 +282,53 @@ describe('FirmVault Quest skeleton', () => {
     )
     expect([...negotiationWaitRefs]).toEqual(expect.arrayContaining(['firmvault-negotiation-wait-offer-response']))
 
+    const settlementPhase = phases.find((phase) => phase.phase_slug === 'settlement')
+    const settlementPlanRefs = new Set((settlementPhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...settlementPlanRefs]).toEqual(expect.arrayContaining([
+      'firmvault-settlement-prepare-statement-task',
+      'firmvault-settlement-prepare-authorization-task',
+      'firmvault-settlement-client-authorization-gate',
+      'firmvault-settlement-execute-release-gate',
+      'firmvault-settlement-wait-for-funds',
+      'firmvault-settlement-document-funds-task',
+      'firmvault-settlement-lien-audit-task',
+      'firmvault-settlement-lien-strategy-review-gate',
+      'firmvault-settlement-lien-document-result-task',
+      'firmvault-final-distribution-prepare-statement-task',
+      'firmvault-final-distribution-issue-client-gate',
+      'firmvault-final-distribution-confirm-client-receipt-gate',
+      'firmvault-final-distribution-zero-trust-task',
+    ]))
+    expect(settlementPlanRefs.has('firmvault-settlement-deferred')).toBe(false)
+
     const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
-        const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
-        expect([...lienPlanRefs]).toEqual(
-          expect.arrayContaining([
-            'firmvault-early-lien-identification-task',
-            'firmvault-early-lien-human-inventory-review',
-            'firmvault-liens-deferred',
-          ]),
-        )
-        const lienRecipeSlugs = new Set(
-          (liensPhase?.plans ?? [])
-            .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
-            .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
-        )
-        expect([...lienRecipeSlugs]).toEqual(expect.arrayContaining(['firmvault-lien-identify-potential']))
+    const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...lienPlanRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-early-lien-identification-task',
+        'firmvault-early-lien-human-inventory-review',
+        'firmvault-lien-resolution-review-inventory-task',
+        'firmvault-lien-resolution-prepare-final-request-task',
+        'firmvault-lien-resolution-human-send-final-request',
+        'firmvault-lien-resolution-wait-final-amount',
+        'firmvault-lien-resolution-document-final-amount-task',
+        'firmvault-lien-resolution-payment-review-gate',
+        'firmvault-lien-resolution-document-payment-task',
+      ]),
+    )
+    expect(lienPlanRefs.has('firmvault-liens-deferred')).toBe(false)
+    const lienRecipeSlugs = new Set(
+      (liensPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...lienRecipeSlugs]).toEqual(expect.arrayContaining([
+      'firmvault-lien-identify-potential',
+      'firmvault-lien-resolution-review-inventory',
+      'firmvault-lien-resolution-prepare-final-request',
+      'firmvault-lien-resolution-document-final-amount',
+      'firmvault-lien-resolution-document-payment',
+    ]))
     
   })
 

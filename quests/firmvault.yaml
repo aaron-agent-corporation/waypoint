@@ -42,6 +42,17 @@ recipes:
 - firmvault-negotiation-document-client-decision
 - firmvault-negotiation-prepare-response
 - firmvault-negotiation-document-response
+- firmvault-settlement-prepare-statement
+- firmvault-settlement-prepare-authorization
+- firmvault-settlement-document-funds
+- firmvault-settlement-lien-audit
+- firmvault-settlement-lien-document-result
+- firmvault-lien-resolution-review-inventory
+- firmvault-lien-resolution-prepare-final-request
+- firmvault-lien-resolution-document-final-amount
+- firmvault-lien-resolution-document-payment
+- firmvault-final-distribution-prepare-statement
+- firmvault-final-distribution-zero-trust
 scaffolds:
   workstreams:
   - key: case
@@ -965,16 +976,209 @@ scaffolds:
         phase_slug: settlement
         lifecycle_phase: settlement
         plans:
-        - plan_ref: firmvault-settlement-deferred
-          title: Checkpoint deferred settlement workflow expansion after Part One
+        - plan_ref: firmvault-settlement-prepare-statement-task
+          title: Prepare draft settlement statement
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-settlement-prepare-statement
             source_port:
               workflow_id: firmvault-settlement-processing
-              status: deferred_after_part_one
+              source_node: prepare_settlement_statement
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+              output_landmarks:
+              - settlement_statement_prepared
+        - plan_ref: firmvault-settlement-prepare-authorization-task
+          title: Prepare authorization to settle handoff
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-settlement-prepare-authorization
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              source_node: prepare_authorization_to_settle
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+              output_landmarks:
+              - authorization_to_settle_prepared
+        - plan_ref: firmvault-settlement-client-authorization-gate
+          title: Human client settlement authorization gate
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: client_settlement_authorization
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              source_node: get_client_signature
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+              output_landmarks:
+              - client_authorized
+        - plan_ref: firmvault-settlement-execute-release-gate
+          title: Human execute release gate
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: execute_release
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              source_node: execute_release
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+              output_landmarks:
+              - release_executed
+        - plan_ref: firmvault-settlement-wait-for-funds
+          title: Wait for settlement funds
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 14
+                exit_landmark: funds_received
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              source_node: wait_for_funds
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+        - plan_ref: firmvault-settlement-document-funds-task
+          title: Document settlement funds receipt
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-settlement-document-funds
+            source_port:
+              workflow_id: firmvault-settlement-processing
+              source_node: receive_settlement_funds
+              source_workflow: workflows/firmvault-settlement-processing.yaml
+              output_landmarks:
+              - funds_received
+        - plan_ref: firmvault-settlement-lien-audit-task
+          title: Audit settlement liens
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-settlement-lien-audit
+            source_port:
+              workflow_id: firmvault-settlement-lien-negotiation
+              source_node: audit_settlement_liens
+              source_workflow: workflows/firmvault-settlement-lien-negotiation.yaml
+              output_landmarks:
+              - settlement_liens_audited
+              - liens_prioritized
+              - lien_available_funds_calculated
+        - plan_ref: firmvault-settlement-lien-strategy-review-gate
+          title: Human lien strategy review gate
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: settlement_lien_strategy_review
+            source_port:
+              workflow_id: firmvault-settlement-lien-negotiation
+              source_node: human_lien_strategy_review
+              source_workflow: workflows/firmvault-settlement-lien-negotiation.yaml
+              output_landmarks:
+              - settlement_lien_strategy_reviewed
+        - plan_ref: firmvault-settlement-lien-document-result-task
+          title: Document settlement lien result
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-settlement-lien-document-result
+            source_port:
+              workflow_id: firmvault-settlement-lien-negotiation
+              source_node: document_lien_negotiation_result
+              source_workflow: workflows/firmvault-settlement-lien-negotiation.yaml
+              output_landmarks:
+              - liens_negotiated
+        - plan_ref: firmvault-final-distribution-prepare-statement-task
+          title: Prepare final distribution statement
+          wave: 100
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-final-distribution-prepare-statement
+            source_port:
+              workflow_id: firmvault-final-distribution
+              source_node: prepare_final_distribution_statement
+              source_workflow: workflows/firmvault-final-distribution.yaml
+              output_landmarks:
+              - final_distribution_statement_prepared
+        - plan_ref: firmvault-final-distribution-issue-client-gate
+          title: Human issue client distribution gate
+          wave: 110
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: issue_client_distribution
+            source_port:
+              workflow_id: firmvault-final-distribution
+              source_node: human_issue_client_distribution
+              source_workflow: workflows/firmvault-final-distribution.yaml
+              output_landmarks:
+              - client_distribution_issued
+        - plan_ref: firmvault-final-distribution-confirm-client-receipt-gate
+          title: Human confirm client distribution receipt gate
+          wave: 120
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_client_distribution_receipt
+            source_port:
+              workflow_id: firmvault-final-distribution
+              source_node: human_confirm_client_receipt
+              source_workflow: workflows/firmvault-final-distribution.yaml
+              output_landmarks:
+              - client_distributed
+        - plan_ref: firmvault-final-distribution-zero-trust-task
+          title: Document trust account zeroed and final distribution complete
+          wave: 130
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-final-distribution-zero-trust
+            source_port:
+              workflow_id: firmvault-final-distribution
+              source_node: zero_trust_account
+              source_workflow: workflows/firmvault-final-distribution.yaml
+              output_landmarks:
+              - trust_account_zeroed
+              - final_distribution_complete
       - phase_key: '70'
         phase_slug: liens
         lifecycle_phase: liens
@@ -1012,16 +1216,114 @@ scaffolds:
               source_workflow: workflows/firmvault-early-lien-identification.yaml
               output_landmarks:
               - lien_inventory_reviewed
-        - plan_ref: firmvault-liens-deferred
-          title: Checkpoint deferred final lien-resolution workflow expansion after early identification
+        - plan_ref: firmvault-lien-resolution-review-inventory-task
+          title: Review final lien inventory
           wave: 30
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-lien-resolution-review-inventory
             source_port:
               workflow_id: firmvault-lien-resolution
-              status: deferred_after_part_one
+              source_node: review_lien_inventory
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - liens_opened
+        - plan_ref: firmvault-lien-resolution-prepare-final-request-task
+          title: Prepare final lien amount request
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-lien-resolution-prepare-final-request
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: prepare_final_lien_request
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - final_amount_request_prepared
+        - plan_ref: firmvault-lien-resolution-human-send-final-request
+          title: Human send final lien request gate
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: send_final_lien_request
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: human_send_final_lien_request
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - final_amounts_requested
+        - plan_ref: firmvault-lien-resolution-wait-final-amount
+          title: Wait for final lien amount
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 30
+                exit_landmark: final_amounts_received
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: wait_for_final_lien_amount
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+        - plan_ref: firmvault-lien-resolution-document-final-amount-task
+          title: Document final lien amount
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-lien-resolution-document-final-amount
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: document_final_lien_amount
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - final_amounts_received
+        - plan_ref: firmvault-lien-resolution-payment-review-gate
+          title: Human lien payment review gate
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: lien_payment_review
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: human_lien_payment_review
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - lien_payment_authorized
+        - plan_ref: firmvault-lien-resolution-document-payment-task
+          title: Document lien payment or negotiated resolution
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-lien-resolution-document-payment
+            source_port:
+              workflow_id: firmvault-lien-resolution
+              source_node: document_lien_payment
+              source_workflow: workflows/firmvault-lien-resolution.yaml
+              output_landmarks:
+              - liens_negotiated
+              - liens_paid
       - phase_key: '80'
         phase_slug: close
         lifecycle_phase: close
@@ -1040,5 +1342,5 @@ metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_six_e_negotiation_wave
+    status: part_six_f_settlement_distribution_wave
     external_side_effects: forbidden

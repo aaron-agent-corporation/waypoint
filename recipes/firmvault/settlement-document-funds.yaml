@@ -1,0 +1,79 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-F settlement/distribution wave.
+schema_version: 1
+slug: firmvault-settlement-document-funds
+name: FirmVault Settlement - Document Funds
+description: Document human-confirmed settlement funds receipt without distributing funds.
+prompt: 'You are running the source-backed Waypoint port of `firmvault-settlement-document-funds` for a FirmVault personal-injury
+  case.
+
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission
+  Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or
+  a mounted `/workspace` path.
+
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls,
+  insurer/provider/client/lien-holder communications, trust-account actions, payments, deposits, releases, or external API
+  calls. Do not claim that a human, bank, insurer, lien holder, provider, client, or external system was contacted unless
+  the local case folder already contains owner-confirmed evidence. Produce local drafts, ledgers, handoffs, blocked notes,
+  or review questions only.
+
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, lien holders,
+  treatment facts, signatures, lien terms, settlement funds, trust-account balances, payment facts, deadlines, authority,
+  or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would
+  be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+
+  Source purpose: Document human-confirmed settlement funds receipt without distributing funds.
+
+
+  Adapted Mission Control workflow instructions:
+
+
+  Read same-task Mission Control comments and canonical settlement files to document settlement funds receipt. Require human-confirmed
+  funds facts before marking funds received: received date, amount, payer, check or payment reference if available, deposit
+  date, trust-account status, and whether the funds have cleared. Write received-funds documentation under documents/received/settlement/
+  when supported by the comment, update settlement/settlement.md and settlement/distribution.md as funds-received tracking
+  only, and append activity and workflow-log entries. Do not pay liens, issue client/law-firm checks, mark liens paid, or
+  mark final distribution complete.
+
+
+  Canonical paths from the source workflow:
+
+  - `settlement/settlement.md`
+
+  - `settlement/distribution.md`
+
+  - `documents/received/settlement/`
+
+  - `activity/`
+
+  - `workflow-log/`
+
+
+  Completion standard: complete only when the local draft, ledger, handoff, blocked checkpoint, or review note is supported
+  by local Waypoint project folder evidence and the no-external-side-effects rule above. Human signature, release execution,
+  send/payment/receipt, and distribution facts require human-gate evidence before landmarks are satisfied.
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-settlement-processing.yaml
+    source_node: receive_settlement_funds
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by local case-folder evidence.
+    - No external communication, trust-account action, payment, deposit, release execution, or distribution is claimed or
+      performed.
+    - No settlement amount, lien amount, payment fact, client authority, deadline, or trust-account balance is invented.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - External communications and money movement are draft/handoff only; human-gated confirmation must exist before related
+      landmarks are satisfied.

@@ -90,8 +90,8 @@ describe('FirmVault case state contract', () => {
     await patchYaml(join(root, '.waypoint', 'firmvault', 'settlement.yaml'), (settlementState) => {
       settlementState.settlement.status = 'signed'
       settlementState.settlement.evidence = [{ path: 'documents/settlement/release.pdf' }]
-      settlementState.settlement.distribution.status = 'complete'
-      settlementState.settlement.distribution.evidence = [{ path: 'documents/settlement/distribution.pdf' }]
+      settlementState.settlement.distribution.completion.status = 'complete'
+      settlementState.settlement.distribution.completion.evidence = [{ path: 'documents/settlement/distribution.pdf' }]
     })
 
     const projection = await readFirmVaultLandmarkProjection(root)
@@ -405,6 +405,120 @@ describe('FirmVault case state contract', () => {
       'negotiation_response_prepared',
       'negotiation_response_human_sent',
       'negotiation_result_documented',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
+  it('projects settlement, settlement-lien, final distribution, and final lien-resolution landmarks from explicit state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'settlement'), { recursive: true })
+    await mkdir(join(root, 'liens'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'settlement'), { recursive: true })
+    await mkdir(join(root, 'documents', 'received', 'settlement'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'settlement'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'liens'), { recursive: true })
+    await mkdir(join(root, 'documents', 'received', 'liens'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'liens'), { recursive: true })
+    await mkdir(join(root, 'activity'), { recursive: true })
+    const evidencePaths = [
+      'settlement/settlement.md',
+      'documents/generated/settlement/settlement-statement.md',
+      'documents/generated/settlement/authorization.md',
+      'documents/sent/settlement/client-authorization.md',
+      'documents/sent/settlement/release-executed.md',
+      'documents/received/settlement/funds.md',
+      'settlement/distribution.md',
+      'activity/settlement-lien-review.md',
+      'documents/sent/settlement/client-distribution.md',
+      'activity/client-receipt.md',
+      'activity/trust-zeroed.md',
+      'liens/inventory.md',
+      'documents/generated/liens/final-request.md',
+      'documents/sent/liens/final-request-sent.md',
+      'documents/received/liens/final-amount.md',
+      'activity/lien-payment-review.md',
+      'documents/sent/liens/lien-payment.md',
+    ]
+    for (const evidencePath of evidencePaths) {
+      await writeFile(join(root, evidencePath), 'fixture', 'utf8')
+    }
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'settlement.yaml'), (settlementState) => {
+      settlementState.settlement.status = 'reached'
+      settlementState.settlement.evidence = [{ path: 'settlement/settlement.md' }]
+      settlementState.settlement.statement.status = 'prepared'
+      settlementState.settlement.statement.evidence = [{ path: 'documents/generated/settlement/settlement-statement.md' }]
+      settlementState.settlement.authorization_to_settle.status = 'prepared'
+      settlementState.settlement.authorization_to_settle.evidence = [{ path: 'documents/generated/settlement/authorization.md' }]
+      settlementState.settlement.client_authorization.status = 'authorized'
+      settlementState.settlement.client_authorization.evidence = [{ path: 'documents/sent/settlement/client-authorization.md' }]
+      settlementState.settlement.release.status = 'executed'
+      settlementState.settlement.release.evidence = [{ path: 'documents/sent/settlement/release-executed.md' }]
+      settlementState.settlement.funds.status = 'received'
+      settlementState.settlement.funds.evidence = [{ path: 'documents/received/settlement/funds.md' }]
+      settlementState.settlement.liens.audit.status = 'audited'
+      settlementState.settlement.liens.audit.evidence = [{ path: 'activity/settlement-lien-review.md' }]
+      settlementState.settlement.liens.prioritization.status = 'prioritized'
+      settlementState.settlement.liens.prioritization.evidence = [{ path: 'activity/settlement-lien-review.md' }]
+      settlementState.settlement.liens.available_funds.status = 'calculated'
+      settlementState.settlement.liens.available_funds.evidence = [{ path: 'settlement/distribution.md' }]
+      settlementState.settlement.liens.strategy_review.status = 'reviewed'
+      settlementState.settlement.liens.strategy_review.evidence = [{ path: 'activity/settlement-lien-review.md' }]
+      settlementState.settlement.liens.result.status = 'negotiated'
+      settlementState.settlement.liens.result.evidence = [{ path: 'settlement/distribution.md' }]
+      settlementState.settlement.distribution.statement.status = 'prepared'
+      settlementState.settlement.distribution.statement.evidence = [{ path: 'settlement/distribution.md' }]
+      settlementState.settlement.distribution.client_issuance.status = 'issued'
+      settlementState.settlement.distribution.client_issuance.evidence = [{ path: 'documents/sent/settlement/client-distribution.md' }]
+      settlementState.settlement.distribution.client_receipt.status = 'confirmed'
+      settlementState.settlement.distribution.client_receipt.evidence = [{ path: 'activity/client-receipt.md' }]
+      settlementState.settlement.distribution.trust_account.status = 'zeroed'
+      settlementState.settlement.distribution.trust_account.evidence = [{ path: 'activity/trust-zeroed.md' }]
+      settlementState.settlement.distribution.completion.status = 'complete'
+      settlementState.settlement.distribution.completion.evidence = [{ path: 'activity/trust-zeroed.md' }]
+    })
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'liens.yaml'), (liensState) => {
+      liensState.final_resolution.inventory.status = 'opened'
+      liensState.final_resolution.inventory.evidence = [{ path: 'liens/inventory.md' }]
+      liensState.final_resolution.final_amount_request.prepared.status = 'prepared'
+      liensState.final_resolution.final_amount_request.prepared.evidence = [{ path: 'documents/generated/liens/final-request.md' }]
+      liensState.final_resolution.final_amount_request.sent.status = 'sent'
+      liensState.final_resolution.final_amount_request.sent.evidence = [{ path: 'documents/sent/liens/final-request-sent.md' }]
+      liensState.final_resolution.final_amount_receipt.status = 'received'
+      liensState.final_resolution.final_amount_receipt.evidence = [{ path: 'documents/received/liens/final-amount.md' }]
+      liensState.final_resolution.payment_authorization.status = 'authorized'
+      liensState.final_resolution.payment_authorization.evidence = [{ path: 'activity/lien-payment-review.md' }]
+      liensState.final_resolution.payment.status = 'paid'
+      liensState.final_resolution.payment.evidence = [{ path: 'documents/sent/liens/lien-payment.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    for (const slug of [
+      'settlement_reached',
+      'settlement_statement_prepared',
+      'authorization_to_settle_prepared',
+      'client_authorized',
+      'release_executed',
+      'funds_received',
+      'settlement_liens_audited',
+      'liens_prioritized',
+      'lien_available_funds_calculated',
+      'settlement_lien_strategy_reviewed',
+      'liens_negotiated',
+      'final_distribution_statement_prepared',
+      'client_distribution_issued',
+      'client_distributed',
+      'trust_account_zeroed',
+      'liens_opened',
+      'final_amount_request_prepared',
+      'final_amounts_requested',
+      'final_amounts_received',
+      'lien_payment_authorized',
+      'liens_paid',
+      'final_distribution_complete',
     ] as const) {
       expect(projection.landmarks[slug].satisfied, slug).toBe(true)
       expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)

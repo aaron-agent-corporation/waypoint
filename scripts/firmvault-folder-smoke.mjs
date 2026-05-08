@@ -108,7 +108,7 @@ try {
   }
 
   const initCaseOutput = run(['firmvault', 'init-case', '--case-type', 'personal-injury', '--case-slug', 'smith-v-acme'])
-  assertIncludes(initCaseOutput, 'landmarks satisfied: 0/57', 'waypoint firmvault init-case')
+  assertIncludes(initCaseOutput, 'landmarks satisfied: 0/77', 'waypoint firmvault init-case')
 
   run(['start', '--quest', 'firmvault'])
   const routesOutput = run(['routes'])
@@ -122,7 +122,7 @@ try {
 
   const projection = parseJsonOutput('waypoint firmvault landmarks --json', run(['firmvault', 'landmarks', '--json']))
   const landmarkCount = Object.keys(projection.landmarks ?? {}).length
-  if (landmarkCount !== 57) throw new Error(`Expected 57 FirmVault landmarks, got ${landmarkCount}`)
+  if (landmarkCount !== 77) throw new Error(`Expected 77 FirmVault landmarks, got ${landmarkCount}`)
   const satisfiedCount = Object.values(projection.landmarks).filter((landmark) => landmark.satisfied).length
   if (satisfiedCount !== 0) throw new Error(`Expected 0 initially satisfied FirmVault landmarks, got ${satisfiedCount}`)
 

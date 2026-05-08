@@ -59,6 +59,26 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'negotiation_response_human_sent',
   'negotiation_result_documented',
   'settlement_reached',
+  'settlement_statement_prepared',
+  'authorization_to_settle_prepared',
+  'client_authorized',
+  'release_executed',
+  'funds_received',
+  'settlement_liens_audited',
+  'liens_prioritized',
+  'lien_available_funds_calculated',
+  'settlement_lien_strategy_reviewed',
+  'liens_negotiated',
+  'final_distribution_statement_prepared',
+  'client_distribution_issued',
+  'client_distributed',
+  'trust_account_zeroed',
+  'liens_opened',
+  'final_amount_request_prepared',
+  'final_amounts_requested',
+  'final_amounts_received',
+  'lien_payment_authorized',
+  'liens_paid',
   'final_distribution_complete',
 ] as const
 
@@ -476,10 +496,110 @@ export async function readFirmVaultLandmarkProjection(
       acceptedStatuses: ['reached', 'signed', 'funded', 'distributed'],
       evidence: getPath(settlementState, ['settlement', 'evidence']),
     }),
+    settlement_statement_prepared: await factLandmark(projectRoot, 'settlement_statement_prepared', warnings, {
+      status: getPath(settlementState, ['settlement', 'statement', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'statement', 'evidence']),
+    }),
+    authorization_to_settle_prepared: await factLandmark(projectRoot, 'authorization_to_settle_prepared', warnings, {
+      status: getPath(settlementState, ['settlement', 'authorization_to_settle', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'authorization_to_settle', 'evidence']),
+    }),
+    client_authorized: await factLandmark(projectRoot, 'client_authorized', warnings, {
+      status: getPath(settlementState, ['settlement', 'client_authorization', 'status']),
+      acceptedStatuses: ['authorized', 'signed', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'client_authorization', 'evidence']),
+    }),
+    release_executed: await factLandmark(projectRoot, 'release_executed', warnings, {
+      status: getPath(settlementState, ['settlement', 'release', 'status']),
+      acceptedStatuses: ['executed', 'signed', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'release', 'evidence']),
+    }),
+    funds_received: await factLandmark(projectRoot, 'funds_received', warnings, {
+      status: getPath(settlementState, ['settlement', 'funds', 'status']),
+      acceptedStatuses: ['received', 'cleared', 'documented'],
+      evidence: getPath(settlementState, ['settlement', 'funds', 'evidence']),
+    }),
+    settlement_liens_audited: await factLandmark(projectRoot, 'settlement_liens_audited', warnings, {
+      status: getPath(settlementState, ['settlement', 'liens', 'audit', 'status']),
+      acceptedStatuses: ['audited', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'liens', 'audit', 'evidence']),
+    }),
+    liens_prioritized: await factLandmark(projectRoot, 'liens_prioritized', warnings, {
+      status: getPath(settlementState, ['settlement', 'liens', 'prioritization', 'status']),
+      acceptedStatuses: ['prioritized', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'liens', 'prioritization', 'evidence']),
+    }),
+    lien_available_funds_calculated: await factLandmark(projectRoot, 'lien_available_funds_calculated', warnings, {
+      status: getPath(settlementState, ['settlement', 'liens', 'available_funds', 'status']),
+      acceptedStatuses: ['calculated', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'liens', 'available_funds', 'evidence']),
+    }),
+    settlement_lien_strategy_reviewed: await factLandmark(projectRoot, 'settlement_lien_strategy_reviewed', warnings, {
+      status: getPath(settlementState, ['settlement', 'liens', 'strategy_review', 'status']),
+      acceptedStatuses: ['reviewed', 'approved', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'liens', 'strategy_review', 'evidence']),
+    }),
+    liens_negotiated: await factLandmark(projectRoot, 'liens_negotiated', warnings, {
+      status: getPath(settlementState, ['settlement', 'liens', 'result', 'status']),
+      acceptedStatuses: ['negotiated', 'documented', 'none_applicable', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'liens', 'result', 'evidence']),
+    }),
+    final_distribution_statement_prepared: await factLandmark(projectRoot, 'final_distribution_statement_prepared', warnings, {
+      status: getPath(settlementState, ['settlement', 'distribution', 'statement', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'distribution', 'statement', 'evidence']),
+    }),
+    client_distribution_issued: await factLandmark(projectRoot, 'client_distribution_issued', warnings, {
+      status: getPath(settlementState, ['settlement', 'distribution', 'client_issuance', 'status']),
+      acceptedStatuses: ['issued', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'distribution', 'client_issuance', 'evidence']),
+    }),
+    client_distributed: await factLandmark(projectRoot, 'client_distributed', warnings, {
+      status: getPath(settlementState, ['settlement', 'distribution', 'client_receipt', 'status']),
+      acceptedStatuses: ['confirmed', 'received', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'distribution', 'client_receipt', 'evidence']),
+    }),
+    trust_account_zeroed: await factLandmark(projectRoot, 'trust_account_zeroed', warnings, {
+      status: getPath(settlementState, ['settlement', 'distribution', 'trust_account', 'status']),
+      acceptedStatuses: ['zeroed', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'distribution', 'trust_account', 'evidence']),
+    }),
+    liens_opened: await factLandmark(projectRoot, 'liens_opened', warnings, {
+      status: getPath(liensState, ['final_resolution', 'inventory', 'status']),
+      acceptedStatuses: ['opened', 'reviewed', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'inventory', 'evidence']),
+    }),
+    final_amount_request_prepared: await factLandmark(projectRoot, 'final_amount_request_prepared', warnings, {
+      status: getPath(liensState, ['final_resolution', 'final_amount_request', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'final_amount_request', 'prepared', 'evidence']),
+    }),
+    final_amounts_requested: await factLandmark(projectRoot, 'final_amounts_requested', warnings, {
+      status: getPath(liensState, ['final_resolution', 'final_amount_request', 'sent', 'status']),
+      acceptedStatuses: ['sent', 'requested', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'final_amount_request', 'sent', 'evidence']),
+    }),
+    final_amounts_received: await factLandmark(projectRoot, 'final_amounts_received', warnings, {
+      status: getPath(liensState, ['final_resolution', 'final_amount_receipt', 'status']),
+      acceptedStatuses: ['received', 'documented', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'final_amount_receipt', 'evidence']),
+    }),
+    lien_payment_authorized: await factLandmark(projectRoot, 'lien_payment_authorized', warnings, {
+      status: getPath(liensState, ['final_resolution', 'payment_authorization', 'status']),
+      acceptedStatuses: ['authorized', 'reviewed', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'payment_authorization', 'evidence']),
+    }),
+    liens_paid: await factLandmark(projectRoot, 'liens_paid', warnings, {
+      status: getPath(liensState, ['final_resolution', 'payment', 'status']),
+      acceptedStatuses: ['paid', 'documented', 'complete'],
+      evidence: getPath(liensState, ['final_resolution', 'payment', 'evidence']),
+    }),
     final_distribution_complete: await factLandmark(projectRoot, 'final_distribution_complete', warnings, {
-      status: getPath(settlementState, ['settlement', 'distribution', 'status']),
+      status: getPath(settlementState, ['settlement', 'distribution', 'completion', 'status']),
       acceptedStatuses: ['complete'],
-      evidence: getPath(settlementState, ['settlement', 'distribution', 'evidence']),
+      evidence: getPath(settlementState, ['settlement', 'distribution', 'completion', 'evidence']),
     }),
   }
 
@@ -640,6 +760,16 @@ function initialLiensState(): Record<string, unknown> {
       liens: { status: 'unknown', evidence: [] },
       inventory_review: { status: 'not_reviewed', evidence: [] },
     },
+    final_resolution: {
+      inventory: { status: 'not_reviewed', evidence: [] },
+      final_amount_request: {
+        prepared: { status: 'not_started', evidence: [] },
+        sent: { status: 'not_sent', evidence: [] },
+      },
+      final_amount_receipt: { status: 'missing', evidence: [] },
+      payment_authorization: { status: 'not_reviewed', evidence: [] },
+      payment: { status: 'not_documented', evidence: [] },
+    },
   }
 }
 
@@ -713,7 +843,25 @@ function initialSettlementState(): Record<string, unknown> {
     settlement: {
       status: 'none',
       evidence: [],
-      distribution: { status: 'not_started', evidence: [] },
+      statement: { status: 'not_started', evidence: [] },
+      authorization_to_settle: { status: 'not_started', evidence: [] },
+      client_authorization: { status: 'not_authorized', evidence: [] },
+      release: { status: 'not_executed', evidence: [] },
+      funds: { status: 'not_received', evidence: [] },
+      liens: {
+        audit: { status: 'not_started', evidence: [] },
+        prioritization: { status: 'not_started', evidence: [] },
+        available_funds: { status: 'not_started', evidence: [] },
+        strategy_review: { status: 'not_reviewed', evidence: [] },
+        result: { status: 'not_documented', evidence: [] },
+      },
+      distribution: {
+        statement: { status: 'not_started', evidence: [] },
+        client_issuance: { status: 'not_issued', evidence: [] },
+        client_receipt: { status: 'not_confirmed', evidence: [] },
+        trust_account: { status: 'not_zeroed', evidence: [] },
+        completion: { status: 'not_started', evidence: [] },
+      },
     },
   }
 }

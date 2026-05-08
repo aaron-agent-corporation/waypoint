@@ -175,7 +175,7 @@ P7 added (implementation commit `4f83277`):
 P8 records the final close-out state for the Track 4 Waypoint Quest/Recipe port.
 
 - Actual Quest count: 38
-- Actual Recipe count: 73
+- Actual Recipe count: 84
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands to run for close-out:
@@ -210,12 +210,12 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 
 The original Waypoint source-port close-out remains recorded above. FirmVault folder-host work is continuing as a standalone runtime integration track.
 
-Latest FirmVault slice: Part Six-E negotiation wave. This slice ports workflow-backed negotiation manifests from Mission Control and expands the FirmVault Quest/state contract to:
+Latest FirmVault slice: Part Six-F settlement, liens, and final distribution wave. This slice ports workflow-backed settlement-processing, settlement-lien, final lien-resolution, and final-distribution manifests from Mission Control and expands the FirmVault Quest/state contract to:
 
-- FirmVault installed Recipe count: 38
-- FirmVault scaffold plan/task count: 65
-- FirmVault deterministic landmark count: 57
-- Total bundled Recipe count after this slice: 73
+- FirmVault installed Recipe count: 49
+- FirmVault scaffold plan/task count: 83
+- FirmVault deterministic landmark count: 77
+- Total bundled Recipe count after this slice: 84
 
 Source workflows used for this slice:
 

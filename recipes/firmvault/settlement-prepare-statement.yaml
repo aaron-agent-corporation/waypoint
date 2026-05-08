@@ -1,0 +1,86 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-F settlement/distribution wave.
+schema_version: 1
+slug: firmvault-settlement-prepare-statement
+name: FirmVault Settlement - Prepare Statement
+description: Prepare a draft settlement statement from accepted settlement and deduction facts.
+prompt: 'You are running the source-backed Waypoint port of `firmvault-settlement-prepare-statement` for a FirmVault personal-injury
+  case.
+
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission
+  Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or
+  a mounted `/workspace` path.
+
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls,
+  insurer/provider/client/lien-holder communications, trust-account actions, payments, deposits, releases, or external API
+  calls. Do not claim that a human, bank, insurer, lien holder, provider, client, or external system was contacted unless
+  the local case folder already contains owner-confirmed evidence. Produce local drafts, ledgers, handoffs, blocked notes,
+  or review questions only.
+
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, lien holders,
+  treatment facts, signatures, lien terms, settlement funds, trust-account balances, payment facts, deadlines, authority,
+  or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would
+  be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+
+  Source purpose: Prepare a draft settlement statement from accepted settlement and deduction facts.
+
+
+  Adapted Mission Control workflow instructions:
+
+
+  Prepare a draft settlement statement from canonical FirmVault settlement, negotiation, insurance, expense, and lien facts.
+  Use the accepted settlement amount already documented by the negotiation workflow. If fee, cost, lien, or trust-account
+  facts are missing, preserve them as explicit TBD/needs-review fields instead of inventing numbers. Write the draft under
+  documents/generated/settlement/, update settlement/distribution.md as a draft planning ledger, and append activity and workflow-log
+  entries. Do not distribute funds, mark liens paid, or mark funds received.
+
+
+  Canonical paths from the source workflow:
+
+  - `settlement/settlement.md`
+
+  - `settlement/distribution.md`
+
+  - `negotiation/offers.md`
+
+  - `insurance/`
+
+  - `liens/`
+
+  - `expenses/`
+
+  - `documents/generated/settlement/`
+
+  - `activity/`
+
+  - `workflow-log/`
+
+
+  Completion standard: complete only when the local draft, ledger, handoff, blocked checkpoint, or review note is supported
+  by local Waypoint project folder evidence and the no-external-side-effects rule above. Human signature, release execution,
+  send/payment/receipt, and distribution facts require human-gate evidence before landmarks are satisfied.
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-settlement-processing.yaml
+    source_node: prepare_settlement_statement
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by local case-folder evidence.
+    - No external communication, trust-account action, payment, deposit, release execution, or distribution is claimed or
+      performed.
+    - No settlement amount, lien amount, payment fact, client authority, deadline, or trust-account balance is invented.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - External communications and money movement are draft/handoff only; human-gated confirmation must exist before related
+      landmarks are satisfied.

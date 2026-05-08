@@ -1,0 +1,80 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-F settlement/distribution wave.
+schema_version: 1
+slug: firmvault-final-distribution-zero-trust
+name: FirmVault Final Distribution - Zero Trust
+description: Document trust account zeroing and final distribution completion from explicit confirmation.
+prompt: 'You are running the source-backed Waypoint port of `firmvault-final-distribution-zero-trust` for a FirmVault personal-injury
+  case.
+
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission
+  Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or
+  a mounted `/workspace` path.
+
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls,
+  insurer/provider/client/lien-holder communications, trust-account actions, payments, deposits, releases, or external API
+  calls. Do not claim that a human, bank, insurer, lien holder, provider, client, or external system was contacted unless
+  the local case folder already contains owner-confirmed evidence. Produce local drafts, ledgers, handoffs, blocked notes,
+  or review questions only.
+
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, lien holders,
+  treatment facts, signatures, lien terms, settlement funds, trust-account balances, payment facts, deadlines, authority,
+  or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would
+  be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+
+  Source purpose: Document trust account zeroing and final distribution completion from explicit confirmation.
+
+
+  Adapted Mission Control workflow instructions:
+
+
+  Document the final distribution completion after human-confirmed issuance and receipt. Read same-task Mission Control comments
+  and canonical distribution files. Require human/test facts for issued amount, receipt amount, and trust-account closing
+  balance before marking the trust account zeroed. Update settlement/distribution.md and settlement/settlement.md, append
+  activity/workflow-log entries, and mark final distribution complete only from explicit same-task confirmation. Do not invent
+  check, receipt, or trust-account facts.
+
+
+  Canonical paths from the source workflow:
+
+  - `settlement/settlement.md`
+
+  - `settlement/distribution.md`
+
+  - `documents/generated/settlement/`
+
+  - `documents/sent/settlement/`
+
+  - `activity/`
+
+  - `workflow-log/`
+
+
+  Completion standard: complete only when the local draft, ledger, handoff, blocked checkpoint, or review note is supported
+  by local Waypoint project folder evidence and the no-external-side-effects rule above. Human signature, release execution,
+  send/payment/receipt, and distribution facts require human-gate evidence before landmarks are satisfied.
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-final-distribution.yaml
+    source_node: zero_trust_account
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by local case-folder evidence.
+    - No external communication, trust-account action, payment, deposit, release execution, or distribution is claimed or
+      performed.
+    - No settlement amount, lien amount, payment fact, client authority, deadline, or trust-account balance is invented.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - External communications and money movement are draft/handoff only; human-gated confirmation must exist before related
+      landmarks are satisfied.
