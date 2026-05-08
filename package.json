@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "smoke:folder-host": "node scripts/folder-host-smoke.mjs",
     "smoke:firmvault-folder": "node scripts/firmvault-folder-smoke.mjs",
+    "smoke:firmvault-bootstrap": "node scripts/firmvault-bootstrap-smoke.mjs",
     "build": "tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs",
     "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
     "prepack": "pnpm clean && pnpm build",

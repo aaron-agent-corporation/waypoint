@@ -44,6 +44,7 @@ waypoint --version
 waypoint init [--quest <slug>]
 waypoint status
 waypoint doctor firmvault [--json]
+waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
 waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
 waypoint firmvault landmarks [--json]
 waypoint quests
@@ -144,7 +145,17 @@ waypoint resume --route-id route-001
 
 ### FirmVault case-state contract
 
-For FirmVault cases, Waypoint owns a simpler product runtime state model instead of scraping arbitrary legacy folder layouts for workflow truth:
+For FirmVault cases, Waypoint owns a simpler product runtime state model instead of scraping arbitrary legacy folder layouts for workflow truth.
+
+To create and activate a new PI case folder from a trusted cases root:
+
+```bash
+waypoint firmvault bootstrap --cases-root /path/to/cases --case-name "Smith v. Acme" --case-type personal-injury --start
+```
+
+`bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present.
+
+For an existing FirmVault-style folder, initialize only the case-state contract:
 
 ```bash
 waypoint firmvault init-case --case-type personal-injury --case-slug smith-v-acme

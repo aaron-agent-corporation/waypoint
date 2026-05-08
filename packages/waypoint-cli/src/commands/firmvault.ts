@@ -5,6 +5,16 @@ interface InitFirmVaultCaseStateResult {
   readonly projection: FirmVaultLandmarkProjection
 }
 
+interface BootstrapFirmVaultCaseResult {
+  readonly caseRoot: string
+  readonly caseSlug: string
+  readonly createdPaths: readonly string[]
+  readonly project: { readonly config: { readonly quest: string } }
+  readonly catalog: { readonly recipes: readonly unknown[] }
+  readonly firmvaultState: InitFirmVaultCaseStateResult
+  readonly route?: { readonly id: string }
+}
+
 interface FirmVaultLandmarkProjection {
   readonly schema_version: 1
   readonly generated_at: string
@@ -13,6 +23,15 @@ interface FirmVaultLandmarkProjection {
 }
 
 type FirmVaultStateModule = {
+  readonly bootstrapFirmVaultCase: (
+    input: {
+      readonly casesRoot: string
+      readonly caseName: string
+      readonly caseType: 'personal_injury'
+      readonly caseSlug?: string
+      readonly startRoute?: boolean
+    },
+  ) => Promise<BootstrapFirmVaultCaseResult>
   readonly initFirmVaultCaseState: (
     root: string,
     options: { readonly caseType: 'personal_injury'; readonly caseSlug?: string },
@@ -21,6 +40,7 @@ type FirmVaultStateModule = {
 }
 
 const usageLines = [
+  'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
   '       waypoint firmvault landmarks [--json]',
 ]
@@ -32,12 +52,62 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
     return runInitCase(rest, io)
   }
 
+  if (subcommand === 'bootstrap') {
+    return runBootstrap(rest, io)
+  }
+
   if (subcommand === 'landmarks') {
     return runLandmarks(rest, io)
   }
 
   usageLines.forEach((line) => io.stderr(line))
   return 1
+}
+
+async function runBootstrap(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseBootstrapArgs(args)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault bootstrap arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+
+  const module = await importFirmVaultStateModule()
+  const result = await module.bootstrapFirmVaultCase({
+    casesRoot: parsed.casesRoot,
+    caseName: parsed.caseName,
+    caseType: parsed.caseType,
+    ...(parsed.caseSlug ? { caseSlug: parsed.caseSlug } : {}),
+    ...(parsed.startRoute ? { startRoute: true } : {}),
+  })
+  const satisfied = countSatisfiedLandmarks(result.firmvaultState.projection)
+  const total = Object.keys(result.firmvaultState.projection.landmarks).length
+
+  if (parsed.json) {
+    io.stdout(JSON.stringify({
+      case_root: result.caseRoot,
+      case_slug: result.caseSlug,
+      quest: result.project.config.quest,
+      route_id: result.route?.id ?? null,
+      created_paths: result.createdPaths,
+      recipes_installed: result.catalog.recipes.length,
+      landmarks: {
+        satisfied,
+        total,
+      },
+    }, null, 2))
+    return 0
+  }
+
+  io.stdout('Waypoint FirmVault case bootstrapped')
+  io.stdout(`case_root: ${result.caseRoot}`)
+  io.stdout(`case_slug: ${result.caseSlug}`)
+  io.stdout(`quest: ${result.project.config.quest}`)
+  io.stdout(`recipes installed: ${result.catalog.recipes.length}`)
+  io.stdout(`route_id: ${result.route?.id ?? 'null'}`)
+  io.stdout(`landmarks satisfied: ${satisfied}/${total}`)
+  return 0
 }
 
 async function runInitCase(args: readonly string[], io: WaypointCliIo): Promise<number> {
@@ -124,6 +194,81 @@ function parseInitCaseArgs(args: readonly string[]):
   }
 
   return { ok: true, caseType, ...(caseSlug ? { caseSlug } : {}) }
+}
+
+function parseBootstrapArgs(args: readonly string[]):
+  | {
+    readonly ok: true
+    readonly casesRoot: string
+    readonly caseName: string
+    readonly caseType: 'personal_injury'
+    readonly caseSlug?: string
+    readonly startRoute: boolean
+    readonly json: boolean
+  }
+  | { readonly ok: false; readonly error: string } {
+  let casesRoot: string | undefined
+  let caseName: string | undefined
+  let caseType: 'personal_injury' = 'personal_injury'
+  let caseSlug: string | undefined
+  let startRoute = false
+  let json = false
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--cases-root') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --cases-root' }
+      casesRoot = value
+      index += 1
+      continue
+    }
+    if (arg === '--case-name') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --case-name' }
+      caseName = value
+      index += 1
+      continue
+    }
+    if (arg === '--case-type') {
+      const value = args[index + 1]
+      if (value !== 'personal-injury' && value !== 'personal_injury') {
+        return { ok: false, error: `Unsupported FirmVault case type: ${value ?? '<missing>'}` }
+      }
+      caseType = 'personal_injury'
+      index += 1
+      continue
+    }
+    if (arg === '--case-slug') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --case-slug' }
+      caseSlug = value
+      index += 1
+      continue
+    }
+    if (arg === '--start') {
+      startRoute = true
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault bootstrap option: ${arg}` }
+  }
+
+  if (!casesRoot) return { ok: false, error: 'Missing required --cases-root' }
+  if (!caseName) return { ok: false, error: 'Missing required --case-name' }
+
+  return {
+    ok: true,
+    casesRoot,
+    caseName,
+    caseType,
+    startRoute,
+    json,
+    ...(caseSlug ? { caseSlug } : {}),
+  }
 }
 
 function countSatisfiedLandmarks(projection: FirmVaultLandmarkProjection): number {
