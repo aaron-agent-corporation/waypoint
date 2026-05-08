@@ -155,7 +155,7 @@ To create and activate a new PI case folder from a trusted cases root:
 waypoint firmvault bootstrap --cases-root /path/to/cases --case-name "Smith v. Acme" --case-type personal-injury --start
 ```
 
-`bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present.
+`bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present. For agent-initiated bootstrap, use the Hermes operator adapter's trusted `cases_roots` registry and route FirmVault new-case requests through the `paralegal` profile; see `docs/firmvault-new-case-bootstrap.md`.
 
 To add a local document after bootstrap or case-state initialization:
 

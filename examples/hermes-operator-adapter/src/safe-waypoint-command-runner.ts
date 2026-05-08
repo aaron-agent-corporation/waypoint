@@ -131,6 +131,40 @@ export function buildSafeWaypointCommand(
     }
   }
 
+  if (command === 'firmvault' && rest[0] === 'bootstrap') {
+    const subcommandArgs = rest.slice(1)
+    validateFlags('firmvault bootstrap', subcommandArgs, {
+      mutation: true,
+      summaryHint: 'firmvault bootstrap',
+      allowedFlags: {
+        '--cases-root': 'value',
+        '--case-name': 'value',
+        '--case-type': 'value',
+        '--case-slug': 'value',
+        '--start': 'boolean',
+        '--json': 'boolean',
+      },
+      requiredFlags: ['--cases-root', '--case-name', '--case-type'],
+      customValidate: (args) => {
+        const casesRootIndex = args.indexOf('--cases-root')
+        const caseTypeIndex = args.indexOf('--case-type')
+        if (casesRootIndex === -1 || args[casesRootIndex + 1] !== project.path) {
+          throw new Error('Waypoint firmvault bootstrap requires --cases-root to match the registered project path')
+        }
+        if (caseTypeIndex === -1 || args[caseTypeIndex + 1] !== 'personal-injury') {
+          throw new Error('Waypoint firmvault bootstrap only allows --case-type personal-injury')
+        }
+      },
+    })
+    return {
+      command: process.execPath,
+      args: [project.waypointCli, command, 'bootstrap', ...subcommandArgs],
+      cwd: project.path,
+      mutation: true,
+      summaryHint: 'firmvault bootstrap',
+    }
+  }
+
   const rule = COMMAND_RULES[command]
   if (!rule) throw new Error(`Waypoint command is not allowlisted: ${command}`)
 
