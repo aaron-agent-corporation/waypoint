@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 52
+- Total Recipes loaded from disk: 63
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -30,196 +30,314 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `add-tests` — Add Tests Quest
   - Path: `quests/add-tests.yaml`
   - Description: Waypoint catalog Quest port of gsd:add-tests for generate tests for a completed phase from UAT criteria and implementation evidence.
+
   - Recipes: `waypoint-verifier`, `waypoint-executor`
-  - Source port scope/status: `command_informed_sub_quest`
 - `ai-integration-phase` — AI Integration Phase Quest
   - Path: `quests/ai-integration-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:ai-integration-phase for generating AI-SPEC contracts for AI-system phases.
+
   - Recipes: `waypoint-framework-selector`, `waypoint-ai-researcher`, `waypoint-domain-researcher`, `waypoint-eval-planner`
-  - Source port scope/status: `command_informed_sub_quest`
 - `audit-fix` — Audit Fix Quest
   - Path: `quests/audit-fix.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-fix for autonomous audit-to-fix pipeline that classifies findings, fixes auto-fixable issues, and verifies results.
+
   - Recipes: `waypoint-code-reviewer`, `waypoint-code-fixer`, `waypoint-verifier`
-  - Source port scope/status: `command_informed_sub_quest`
 - `audit-milestone` — Audit Milestone Quest
   - Path: `quests/audit-milestone.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-milestone for milestone completion audit that checks delivered work against original intent before archiving.
+
   - Recipes: `waypoint-verifier`, `waypoint-integration-checker`, `waypoint-assumptions-analyzer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `audit-uat` — Audit UAT Quest
   - Path: `quests/audit-uat.yaml`
   - Description: Waypoint catalog Quest port of gsd:audit-uat for cross-phase audit of outstanding UAT and verification items.
+
   - Recipes: `waypoint-verifier`
-  - Source port scope/status: `command_informed_sub_quest`
 - `cleanup` — Cleanup Quest
   - Path: `quests/cleanup.yaml`
   - Description: Waypoint catalog Quest port of gsd:cleanup for archive accumulated phase directories from completed milestones.
+
   - Recipes: `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `code-review` — Code Review Quest
   - Path: `quests/code-review.yaml`
   - Description: Waypoint catalog Quest port of gsd:code-review for source review loop for changed files with optional fix iteration.
+
   - Recipes: `waypoint-code-reviewer`, `waypoint-code-fixer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `complete-milestone` — Complete Milestone Quest
   - Path: `quests/complete-milestone.yaml`
   - Description: Waypoint catalog Quest port of gsd:complete-milestone for archive a completed milestone and prepare the project for the next version.
+
   - Recipes: `waypoint-roadmapper`, `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `debug` — Debug Quest
   - Path: `quests/debug.yaml`
   - Description: Waypoint sub-Quest port of gsd:debug for systematic debugging with checkpointable investigation and continuation loops.
+
   - Recipes: `waypoint-debug-session-manager`, `waypoint-debugger`
-  - Source port scope/status: `command_informed_sub_quest`
 - `docs-update` — Docs Update Quest
   - Path: `quests/docs-update.yaml`
   - Description: Waypoint catalog Quest port of gsd:docs-update for generate or verify project documentation against the codebase.
+
   - Recipes: `waypoint-doc-writer`, `waypoint-doc-verifier`
-  - Source port scope/status: `command_informed_sub_quest`
 - `eval-review` — Evaluation Review Quest
   - Path: `quests/eval-review.yaml`
   - Description: Waypoint catalog Quest port of gsd:eval-review for audit AI/evaluation coverage for a completed AI phase.
+
   - Recipes: `waypoint-eval-auditor`, `waypoint-eval-planner`
-  - Source port scope/status: `command_informed_sub_quest`
 - `example` — Example Quest
   - Path: `quests/example.yaml`
   - Description: A trivial Quest demonstrating the manifest shape. It names a workflow YAML file, references two recipes, and declares a one-workstream scaffold.
+
   - Recipes: `doc-writer`, `reviewer`
 - `explore` — Explore Quest
   - Path: `quests/explore.yaml`
   - Description: Waypoint catalog Quest port of gsd:explore for socratic ideation and idea-routing session before committing to a plan.
+
   - Recipes: `waypoint-advisor-researcher`, `waypoint-domain-researcher`
-  - Source port scope/status: `command_informed_sub_quest`
 - `extract-learnings` — Extract Learnings Quest
   - Path: `quests/extract-learnings.yaml`
   - Description: Waypoint catalog Quest port of gsd:extract-learnings for extract decisions, lessons, patterns, and surprises from completed phase artifacts.
+
   - Recipes: `waypoint-doc-synthesizer`, `waypoint-pattern-mapper`
-  - Source port scope/status: `command_informed_sub_quest`
 - `fast` — Fast Quest
   - Path: `quests/fast.yaml`
   - Description: Waypoint catalog Quest port of gsd:fast for trivial task execution path with minimal planning overhead.
+
   - Recipes: `waypoint-executor`
-  - Source port scope/status: `command_informed_sub_quest`
 - `firmvault` — FirmVault Case Workflow
   - Path: `quests/firmvault.yaml`
   - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
-  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-pip-file-application`, `firmvault-pip-prepare-packet`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`
-  - Source port scope/status: `part_six_b_treatment_liens_wave`
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`
 - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
   - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
+
   - Recipes: `waypoint-debugger`, `waypoint-codebase-mapper`
-  - Source port scope/status: `command_informed_sub_quest`
 - `graphify` — Graphify Quest
   - Path: `quests/graphify.yaml`
   - Description: Waypoint catalog Quest port of gsd:graphify for knowledge graph build and inspection flow for project planning context.
+
   - Recipes: `waypoint-pattern-mapper`
-  - Source port scope/status: `command_informed_sub_quest`
 - `health` — Health Quest
   - Path: `quests/health.yaml`
   - Description: Waypoint catalog Quest port of gsd:health for planning-directory and workflow health diagnostic.
+
   - Recipes: `waypoint-verifier`
-  - Source port scope/status: `command_informed_sub_quest`
 - `ingest-docs` — Ingest Docs Quest
   - Path: `quests/ingest-docs.yaml`
   - Description: Waypoint catalog Quest port of gsd:ingest-docs for bootstrap or merge planning setup from existing ADRs, PRDs, specs, and docs.
+
   - Recipes: `waypoint-doc-classifier`, `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `map-codebase` — Map Codebase Quest
   - Path: `quests/map-codebase.yaml`
   - Description: Waypoint catalog Quest port of gsd:map-codebase for parallel codebase analysis producing structured codebase intelligence.
+
   - Recipes: `waypoint-codebase-mapper`
-  - Source port scope/status: `command_informed_sub_quest`
 - `milestone-summary` — Milestone Summary Quest
   - Path: `quests/milestone-summary.yaml`
   - Description: Waypoint catalog Quest port of gsd:milestone-summary for generate a comprehensive completed-milestone summary for onboarding and review.
+
   - Recipes: `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `plan-review-convergence` — Plan Review Convergence Quest
   - Path: `quests/plan-review-convergence.yaml`
   - Description: Waypoint catalog Quest port of gsd:plan-review-convergence for iterative plan-review convergence loop until high concerns are resolved.
+
   - Recipes: `waypoint-planner`, `waypoint-plan-checker`
-  - Source port scope/status: `command_informed_sub_quest`
 - `pr-branch` — PR Branch Quest
   - Path: `quests/pr-branch.yaml`
   - Description: Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
+
   - Recipes: `waypoint-executor`
-  - Source port scope/status: `command_informed_sub_quest`
 - `profile-user` — Profile User Quest
   - Path: `quests/profile-user.yaml`
   - Description: Waypoint catalog Quest port of gsd:profile-user for generate developer behavior and preference profile artifacts with consent gates.
+
   - Recipes: `waypoint-user-profiler`
-  - Source port scope/status: `command_informed_sub_quest`
 - `quick` — Quick Quest
   - Path: `quests/quick.yaml`
   - Description: Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
+
   - Recipes: `waypoint-planner`, `waypoint-executor`, `waypoint-verifier`
-  - Source port scope/status: `command_informed_sub_quest`
 - `review` — External Review Quest
   - Path: `quests/review.yaml`
   - Description: Waypoint catalog Quest port of gsd:review for cross-AI peer review of phase plans.
+
   - Recipes: `waypoint-plan-checker`
-  - Source port scope/status: `command_informed_sub_quest`
 - `review-backlog` — Review Backlog Quest
   - Path: `quests/review-backlog.yaml`
   - Description: Waypoint catalog Quest port of gsd:review-backlog for review and promote backlog items into active planning.
+
   - Recipes: `waypoint-roadmapper`, `waypoint-planner`
-  - Source port scope/status: `command_informed_sub_quest`
 - `secure-phase` — Secure Phase Quest
   - Path: `quests/secure-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:secure-phase for retroactively verifying threat mitigations for completed work.
+
   - Recipes: `waypoint-security-auditor`, `waypoint-verifier`, `waypoint-code-fixer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `sketch` — Sketch Quest
   - Path: `quests/sketch.yaml`
   - Description: Waypoint catalog Quest port of gsd:sketch for explore UI/design directions through throwaway mockups before implementation.
+
   - Recipes: `waypoint-ui-researcher`, `waypoint-ui-auditor`
-  - Source port scope/status: `command_informed_sub_quest`
 - `spec-phase` — Spec Phase Quest
   - Path: `quests/spec-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:spec-phase for clarifying what a phase delivers before planning how to build it.
+
   - Recipes: `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-doc-writer`, `waypoint-plan-checker`
-  - Source port scope/status: `command_informed_sub_quest`
 - `spike` — Spike Quest
   - Path: `quests/spike.yaml`
   - Description: Waypoint sub-Quest port of gsd:spike for focused experiential exploration before committing to a build path.
+
   - Recipes: `waypoint-project-researcher`, `waypoint-domain-researcher`, `waypoint-assumptions-analyzer`, `waypoint-executor`, `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `stats` — Stats Quest
   - Path: `quests/stats.yaml`
   - Description: Waypoint catalog Quest port of gsd:stats for project statistics report for phases, plans, requirements, git metrics, and timeline.
+
   - Recipes: `waypoint-doc-synthesizer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `ui-phase` — UI Phase Quest
   - Path: `quests/ui-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:ui-phase for generating UI-SPEC design contracts for frontend phases.
+
   - Recipes: `waypoint-ui-researcher`, `waypoint-ui-checker`, `waypoint-ui-auditor`, `waypoint-doc-writer`
-  - Source port scope/status: `command_informed_sub_quest`
 - `ui-review` — UI Review Quest
   - Path: `quests/ui-review.yaml`
   - Description: Waypoint catalog Quest port of gsd:ui-review for retroactive UI and visual quality audit.
+
   - Recipes: `waypoint-ui-auditor`, `waypoint-ui-checker`
-  - Source port scope/status: `command_informed_sub_quest`
 - `ultraplan-phase` — Ultraplan Phase Quest
   - Path: `quests/ultraplan-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:ultraplan-phase for offloading planning to a remote cloud planning session and importing the result.
+
   - Recipes: `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`
-  - Source port scope/status: `command_informed_sub_quest`
 - `validate-phase` — Validate Phase Quest
   - Path: `quests/validate-phase.yaml`
   - Description: Waypoint sub-Quest port of gsd:validate-phase for auditing and filling Nyquist validation gaps after execution.
+
   - Recipes: `waypoint-nyquist-auditor`, `waypoint-verifier`, `waypoint-code-fixer`, `waypoint-eval-auditor`
-  - Source port scope/status: `command_informed_sub_quest`
 - `waypoint` — Waypoint Quest
   - Path: `quests/waypoint.yaml`
   - Description: Waypoint Quest port of the get-shit-done-cc project flow. It models the initialize → discuss → plan → execute → verify → ship journey as a reusable Quest while preserving source command intent in metadata for later runtime and catalog phases.
+
   - Recipes: `waypoint-doc-writer`, `waypoint-project-researcher`, `waypoint-roadmapper`, `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`, `waypoint-executor`, `waypoint-verifier`, `waypoint-doc-synthesizer`, `waypoint-code-reviewer`
-  - Source port scope/status: `main_quest_manifest`
 
 ## Recipes
 
-### Waypoint source-derived Recipes
+- `doc-writer` — Doc Writer
+  - Path: `recipes/doc-writer.yaml`
+  - Description: Produces clear, well-organized documentation from a set of source notes or an outline. Favors concrete examples over abstractions.
+
+- `firmvault-accident-report-analyze` — FirmVault Accident Report Analyze
+  - Path: `recipes/firmvault/accident-report-analyze.yaml`
+  - Description: Analyzes a crash or accident report shadow and updates accident, party, witness, and insurance ledgers.
+  - External side effects: `forbidden`
+- `firmvault-case-setup-create-shell` — FirmVault Case Setup Create Shell
+  - Path: `recipes/firmvault/case-setup-create-shell.yaml`
+  - Description: Creates or verifies the native FirmVault case shell from accepted intake information.
+  - External side effects: `forbidden`
+- `firmvault-client-check-in-prepare-handoff` — FirmVault Client Check-In Prepare Handoff
+  - Path: `recipes/firmvault/client-check-in-prepare-handoff.yaml`
+  - Description: Prepares a human-facing client check-in script and task handoff without sending it.
+  - External side effects: `forbidden`
+- `firmvault-client-check-in-start-cadence` — FirmVault Client Check-In Start Cadence
+  - Path: `recipes/firmvault/client-check-in-start-cadence.yaml`
+  - Description: Establishes the recurring client check-in cadence without contacting the client.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-request-missing-documents` — FirmVault Document Collection Request Missing Documents
+  - Path: `recipes/firmvault/document-collection-request-missing-documents.yaml`
+  - Description: Prepares the client-facing handoff for missing onboarding documents after the intake checklist has been reviewed.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-review-intake` — FirmVault Document Collection Review Intake
+  - Path: `recipes/firmvault/document-collection-review-intake.yaml`
+  - Description: Reviews onboarding documents and identifies missing intake, contract, and authorization items.
+  - External side effects: `forbidden`
+- `firmvault-document-collection-send-signature-packets` — FirmVault Document Collection Send Signature Packets
+  - Path: `recipes/firmvault/document-collection-send-signature-packets.yaml`
+  - Description: Stages the signature-packet handoff after missing onboarding documents have been identified.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-identify-carrier` — FirmVault Insurance BI - Identify Carrier
+  - Path: `recipes/firmvault/insurance-bi-identify-carrier.yaml`
+  - Description: Identifies and normalizes the at-fault bodily-injury carrier from canonical FirmVault evidence.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-prepare-lor` — FirmVault Insurance BI - Prepare LOR Handoff
+  - Path: `recipes/firmvault/insurance-bi-prepare-lor.yaml`
+  - Description: Prepares a BI letter-of-representation draft or exact human handoff without sending it externally.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-process-acknowledgment` — FirmVault Insurance BI - Process Acknowledgment
+  - Path: `recipes/firmvault/insurance-bi-process-acknowledgment.yaml`
+  - Description: Processes a BI carrier acknowledgment or prepares a human follow-up when no acknowledgment arrived after the wait.
+  - External side effects: `forbidden`
+- `firmvault-insurance-pip-open-claim` — FirmVault Insurance PIP - Open Claim
+  - Path: `recipes/firmvault/insurance-pip-open-claim.yaml`
+  - Description: Identifies the PIP carrier path and prepares or documents opening a Kentucky PIP claim.
+  - External side effects: `forbidden`
+- `firmvault-lien-identify-potential` — FirmVault Early Lien Identification
+  - Path: `recipes/firmvault/lien-identify-potential.yaml`
+  - Description: Identifies evidence-backed lien and payor clues without starting final lien resolution.
+  - External side effects: `forbidden`
+- `firmvault-medical-chronology-update` — FirmVault Medical Chronology - Update
+  - Path: `recipes/firmvault/medical-chronology-update.yaml`
+  - Description: Updates a provider or case medical chronology from received records shadows.
+  - External side effects: `forbidden`
+- `firmvault-medical-provider-review-status` — FirmVault Medical Provider Status - Review
+  - Path: `recipes/firmvault/medical-provider-review-status.yaml`
+  - Description: Reviews and normalizes provider treatment status without requesting records or bills.
+  - External side effects: `forbidden`
+- `firmvault-medical-provider-setup-case` — FirmVault Medical Provider Setup Case
+  - Path: `recipes/firmvault/medical-provider-setup-case.yaml`
+  - Description: Creates or normalizes medical provider ledgers for known providers in one FirmVault case.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-escalate-delay` — FirmVault Medical Records Escalate Delay
+  - Path: `recipes/firmvault/medical-records-escalate-delay.yaml`
+  - Description: Prepares escalation for records and bills still missing 30 days after the original request.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-first-follow-up` — FirmVault Medical Records First Follow-Up
+  - Path: `recipes/firmvault/medical-records-first-follow-up.yaml`
+  - Description: Performs the 14-day follow-up review for pending medical records and bills requests.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-prepare-request` — FirmVault Medical Records Prepare Request
+  - Path: `recipes/firmvault/medical-records-prepare-request.yaml`
+  - Description: Prepares provider-specific records and bills request work product from FirmVault masked case data.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-receive-and-process` — FirmVault Medical Records Receive and Process
+  - Path: `recipes/firmvault/medical-records-receive-and-process.yaml`
+  - Description: Confirms received medical records or bills are present in the FirmVault vault shadow and updates provider receipt tracking.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-second-follow-up` — FirmVault Medical Records Second Follow-Up
+  - Path: `recipes/firmvault/medical-records-second-follow-up.yaml`
+  - Description: Performs the 21-day second follow-up review for pending medical records and bills requests.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-send-request` — FirmVault Medical Records Send Request
+  - Path: `recipes/firmvault/medical-records-send-request.yaml`
+  - Description: Confirms or prepares human handoff for sending records and bills requests, then records the request status in the FirmVault shadow vault.
+  - External side effects: `forbidden`
+- `firmvault-medical-records-verify-authorization` — FirmVault Medical Records Verify Authorization
+  - Path: `recipes/firmvault/medical-records-verify-authorization.yaml`
+  - Description: Verifies that a FirmVault case has a signed HIPAA or medical authorization before records and bills are requested.
+  - External side effects: `forbidden`
+- `firmvault-pip-confirm-approval` — FirmVault PIP Confirm Approval
+  - Path: `recipes/firmvault/pip-confirm-approval.yaml`
+  - Description: Confirms whether a Kentucky PIP claim is approved or active for one FirmVault case, normalizes the masked claim shadow when supported, and blocks with a precise handoff when approval evidence is missing.
+  - External side effects: `forbidden`
+- `firmvault-pip-file-application` — FirmVault PIP File Application
+  - Path: `recipes/firmvault/pip-file-application.yaml`
+  - Description: Prepares or confirms filing of the Kentucky KACP PIP application for one FirmVault case using masked vault data.
+  - External side effects: `forbidden`
+- `firmvault-pip-track-exhaustion` — FirmVault PIP Track Exhaustion
+  - Path: `recipes/firmvault/pip-track-exhaustion.yaml`
+  - Description: Tracks whether PIP benefits are exhausted and records the supported status in the FirmVault masked claim shadow.
+  - External side effects: `forbidden`
+- `firmvault-request-records-bills-follow-up` — FirmVault Request Records and Bills - Follow Up
+  - Path: `recipes/firmvault/request-records-bills-follow-up.yaml`
+  - Description: Reviews pending records/bills requests after a timer and prepares or documents the follow-up.
+  - External side effects: `forbidden`
+- `firmvault-request-records-bills-prepare-request` — FirmVault Request Records and Bills - Prepare Request
+  - Path: `recipes/firmvault/request-records-bills-prepare-request.yaml`
+  - Description: Prepares provider-specific medical records and bills request work product.
+  - External side effects: `forbidden`
+- `firmvault-request-records-bills-send-request` — FirmVault Request Records and Bills - Send Request
+  - Path: `recipes/firmvault/request-records-bills-send-request.yaml`
+  - Description: Confirms sending evidence or prepares a precise human handoff for records and bills requests.
+  - External side effects: `forbidden`
+- `reviewer` — Reviewer
+  - Path: `recipes/reviewer.yaml`
+  - Description: Reviews completed work for correctness, completeness, and adherence to stated acceptance criteria. Produces a pass/fail verdict with specific issues to address when failing.
 
 - `waypoint-advisor-researcher` — Advisor Researcher
   - Path: `recipes/waypoint/advisor-researcher.yaml`
@@ -320,78 +438,6 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `waypoint-verifier` — Verifier
   - Path: `recipes/waypoint/verifier.yaml`
   - Description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
-
-### FirmVault source-backed Recipes
-
-- `firmvault-accident-report-analyze` — FirmVault Accident Report Analyze
-  - Path: `recipes/firmvault/accident-report-analyze.yaml`
-  - Description: Analyzes a crash or accident report shadow and updates accident, party, witness, and insurance ledgers.
-  - External side effects: `forbidden`
-- `firmvault-case-setup-create-shell` — FirmVault Case Setup Create Shell
-  - Path: `recipes/firmvault/case-setup-create-shell.yaml`
-  - Description: Creates or verifies the native FirmVault case shell from accepted intake information.
-  - External side effects: `forbidden`
-- `firmvault-client-check-in-prepare-handoff` — FirmVault Client Check-In Prepare Handoff
-  - Path: `recipes/firmvault/client-check-in-prepare-handoff.yaml`
-  - Description: Prepares a human-facing client check-in script and task handoff without sending it.
-  - External side effects: `forbidden`
-- `firmvault-client-check-in-start-cadence` — FirmVault Client Check-In Start Cadence
-  - Path: `recipes/firmvault/client-check-in-start-cadence.yaml`
-  - Description: Establishes the recurring client check-in cadence without contacting the client.
-  - External side effects: `forbidden`
-- `firmvault-document-collection-request-missing-documents` — FirmVault Document Collection Request Missing Documents
-  - Path: `recipes/firmvault/document-collection-request-missing-documents.yaml`
-  - Description: Prepares the client-facing handoff for missing onboarding documents after the intake checklist has been reviewed.
-  - External side effects: `forbidden`
-- `firmvault-document-collection-review-intake` — FirmVault Document Collection Review Intake
-  - Path: `recipes/firmvault/document-collection-review-intake.yaml`
-  - Description: Reviews onboarding documents and identifies missing intake, contract, and authorization items.
-  - External side effects: `forbidden`
-- `firmvault-document-collection-send-signature-packets` — FirmVault Document Collection Send Signature Packets
-  - Path: `recipes/firmvault/document-collection-send-signature-packets.yaml`
-  - Description: Stages the signature-packet handoff after missing onboarding documents have been identified.
-  - External side effects: `forbidden`
-- `firmvault-insurance-bi-identify-carrier` — FirmVault Insurance BI - Identify Carrier
-  - Path: `recipes/firmvault/insurance-bi-identify-carrier.yaml`
-  - Description: Identifies and normalizes the at-fault bodily-injury carrier from canonical FirmVault evidence.
-  - External side effects: `forbidden`
-- `firmvault-insurance-bi-prepare-lor` — FirmVault Insurance BI - Prepare LOR Handoff
-  - Path: `recipes/firmvault/insurance-bi-prepare-lor.yaml`
-  - Description: Prepares a BI letter-of-representation draft or exact human handoff without sending it externally.
-  - External side effects: `forbidden`
-- `firmvault-insurance-bi-process-acknowledgment` — FirmVault Insurance BI - Process Acknowledgment
-  - Path: `recipes/firmvault/insurance-bi-process-acknowledgment.yaml`
-  - Description: Processes a BI carrier acknowledgment or prepares a human follow-up when no acknowledgment arrived after the wait.
-  - External side effects: `forbidden`
-- `firmvault-insurance-pip-open-claim` — FirmVault Insurance PIP - Open Claim
-  - Path: `recipes/firmvault/insurance-pip-open-claim.yaml`
-  - Description: Identifies the PIP carrier path and prepares or documents opening a Kentucky PIP claim.
-  - External side effects: `forbidden`
-- `firmvault-medical-provider-setup-case` — FirmVault Medical Provider Setup Case
-  - Path: `recipes/firmvault/medical-provider-setup-case.yaml`
-  - Description: Creates or normalizes medical provider ledgers for known providers in one FirmVault case.
-  - External side effects: `forbidden`
-- `firmvault-pip-confirm-approval` — FirmVault PIP Confirm Approval
-  - Path: `recipes/firmvault/pip-confirm-approval.yaml`
-  - Description: Confirms whether a Kentucky PIP claim is approved or active for one FirmVault case, normalizes the masked claim shadow when supported, and blocks with a precise handoff when approval evidence is missing.
-  - External side effects: `forbidden`
-- `firmvault-pip-file-application` — FirmVault PIP File Application
-  - Path: `recipes/firmvault/pip-file-application.yaml`
-  - Description: Prepares or confirms filing of the Kentucky KACP PIP application for one FirmVault case using masked vault data.
-  - External side effects: `forbidden`
-- `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential` — FirmVault PIP Track Exhaustion
-  - Path: `recipes/firmvault/pip-track-exhaustion.yaml`
-  - Description: Tracks whether PIP benefits are exhausted and records the supported status in the FirmVault masked claim shadow.
-  - External side effects: `forbidden`
-
-### Non-source-derived example Recipes
-
-- `doc-writer` — Doc Writer
-  - Path: `recipes/doc-writer.yaml`
-  - Description: Produces clear, well-organized documentation from a set of source notes or an outline. Favors concrete examples over abstractions.
-- `reviewer` — Reviewer
-  - Path: `recipes/reviewer.yaml`
-  - Description: Reviews completed work for correctness, completeness, and adherence to stated acceptance criteria. Produces a pass/fail verdict with specific issues to address when failing.
 
 ## Deferred / not implemented in this repo
 

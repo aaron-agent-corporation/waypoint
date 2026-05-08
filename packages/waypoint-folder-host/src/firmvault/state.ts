@@ -30,6 +30,17 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'lien_clues_reviewed',
   'liens_identified',
   'lien_inventory_reviewed',
+  'medical_auth_verified',
+  'records_request_packet_prepared',
+  'records_requested_all_providers',
+  'first_records_follow_up_complete',
+  'second_records_follow_up_complete',
+  'third_records_follow_up_complete',
+  'records_request_escalated',
+  'records_and_bills_processed',
+  'all_records_received',
+  'medical_chronology_updated',
+  'medical_records_request_workflow_complete',
   'demand_sent',
   'initial_offer_received',
   'settlement_reached',
@@ -43,6 +54,7 @@ export const FIRMVAULT_CASE_STATE_FILES = [
   'providers.yaml',
   'insurance.yaml',
   'liens.yaml',
+  'records.yaml',
   'demand.yaml',
   'negotiation.yaml',
   'settlement.yaml',
@@ -106,6 +118,7 @@ export async function initFirmVaultCaseState(
     writeYaml(join(stateDir, 'providers.yaml'), initialProvidersState()),
     writeYaml(join(stateDir, 'insurance.yaml'), initialInsuranceState()),
     writeYaml(join(stateDir, 'liens.yaml'), initialLiensState()),
+    writeYaml(join(stateDir, 'records.yaml'), initialRecordsState()),
     writeYaml(join(stateDir, 'demand.yaml'), initialDemandState()),
     writeYaml(join(stateDir, 'negotiation.yaml'), initialNegotiationState()),
     writeYaml(join(stateDir, 'settlement.yaml'), initialSettlementState()),
@@ -133,13 +146,14 @@ export async function readFirmVaultLandmarkProjection(
 ): Promise<FirmVaultLandmarkProjection> {
   const stateDir = firmVaultStateDir(projectRoot)
   const warnings: string[] = []
-  const [caseState, clientState, accidentState, providersState, insuranceState, liensState, demandState, negotiationState, settlementState] = await Promise.all([
+  const [caseState, clientState, accidentState, providersState, insuranceState, liensState, recordsState, demandState, negotiationState, settlementState] = await Promise.all([
     readYamlRecord(join(stateDir, 'case.yaml')),
     readYamlRecord(join(stateDir, 'client.yaml')),
     readYamlRecord(join(stateDir, 'accident.yaml')),
     readYamlRecord(join(stateDir, 'providers.yaml')),
     readYamlRecord(join(stateDir, 'insurance.yaml')),
     readYamlRecord(join(stateDir, 'liens.yaml')),
+    readYamlRecord(join(stateDir, 'records.yaml')),
     readYamlRecord(join(stateDir, 'demand.yaml')),
     readYamlRecord(join(stateDir, 'negotiation.yaml')),
     readYamlRecord(join(stateDir, 'settlement.yaml')),
@@ -292,6 +306,61 @@ export async function readFirmVaultLandmarkProjection(
       status: getPath(liensState, ['early_identification', 'inventory_review', 'status']),
       acceptedStatuses: ['reviewed', 'complete'],
       evidence: getPath(liensState, ['early_identification', 'inventory_review', 'evidence']),
+    }),
+    medical_auth_verified: await factLandmark(projectRoot, 'medical_auth_verified', warnings, {
+      status: getPath(recordsState, ['records', 'authorization', 'status']),
+      acceptedStatuses: ['verified', 'complete'],
+      evidence: getPath(recordsState, ['records', 'authorization', 'evidence']),
+    }),
+    records_request_packet_prepared: await factLandmark(projectRoot, 'records_request_packet_prepared', warnings, {
+      status: getPath(recordsState, ['records', 'request_packet', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(recordsState, ['records', 'request_packet', 'evidence']),
+    }),
+    records_requested_all_providers: await factLandmark(projectRoot, 'records_requested_all_providers', warnings, {
+      status: getPath(recordsState, ['records', 'requests', 'status']),
+      acceptedStatuses: ['sent_all', 'requested_all', 'complete'],
+      evidence: getPath(recordsState, ['records', 'requests', 'evidence']),
+    }),
+    first_records_follow_up_complete: await factLandmark(projectRoot, 'first_records_follow_up_complete', warnings, {
+      status: getPath(recordsState, ['records', 'followups', 'first', 'status']),
+      acceptedStatuses: ['complete', 'not_needed'],
+      evidence: getPath(recordsState, ['records', 'followups', 'first', 'evidence']),
+    }),
+    second_records_follow_up_complete: await factLandmark(projectRoot, 'second_records_follow_up_complete', warnings, {
+      status: getPath(recordsState, ['records', 'followups', 'second', 'status']),
+      acceptedStatuses: ['complete', 'not_needed'],
+      evidence: getPath(recordsState, ['records', 'followups', 'second', 'evidence']),
+    }),
+    third_records_follow_up_complete: await factLandmark(projectRoot, 'third_records_follow_up_complete', warnings, {
+      status: getPath(recordsState, ['records', 'followups', 'third', 'status']),
+      acceptedStatuses: ['complete', 'not_needed'],
+      evidence: getPath(recordsState, ['records', 'followups', 'third', 'evidence']),
+    }),
+    records_request_escalated: await factLandmark(projectRoot, 'records_request_escalated', warnings, {
+      status: getPath(recordsState, ['records', 'escalation', 'status']),
+      acceptedStatuses: ['escalated', 'not_needed', 'complete'],
+      evidence: getPath(recordsState, ['records', 'escalation', 'evidence']),
+    }),
+    records_and_bills_processed: await factLandmark(projectRoot, 'records_and_bills_processed', warnings, {
+      status: getPath(recordsState, ['records', 'processing', 'status']),
+      acceptedStatuses: ['processed', 'complete'],
+      evidence: getPath(recordsState, ['records', 'processing', 'evidence']),
+    }),
+    all_records_received: await factLandmark(projectRoot, 'all_records_received', warnings, {
+      status: getPath(recordsState, ['records', 'received', 'status']),
+      acceptedStatuses: ['all_received', 'complete'],
+      evidence: getPath(recordsState, ['records', 'received', 'evidence']),
+    }),
+    medical_chronology_updated: await factLandmark(projectRoot, 'medical_chronology_updated', warnings, {
+      status: getPath(recordsState, ['records', 'chronology', 'status']),
+      acceptedStatuses: ['updated', 'complete'],
+      evidence: getPath(recordsState, ['records', 'chronology', 'evidence']),
+    }),
+    medical_records_request_workflow_complete: await factLandmark(projectRoot, 'medical_records_request_workflow_complete', warnings, {
+      status: getPath(recordsState, ['records', 'workflow_review', 'status']),
+      acceptedStatuses: ['complete', 'reviewed'],
+      evidence: getPath(recordsState, ['records', 'workflow_review', 'evidence']),
     }),
     demand_sent: await factLandmark(projectRoot, 'demand_sent', warnings, {
       status: getPath(demandState, ['demand', 'status']),
@@ -471,6 +540,28 @@ function initialLiensState(): Record<string, unknown> {
       clues_reviewed: { status: 'not_reviewed', evidence: [] },
       liens: { status: 'unknown', evidence: [] },
       inventory_review: { status: 'not_reviewed', evidence: [] },
+    },
+  }
+}
+
+
+function initialRecordsState(): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    records: {
+      authorization: { status: 'missing', evidence: [] },
+      request_packet: { status: 'not_started', evidence: [] },
+      requests: { status: 'not_sent', evidence: [] },
+      followups: {
+        first: { status: 'not_started', evidence: [] },
+        second: { status: 'not_started', evidence: [] },
+        third: { status: 'not_started', evidence: [] },
+      },
+      escalation: { status: 'not_started', evidence: [] },
+      received: { status: 'missing', evidence: [] },
+      processing: { status: 'not_started', evidence: [] },
+      chronology: { status: 'not_started', evidence: [] },
+      workflow_review: { status: 'not_reviewed', evidence: [] },
     },
   }
 }

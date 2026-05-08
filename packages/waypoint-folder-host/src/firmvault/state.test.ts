@@ -226,6 +226,78 @@ describe('FirmVault case state contract', () => {
   })
 
 
+
+  it('projects records, bills, and chronology landmarks from explicit records state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'documents', 'signed'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'records'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'records'), { recursive: true })
+    await mkdir(join(root, 'documents', 'received', 'records'), { recursive: true })
+    await mkdir(join(root, 'medical-providers', 'acme-clinic'), { recursive: true })
+    await mkdir(join(root, 'workflow-log'), { recursive: true })
+    const evidencePaths = [
+      'documents/signed/hipaa.pdf',
+      'documents/generated/records/acme-request.pdf',
+      'documents/sent/records/acme-request-sent.md',
+      'documents/sent/records/acme-first-follow-up.md',
+      'documents/sent/records/acme-second-follow-up.md',
+      'documents/sent/records/acme-third-follow-up.md',
+      'workflow-log/records-escalation.md',
+      'documents/received/records/acme-records.pdf',
+      'medical-providers/acme-clinic/records-bills.md',
+      'medical-providers/acme-clinic/chronology.md',
+      'workflow-log/records-complete.md',
+    ]
+    for (const evidencePath of evidencePaths) {
+      await writeFile(join(root, evidencePath), 'fixture', 'utf8')
+    }
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'records.yaml'), (recordsState) => {
+      recordsState.records.authorization.status = 'verified'
+      recordsState.records.authorization.evidence = [{ path: 'documents/signed/hipaa.pdf' }]
+      recordsState.records.request_packet.status = 'prepared'
+      recordsState.records.request_packet.evidence = [{ path: 'documents/generated/records/acme-request.pdf' }]
+      recordsState.records.requests.status = 'sent_all'
+      recordsState.records.requests.evidence = [{ path: 'documents/sent/records/acme-request-sent.md' }]
+      recordsState.records.followups.first.status = 'complete'
+      recordsState.records.followups.first.evidence = [{ path: 'documents/sent/records/acme-first-follow-up.md' }]
+      recordsState.records.followups.second.status = 'complete'
+      recordsState.records.followups.second.evidence = [{ path: 'documents/sent/records/acme-second-follow-up.md' }]
+      recordsState.records.followups.third.status = 'complete'
+      recordsState.records.followups.third.evidence = [{ path: 'documents/sent/records/acme-third-follow-up.md' }]
+      recordsState.records.escalation.status = 'escalated'
+      recordsState.records.escalation.evidence = [{ path: 'workflow-log/records-escalation.md' }]
+      recordsState.records.received.status = 'all_received'
+      recordsState.records.received.evidence = [{ path: 'documents/received/records/acme-records.pdf' }]
+      recordsState.records.processing.status = 'processed'
+      recordsState.records.processing.evidence = [{ path: 'medical-providers/acme-clinic/records-bills.md' }]
+      recordsState.records.chronology.status = 'updated'
+      recordsState.records.chronology.evidence = [{ path: 'medical-providers/acme-clinic/chronology.md' }]
+      recordsState.records.workflow_review.status = 'complete'
+      recordsState.records.workflow_review.evidence = [{ path: 'workflow-log/records-complete.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+
+    for (const slug of [
+      'medical_auth_verified',
+      'records_request_packet_prepared',
+      'records_requested_all_providers',
+      'first_records_follow_up_complete',
+      'second_records_follow_up_complete',
+      'third_records_follow_up_complete',
+      'records_request_escalated',
+      'records_and_bills_processed',
+      'all_records_received',
+      'medical_chronology_updated',
+      'medical_records_request_workflow_complete',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })

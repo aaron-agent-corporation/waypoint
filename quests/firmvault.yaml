@@ -21,6 +21,17 @@ recipes:
 - firmvault-pip-track-exhaustion
 - firmvault-medical-provider-review-status
 - firmvault-lien-identify-potential
+- firmvault-medical-records-verify-authorization
+- firmvault-request-records-bills-prepare-request
+- firmvault-request-records-bills-send-request
+- firmvault-request-records-bills-follow-up
+- firmvault-medical-records-receive-and-process
+- firmvault-medical-chronology-update
+- firmvault-medical-records-prepare-request
+- firmvault-medical-records-send-request
+- firmvault-medical-records-first-follow-up
+- firmvault-medical-records-second-follow-up
+- firmvault-medical-records-escalate-delay
 scaffolds:
   workstreams:
   - key: case
@@ -468,16 +479,219 @@ scaffolds:
         phase_slug: records-bills
         lifecycle_phase: records-bills
         plans:
-        - plan_ref: firmvault-records-bills-deferred
-          title: Checkpoint deferred records and bills workflow expansion after Part One
+        - plan_ref: firmvault-medical-records-verify-authorization-task
+          title: Verify signed medical authorization from canonical local evidence
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-medical-records-verify-authorization
             source_port:
               workflow_id: firmvault-request-medical-records
-              status: deferred_after_part_one
+              source_node: verify_medical_authorization
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - medical_auth_verified
+        - plan_ref: firmvault-records-bills-prepare-request-task
+          title: Prepare provider records-and-bills request packet handoff
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-request-records-bills-prepare-request
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: prepare_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - records_request_packet_prepared
+        - plan_ref: firmvault-records-bills-human-send-request
+          title: Human send gate for records-and-bills request
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_send_records_bills_request
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: send_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - records_requested_all_providers
+        - plan_ref: firmvault-records-bills-wait-first-follow-up
+          title: Wait for records and bills before first follow-up
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 15
+                exit_landmark: records_and_bills_processed
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: wait_15_days_for_records
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+        - plan_ref: firmvault-records-bills-first-follow-up-task
+          title: Prepare first records-and-bills follow-up if needed
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-request-records-bills-follow-up
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: first_follow_up_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - first_records_follow_up_complete
+        - plan_ref: firmvault-records-bills-wait-second-follow-up
+          title: Wait for records and bills before second follow-up
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 15
+                exit_landmark: records_and_bills_processed
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: wait_15_more_days_for_second_follow_up
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+        - plan_ref: firmvault-records-bills-second-follow-up-task
+          title: Prepare second records-and-bills follow-up if needed
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-request-records-bills-follow-up
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: second_follow_up_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - second_records_follow_up_complete
+        - plan_ref: firmvault-records-bills-wait-third-follow-up
+          title: Wait for records and bills before third follow-up
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 15
+                exit_landmark: records_and_bills_processed
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: wait_15_more_days_for_third_follow_up
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+        - plan_ref: firmvault-records-bills-third-follow-up-task
+          title: Prepare third records-and-bills follow-up if needed
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-request-records-bills-follow-up
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: third_follow_up_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - third_records_follow_up_complete
+        - plan_ref: firmvault-records-bills-wait-escalation
+          title: Wait for records and bills before escalation review
+          wave: 100
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 15
+                exit_landmark: records_and_bills_processed
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: wait_15_more_days_for_escalation
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+        - plan_ref: firmvault-records-bills-escalate-delay-task
+          title: Prepare delayed-records escalation handoff if needed
+          wave: 110
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-records-escalate-delay
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: escalate_records_request
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - records_request_escalated
+        - plan_ref: firmvault-records-bills-receive-process-task
+          title: Receive and process records and bills from local evidence
+          wave: 120
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-records-receive-and-process
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: receive_and_process_records_bills
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - records_and_bills_processed
+              - all_records_received
+        - plan_ref: firmvault-medical-chronology-update-task
+          title: Update medical chronology from processed record shadows
+          wave: 130
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-chronology-update
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: update_medical_chronology
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - medical_chronology_updated
+        - plan_ref: firmvault-records-bills-human-completion-review
+          title: Human completion review for provider records workflow
+          wave: 140
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_provider_records_workflow_complete
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: confirm_provider_records_workflow_complete
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              output_landmarks:
+              - medical_records_request_workflow_complete
       - phase_key: '40'
         phase_slug: demand
         lifecycle_phase: demand
@@ -585,5 +799,5 @@ metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_one_skeleton
+    status: part_six_c_records_bills_wave
     external_side_effects: forbidden

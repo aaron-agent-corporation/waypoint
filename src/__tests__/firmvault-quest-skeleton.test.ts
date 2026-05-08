@@ -169,9 +169,45 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-medical-provider-wait-status-refresh',
       ]),
     )
-  
-    
-        const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
+
+
+    const recordsPhase = phases.find((phase) => phase.phase_slug === 'records-bills')
+    const recordsPlanRefs = new Set((recordsPhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...recordsPlanRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-medical-records-verify-authorization-task',
+        'firmvault-records-bills-prepare-request-task',
+        'firmvault-records-bills-human-send-request',
+        'firmvault-records-bills-wait-first-follow-up',
+        'firmvault-records-bills-first-follow-up-task',
+        'firmvault-records-bills-wait-second-follow-up',
+        'firmvault-records-bills-second-follow-up-task',
+        'firmvault-records-bills-wait-third-follow-up',
+        'firmvault-records-bills-third-follow-up-task',
+        'firmvault-records-bills-wait-escalation',
+        'firmvault-records-bills-escalate-delay-task',
+        'firmvault-records-bills-receive-process-task',
+        'firmvault-medical-chronology-update-task',
+        'firmvault-records-bills-human-completion-review',
+      ]),
+    )
+    const recordsRecipeSlugs = new Set(
+      (recordsPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...recordsRecipeSlugs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-medical-records-verify-authorization',
+        'firmvault-request-records-bills-prepare-request',
+        'firmvault-request-records-bills-follow-up',
+        'firmvault-medical-records-escalate-delay',
+        'firmvault-medical-records-receive-and-process',
+        'firmvault-medical-chronology-update',
+      ]),
+    )
+
+    const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
         const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
         expect([...lienPlanRefs]).toEqual(
           expect.arrayContaining([
