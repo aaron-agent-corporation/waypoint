@@ -176,6 +176,56 @@ describe('FirmVault case state contract', () => {
     }
   })
 
+
+  it('projects treatment-status and early lien landmarks from explicit provider and lien state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'medical-providers', 'acme-chiropractic'), { recursive: true })
+    await mkdir(join(root, 'liens'), { recursive: true })
+    await mkdir(join(root, 'activity'), { recursive: true })
+    await writeFile(join(root, 'medical-providers', 'acme-chiropractic', 'treatment.md'), '# Treatment status\n', 'utf8')
+    await writeFile(join(root, 'activity', 'provider-status-review.md'), '# Provider status review\n', 'utf8')
+    await writeFile(join(root, 'liens', 'health-plan.md'), '# Health plan lien\n', 'utf8')
+    await writeFile(join(root, 'activity', 'early-lien-review.md'), '# Early lien review\n', 'utf8')
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'providers.yaml'), (providersState) => {
+      providersState.treatment_status = {
+        provider_list_reviewed: { status: 'reviewed', evidence: [{ path: 'activity/provider-status-review.md' }] },
+        provider_status_updated: { status: 'updated', evidence: [{ path: 'medical-providers/acme-chiropractic/treatment.md' }] },
+        provider_followups_flagged: { status: 'flagged', evidence: [{ path: 'activity/provider-status-review.md' }] },
+        human_review: { status: 'reviewed', evidence: [{ path: 'activity/provider-status-review.md' }] },
+        treatment_complete: { status: 'complete', evidence: [{ path: 'medical-providers/acme-chiropractic/treatment.md' }] },
+      }
+    })
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'liens.yaml'), (liensState) => {
+      liensState.early_identification.health_coverage.status = 'categorized'
+      liensState.early_identification.health_coverage.evidence = [{ path: 'activity/early-lien-review.md' }]
+      liensState.early_identification.clues_reviewed.status = 'reviewed'
+      liensState.early_identification.clues_reviewed.evidence = [{ path: 'activity/early-lien-review.md' }]
+      liensState.early_identification.liens.status = 'identified'
+      liensState.early_identification.liens.evidence = [{ path: 'liens/health-plan.md' }]
+      liensState.early_identification.inventory_review.status = 'reviewed'
+      liensState.early_identification.inventory_review.evidence = [{ path: 'activity/early-lien-review.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    for (const slug of [
+      'provider_list_reviewed',
+      'provider_status_updated',
+      'provider_followups_flagged',
+      'treatment_status_reviewed',
+      'treatment_complete',
+      'health_coverage_categorized',
+      'lien_clues_reviewed',
+      'liens_identified',
+      'lien_inventory_reviewed',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })

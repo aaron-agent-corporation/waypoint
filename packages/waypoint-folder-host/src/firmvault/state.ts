@@ -21,6 +21,15 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'pip_approved',
   'pip_status_checked',
   'pip_benefits_exhausted',
+  'provider_list_reviewed',
+  'provider_status_updated',
+  'provider_followups_flagged',
+  'treatment_status_reviewed',
+  'treatment_complete',
+  'health_coverage_categorized',
+  'lien_clues_reviewed',
+  'liens_identified',
+  'lien_inventory_reviewed',
   'demand_sent',
   'initial_offer_received',
   'settlement_reached',
@@ -33,6 +42,7 @@ export const FIRMVAULT_CASE_STATE_FILES = [
   'accident.yaml',
   'providers.yaml',
   'insurance.yaml',
+  'liens.yaml',
   'demand.yaml',
   'negotiation.yaml',
   'settlement.yaml',
@@ -95,6 +105,7 @@ export async function initFirmVaultCaseState(
     writeYaml(join(stateDir, 'accident.yaml'), initialAccidentState()),
     writeYaml(join(stateDir, 'providers.yaml'), initialProvidersState()),
     writeYaml(join(stateDir, 'insurance.yaml'), initialInsuranceState()),
+    writeYaml(join(stateDir, 'liens.yaml'), initialLiensState()),
     writeYaml(join(stateDir, 'demand.yaml'), initialDemandState()),
     writeYaml(join(stateDir, 'negotiation.yaml'), initialNegotiationState()),
     writeYaml(join(stateDir, 'settlement.yaml'), initialSettlementState()),
@@ -122,12 +133,13 @@ export async function readFirmVaultLandmarkProjection(
 ): Promise<FirmVaultLandmarkProjection> {
   const stateDir = firmVaultStateDir(projectRoot)
   const warnings: string[] = []
-  const [caseState, clientState, accidentState, providersState, insuranceState, demandState, negotiationState, settlementState] = await Promise.all([
+  const [caseState, clientState, accidentState, providersState, insuranceState, liensState, demandState, negotiationState, settlementState] = await Promise.all([
     readYamlRecord(join(stateDir, 'case.yaml')),
     readYamlRecord(join(stateDir, 'client.yaml')),
     readYamlRecord(join(stateDir, 'accident.yaml')),
     readYamlRecord(join(stateDir, 'providers.yaml')),
     readYamlRecord(join(stateDir, 'insurance.yaml')),
+    readYamlRecord(join(stateDir, 'liens.yaml')),
     readYamlRecord(join(stateDir, 'demand.yaml')),
     readYamlRecord(join(stateDir, 'negotiation.yaml')),
     readYamlRecord(join(stateDir, 'settlement.yaml')),
@@ -235,6 +247,51 @@ export async function readFirmVaultLandmarkProjection(
       status: getPath(insuranceState, ['insurance', 'pip', 'benefits', 'status']),
       acceptedStatuses: ['exhausted'],
       evidence: getPath(insuranceState, ['insurance', 'pip', 'benefits', 'evidence']),
+    }),
+    provider_list_reviewed: await factLandmark(projectRoot, 'provider_list_reviewed', warnings, {
+      status: getPath(providersState, ['treatment_status', 'provider_list_reviewed', 'status']),
+      acceptedStatuses: ['reviewed', 'complete'],
+      evidence: getPath(providersState, ['treatment_status', 'provider_list_reviewed', 'evidence']),
+    }),
+    provider_status_updated: await factLandmark(projectRoot, 'provider_status_updated', warnings, {
+      status: getPath(providersState, ['treatment_status', 'provider_status_updated', 'status']),
+      acceptedStatuses: ['updated', 'complete'],
+      evidence: getPath(providersState, ['treatment_status', 'provider_status_updated', 'evidence']),
+    }),
+    provider_followups_flagged: await factLandmark(projectRoot, 'provider_followups_flagged', warnings, {
+      status: getPath(providersState, ['treatment_status', 'provider_followups_flagged', 'status']),
+      acceptedStatuses: ['flagged', 'none_needed', 'complete'],
+      evidence: getPath(providersState, ['treatment_status', 'provider_followups_flagged', 'evidence']),
+    }),
+    treatment_status_reviewed: await factLandmark(projectRoot, 'treatment_status_reviewed', warnings, {
+      status: getPath(providersState, ['treatment_status', 'human_review', 'status']),
+      acceptedStatuses: ['reviewed', 'complete'],
+      evidence: getPath(providersState, ['treatment_status', 'human_review', 'evidence']),
+    }),
+    treatment_complete: await factLandmark(projectRoot, 'treatment_complete', warnings, {
+      status: getPath(providersState, ['treatment_status', 'treatment_complete', 'status']),
+      acceptedStatuses: ['complete', 'confirmed'],
+      evidence: getPath(providersState, ['treatment_status', 'treatment_complete', 'evidence']),
+    }),
+    health_coverage_categorized: await factLandmark(projectRoot, 'health_coverage_categorized', warnings, {
+      status: getPath(liensState, ['early_identification', 'health_coverage', 'status']),
+      acceptedStatuses: ['categorized', 'complete'],
+      evidence: getPath(liensState, ['early_identification', 'health_coverage', 'evidence']),
+    }),
+    lien_clues_reviewed: await factLandmark(projectRoot, 'lien_clues_reviewed', warnings, {
+      status: getPath(liensState, ['early_identification', 'clues_reviewed', 'status']),
+      acceptedStatuses: ['reviewed', 'complete'],
+      evidence: getPath(liensState, ['early_identification', 'clues_reviewed', 'evidence']),
+    }),
+    liens_identified: await factLandmark(projectRoot, 'liens_identified', warnings, {
+      status: getPath(liensState, ['early_identification', 'liens', 'status']),
+      acceptedStatuses: ['identified', 'none_supported', 'complete'],
+      evidence: getPath(liensState, ['early_identification', 'liens', 'evidence']),
+    }),
+    lien_inventory_reviewed: await factLandmark(projectRoot, 'lien_inventory_reviewed', warnings, {
+      status: getPath(liensState, ['early_identification', 'inventory_review', 'status']),
+      acceptedStatuses: ['reviewed', 'complete'],
+      evidence: getPath(liensState, ['early_identification', 'inventory_review', 'evidence']),
     }),
     demand_sent: await factLandmark(projectRoot, 'demand_sent', warnings, {
       status: getPath(demandState, ['demand', 'status']),
@@ -359,7 +416,18 @@ function initialAccidentState(): Record<string, unknown> {
 }
 
 function initialProvidersState(): Record<string, unknown> {
-  return { schema_version: 1, providers_setup: { status: 'not_started', evidence: [] }, providers: [] }
+  return {
+    schema_version: 1,
+    providers_setup: { status: 'not_started', evidence: [] },
+    providers: [],
+    treatment_status: {
+      provider_list_reviewed: { status: 'not_reviewed', evidence: [] },
+      provider_status_updated: { status: 'not_started', evidence: [] },
+      provider_followups_flagged: { status: 'not_started', evidence: [] },
+      human_review: { status: 'not_reviewed', evidence: [] },
+      treatment_complete: { status: 'unknown', evidence: [] },
+    },
+  }
 }
 
 function initialInsuranceState(): Record<string, unknown> {
@@ -390,6 +458,19 @@ function initialInsuranceState(): Record<string, unknown> {
         status_check: { status: 'not_checked', evidence: [] },
         benefits: { status: 'unknown', evidence: [] },
       },
+    },
+  }
+}
+
+function initialLiensState(): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    liens: [],
+    early_identification: {
+      health_coverage: { status: 'unknown', evidence: [] },
+      clues_reviewed: { status: 'not_reviewed', evidence: [] },
+      liens: { status: 'unknown', evidence: [] },
+      inventory_review: { status: 'not_reviewed', evidence: [] },
     },
   }
 }

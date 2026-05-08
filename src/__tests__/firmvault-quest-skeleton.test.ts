@@ -119,6 +119,9 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-insurance-pip-confirm-approval-task',
         'firmvault-insurance-pip-wait-status-followup',
         'firmvault-insurance-pip-track-exhaustion-task',
+        'firmvault-medical-provider-review-status-task',
+        'firmvault-medical-provider-human-status-review',
+        'firmvault-medical-provider-wait-status-refresh',
       ]),
     )
 
@@ -136,6 +139,7 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-pip-file-application',
         'firmvault-pip-confirm-approval',
         'firmvault-pip-track-exhaustion',
+        'firmvault-medical-provider-review-status',
       ]),
     )
 
@@ -145,7 +149,11 @@ describe('FirmVault Quest skeleton', () => {
         .map((plan) => plan.plan_ref),
     )
     expect([...treatmentGateRefs]).toEqual(
-      expect.arrayContaining(['firmvault-insurance-bi-human-send-lor', 'firmvault-insurance-pip-human-send-packet']),
+      expect.arrayContaining([
+        'firmvault-insurance-bi-human-send-lor',
+        'firmvault-insurance-pip-human-send-packet',
+        'firmvault-medical-provider-human-status-review',
+      ]),
     )
 
     const treatmentWaitRefs = new Set(
@@ -158,8 +166,27 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-insurance-bi-wait-acknowledgment',
         'firmvault-insurance-pip-wait-acknowledgment',
         'firmvault-insurance-pip-wait-status-followup',
+        'firmvault-medical-provider-wait-status-refresh',
       ]),
     )
+  
+    
+        const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
+        const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
+        expect([...lienPlanRefs]).toEqual(
+          expect.arrayContaining([
+            'firmvault-early-lien-identification-task',
+            'firmvault-early-lien-human-inventory-review',
+            'firmvault-liens-deferred',
+          ]),
+        )
+        const lienRecipeSlugs = new Set(
+          (liensPhase?.plans ?? [])
+            .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+            .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+        )
+        expect([...lienRecipeSlugs]).toEqual(expect.arrayContaining(['firmvault-lien-identify-potential']))
+    
   })
 
   it('installs and starts inside a temp FirmVault-style case folder without touching the repo root', async () => {

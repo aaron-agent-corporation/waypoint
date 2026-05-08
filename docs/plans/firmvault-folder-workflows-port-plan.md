@@ -257,7 +257,7 @@ pnpm typecheck
 **Objective:** Port the rest of the live-tested non-litigation workflow catalog in dependency-wave order.
 
 **Wave order:**
-1. Wave 2 insurance: BI and PIP. Part Six-A plan: `docs/plans/firmvault-port-part-six-insurance-plan.md`.
+1. Wave 2 insurance: BI and PIP. Part Six-A plan: `docs/plans/firmvault-port-part-six-insurance-plan.md` and Part Six-B plan: `docs/plans/firmvault-port-part-six-treatment-liens-plan.md`.
 2. Wave 3 treatment/lien discovery.
 3. Wave 4 records/bills/chronology.
 4. Wave 5 demand.

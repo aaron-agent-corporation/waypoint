@@ -19,6 +19,8 @@ recipes:
 - firmvault-pip-file-application
 - firmvault-pip-confirm-approval
 - firmvault-pip-track-exhaustion
+- firmvault-medical-provider-review-status
+- firmvault-lien-identify-potential
 scaffolds:
   workstreams:
   - key: case
@@ -414,6 +416,54 @@ scaffolds:
               output_landmarks:
               - pip_status_checked
               - pip_benefits_exhausted
+        - plan_ref: firmvault-medical-provider-review-status-task
+          title: Review and normalize provider treatment status
+          wave: 130
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-provider-review-status
+            source_port:
+              workflow_id: firmvault-medical-provider-status
+              source_node: review_provider_statuses
+              source_workflow: workflows/firmvault-medical-provider-status.yaml
+              output_landmarks:
+              - provider_list_reviewed
+              - provider_status_updated
+              - provider_followups_flagged
+        - plan_ref: firmvault-medical-provider-human-status-review
+          title: Human treatment-status review
+          wave: 140
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_treatment_status_review
+            source_port:
+              workflow_id: firmvault-medical-provider-status
+              source_node: human_treatment_status_review
+              source_workflow: workflows/firmvault-medical-provider-status.yaml
+              output_landmarks:
+              - treatment_status_reviewed
+        - plan_ref: firmvault-medical-provider-wait-status-refresh
+          title: Wait for next provider treatment-status refresh
+          wave: 150
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 30
+                exit_landmark: treatment_complete
+            source_port:
+              workflow_id: firmvault-medical-provider-status
+              source_node: wait_for_treatment_status_refresh
+              source_workflow: workflows/firmvault-medical-provider-status.yaml
       - phase_key: '30'
         phase_slug: records-bills
         lifecycle_phase: records-bills
@@ -474,9 +524,42 @@ scaffolds:
         phase_slug: liens
         lifecycle_phase: liens
         plans:
-        - plan_ref: firmvault-liens-deferred
-          title: Checkpoint deferred lien workflow expansion after Part One
+        - plan_ref: firmvault-early-lien-identification-task
+          title: Identify evidence-backed early lien and payor clues
           wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-lien-identify-potential
+            source_port:
+              workflow_id: firmvault-early-lien-identification
+              source_node: identify_potential_liens
+              source_workflow: workflows/firmvault-early-lien-identification.yaml
+              output_landmarks:
+              - health_coverage_categorized
+              - lien_clues_reviewed
+              - liens_identified
+        - plan_ref: firmvault-early-lien-human-inventory-review
+          title: Human early-lien inventory review
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_lien_inventory_review
+            source_port:
+              workflow_id: firmvault-early-lien-identification
+              source_node: human_lien_inventory_review
+              source_workflow: workflows/firmvault-early-lien-identification.yaml
+              output_landmarks:
+              - lien_inventory_reviewed
+        - plan_ref: firmvault-liens-deferred
+          title: Checkpoint deferred final lien-resolution workflow expansion after early identification
+          wave: 30
           metadata:
             waypoint:
               node:

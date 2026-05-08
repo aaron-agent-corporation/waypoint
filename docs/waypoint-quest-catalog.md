@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 50
+- Total Recipes loaded from disk: 52
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -104,8 +104,8 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault` — FirmVault Case Workflow
   - Path: `quests/firmvault.yaml`
   - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
-  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-pip-file-application`, `firmvault-pip-prepare-packet`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`
-  - Source port scope/status: `part_six_a_insurance_wave`
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-pip-file-application`, `firmvault-pip-prepare-packet`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`
+  - Source port scope/status: `part_six_b_treatment_liens_wave`
 - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
   - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
@@ -379,7 +379,7 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/firmvault/pip-file-application.yaml`
   - Description: Prepares or confirms filing of the Kentucky KACP PIP application for one FirmVault case using masked vault data.
   - External side effects: `forbidden`
-- `firmvault-pip-track-exhaustion` — FirmVault PIP Track Exhaustion
+- `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential` — FirmVault PIP Track Exhaustion
   - Path: `recipes/firmvault/pip-track-exhaustion.yaml`
   - Description: Tracks whether PIP benefits are exhausted and records the supported status in the FirmVault masked claim shadow.
   - External side effects: `forbidden`

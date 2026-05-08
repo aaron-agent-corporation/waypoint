@@ -28,6 +28,8 @@ const firmVaultRecipeSlugs = [
   'firmvault-pip-file-application',
   'firmvault-pip-confirm-approval',
   'firmvault-pip-track-exhaustion',
+  'firmvault-medical-provider-review-status',
+  'firmvault-lien-identify-potential',
 ] as const
 
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
@@ -67,7 +69,7 @@ async function readRecipeManifest(slug: string) {
 }
 
 describe('FirmVault source-backed Recipe port', () => {
-  it('keeps the FirmVault Quest bound to the current Wave 0/1 plus BI/PIP insurance recipe slugs', async () => {
+  it('keeps the FirmVault Quest bound to the current Wave 0/1 plus BI/PIP, treatment-status, and early-lien recipe slugs', async () => {
     const questRecipes = await loadQuestRecipes()
     expect(questRecipes).toEqual(firmVaultRecipeSlugs)
 
