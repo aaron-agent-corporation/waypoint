@@ -2,6 +2,7 @@
 import cliPackage from '../package.json' with { type: 'json' }
 import { runAutoCommand } from './commands/auto.ts'
 import { runDiscussCommand } from './commands/discuss.ts'
+import { runDoctorCommand } from './commands/doctor.ts'
 import { runGateCommand } from './commands/gate.ts'
 import { runInitCommand } from './commands/init.ts'
 import { runLifecycleCommand } from './commands/lifecycle.ts'
@@ -31,6 +32,7 @@ Usage:
   waypoint --version
   waypoint init [--quest <slug>]
   waypoint status
+  waypoint doctor firmvault [--json]
   waypoint quests
   waypoint recipes [--quest <slug>]
   waypoint start [--quest <slug>]
@@ -71,6 +73,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'status') {
     return runStatusCommand(args.slice(1), io)
+  }
+
+  if (command === 'doctor') {
+    return runDoctorCommand(args.slice(1), io)
   }
 
   if (command === 'quests') {

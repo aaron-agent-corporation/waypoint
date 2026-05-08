@@ -79,6 +79,12 @@ export type {
 } from './autopilot/types.ts'
 export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
 export { LocalRecipeRuntime } from './runtime/local-runtime.ts'
+export {
+  FIRMVAULT_REQUIRED_CASE_PATHS,
+  FIRMVAULT_STARTER_CASE_PATHS,
+  inspectFirmVaultCaseFolder,
+} from './firmvault/case-folder.ts'
+export type { FirmVaultCaseFolderInspection } from './firmvault/case-folder.ts'
 export type { LocalRecipePayload, LocalRecipePayloadInput } from './runtime/payload.ts'
 export { buildLocalRecipePayload } from './runtime/payload.ts'
 export type {

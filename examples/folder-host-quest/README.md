@@ -21,6 +21,7 @@ node ../../packages/waypoint-cli/src/bin.ts --help
 node ../../packages/waypoint-cli/src/bin.ts --version
 node ../../packages/waypoint-cli/src/bin.ts init --quest waypoint
 node ../../packages/waypoint-cli/src/bin.ts status
+node ../../packages/waypoint-cli/src/bin.ts doctor firmvault --json
 node ../../packages/waypoint-cli/src/bin.ts quests
 node ../../packages/waypoint-cli/src/bin.ts recipes --quest waypoint
 node ../../packages/waypoint-cli/src/bin.ts start --quest waypoint

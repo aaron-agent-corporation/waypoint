@@ -42,6 +42,7 @@ waypoint --help
 waypoint --version
 waypoint init [--quest <slug>]
 waypoint status
+waypoint doctor firmvault [--json]
 waypoint quests
 waypoint recipes [--quest <slug>]
 waypoint start [--quest <slug>]
