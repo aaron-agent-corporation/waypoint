@@ -1,7 +1,12 @@
 import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, relative, sep } from 'node:path'
 
+import { loadBundledWaypointCatalog } from '../catalog/bundled.ts'
+import { installQuestCatalog, type InstallQuestCatalogResult } from '../catalog/install.ts'
+import { initWaypointProject, type InitWaypointProjectResult } from '../project/init.ts'
+import { startQuestRoute, type StartedQuestRoute } from '../routes/start.ts'
 import { FIRMVAULT_REQUIRED_CASE_PATHS } from './case-folder'
+import { initFirmVaultCaseState, type InitFirmVaultCaseStateResult } from './state.ts'
 
 export interface FirmVaultCaseBootstrapInput {
   readonly casesRoot: string
@@ -16,6 +21,46 @@ export interface FirmVaultCaseBootstrapFolderResult {
   readonly caseRoot: string
   readonly caseSlug: string
   readonly createdPaths: readonly string[]
+}
+
+export interface FirmVaultCaseActivationInput extends FirmVaultCaseBootstrapInput {
+  readonly startRoute?: boolean
+}
+
+export interface FirmVaultCaseActivationResult extends FirmVaultCaseBootstrapFolderResult {
+  readonly project: InitWaypointProjectResult
+  readonly catalog: InstallQuestCatalogResult
+  readonly firmvaultState: InitFirmVaultCaseStateResult
+  readonly route?: StartedQuestRoute
+}
+
+export async function bootstrapFirmVaultCase(
+  input: FirmVaultCaseActivationInput,
+): Promise<FirmVaultCaseActivationResult> {
+  const folder = await createFirmVaultCaseFolder(input)
+  const project = await initWaypointProject(folder.caseRoot, {
+    quest: 'firmvault',
+    now: input.now,
+  })
+  const catalog = await installQuestCatalog(folder.caseRoot, await loadBundledWaypointCatalog(), {
+    quest: 'firmvault',
+  })
+  const firmvaultState = await initFirmVaultCaseState(folder.caseRoot, {
+    caseType: input.caseType,
+    caseSlug: folder.caseSlug,
+    now: input.now,
+  })
+  const route = input.startRoute
+    ? await startQuestRoute(folder.caseRoot, { quest: 'firmvault', now: input.now })
+    : undefined
+
+  return {
+    ...folder,
+    project,
+    catalog,
+    firmvaultState,
+    ...(route ? { route } : {}),
+  }
 }
 
 export async function createFirmVaultCaseFolder(

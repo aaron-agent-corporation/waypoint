@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { FIRMVAULT_REQUIRED_CASE_PATHS, inspectFirmVaultCaseFolder } from './case-folder'
-import { createFirmVaultCaseFolder } from './bootstrap'
+import { bootstrapFirmVaultCase, createFirmVaultCaseFolder } from './bootstrap'
 
 async function tempCasesRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-firmvault-cases-'))
@@ -75,5 +75,31 @@ describe('createFirmVaultCaseFolder', () => {
       caseType: 'personal_injury',
       caseSlug: 'existing-case',
     })).rejects.toThrow('FirmVault case folder already exists')
+  })
+
+  it('bootstraps a case folder with Waypoint, FirmVault state, catalog, and an optional route', async () => {
+    const casesRoot = await tempCasesRoot()
+
+    const result = await bootstrapFirmVaultCase({
+      casesRoot,
+      caseName: 'Sam Client v. City Bus',
+      caseType: 'personal_injury',
+      startRoute: true,
+      now: new Date('2026-05-08T13:00:00.000Z'),
+    })
+
+    expect(result.caseSlug).toBe('sam-client-v-city-bus')
+    expect(result.project.config.quest).toBe('firmvault')
+    expect(result.catalog.quest.slug).toBe('firmvault')
+    expect(result.catalog.recipes.length).toBeGreaterThan(0)
+    expect(result.firmvaultState.projection.landmarks.case_setup_complete.satisfied).toBe(false)
+    expect(result.route?.id).toBe('route-001')
+    expect(result.route?.quest).toBe('firmvault')
+
+    expect(await pathExists(join(result.caseRoot, '.waypoint/config.yaml'))).toBe(true)
+    expect(await pathExists(join(result.caseRoot, '.waypoint/quests/firmvault.yaml'))).toBe(true)
+    expect(await pathExists(join(result.caseRoot, '.waypoint/firmvault/case.yaml'))).toBe(true)
+    expect(await pathExists(join(result.caseRoot, '.waypoint/routes/route-001.yaml'))).toBe(true)
+    expect(await pathExists(join(result.caseRoot, '.waypoint/tasks/tasks.yaml'))).toBe(true)
   })
 })

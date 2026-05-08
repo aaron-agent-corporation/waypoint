@@ -85,8 +85,13 @@ export {
   inspectFirmVaultCaseFolder,
 } from './firmvault/case-folder.ts'
 export type { FirmVaultCaseFolderInspection } from './firmvault/case-folder.ts'
-export { createFirmVaultCaseFolder } from './firmvault/bootstrap.ts'
-export type { FirmVaultCaseBootstrapFolderResult, FirmVaultCaseBootstrapInput } from './firmvault/bootstrap.ts'
+export { bootstrapFirmVaultCase, createFirmVaultCaseFolder } from './firmvault/bootstrap.ts'
+export type {
+  FirmVaultCaseActivationInput,
+  FirmVaultCaseActivationResult,
+  FirmVaultCaseBootstrapFolderResult,
+  FirmVaultCaseBootstrapInput,
+} from './firmvault/bootstrap.ts'
 export {
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
