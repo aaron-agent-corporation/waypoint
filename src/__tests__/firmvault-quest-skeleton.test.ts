@@ -102,6 +102,64 @@ describe('FirmVault Quest skeleton', () => {
     for (const plan of waitPlans) {
       expect(plan.metadata?.waypoint?.wait, `${plan.plan_ref} wait metadata`).toBeDefined()
     }
+
+    const treatmentMonitoring = phases.find((phase) => phase.phase_slug === 'treatment-monitoring')
+    const treatmentPlanRefs = new Set((treatmentMonitoring?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...treatmentPlanRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-insurance-bi-identify-carrier-task',
+        'firmvault-insurance-bi-prepare-lor-handoff',
+        'firmvault-insurance-bi-human-send-lor',
+        'firmvault-insurance-bi-wait-acknowledgment',
+        'firmvault-insurance-bi-process-acknowledgment-task',
+        'firmvault-insurance-pip-open-claim-task',
+        'firmvault-insurance-pip-prepare-packet',
+        'firmvault-insurance-pip-human-send-packet',
+        'firmvault-insurance-pip-wait-acknowledgment',
+        'firmvault-insurance-pip-confirm-approval-task',
+        'firmvault-insurance-pip-wait-status-followup',
+        'firmvault-insurance-pip-track-exhaustion-task',
+      ]),
+    )
+
+    const treatmentRecipeSlugs = new Set(
+      (treatmentMonitoring?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...treatmentRecipeSlugs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-insurance-bi-identify-carrier',
+        'firmvault-insurance-bi-prepare-lor',
+        'firmvault-insurance-bi-process-acknowledgment',
+        'firmvault-insurance-pip-open-claim',
+        'firmvault-pip-file-application',
+        'firmvault-pip-confirm-approval',
+        'firmvault-pip-track-exhaustion',
+      ]),
+    )
+
+    const treatmentGateRefs = new Set(
+      (treatmentMonitoring?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'gate')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...treatmentGateRefs]).toEqual(
+      expect.arrayContaining(['firmvault-insurance-bi-human-send-lor', 'firmvault-insurance-pip-human-send-packet']),
+    )
+
+    const treatmentWaitRefs = new Set(
+      (treatmentMonitoring?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'wait')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...treatmentWaitRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-insurance-bi-wait-acknowledgment',
+        'firmvault-insurance-pip-wait-acknowledgment',
+        'firmvault-insurance-pip-wait-status-followup',
+      ]),
+    )
   })
 
   it('installs and starts inside a temp FirmVault-style case folder without touching the repo root', async () => {

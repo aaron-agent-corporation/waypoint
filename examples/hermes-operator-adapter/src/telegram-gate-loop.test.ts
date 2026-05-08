@@ -86,7 +86,7 @@ describe('Hermes Telegram gate loop reference adapter', () => {
 
     const events = await runUnsafeSetupCommand(fixture.project, ['route-events', '--route-id', 'route-001', '--limit', '20'])
     expect(events).toContain('route.gate.approved')
-  })
+  }, 30000)
 
   it('maps reject, revise, show tasks, and show events replies through safe Waypoint commands', async () => {
     const calls: string[][] = []

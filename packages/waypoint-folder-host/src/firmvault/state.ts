@@ -7,6 +7,20 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'full_intake_complete',
   'accident_report_obtained',
   'providers_setup',
+  'at_fault_insurance_identified',
+  'bi_lor_prepared',
+  'bi_lor_sent',
+  'bi_acknowledgment_checked',
+  'pip_track_active',
+  'pip_carrier_identified',
+  'pip_application_prepared',
+  'pip_lor_prepared',
+  'pip_application_filed',
+  'pip_lor_sent',
+  'pip_acknowledgment_checked',
+  'pip_approved',
+  'pip_status_checked',
+  'pip_benefits_exhausted',
   'demand_sent',
   'initial_offer_received',
   'settlement_reached',
@@ -18,6 +32,7 @@ export const FIRMVAULT_CASE_STATE_FILES = [
   'client.yaml',
   'accident.yaml',
   'providers.yaml',
+  'insurance.yaml',
   'demand.yaml',
   'negotiation.yaml',
   'settlement.yaml',
@@ -79,6 +94,7 @@ export async function initFirmVaultCaseState(
     writeYaml(join(stateDir, 'client.yaml'), initialClientState()),
     writeYaml(join(stateDir, 'accident.yaml'), initialAccidentState()),
     writeYaml(join(stateDir, 'providers.yaml'), initialProvidersState()),
+    writeYaml(join(stateDir, 'insurance.yaml'), initialInsuranceState()),
     writeYaml(join(stateDir, 'demand.yaml'), initialDemandState()),
     writeYaml(join(stateDir, 'negotiation.yaml'), initialNegotiationState()),
     writeYaml(join(stateDir, 'settlement.yaml'), initialSettlementState()),
@@ -106,11 +122,12 @@ export async function readFirmVaultLandmarkProjection(
 ): Promise<FirmVaultLandmarkProjection> {
   const stateDir = firmVaultStateDir(projectRoot)
   const warnings: string[] = []
-  const [caseState, clientState, accidentState, providersState, demandState, negotiationState, settlementState] = await Promise.all([
+  const [caseState, clientState, accidentState, providersState, insuranceState, demandState, negotiationState, settlementState] = await Promise.all([
     readYamlRecord(join(stateDir, 'case.yaml')),
     readYamlRecord(join(stateDir, 'client.yaml')),
     readYamlRecord(join(stateDir, 'accident.yaml')),
     readYamlRecord(join(stateDir, 'providers.yaml')),
+    readYamlRecord(join(stateDir, 'insurance.yaml')),
     readYamlRecord(join(stateDir, 'demand.yaml')),
     readYamlRecord(join(stateDir, 'negotiation.yaml')),
     readYamlRecord(join(stateDir, 'settlement.yaml')),
@@ -148,6 +165,76 @@ export async function readFirmVaultLandmarkProjection(
       status: getPath(providersState, ['providers_setup', 'status']),
       acceptedStatuses: ['complete'],
       evidence: getPath(providersState, ['providers_setup', 'evidence']),
+    }),
+    at_fault_insurance_identified: await factLandmark(projectRoot, 'at_fault_insurance_identified', warnings, {
+      status: getPath(insuranceState, ['insurance', 'bi', 'carrier_identified', 'status']),
+      acceptedStatuses: ['identified', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'bi', 'carrier_identified', 'evidence']),
+    }),
+    bi_lor_prepared: await factLandmark(projectRoot, 'bi_lor_prepared', warnings, {
+      status: getPath(insuranceState, ['insurance', 'bi', 'lor', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'bi', 'lor', 'prepared', 'evidence']),
+    }),
+    bi_lor_sent: await factLandmark(projectRoot, 'bi_lor_sent', warnings, {
+      status: getPath(insuranceState, ['insurance', 'bi', 'lor', 'sent', 'status']),
+      acceptedStatuses: ['sent', 'confirmed'],
+      evidence: getPath(insuranceState, ['insurance', 'bi', 'lor', 'sent', 'evidence']),
+    }),
+    bi_acknowledgment_checked: await factLandmark(projectRoot, 'bi_acknowledgment_checked', warnings, {
+      status: getPath(insuranceState, ['insurance', 'bi', 'acknowledgment', 'status']),
+      acceptedStatuses: ['checked', 'acknowledged', 'follow_up_needed'],
+      evidence: getPath(insuranceState, ['insurance', 'bi', 'acknowledgment', 'evidence']),
+    }),
+    pip_track_active: await factLandmark(projectRoot, 'pip_track_active', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'track', 'status']),
+      acceptedStatuses: ['active', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'track', 'evidence']),
+    }),
+    pip_carrier_identified: await factLandmark(projectRoot, 'pip_carrier_identified', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'carrier_identified', 'status']),
+      acceptedStatuses: ['identified', 'assigned', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'carrier_identified', 'evidence']),
+    }),
+    pip_application_prepared: await factLandmark(projectRoot, 'pip_application_prepared', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'application', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'application', 'prepared', 'evidence']),
+    }),
+    pip_lor_prepared: await factLandmark(projectRoot, 'pip_lor_prepared', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'lor', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'lor', 'prepared', 'evidence']),
+    }),
+    pip_application_filed: await factLandmark(projectRoot, 'pip_application_filed', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'application', 'filed', 'status']),
+      acceptedStatuses: ['filed', 'sent', 'confirmed'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'application', 'filed', 'evidence']),
+    }),
+    pip_lor_sent: await factLandmark(projectRoot, 'pip_lor_sent', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'lor', 'sent', 'status']),
+      acceptedStatuses: ['sent', 'confirmed'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'lor', 'sent', 'evidence']),
+    }),
+    pip_acknowledgment_checked: await factLandmark(projectRoot, 'pip_acknowledgment_checked', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'acknowledgment', 'status']),
+      acceptedStatuses: ['checked', 'acknowledged', 'follow_up_needed'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'acknowledgment', 'evidence']),
+    }),
+    pip_approved: await factLandmark(projectRoot, 'pip_approved', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'approval', 'status']),
+      acceptedStatuses: ['approved'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'approval', 'evidence']),
+    }),
+    pip_status_checked: await factLandmark(projectRoot, 'pip_status_checked', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'status_check', 'status']),
+      acceptedStatuses: ['checked', 'complete'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'status_check', 'evidence']),
+    }),
+    pip_benefits_exhausted: await factLandmark(projectRoot, 'pip_benefits_exhausted', warnings, {
+      status: getPath(insuranceState, ['insurance', 'pip', 'benefits', 'status']),
+      acceptedStatuses: ['exhausted'],
+      evidence: getPath(insuranceState, ['insurance', 'pip', 'benefits', 'evidence']),
     }),
     demand_sent: await factLandmark(projectRoot, 'demand_sent', warnings, {
       status: getPath(demandState, ['demand', 'status']),
@@ -273,6 +360,38 @@ function initialAccidentState(): Record<string, unknown> {
 
 function initialProvidersState(): Record<string, unknown> {
   return { schema_version: 1, providers_setup: { status: 'not_started', evidence: [] }, providers: [] }
+}
+
+function initialInsuranceState(): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    insurance: {
+      bi: {
+        carrier_identified: { status: 'unknown', evidence: [] },
+        lor: {
+          prepared: { status: 'not_started', evidence: [] },
+          sent: { status: 'not_sent', evidence: [] },
+        },
+        acknowledgment: { status: 'not_checked', evidence: [] },
+      },
+      pip: {
+        track: { status: 'not_started', evidence: [] },
+        carrier_identified: { status: 'unknown', evidence: [] },
+        application: {
+          prepared: { status: 'not_started', evidence: [] },
+          filed: { status: 'not_filed', evidence: [] },
+        },
+        lor: {
+          prepared: { status: 'not_started', evidence: [] },
+          sent: { status: 'not_sent', evidence: [] },
+        },
+        acknowledgment: { status: 'not_checked', evidence: [] },
+        approval: { status: 'unknown', evidence: [] },
+        status_check: { status: 'not_checked', evidence: [] },
+        benefits: { status: 'unknown', evidence: [] },
+      },
+    },
+  }
 }
 
 function initialDemandState(): Record<string, unknown> {

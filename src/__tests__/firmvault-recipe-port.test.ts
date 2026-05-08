@@ -12,7 +12,7 @@ const missionControlRoot = '/Users/aaronwhaley/Github/mission-control'
 const firmvaultRecipeDir = join(repoRoot, 'recipes', 'firmvault')
 const firmvaultQuestPath = join(repoRoot, 'quests', 'firmvault.yaml')
 
-const initialFirmVaultRecipeSlugs = [
+const firmVaultRecipeSlugs = [
   'firmvault-case-setup-create-shell',
   'firmvault-document-collection-review-intake',
   'firmvault-document-collection-request-missing-documents',
@@ -21,6 +21,13 @@ const initialFirmVaultRecipeSlugs = [
   'firmvault-medical-provider-setup-case',
   'firmvault-client-check-in-start-cadence',
   'firmvault-client-check-in-prepare-handoff',
+  'firmvault-insurance-bi-identify-carrier',
+  'firmvault-insurance-bi-prepare-lor',
+  'firmvault-insurance-bi-process-acknowledgment',
+  'firmvault-insurance-pip-open-claim',
+  'firmvault-pip-file-application',
+  'firmvault-pip-confirm-approval',
+  'firmvault-pip-track-exhaustion',
 ] as const
 
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
@@ -60,22 +67,22 @@ async function readRecipeManifest(slug: string) {
 }
 
 describe('FirmVault source-backed Recipe port', () => {
-  it('keeps the FirmVault Quest bound to the initial Wave 0/1 recipe slugs', async () => {
+  it('keeps the FirmVault Quest bound to the current Wave 0/1 plus BI/PIP insurance recipe slugs', async () => {
     const questRecipes = await loadQuestRecipes()
-    expect(questRecipes).toEqual(initialFirmVaultRecipeSlugs)
+    expect(questRecipes).toEqual(firmVaultRecipeSlugs)
 
     const catalog = await loadBundledWaypointCatalog()
     const resolved = catalog.resolveQuestRecipes('firmvault')
     expect(resolved.ok, resolved.ok ? undefined : resolved.message).toBe(true)
     if (!resolved.ok) throw new Error(resolved.message)
 
-    for (const slug of initialFirmVaultRecipeSlugs) {
+    for (const slug of firmVaultRecipeSlugs) {
       expect(catalog.recipes.has(slug), `${slug} exists in bundled catalog`).toBe(true)
     }
   })
 
-  it('ports every initial FirmVault Recipe from Mission Control source files with safe folder-host metadata', async () => {
-    for (const slug of initialFirmVaultRecipeSlugs) {
+  it('ports every current FirmVault Recipe from Mission Control source files with safe folder-host metadata', async () => {
+    for (const slug of firmVaultRecipeSlugs) {
       const manifest = await readRecipeManifest(slug)
       const sourcePort = manifest.metadata?.source_port
 

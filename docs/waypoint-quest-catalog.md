@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 43
+- Total Recipes loaded from disk: 50
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -104,8 +104,8 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault` — FirmVault Case Workflow
   - Path: `quests/firmvault.yaml`
   - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
-  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`
-  - Source port scope/status: `part_one_skeleton`
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-pip-file-application`, `firmvault-pip-prepare-packet`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`
+  - Source port scope/status: `part_six_a_insurance_wave`
 - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
   - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
@@ -321,39 +321,67 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/waypoint/verifier.yaml`
   - Description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
 
-### FirmVault placeholder Recipes
+### FirmVault source-backed Recipes
 
 - `firmvault-accident-report-analyze` — FirmVault Accident Report Analyze
   - Path: `recipes/firmvault/accident-report-analyze.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Analyzes a crash or accident report shadow and updates accident, party, witness, and insurance ledgers.
   - External side effects: `forbidden`
 - `firmvault-case-setup-create-shell` — FirmVault Case Setup Create Shell
   - Path: `recipes/firmvault/case-setup-create-shell.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Creates or verifies the native FirmVault case shell from accepted intake information.
   - External side effects: `forbidden`
-- `firmvault-client-check-in-prepare-handoff` — FirmVault Client Check In Prepare Handoff
+- `firmvault-client-check-in-prepare-handoff` — FirmVault Client Check-In Prepare Handoff
   - Path: `recipes/firmvault/client-check-in-prepare-handoff.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Prepares a human-facing client check-in script and task handoff without sending it.
   - External side effects: `forbidden`
-- `firmvault-client-check-in-start-cadence` — FirmVault Client Check In Start Cadence
+- `firmvault-client-check-in-start-cadence` — FirmVault Client Check-In Start Cadence
   - Path: `recipes/firmvault/client-check-in-start-cadence.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Establishes the recurring client check-in cadence without contacting the client.
   - External side effects: `forbidden`
 - `firmvault-document-collection-request-missing-documents` — FirmVault Document Collection Request Missing Documents
   - Path: `recipes/firmvault/document-collection-request-missing-documents.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Prepares the client-facing handoff for missing onboarding documents after the intake checklist has been reviewed.
   - External side effects: `forbidden`
 - `firmvault-document-collection-review-intake` — FirmVault Document Collection Review Intake
   - Path: `recipes/firmvault/document-collection-review-intake.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Reviews onboarding documents and identifies missing intake, contract, and authorization items.
   - External side effects: `forbidden`
 - `firmvault-document-collection-send-signature-packets` — FirmVault Document Collection Send Signature Packets
   - Path: `recipes/firmvault/document-collection-send-signature-packets.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Stages the signature-packet handoff after missing onboarding documents have been identified.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-identify-carrier` — FirmVault Insurance BI - Identify Carrier
+  - Path: `recipes/firmvault/insurance-bi-identify-carrier.yaml`
+  - Description: Identifies and normalizes the at-fault bodily-injury carrier from canonical FirmVault evidence.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-prepare-lor` — FirmVault Insurance BI - Prepare LOR Handoff
+  - Path: `recipes/firmvault/insurance-bi-prepare-lor.yaml`
+  - Description: Prepares a BI letter-of-representation draft or exact human handoff without sending it externally.
+  - External side effects: `forbidden`
+- `firmvault-insurance-bi-process-acknowledgment` — FirmVault Insurance BI - Process Acknowledgment
+  - Path: `recipes/firmvault/insurance-bi-process-acknowledgment.yaml`
+  - Description: Processes a BI carrier acknowledgment or prepares a human follow-up when no acknowledgment arrived after the wait.
+  - External side effects: `forbidden`
+- `firmvault-insurance-pip-open-claim` — FirmVault Insurance PIP - Open Claim
+  - Path: `recipes/firmvault/insurance-pip-open-claim.yaml`
+  - Description: Identifies the PIP carrier path and prepares or documents opening a Kentucky PIP claim.
   - External side effects: `forbidden`
 - `firmvault-medical-provider-setup-case` — FirmVault Medical Provider Setup Case
   - Path: `recipes/firmvault/medical-provider-setup-case.yaml`
-  - Description: Placeholder Recipe manifest for Part One Quest skeleton resolution; full prompt port lands in FVP2.
+  - Description: Creates or normalizes medical provider ledgers for known providers in one FirmVault case.
+  - External side effects: `forbidden`
+- `firmvault-pip-confirm-approval` — FirmVault PIP Confirm Approval
+  - Path: `recipes/firmvault/pip-confirm-approval.yaml`
+  - Description: Confirms whether a Kentucky PIP claim is approved or active for one FirmVault case, normalizes the masked claim shadow when supported, and blocks with a precise handoff when approval evidence is missing.
+  - External side effects: `forbidden`
+- `firmvault-pip-file-application` — FirmVault PIP File Application
+  - Path: `recipes/firmvault/pip-file-application.yaml`
+  - Description: Prepares or confirms filing of the Kentucky KACP PIP application for one FirmVault case using masked vault data.
+  - External side effects: `forbidden`
+- `firmvault-pip-track-exhaustion` — FirmVault PIP Track Exhaustion
+  - Path: `recipes/firmvault/pip-track-exhaustion.yaml`
+  - Description: Tracks whether PIP benefits are exhausted and records the supported status in the FirmVault masked claim shadow.
   - External side effects: `forbidden`
 
 ### Non-source-derived example Recipes
@@ -371,4 +399,4 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - No first-class sub-Quest schema field exists yet; command mapping intent lives in metadata/docs.
 - No built-in recipe executor is shipped in the standalone core package yet; hosts provide `IRecipeRuntime`.
 - Namespace commands from the upstream source CLI (`ns-*`) remain deferred optional mappings, documented in `docs/quests/waypoint-command-map.md`.
-- FirmVault placeholder recipes are safe Part One catalog manifests; full prompt/SOP ports are deferred to FVP2.
+- FirmVault recipes are source-backed workflow/SOP ports staged wave-by-wave under the FirmVault folder-host plan.

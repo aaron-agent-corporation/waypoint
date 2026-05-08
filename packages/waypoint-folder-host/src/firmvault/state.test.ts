@@ -101,6 +101,81 @@ describe('FirmVault case state contract', () => {
     expect(projection.landmarks.final_distribution_complete.satisfied).toBe(true)
   })
 
+  it('projects BI and PIP insurance landmarks from explicit insurance state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'insurance'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'documents', 'received', 'insurance'), { recursive: true })
+    await writeFile(join(root, 'insurance', 'bi-acme.md'), '# BI carrier\n', 'utf8')
+    await writeFile(join(root, 'documents', 'generated', 'insurance', 'bi-acme-lor.md'), '# BI LOR\n', 'utf8')
+    await writeFile(join(root, 'documents', 'sent', 'insurance', 'bi-acme-lor-sent.md'), '# Sent BI LOR\n', 'utf8')
+    await writeFile(join(root, 'documents', 'received', 'insurance', 'bi-ack.md'), '# BI ack\n', 'utf8')
+    await writeFile(join(root, 'insurance', 'pip-acme.md'), '# PIP carrier\n', 'utf8')
+    await writeFile(join(root, 'documents', 'generated', 'insurance', 'pip-acme-application.md'), '# PIP app\n', 'utf8')
+    await writeFile(join(root, 'documents', 'generated', 'insurance', 'pip-acme-lor.md'), '# PIP LOR\n', 'utf8')
+    await writeFile(join(root, 'documents', 'sent', 'insurance', 'pip-acme-application-sent.md'), '# Sent PIP app\n', 'utf8')
+    await writeFile(join(root, 'documents', 'sent', 'insurance', 'pip-acme-lor-sent.md'), '# Sent PIP LOR\n', 'utf8')
+    await writeFile(join(root, 'documents', 'received', 'insurance', 'pip-ack.md'), '# PIP ack\n', 'utf8')
+    await writeFile(join(root, 'documents', 'received', 'insurance', 'pip-approval.md'), '# PIP approval\n', 'utf8')
+    await writeFile(join(root, 'documents', 'received', 'insurance', 'pip-status.md'), '# PIP status\n', 'utf8')
+    await writeFile(join(root, 'documents', 'received', 'insurance', 'pip-exhausted.md'), '# PIP exhausted\n', 'utf8')
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'insurance.yaml'), (insuranceState) => {
+      insuranceState.insurance.bi.carrier_identified.status = 'identified'
+      insuranceState.insurance.bi.carrier_identified.evidence = [{ path: 'insurance/bi-acme.md' }]
+      insuranceState.insurance.bi.lor.prepared.status = 'prepared'
+      insuranceState.insurance.bi.lor.prepared.evidence = [{ path: 'documents/generated/insurance/bi-acme-lor.md' }]
+      insuranceState.insurance.bi.lor.sent.status = 'sent'
+      insuranceState.insurance.bi.lor.sent.evidence = [{ path: 'documents/sent/insurance/bi-acme-lor-sent.md' }]
+      insuranceState.insurance.bi.acknowledgment.status = 'checked'
+      insuranceState.insurance.bi.acknowledgment.evidence = [{ path: 'documents/received/insurance/bi-ack.md' }]
+      insuranceState.insurance.pip.track.status = 'active'
+      insuranceState.insurance.pip.track.evidence = [{ path: 'insurance/pip-acme.md' }]
+      insuranceState.insurance.pip.carrier_identified.status = 'identified'
+      insuranceState.insurance.pip.carrier_identified.evidence = [{ path: 'insurance/pip-acme.md' }]
+      insuranceState.insurance.pip.application.prepared.status = 'prepared'
+      insuranceState.insurance.pip.application.prepared.evidence = [{ path: 'documents/generated/insurance/pip-acme-application.md' }]
+      insuranceState.insurance.pip.lor.prepared.status = 'prepared'
+      insuranceState.insurance.pip.lor.prepared.evidence = [{ path: 'documents/generated/insurance/pip-acme-lor.md' }]
+      insuranceState.insurance.pip.application.filed.status = 'filed'
+      insuranceState.insurance.pip.application.filed.evidence = [{ path: 'documents/sent/insurance/pip-acme-application-sent.md' }]
+      insuranceState.insurance.pip.lor.sent.status = 'sent'
+      insuranceState.insurance.pip.lor.sent.evidence = [{ path: 'documents/sent/insurance/pip-acme-lor-sent.md' }]
+      insuranceState.insurance.pip.acknowledgment.status = 'checked'
+      insuranceState.insurance.pip.acknowledgment.evidence = [{ path: 'documents/received/insurance/pip-ack.md' }]
+      insuranceState.insurance.pip.approval.status = 'approved'
+      insuranceState.insurance.pip.approval.evidence = [{ path: 'documents/received/insurance/pip-approval.md' }]
+      insuranceState.insurance.pip.status_check.status = 'checked'
+      insuranceState.insurance.pip.status_check.evidence = [{ path: 'documents/received/insurance/pip-status.md' }]
+      insuranceState.insurance.pip.benefits.status = 'exhausted'
+      insuranceState.insurance.pip.benefits.evidence = [{ path: 'documents/received/insurance/pip-exhausted.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+
+    for (const slug of [
+      'at_fault_insurance_identified',
+      'bi_lor_prepared',
+      'bi_lor_sent',
+      'bi_acknowledgment_checked',
+      'pip_track_active',
+      'pip_carrier_identified',
+      'pip_application_prepared',
+      'pip_lor_prepared',
+      'pip_application_filed',
+      'pip_lor_sent',
+      'pip_acknowledgment_checked',
+      'pip_approved',
+      'pip_status_checked',
+      'pip_benefits_exhausted',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })

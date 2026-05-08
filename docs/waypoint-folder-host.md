@@ -154,13 +154,27 @@ waypoint firmvault landmarks --json
 
 `init-case` creates `.waypoint/firmvault/` state files. Initial landmarks are deliberately false until explicit state fields and evidence paths satisfy them.
 
-The first supported FirmVault landmark projection includes:
+The supported FirmVault landmark projection currently includes the core case, intake, accident, provider, BI/PIP insurance, demand, negotiation, settlement, and distribution landmarks:
 
 ```text
 case_setup_complete
 full_intake_complete
 accident_report_obtained
 providers_setup
+at_fault_insurance_identified
+bi_lor_prepared
+bi_lor_sent
+bi_acknowledgment_checked
+pip_track_active
+pip_carrier_identified
+pip_application_prepared
+pip_lor_prepared
+pip_application_filed
+pip_lor_sent
+pip_acknowledgment_checked
+pip_approved
+pip_status_checked
+pip_benefits_exhausted
 demand_sent
 initial_offer_received
 settlement_reached
@@ -205,6 +219,7 @@ A project-local folder host state tree looks like this:
     client.yaml               # intake, contract, and HIPAA status + evidence
     accident.yaml             # accident report/liability state
     providers.yaml            # provider setup state
+    insurance.yaml            # BI/PIP carrier, packet, acknowledgment, and exhaustion state
     demand.yaml               # demand package state
     negotiation.yaml          # offers and negotiation state
     settlement.yaml           # settlement and distribution state

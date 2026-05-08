@@ -1,6 +1,3 @@
-# FirmVault Quest skeleton for case-folder-local Waypoint operation.
-# Uses only current Quest schema fields; source mapping lives in metadata.source_port.
-
 schema_version: 1
 slug: firmvault
 name: FirmVault Case Workflow
@@ -15,6 +12,13 @@ recipes:
 - firmvault-medical-provider-setup-case
 - firmvault-client-check-in-start-cadence
 - firmvault-client-check-in-prepare-handoff
+- firmvault-insurance-bi-identify-carrier
+- firmvault-insurance-bi-prepare-lor
+- firmvault-insurance-bi-process-acknowledgment
+- firmvault-insurance-pip-open-claim
+- firmvault-pip-file-application
+- firmvault-pip-confirm-approval
+- firmvault-pip-track-exhaustion
 scaffolds:
   workstreams:
   - key: case
@@ -224,16 +228,192 @@ scaffolds:
         phase_slug: treatment-monitoring
         lifecycle_phase: treatment-monitoring
         plans:
-        - plan_ref: firmvault-treatment-monitoring-deferred
-          title: Checkpoint deferred treatment-monitoring expansion after Part One
+        - plan_ref: firmvault-insurance-bi-identify-carrier-task
+          title: Identify and normalize the BI carrier from local evidence
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-insurance-bi-identify-carrier
             source_port:
-              workflow_id: firmvault-medical-provider-status
-              status: deferred_after_part_one
+              workflow_id: firmvault-bi-claim-setup
+              source_node: identify_bi_carrier
+              source_workflow: workflows/firmvault-bi-claim-setup.yaml
+              output_landmarks:
+              - at_fault_insurance_identified
+        - plan_ref: firmvault-insurance-bi-prepare-lor-handoff
+          title: Prepare the BI letter-of-representation handoff
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-insurance-bi-prepare-lor
+            source_port:
+              workflow_id: firmvault-bi-claim-setup
+              source_node: prepare_bi_lor_handoff
+              source_workflow: workflows/firmvault-bi-claim-setup.yaml
+              output_landmarks:
+              - bi_lor_prepared
+        - plan_ref: firmvault-insurance-bi-human-send-lor
+          title: Human send gate for the BI letter of representation
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_send_bi_lor
+            source_port:
+              workflow_id: firmvault-bi-claim-setup
+              source_node: human_send_bi_lor
+              source_workflow: workflows/firmvault-bi-claim-setup.yaml
+              output_landmarks:
+              - bi_lor_sent
+        - plan_ref: firmvault-insurance-bi-wait-acknowledgment
+          title: Wait for BI carrier acknowledgment
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 5
+                exit_landmark: bi_claim_acknowledged
+            source_port:
+              workflow_id: firmvault-bi-claim-setup
+              source_node: wait_for_bi_acknowledgment
+              source_workflow: workflows/firmvault-bi-claim-setup.yaml
+        - plan_ref: firmvault-insurance-bi-process-acknowledgment-task
+          title: Process BI acknowledgment or prepare follow-up
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-insurance-bi-process-acknowledgment
+            source_port:
+              workflow_id: firmvault-bi-claim-setup
+              source_node: process_bi_acknowledgment
+              source_workflow: workflows/firmvault-bi-claim-setup.yaml
+              output_landmarks:
+              - bi_acknowledgment_checked
+        - plan_ref: firmvault-insurance-pip-open-claim-task
+          title: Determine the PIP path and normalize the PIP carrier ledger
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-insurance-pip-open-claim
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: determine_pip_path
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+              output_landmarks:
+              - pip_track_active
+              - pip_carrier_identified
+        - plan_ref: firmvault-insurance-pip-prepare-packet
+          title: Prepare the PIP application and LOR packet handoff
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-pip-file-application
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: prepare_pip_packet
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+              output_landmarks:
+              - pip_application_prepared
+              - pip_lor_prepared
+        - plan_ref: firmvault-insurance-pip-human-send-packet
+          title: Human send gate for the PIP packet
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_send_pip_packet
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: human_send_pip_packet
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+              output_landmarks:
+              - pip_application_filed
+              - pip_lor_sent
+        - plan_ref: firmvault-insurance-pip-wait-acknowledgment
+          title: Wait for PIP acknowledgment
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 10
+                exit_landmark: pip_approved
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: wait_for_pip_acknowledgment
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+        - plan_ref: firmvault-insurance-pip-confirm-approval-task
+          title: Process PIP acknowledgment, approval, or follow-up
+          wave: 100
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-pip-confirm-approval
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: process_pip_acknowledgment
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+              output_landmarks:
+              - pip_acknowledgment_checked
+        - plan_ref: firmvault-insurance-pip-wait-status-followup
+          title: Wait before PIP payment/exhaustion status follow-up
+          wave: 110
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 30
+                exit_landmark: pip_benefits_exhausted
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: wait_before_pip_status_followup
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+        - plan_ref: firmvault-insurance-pip-track-exhaustion-task
+          title: Track PIP payment, denial, or exhaustion status
+          wave: 120
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-pip-track-exhaustion
+            source_port:
+              workflow_id: firmvault-pip-claim-setup
+              source_node: track_pip_status
+              source_workflow: workflows/firmvault-pip-claim-setup.yaml
+              output_landmarks:
+              - pip_status_checked
+              - pip_benefits_exhausted
       - phase_key: '30'
         phase_slug: records-bills
         lifecycle_phase: records-bills

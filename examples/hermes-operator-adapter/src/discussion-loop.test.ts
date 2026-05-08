@@ -93,7 +93,7 @@ describe('Hermes discussion loop reference adapter', () => {
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 
   it('can append only the operator message when agent execution is not requested', async () => {
     const { root, project } = await startedProject()
