@@ -296,24 +296,33 @@ pnpm typecheck
 pnpm clean && pnpm build && pnpm verify:built-imports && pnpm smoke:install && pnpm smoke:firmvault-folder && pnpm test && pnpm typecheck
 ```
 
-## Phase FVP8: Mission Control Cutover Bridge
+## Phase FVP8: FirmVault Case Bootstrap + Agent Activation
 
-**Objective:** After folder-host FirmVault Quest works, wire Mission Control to consume the external Waypoint package and reuse the FirmVault Quest/Recipe catalog rather than maintaining separate legacy workflow definitions.
+**Objective:** After the folder-host FirmVault Quest works, make it consumable as the new-case operator flow: the agent creates a new PI case folder under a trusted cases root, installs/activates the `firmvault` Quest, initializes FirmVault state, starts the route, and leaves the case ready for document intake and gated lifecycle progress.
+
+**Plan:** `docs/plans/firmvault-case-bootstrap-agent-plan.md`
 
 **Steps:**
-1. Add pinned dependency to Mission Control using the Waypoint RC/tag strategy.
-2. Build adapter tests that compare Mission Control legacy workflow ids to Waypoint FirmVault Quest manifest entries.
-3. Keep rollback: Mission Control can revert to legacy workflows by changing dependency/tag and disabling the adapter.
-4. Only promote beyond RC after Mission Control validation passes.
+1. Add a safe FirmVault starter-folder writer that creates the canonical case folder layout and starter markdown files.
+2. Compose existing folder-host primitives instead of inventing a new runtime: initialize Waypoint, install the FirmVault Quest/Recipes, initialize `.waypoint/firmvault/` state, and optionally start `route-001`.
+3. Expose the flow through `waypoint firmvault bootstrap --cases-root <trusted-root> --case-name <name> --case-type personal-injury [--start] [--json]`.
+4. Add a constrained Hermes/operator adapter for “new case” requests that resolves only trusted cases-root keys and invokes the bootstrap command with explicit args.
+5. Add a local document-intake rail so the agent can add/copy case documents into `documents/inbox/` and record them in FirmVault state without marking substantive landmarks complete from file presence alone.
 
 **Verification:**
 
 ```bash
-cd /Users/aaronwhaley/Github/mission-control
-pnpm exec vitest run src/lib/__tests__/firmvault-test-ladder-workflows.test.ts src/lib/__tests__/waypoint-workflows.test.ts
+pnpm smoke:firmvault-bootstrap
+pnpm smoke:firmvault-folder
+pnpm smoke:folder-host
+pnpm test
 pnpm typecheck
-pnpm lint
+git diff --check
 ```
+
+## Deferred: Harden / Mission Control Bridge
+
+Mission Control cutover is explicitly cancelled for this track. Any future Mission Control consumption, bridge, or UI/database adapter work belongs to Harden, not the standalone FirmVault folder bootstrap path.
 
 ---
 
