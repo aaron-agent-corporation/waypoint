@@ -15,7 +15,8 @@ The folder host can currently:
 - pause/resume routes and approve/reject gates;
 - run autopilot in the safe null runtime by default;
 - run Recipes through an explicitly configured local command runtime;
-- initialize product-owned FirmVault case state and project workflow landmarks from explicit YAML state plus evidence paths.
+- initialize product-owned FirmVault case state and project workflow landmarks from explicit YAML state plus evidence paths;
+- add local FirmVault documents into `documents/inbox/`, index them in `.waypoint/firmvault/documents.yaml`, and append FirmVault document events without marking substantive landmarks complete.
 
 It does not claim global installation, package publishing, cloud sync, or production packaging yet.
 
@@ -45,6 +46,7 @@ waypoint init [--quest <slug>]
 waypoint status
 waypoint doctor firmvault [--json]
 waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
+waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
 waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
 waypoint firmvault landmarks [--json]
 waypoint quests
@@ -154,6 +156,14 @@ waypoint firmvault bootstrap --cases-root /path/to/cases --case-name "Smith v. A
 ```
 
 `bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present.
+
+To add a local document after bootstrap or case-state initialization:
+
+```bash
+waypoint firmvault add-document --source /path/to/local/file.pdf --kind medical-records --note "uploaded by client" --json
+```
+
+`add-document` copies the source file into `documents/inbox/`, appends an entry to `.waypoint/firmvault/documents.yaml`, and records a `firmvault.document.added` event in `.waypoint/firmvault/events.jsonl`. It is local-only: it does not send email, fax, portal messages, API calls, or trust-account actions, and it does not mark workflow landmarks complete solely because a file exists.
 
 For an existing FirmVault-style folder, initialize only the case-state contract:
 

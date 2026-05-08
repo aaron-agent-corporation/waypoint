@@ -37,10 +37,26 @@ type FirmVaultStateModule = {
     options: { readonly caseType: 'personal_injury'; readonly caseSlug?: string },
   ) => Promise<InitFirmVaultCaseStateResult>
   readonly readFirmVaultLandmarkProjection: (root: string) => Promise<FirmVaultLandmarkProjection>
+  readonly addFirmVaultDocument: (
+    root: string,
+    input: { readonly source: string; readonly kind: FirmVaultDocumentKind; readonly note?: string },
+  ) => Promise<{ readonly document: FirmVaultDocumentIndexEntry }>
+}
+
+type FirmVaultDocumentKind = 'medical_records' | 'bill' | 'insurance' | 'police_report' | 'correspondence' | 'unknown'
+
+interface FirmVaultDocumentIndexEntry {
+  readonly id: string
+  readonly kind: FirmVaultDocumentKind
+  readonly path: string
+  readonly original_name: string
+  readonly added_at: string
+  readonly note?: string
 }
 
 const usageLines = [
   'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]',
+  'Usage: waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
   '       waypoint firmvault landmarks [--json]',
 ]
@@ -54,6 +70,10 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
 
   if (subcommand === 'bootstrap') {
     return runBootstrap(rest, io)
+  }
+
+  if (subcommand === 'add-document') {
+    return runAddDocument(rest, io)
   }
 
   if (subcommand === 'landmarks') {
@@ -107,6 +127,41 @@ async function runBootstrap(args: readonly string[], io: WaypointCliIo): Promise
   io.stdout(`recipes installed: ${result.catalog.recipes.length}`)
   io.stdout(`route_id: ${result.route?.id ?? 'null'}`)
   io.stdout(`landmarks satisfied: ${satisfied}/${total}`)
+  return 0
+}
+
+async function runAddDocument(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseAddDocumentArgs(args)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault add-document arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+
+  const module = await importFirmVaultStateModule()
+  const result = await module.addFirmVaultDocument(io.cwd ?? process.cwd(), {
+    source: parsed.source,
+    kind: parsed.kind,
+    ...(parsed.note ? { note: parsed.note } : {}),
+  })
+
+  if (parsed.json) {
+    io.stdout(JSON.stringify({
+      document_id: result.document.id,
+      kind: result.document.kind,
+      path: result.document.path,
+      original_name: result.document.original_name,
+      added_at: result.document.added_at,
+      note: result.document.note ?? null,
+    }, null, 2))
+    return 0
+  }
+
+  io.stdout('Waypoint FirmVault document added')
+  io.stdout(`document_id: ${result.document.id}`)
+  io.stdout(`kind: ${result.document.kind}`)
+  io.stdout(`path: ${result.document.path}`)
   return 0
 }
 
@@ -164,6 +219,68 @@ async function runLandmarks(args: readonly string[], io: WaypointCliIo): Promise
     io.stdout(`warnings:\n${projection.warnings.map((warning) => `  - ${warning}`).join('\n')}`)
   }
   return 0
+}
+
+function parseAddDocumentArgs(args: readonly string[]):
+  | {
+    readonly ok: true
+    readonly source: string
+    readonly kind: FirmVaultDocumentKind
+    readonly note?: string
+    readonly json: boolean
+  }
+  | { readonly ok: false; readonly error: string } {
+  let source: string | undefined
+  let kind: FirmVaultDocumentKind | undefined
+  let note: string | undefined
+  let json = false
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--source') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --source' }
+      source = value
+      index += 1
+      continue
+    }
+    if (arg === '--kind') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --kind' }
+      const parsedKind = parseDocumentKind(value)
+      if (!parsedKind) return { ok: false, error: `Unsupported FirmVault document kind: ${value}` }
+      kind = parsedKind
+      index += 1
+      continue
+    }
+    if (arg === '--note') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --note' }
+      note = value
+      index += 1
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault add-document option: ${arg}` }
+  }
+
+  if (!source) return { ok: false, error: 'Missing required --source' }
+  if (!kind) return { ok: false, error: 'Missing required --kind' }
+
+  return { ok: true, source, kind, json, ...(note ? { note } : {}) }
+}
+
+function parseDocumentKind(value: string): FirmVaultDocumentKind | null {
+  if (value === 'medical-records' || value === 'medical_records') return 'medical_records'
+  if (value === 'bill') return 'bill'
+  if (value === 'insurance') return 'insurance'
+  if (value === 'police-report' || value === 'police_report') return 'police_report'
+  if (value === 'correspondence') return 'correspondence'
+  if (value === 'unknown') return 'unknown'
+  return null
 }
 
 function parseInitCaseArgs(args: readonly string[]):

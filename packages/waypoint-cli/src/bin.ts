@@ -35,6 +35,7 @@ Usage:
   waypoint status
   waypoint doctor firmvault [--json]
   waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
+  waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
   waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
   waypoint firmvault landmarks [--json]
   waypoint quests

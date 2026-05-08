@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
@@ -119,6 +119,36 @@ describe('waypoint firmvault commands', () => {
     expect(body.quest).toBe('firmvault')
     expect(body.route_id).toBeNull()
     expect(body.landmarks.total).toBe(82)
+  })
+
+  it('adds a local document to a FirmVault case from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const source = join(root, '..', 'client-upload.pdf')
+    await writeFile(source, 'fake document')
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli([
+      'firmvault',
+      'add-document',
+      '--source',
+      source,
+      '--kind',
+      'police-report',
+      '--note',
+      'uploaded by client',
+      '--json',
+    ], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.document_id).toBe('document-001')
+    expect(body.kind).toBe('police_report')
+    expect(body.path).toBe('documents/inbox/client-upload.pdf')
+    expect(existsSync(join(root, 'documents', 'inbox', 'client-upload.pdf'))).toBe(true)
+    await expect(readFile(join(root, '.waypoint', 'firmvault', 'documents.yaml'), 'utf8')).resolves.toContain('document-001')
   })
 
   it('rejects unknown FirmVault commands', async () => {

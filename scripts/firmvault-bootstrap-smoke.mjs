@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdtemp, rm, stat } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -85,6 +85,32 @@ try {
 
   for (const artifact of requiredArtifacts) {
     await requireNonEmptyFile(caseRoot, artifact)
+  }
+
+  const intakeSource = join(casesRoot, 'smoke-police-report.pdf')
+  await writeFile(intakeSource, 'fake smoke police report')
+  const addDocument = parseJsonOutput('waypoint firmvault add-document --json', execFileSync(process.execPath, [
+    cli,
+    'firmvault',
+    'add-document',
+    '--source',
+    intakeSource,
+    '--kind',
+    'police-report',
+    '--note',
+    'smoke intake document',
+    '--json',
+  ], {
+    cwd: caseRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }))
+  if (addDocument.document_id !== 'document-001') throw new Error(`Expected document-001, got ${addDocument.document_id}`)
+  if (addDocument.path !== 'documents/inbox/smoke-police-report.pdf') throw new Error(`Expected inbox document path, got ${addDocument.path}`)
+  await requireNonEmptyFile(caseRoot, 'documents/inbox/smoke-police-report.pdf')
+  const documentIndex = await readFile(join(caseRoot, '.waypoint/firmvault/documents.yaml'), 'utf8')
+  if (!documentIndex.includes('document-001') || !documentIndex.includes('police_report')) {
+    throw new Error(`Expected documents.yaml to index smoke document. Contents:\n${documentIndex}`)
   }
 
   const doctor = parseJsonOutput('waypoint doctor firmvault --json', execFileSync(process.execPath, [cli, 'doctor', 'firmvault', '--json'], {
