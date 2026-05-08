@@ -50,6 +50,14 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'demand_recipients_identified',
   'demand_sent',
   'initial_offer_received',
+  'offer_documented',
+  'offer_evaluated',
+  'net_to_client_prepared',
+  'client_advised_of_offer',
+  'offer_decision_documented',
+  'negotiation_response_prepared',
+  'negotiation_response_human_sent',
+  'negotiation_result_documented',
   'settlement_reached',
   'final_distribution_complete',
 ] as const
@@ -420,8 +428,48 @@ export async function readFirmVaultLandmarkProjection(
     }),
     initial_offer_received: await factLandmark(projectRoot, 'initial_offer_received', warnings, {
       status: getPath(negotiationState, ['negotiation', 'initial_offer', 'status']),
-      acceptedStatuses: ['received'],
+      acceptedStatuses: ['received', 'documented'],
       evidence: getPath(negotiationState, ['negotiation', 'initial_offer', 'evidence']),
+    }),
+    offer_documented: await factLandmark(projectRoot, 'offer_documented', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'offer_documented', 'status']),
+      acceptedStatuses: ['documented', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'offer_documented', 'evidence']),
+    }),
+    offer_evaluated: await factLandmark(projectRoot, 'offer_evaluated', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'evaluation', 'status']),
+      acceptedStatuses: ['evaluated', 'reviewed', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'evaluation', 'evidence']),
+    }),
+    net_to_client_prepared: await factLandmark(projectRoot, 'net_to_client_prepared', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'net_to_client', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'net_to_client', 'evidence']),
+    }),
+    client_advised_of_offer: await factLandmark(projectRoot, 'client_advised_of_offer', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'client_advice', 'status']),
+      acceptedStatuses: ['advised', 'reviewed', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'client_advice', 'evidence']),
+    }),
+    offer_decision_documented: await factLandmark(projectRoot, 'offer_decision_documented', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'client_decision', 'status']),
+      acceptedStatuses: ['documented', 'accepted', 'countered', 'rejected', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'client_decision', 'evidence']),
+    }),
+    negotiation_response_prepared: await factLandmark(projectRoot, 'negotiation_response_prepared', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'response', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'response', 'prepared', 'evidence']),
+    }),
+    negotiation_response_human_sent: await factLandmark(projectRoot, 'negotiation_response_human_sent', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'response', 'human_sent', 'status']),
+      acceptedStatuses: ['sent', 'confirmed'],
+      evidence: getPath(negotiationState, ['negotiation', 'response', 'human_sent', 'evidence']),
+    }),
+    negotiation_result_documented: await factLandmark(projectRoot, 'negotiation_result_documented', warnings, {
+      status: getPath(negotiationState, ['negotiation', 'response', 'result', 'status']),
+      acceptedStatuses: ['documented', 'accepted', 'countered', 'rejected', 'complete'],
+      evidence: getPath(negotiationState, ['negotiation', 'response', 'result', 'evidence']),
     }),
     settlement_reached: await factLandmark(projectRoot, 'settlement_reached', warnings, {
       status: getPath(settlementState, ['settlement', 'status']),
@@ -641,7 +689,22 @@ function initialDemandState(): Record<string, unknown> {
 }
 
 function initialNegotiationState(): Record<string, unknown> {
-  return { schema_version: 1, negotiation: { initial_offer: { status: 'none', amount: null, evidence: [] } } }
+  return {
+    schema_version: 1,
+    negotiation: {
+      initial_offer: { status: 'none', amount: null, evidence: [] },
+      offer_documented: { status: 'not_documented', evidence: [] },
+      evaluation: { status: 'not_started', evidence: [] },
+      net_to_client: { status: 'not_started', evidence: [] },
+      client_advice: { status: 'not_started', evidence: [] },
+      client_decision: { status: 'not_documented', decision: null, evidence: [] },
+      response: {
+        prepared: { status: 'not_started', evidence: [] },
+        human_sent: { status: 'not_sent', evidence: [] },
+        result: { status: 'not_documented', evidence: [] },
+      },
+    },
+  }
 }
 
 function initialSettlementState(): Record<string, unknown> {

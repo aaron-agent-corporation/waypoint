@@ -236,6 +236,52 @@ describe('FirmVault Quest skeleton', () => {
       ]),
     )
 
+    const negotiationPhase = phases.find((phase) => phase.phase_slug === 'negotiation')
+    const negotiationPlanRefs = new Set((negotiationPhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...negotiationPlanRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-negotiation-wait-offer-response',
+        'firmvault-negotiation-log-incoming-offer-task',
+        'firmvault-negotiation-offer-evaluation-task',
+        'firmvault-negotiation-client-offer-decision-gate',
+        'firmvault-negotiation-document-client-decision-task',
+        'firmvault-negotiation-prepare-response-task',
+        'firmvault-negotiation-human-send-response-gate',
+        'firmvault-negotiation-document-response-task',
+      ]),
+    )
+    const negotiationRecipeSlugs = new Set(
+      (negotiationPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...negotiationRecipeSlugs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-negotiation-track-offer',
+        'firmvault-negotiation-offer-evaluation',
+        'firmvault-negotiation-document-client-decision',
+        'firmvault-negotiation-prepare-response',
+        'firmvault-negotiation-document-response',
+      ]),
+    )
+    const negotiationGateRefs = new Set(
+      (negotiationPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'gate')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...negotiationGateRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-negotiation-client-offer-decision-gate',
+        'firmvault-negotiation-human-send-response-gate',
+      ]),
+    )
+    const negotiationWaitRefs = new Set(
+      (negotiationPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'wait')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...negotiationWaitRefs]).toEqual(expect.arrayContaining(['firmvault-negotiation-wait-offer-response']))
+
     const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
         const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
         expect([...lienPlanRefs]).toEqual(

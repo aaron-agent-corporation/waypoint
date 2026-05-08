@@ -37,6 +37,11 @@ recipes:
 - firmvault-demand-draft-letter
 - firmvault-demand-identify-recipients
 - firmvault-demand-send-package
+- firmvault-negotiation-track-offer
+- firmvault-negotiation-offer-evaluation
+- firmvault-negotiation-document-client-decision
+- firmvault-negotiation-prepare-response
+- firmvault-negotiation-document-response
 scaffolds:
   workstreams:
   - key: case
@@ -829,16 +834,133 @@ scaffolds:
         phase_slug: negotiation
         lifecycle_phase: negotiation
         plans:
-        - plan_ref: firmvault-negotiation-deferred
-          title: Checkpoint deferred negotiation workflow expansion after Part One
+        - plan_ref: firmvault-negotiation-wait-offer-response
+          title: Wait for carrier response or initial offer after demand
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 30
+                exit_landmark: initial_offer_received
+            source_port:
+              workflow_id: firmvault-track-offers
+              source_node: wait_for_offer_response
+              source_workflow: workflows/firmvault-track-offers.yaml
+              output_landmarks:
+              - initial_offer_received
+        - plan_ref: firmvault-negotiation-log-incoming-offer-task
+          title: Log incoming offer or substantive demand response from local evidence
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-negotiation-track-offer
+            source_port:
+              workflow_id: firmvault-track-offers
+              source_node: log_incoming_offer
+              source_workflow: workflows/firmvault-track-offers.yaml
+              output_landmarks:
+              - initial_offer_received
+              - offer_documented
+        - plan_ref: firmvault-negotiation-offer-evaluation-task
+          title: Prepare attorney-facing offer evaluation and net-to-client scenarios
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-negotiation-offer-evaluation
             source_port:
               workflow_id: firmvault-offer-evaluation
-              status: deferred_after_part_one
+              source_node: prepare_offer_evaluation
+              source_workflow: workflows/firmvault-offer-evaluation.yaml
+              output_landmarks:
+              - offer_evaluated
+              - net_to_client_prepared
+        - plan_ref: firmvault-negotiation-client-offer-decision-gate
+          title: Human client offer discussion and decision gate
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: client_offer_decision
+            source_port:
+              workflow_id: firmvault-offer-evaluation
+              source_node: client_offer_decision
+              source_workflow: workflows/firmvault-offer-evaluation.yaml
+              output_landmarks:
+              - client_advised_of_offer
+        - plan_ref: firmvault-negotiation-document-client-decision-task
+          title: Document the supported client offer decision locally
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-negotiation-document-client-decision
+            source_port:
+              workflow_id: firmvault-offer-evaluation
+              source_node: document_client_decision
+              source_workflow: workflows/firmvault-offer-evaluation.yaml
+              output_landmarks:
+              - offer_decision_documented
+        - plan_ref: firmvault-negotiation-prepare-response-task
+          title: Prepare acceptance, counter, or rejection handoff without sending externally
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-negotiation-prepare-response
+            source_port:
+              workflow_id: firmvault-negotiate-claim
+              source_node: prepare_negotiation_response
+              source_workflow: workflows/firmvault-negotiate-claim.yaml
+              output_landmarks:
+              - negotiation_response_prepared
+        - plan_ref: firmvault-negotiation-human-send-response-gate
+          title: Human send gate for authorized negotiation response
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_send_negotiation_response
+            source_port:
+              workflow_id: firmvault-negotiate-claim
+              source_node: human_send_negotiation_response
+              source_workflow: workflows/firmvault-negotiate-claim.yaml
+              output_landmarks:
+              - negotiation_response_human_sent
+        - plan_ref: firmvault-negotiation-document-response-task
+          title: Document sent negotiation response and supported result locally
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-negotiation-document-response
+            source_port:
+              workflow_id: firmvault-negotiate-claim
+              source_node: document_negotiation_response
+              source_workflow: workflows/firmvault-negotiate-claim.yaml
+              output_landmarks:
+              - negotiation_result_documented
+              - settlement_reached
       - phase_key: '60'
         phase_slug: settlement
         lifecycle_phase: settlement
@@ -918,5 +1040,5 @@ metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_six_d_demand_wave
+    status: part_six_e_negotiation_wave
     external_side_effects: forbidden

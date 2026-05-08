@@ -3,7 +3,7 @@
 **Date:** 2026-05-06
 **Author:** Hermes (on behalf of Aaron Whaley)
 **Context:** Recovery plan after 2026-05-06 waypoint-orchestrator fabrication incident
-**Status:** Execution complete; P2–P8 complete in real git history
+**Status:** Execution complete for original P2–P8; FirmVault folder-host port continuing
 
 ---
 
@@ -269,7 +269,7 @@ Each phase below has:
 Final close-out state for the accepted Track 4 recovery plan:
 
 - Actual Quest count: 38
-- Actual Recipe count: 68
+- Actual Recipe count: 73
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands run for close-out:
@@ -309,3 +309,19 @@ No "Proceeding to P3 next" as the final line of a response. Either do it now wit
 | P8    | complete | 7d76a47 | 2026-05-06 |
 
 Gary updates this table as real phases land, with real commit hashes from `git log`.
+
+
+## FirmVault folder-host continuation
+
+Current verified direction: standalone Waypoint can be initialized inside a FirmVault case folder, with canonical explicit state files under `.waypoint/firmvault/` and deterministic landmark projection from explicit statuses plus existing evidence paths.
+
+Latest FirmVault source-port slice in progress/completed in this branch: Part Six-E negotiation wave. Expected local case state after this slice includes 57 FirmVault landmarks, 38 FirmVault Recipe manifests, and 65 scaffolded FirmVault plans/tasks.
+
+Verification gates for this continuation remain:
+
+- `pnpm test`
+- `pnpm typecheck`
+- `pnpm build`
+- `node scripts/firmvault-folder-smoke.mjs`
+
+Explicit deferred work remains: settlement processing, final lien resolution, final distribution, and close-case workflow expansion.

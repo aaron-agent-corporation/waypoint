@@ -1,0 +1,76 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-E negotiation wave.
+schema_version: 1
+slug: firmvault-negotiation-prepare-response
+name: FirmVault Negotiation - Prepare Response
+description: Prepares a human-send handoff for an authorized acceptance, counter, or rejection without sending it.
+prompt: 'You are running the source-backed Waypoint port of `firmvault-negotiation-prepare-response` for a FirmVault personal-injury
+  case.
+
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission
+  Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or
+  a mounted `/workspace` path.
+
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls,
+  insurer/provider/client communications, or external API calls. Do not claim that a human or external system was contacted
+  unless the local case folder already contains owner-confirmed evidence. Produce local draft/handoff artifacts, task notes,
+  blocked checkpoints, or review questions only.
+
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, treatment
+  facts, signatures, lien facts, amounts, offers, settlement terms, deadlines, or contact details. Use existing masked FirmVault
+  evidence or explicit owner confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder
+  such as `{client_name}`.
+
+
+  Source purpose: Prepares a human-send handoff for an authorized acceptance, counter, or rejection without sending it.
+
+
+  Adapted Mission Control workflow instructions:
+
+
+  Read the documented client decision and prepare the next negotiation response handoff. For an authorized acceptance path,
+  prepare a human-send acceptance handoff and ready-to-send acceptance letter under documents/generated/insurance/. For a
+  counter or rejection, prepare a human-send handoff for that response without sending it. If no clear decision is documented,
+  return to review with exact missing facts. Do not send external communication and do not mark settlement reached.
+
+
+  Canonical paths from the source workflow:
+
+  - `negotiation/offers.md`
+
+  - `negotiation/offer-evaluation.md`
+
+  - `insurance/`
+
+  - `documents/generated/insurance/`
+
+  - `activity/`
+
+  - `workflow-log/`
+
+
+  Completion standard: complete only when the local ledger, handoff, blocked checkpoint, or review note is supported by local
+  Waypoint project folder evidence and the no-external-side-effects rule above.
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-negotiate-claim.yaml
+    source_node: prepare_negotiation_response
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by local case-folder evidence.
+    - No external communication is claimed or performed.
+    - No offer, authority, settlement term, deadline, recipient, or amount is invented.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - External communications are draft/handoff only; human-gated confirmation must exist before sent/settlement landmarks
+      are satisfied.

@@ -42,7 +42,7 @@ describe('waypoint firmvault commands', () => {
     expect(stderr).toEqual([])
     expect(stdout).toContain('Waypoint FirmVault case state initialized')
     expect(stdout).toContain('case_slug: smith-v-acme')
-    expect(stdout).toContain('landmarks satisfied: 0/49')
+    expect(stdout).toContain('landmarks satisfied: 0/57')
     expect(existsSync(join(root, '.waypoint', 'firmvault', 'case.yaml'))).toBe(true)
     expect(existsSync(join(root, '.waypoint', 'firmvault', 'events.jsonl'))).toBe(true)
   })
@@ -59,7 +59,7 @@ describe('waypoint firmvault commands', () => {
     expect(stderr).toEqual([])
     const body = JSON.parse(stdout.join('\n'))
     expect(body.landmarks.full_intake_complete.satisfied).toBe(false)
-    expect(Object.keys(body.landmarks)).toHaveLength(49)
+    expect(Object.keys(body.landmarks)).toHaveLength(57)
     expect(body.landmarks.at_fault_insurance_identified.satisfied).toBe(false)
   })
 

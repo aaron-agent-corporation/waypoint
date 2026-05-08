@@ -1,0 +1,82 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-E negotiation wave.
+schema_version: 1
+slug: firmvault-negotiation-document-response
+name: FirmVault Negotiation - Document Response
+description: Documents a human-sent negotiation response and records settlement trigger evidence only when supported.
+prompt: 'You are running the source-backed Waypoint port of `firmvault-negotiation-document-response` for a FirmVault personal-injury
+  case.
+
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission
+  Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or
+  a mounted `/workspace` path.
+
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls,
+  insurer/provider/client communications, or external API calls. Do not claim that a human or external system was contacted
+  unless the local case folder already contains owner-confirmed evidence. Produce local draft/handoff artifacts, task notes,
+  blocked checkpoints, or review questions only.
+
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, treatment
+  facts, signatures, lien facts, amounts, offers, settlement terms, deadlines, or contact details. Use existing masked FirmVault
+  evidence or explicit owner confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder
+  such as `{client_name}`.
+
+
+  Source purpose: Documents a human-sent negotiation response and records settlement trigger evidence only when supported.
+
+
+  Adapted Mission Control workflow instructions:
+
+
+  Read same-task human-send comments and document the negotiation response in canonical FirmVault files. For an accepted offer,
+  require human confirmation that external acceptance was actually sent before recording settlement trigger evidence. Write
+  sent acceptance evidence under documents/sent/insurance/, update negotiation and insurance ledgers, append activity and
+  workflow-log entries, and set settlement trigger only after supported sent-acceptance evidence exists. If the human comment
+  records a counter or rejection, document that response without marking settlement reached. If the human send comment is
+  missing or unclear, return exact missing facts for review.
+
+
+  Canonical paths from the source workflow:
+
+  - `negotiation/offers.md`
+
+  - `negotiation/offer-evaluation.md`
+
+  - `insurance/`
+
+  - `settlement/`
+
+  - `documents/generated/insurance/`
+
+  - `documents/sent/insurance/`
+
+  - `activity/`
+
+  - `workflow-log/`
+
+
+  Completion standard: complete only when the local ledger, handoff, blocked checkpoint, or review note is supported by local
+  Waypoint project folder evidence and the no-external-side-effects rule above.
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-negotiate-claim.yaml
+    source_node: document_negotiation_response
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by local case-folder evidence.
+    - No external communication is claimed or performed.
+    - No offer, authority, settlement term, deadline, recipient, or amount is invented.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - External communications are draft/handoff only; human-gated confirmation must exist before sent/settlement landmarks
+      are satisfied.

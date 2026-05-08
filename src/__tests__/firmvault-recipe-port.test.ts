@@ -46,6 +46,11 @@ const firmVaultRecipeSlugs = [
   'firmvault-demand-draft-letter',
   'firmvault-demand-identify-recipients',
   'firmvault-demand-send-package',
+  'firmvault-negotiation-track-offer',
+  'firmvault-negotiation-offer-evaluation',
+  'firmvault-negotiation-document-client-decision',
+  'firmvault-negotiation-prepare-response',
+  'firmvault-negotiation-document-response',
 ] as const
 
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
@@ -59,6 +64,8 @@ type RecipeSourcePortMetadata = {
   readonly status?: string
   readonly source_repository?: string
   readonly source_recipe?: string
+  readonly source_workflow?: string
+  readonly source_node?: string
   readonly source_files?: readonly string[]
   readonly external_side_effects?: string
   readonly review_criteria?: readonly string[]
@@ -117,16 +124,21 @@ describe('FirmVault source-backed Recipe port', () => {
       expect(manifest.prompt, `${slug} active OpenRouter secret instruction`).not.toContain('OPENROUTER_API_KEY')
       expect(manifest.prompt, `${slug} token-looking secret`).not.toMatch(/sk-[A-Za-z0-9_-]{16,}/)
 
-      expect(sourcePort?.status, `${slug} source status`).toBe('ported_from_mission_control')
+      expect(sourcePort?.status, `${slug} source status`).toMatch(/^ported_from_mission_control/)
       expect(sourcePort?.source_repository, `${slug} source repository`).toBe(missionControlRoot)
-      expect(sourcePort?.source_recipe, `${slug} source recipe`).toBe(`recipes/${slug}`)
       expect(sourcePort?.external_side_effects, `${slug} external side effects`).toBe('forbidden')
       expect(sourcePort?.review_criteria, `${slug} review criteria`).toEqual(expect.any(Array))
       expect(sourcePort?.review_criteria?.length ?? 0, `${slug} review criteria length`).toBeGreaterThan(0)
 
-      for (const sourceFile of requiredSourceFiles) {
-        expect(sourcePort?.source_files, `${slug} source file ${sourceFile}`).toContain(sourceFile)
-        await expect(access(join(missionControlRoot, `recipes/${slug}`, sourceFile)), `${slug} source file exists ${sourceFile}`).resolves.toBeUndefined()
+      if (sourcePort?.source_recipe) {
+        expect(sourcePort.source_recipe, `${slug} source recipe`).toBe(`recipes/${slug}`)
+        for (const sourceFile of requiredSourceFiles) {
+          expect(sourcePort?.source_files, `${slug} source file ${sourceFile}`).toContain(sourceFile)
+          await expect(access(join(missionControlRoot, `recipes/${slug}`, sourceFile)), `${slug} source file exists ${sourceFile}`).resolves.toBeUndefined()
+        }
+      } else {
+        expect(sourcePort?.source_workflow, `${slug} workflow-backed source`).toMatch(/^workflows\/firmvault-/)
+        expect(sourcePort?.source_node, `${slug} workflow source node`).toEqual(expect.any(String))
       }
     }
   })

@@ -354,6 +354,63 @@ describe('FirmVault case state contract', () => {
     }
   })
 
+  it('projects negotiation offer, client-decision, and response landmarks from explicit negotiation state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'negotiation'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'activity'), { recursive: true })
+    const evidencePaths = [
+      'negotiation/offers.md',
+      'negotiation/offer-evaluation.md',
+      'negotiation/client-decision.md',
+      'documents/generated/insurance/negotiation-response-handoff.md',
+      'documents/sent/insurance/acceptance-sent.md',
+      'activity/negotiation-result.md',
+    ]
+    for (const evidencePath of evidencePaths) {
+      await writeFile(join(root, evidencePath), 'fixture', 'utf8')
+    }
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'negotiation.yaml'), (negotiationState) => {
+      negotiationState.negotiation.initial_offer.status = 'received'
+      negotiationState.negotiation.initial_offer.evidence = [{ path: 'negotiation/offers.md' }]
+      negotiationState.negotiation.offer_documented.status = 'documented'
+      negotiationState.negotiation.offer_documented.evidence = [{ path: 'negotiation/offers.md' }]
+      negotiationState.negotiation.evaluation.status = 'evaluated'
+      negotiationState.negotiation.evaluation.evidence = [{ path: 'negotiation/offer-evaluation.md' }]
+      negotiationState.negotiation.net_to_client.status = 'prepared'
+      negotiationState.negotiation.net_to_client.evidence = [{ path: 'negotiation/offer-evaluation.md' }]
+      negotiationState.negotiation.client_advice.status = 'advised'
+      negotiationState.negotiation.client_advice.evidence = [{ path: 'negotiation/client-decision.md' }]
+      negotiationState.negotiation.client_decision.status = 'documented'
+      negotiationState.negotiation.client_decision.evidence = [{ path: 'negotiation/client-decision.md' }]
+      negotiationState.negotiation.response.prepared.status = 'prepared'
+      negotiationState.negotiation.response.prepared.evidence = [{ path: 'documents/generated/insurance/negotiation-response-handoff.md' }]
+      negotiationState.negotiation.response.human_sent.status = 'sent'
+      negotiationState.negotiation.response.human_sent.evidence = [{ path: 'documents/sent/insurance/acceptance-sent.md' }]
+      negotiationState.negotiation.response.result.status = 'documented'
+      negotiationState.negotiation.response.result.evidence = [{ path: 'activity/negotiation-result.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    for (const slug of [
+      'initial_offer_received',
+      'offer_documented',
+      'offer_evaluated',
+      'net_to_client_prepared',
+      'client_advised_of_offer',
+      'offer_decision_documented',
+      'negotiation_response_prepared',
+      'negotiation_response_human_sent',
+      'negotiation_result_documented',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
