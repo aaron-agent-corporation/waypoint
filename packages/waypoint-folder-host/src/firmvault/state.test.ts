@@ -298,6 +298,62 @@ describe('FirmVault case state contract', () => {
     }
   })
 
+
+  it('projects demand readiness, drafting, review, recipients, and sent landmarks from explicit demand state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'demand'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'insurance'), { recursive: true })
+    await mkdir(join(root, 'activity'), { recursive: true })
+    const evidencePaths = [
+      'demand/readiness.md',
+      'demand/damages-summary.md',
+      'activity/final-lien-check.md',
+      'demand/demand-letter.md',
+      'demand/demand-package.md',
+      'documents/generated/insurance/demand-send-handoff.md',
+      'documents/sent/insurance/demand-sent.md',
+    ]
+    for (const evidencePath of evidencePaths) {
+      await writeFile(join(root, evidencePath), 'fixture', 'utf8')
+    }
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'demand.yaml'), (demandState) => {
+      demandState.demand.readiness.materials.status = 'gathered'
+      demandState.demand.readiness.materials.evidence = [{ path: 'demand/readiness.md' }]
+      demandState.demand.readiness.damages.status = 'calculated'
+      demandState.demand.readiness.damages.evidence = [{ path: 'demand/damages-summary.md' }]
+      demandState.demand.readiness.review.status = 'reviewed'
+      demandState.demand.readiness.review.evidence = [{ path: 'demand/readiness.md' }]
+      demandState.demand.liens.final_process_check.status = 'checked'
+      demandState.demand.liens.final_process_check.evidence = [{ path: 'activity/final-lien-check.md' }]
+      demandState.demand.draft.status = 'drafted'
+      demandState.demand.draft.evidence = [{ path: 'demand/demand-letter.md' }, { path: 'demand/demand-package.md' }]
+      demandState.demand.attorney_review.status = 'approved'
+      demandState.demand.attorney_review.evidence = [{ path: 'demand/demand-package.md' }]
+      demandState.demand.recipients.status = 'identified'
+      demandState.demand.recipients.evidence = [{ path: 'documents/generated/insurance/demand-send-handoff.md' }]
+      demandState.demand.send.status = 'sent'
+      demandState.demand.send.evidence = [{ path: 'documents/sent/insurance/demand-sent.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    for (const slug of [
+      'demand_materials_gathered',
+      'damages_calculated',
+      'demand_readiness_reviewed',
+      'demand_lien_process_checked',
+      'demand_drafted',
+      'attorney_reviewed_demand',
+      'demand_recipients_identified',
+      'demand_sent',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })

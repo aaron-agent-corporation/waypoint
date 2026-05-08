@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 63
+- Total Recipes loaded from disk: 68
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -105,7 +105,7 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault` — FirmVault Case Workflow
   - Path: `quests/firmvault.yaml`
   - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
-  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`, `firmvault-demand-gather-materials`, `firmvault-demand-check-final-lien-process`, `firmvault-demand-draft-letter`, `firmvault-demand-identify-recipients`, `firmvault-demand-send-package`
 - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
   - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
@@ -283,7 +283,7 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/firmvault/medical-provider-setup-case.yaml`
   - Description: Creates or normalizes medical provider ledgers for known providers in one FirmVault case.
   - External side effects: `forbidden`
-- `firmvault-medical-records-escalate-delay` — FirmVault Medical Records Escalate Delay
+- `firmvault-medical-records-escalate-delay`, `firmvault-demand-gather-materials`, `firmvault-demand-check-final-lien-process`, `firmvault-demand-draft-letter`, `firmvault-demand-identify-recipients`, `firmvault-demand-send-package` — FirmVault Medical Records Escalate Delay
   - Path: `recipes/firmvault/medical-records-escalate-delay.yaml`
   - Description: Prepares escalation for records and bills still missing 30 days after the original request.
   - External side effects: `forbidden`
@@ -438,6 +438,22 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `waypoint-verifier` — Verifier
   - Path: `recipes/waypoint/verifier.yaml`
   - Description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
+
+- `firmvault-demand-gather-materials` — FirmVault Demand - Gather Materials
+  - Path: `recipes/firmvault/demand-gather-materials.yaml`
+  - External side effects: `forbidden`
+- `firmvault-demand-check-final-lien-process` — FirmVault Demand - Check Final Lien Process
+  - Path: `recipes/firmvault/demand-check-final-lien-process.yaml`
+  - External side effects: `forbidden`
+- `firmvault-demand-draft-letter` — FirmVault Demand - Draft Letter
+  - Path: `recipes/firmvault/demand-draft-letter.yaml`
+  - External side effects: `forbidden`
+- `firmvault-demand-identify-recipients` — FirmVault Demand - Identify Recipients
+  - Path: `recipes/firmvault/demand-identify-recipients.yaml`
+  - External side effects: `forbidden`
+- `firmvault-demand-send-package` — FirmVault Demand - Send Package
+  - Path: `recipes/firmvault/demand-send-package.yaml`
+  - External side effects: `forbidden`
 
 ## Deferred / not implemented in this repo
 

@@ -32,6 +32,11 @@ recipes:
 - firmvault-medical-records-first-follow-up
 - firmvault-medical-records-second-follow-up
 - firmvault-medical-records-escalate-delay
+- firmvault-demand-gather-materials
+- firmvault-demand-check-final-lien-process
+- firmvault-demand-draft-letter
+- firmvault-demand-identify-recipients
+- firmvault-demand-send-package
 scaffolds:
   workstreams:
   - key: case
@@ -696,16 +701,130 @@ scaffolds:
         phase_slug: demand
         lifecycle_phase: demand
         plans:
-        - plan_ref: firmvault-demand-deferred
-          title: Checkpoint deferred demand workflow expansion after Part One
+        - plan_ref: firmvault-demand-gather-materials-task
+          title: Gather demand-ready materials and calculate supported damages
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-demand-gather-materials
             source_port:
               workflow_id: firmvault-demand-readiness
-              status: deferred_after_part_one
+              source_node: gather_demand_materials
+              source_workflow: workflows/firmvault-demand-readiness.yaml
+              output_landmarks:
+              - demand_materials_gathered
+              - damages_calculated
+        - plan_ref: firmvault-demand-readiness-human-review
+          title: Human review of demand readiness before drafting
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: confirm_demand_readiness
+            source_port:
+              workflow_id: firmvault-demand-readiness
+              source_node: confirm_demand_readiness
+              source_workflow: workflows/firmvault-demand-readiness.yaml
+              output_landmarks:
+              - demand_readiness_reviewed
+        - plan_ref: firmvault-demand-final-lien-process-check-task
+          title: Check internal final-lien process before drafting demand
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-demand-check-final-lien-process
+            source_port:
+              workflow_id: firmvault-draft-demand
+              source_node: check_final_lien_process
+              source_workflow: workflows/firmvault-draft-demand.yaml
+              output_landmarks:
+              - demand_lien_process_checked
+        - plan_ref: firmvault-demand-draft-letter-task
+          title: Draft local demand letter and package without lien content
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-demand-draft-letter
+            source_port:
+              workflow_id: firmvault-draft-demand
+              source_node: draft_demand_letter
+              source_workflow: workflows/firmvault-draft-demand.yaml
+              output_landmarks:
+              - demand_drafted
+        - plan_ref: firmvault-demand-attorney-review-gate
+          title: Attorney review and approval gate for demand package
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: attorney_review_demand
+            source_port:
+              workflow_id: firmvault-draft-demand
+              source_node: draft_demand_letter
+              source_workflow: workflows/firmvault-draft-demand.yaml
+              output_landmarks:
+              - attorney_reviewed_demand
+        - plan_ref: firmvault-demand-identify-recipients-task
+          title: Identify proper demand recipients and prepare human-send handoff
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-demand-identify-recipients
+            source_port:
+              workflow_id: firmvault-send-demand
+              source_node: identify_demand_recipients
+              source_workflow: workflows/firmvault-send-demand.yaml
+              output_landmarks:
+              - demand_recipients_identified
+        - plan_ref: firmvault-demand-human-send-package
+          title: Human send gate for approved demand package
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: send_demand_package
+            source_port:
+              workflow_id: firmvault-send-demand
+              source_node: send_demand_package
+              source_workflow: workflows/firmvault-send-demand.yaml
+              output_landmarks:
+              - demand_sent
+        - plan_ref: firmvault-demand-wait-response
+          title: Wait for demand response or initial offer
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: wait
+              wait:
+                kind: duration_or_landmark
+                days: 30
+                exit_landmark: initial_offer_received
+            source_port:
+              workflow_id: firmvault-send-demand
+              source_node: wait_for_response
+              source_workflow: workflows/firmvault-send-demand.yaml
       - phase_key: '50'
         phase_slug: negotiation
         lifecycle_phase: negotiation
@@ -799,5 +918,5 @@ metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_six_c_records_bills_wave
+    status: part_six_d_demand_wave
     external_side_effects: forbidden

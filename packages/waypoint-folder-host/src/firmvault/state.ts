@@ -41,6 +41,13 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'all_records_received',
   'medical_chronology_updated',
   'medical_records_request_workflow_complete',
+  'demand_materials_gathered',
+  'damages_calculated',
+  'demand_readiness_reviewed',
+  'demand_lien_process_checked',
+  'demand_drafted',
+  'attorney_reviewed_demand',
+  'demand_recipients_identified',
   'demand_sent',
   'initial_offer_received',
   'settlement_reached',
@@ -158,6 +165,15 @@ export async function readFirmVaultLandmarkProjection(
     readYamlRecord(join(stateDir, 'negotiation.yaml')),
     readYamlRecord(join(stateDir, 'settlement.yaml')),
   ])
+
+  const demandSentStatus = acceptedStatusOrFallback(
+    getPath(demandState, ['demand', 'send', 'status']),
+    ['sent', 'delivered'],
+    getPath(demandState, ['demand', 'status']),
+  )
+  const demandSentEvidence = demandSentStatus === getPath(demandState, ['demand', 'send', 'status'])
+    ? getPath(demandState, ['demand', 'send', 'evidence'])
+    : getPath(demandState, ['demand', 'evidence'])
 
   const landmarks: FirmVaultLandmarkMap = {
     case_setup_complete: await factLandmark(projectRoot, 'case_setup_complete', warnings, {
@@ -362,10 +378,45 @@ export async function readFirmVaultLandmarkProjection(
       acceptedStatuses: ['complete', 'reviewed'],
       evidence: getPath(recordsState, ['records', 'workflow_review', 'evidence']),
     }),
+    demand_materials_gathered: await factLandmark(projectRoot, 'demand_materials_gathered', warnings, {
+      status: getPath(demandState, ['demand', 'readiness', 'materials', 'status']),
+      acceptedStatuses: ['gathered', 'complete'],
+      evidence: getPath(demandState, ['demand', 'readiness', 'materials', 'evidence']),
+    }),
+    damages_calculated: await factLandmark(projectRoot, 'damages_calculated', warnings, {
+      status: getPath(demandState, ['demand', 'readiness', 'damages', 'status']),
+      acceptedStatuses: ['calculated', 'complete'],
+      evidence: getPath(demandState, ['demand', 'readiness', 'damages', 'evidence']),
+    }),
+    demand_readiness_reviewed: await factLandmark(projectRoot, 'demand_readiness_reviewed', warnings, {
+      status: getPath(demandState, ['demand', 'readiness', 'review', 'status']),
+      acceptedStatuses: ['reviewed', 'approved', 'complete'],
+      evidence: getPath(demandState, ['demand', 'readiness', 'review', 'evidence']),
+    }),
+    demand_lien_process_checked: await factLandmark(projectRoot, 'demand_lien_process_checked', warnings, {
+      status: getPath(demandState, ['demand', 'liens', 'final_process_check', 'status']),
+      acceptedStatuses: ['checked', 'not_needed', 'complete'],
+      evidence: getPath(demandState, ['demand', 'liens', 'final_process_check', 'evidence']),
+    }),
+    demand_drafted: await factLandmark(projectRoot, 'demand_drafted', warnings, {
+      status: getPath(demandState, ['demand', 'draft', 'status']),
+      acceptedStatuses: ['drafted', 'complete'],
+      evidence: getPath(demandState, ['demand', 'draft', 'evidence']),
+    }),
+    attorney_reviewed_demand: await factLandmark(projectRoot, 'attorney_reviewed_demand', warnings, {
+      status: getPath(demandState, ['demand', 'attorney_review', 'status']),
+      acceptedStatuses: ['approved', 'reviewed'],
+      evidence: getPath(demandState, ['demand', 'attorney_review', 'evidence']),
+    }),
+    demand_recipients_identified: await factLandmark(projectRoot, 'demand_recipients_identified', warnings, {
+      status: getPath(demandState, ['demand', 'recipients', 'status']),
+      acceptedStatuses: ['identified', 'complete'],
+      evidence: getPath(demandState, ['demand', 'recipients', 'evidence']),
+    }),
     demand_sent: await factLandmark(projectRoot, 'demand_sent', warnings, {
-      status: getPath(demandState, ['demand', 'status']),
+      status: demandSentStatus,
       acceptedStatuses: ['sent', 'delivered'],
-      evidence: getPath(demandState, ['demand', 'evidence']),
+      evidence: demandSentEvidence,
     }),
     initial_offer_received: await factLandmark(projectRoot, 'initial_offer_received', warnings, {
       status: getPath(negotiationState, ['negotiation', 'initial_offer', 'status']),
@@ -567,7 +618,26 @@ function initialRecordsState(): Record<string, unknown> {
 }
 
 function initialDemandState(): Record<string, unknown> {
-  return { schema_version: 1, demand: { status: 'not_ready', blockers: [], evidence: [] } }
+  return {
+    schema_version: 1,
+    demand: {
+      status: 'not_ready',
+      blockers: [],
+      evidence: [],
+      readiness: {
+        materials: { status: 'not_started', evidence: [] },
+        damages: { status: 'not_started', evidence: [] },
+        review: { status: 'not_reviewed', evidence: [] },
+      },
+      liens: {
+        final_process_check: { status: 'not_started', evidence: [] },
+      },
+      draft: { status: 'not_started', evidence: [] },
+      attorney_review: { status: 'not_reviewed', evidence: [] },
+      recipients: { status: 'not_started', evidence: [] },
+      send: { status: 'not_sent', evidence: [] },
+    },
+  }
 }
 
 function initialNegotiationState(): Record<string, unknown> {
@@ -617,6 +687,11 @@ function getPath(value: unknown, path: readonly string[]): unknown {
     current = current[segment]
   }
   return current
+}
+
+function acceptedStatusOrFallback(status: unknown, acceptedStatuses: readonly string[], fallback: unknown): unknown {
+  if (typeof status === 'string' && acceptedStatuses.includes(status)) return status
+  return fallback
 }
 
 function evidencePathFor(item: unknown): string | null {

@@ -207,6 +207,35 @@ describe('FirmVault Quest skeleton', () => {
       ]),
     )
 
+
+    const demandPhase = phases.find((phase) => phase.phase_slug === 'demand')
+    const demandPlanRefs = new Set((demandPhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...demandPlanRefs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-demand-gather-materials-task',
+        'firmvault-demand-readiness-human-review',
+        'firmvault-demand-final-lien-process-check-task',
+        'firmvault-demand-draft-letter-task',
+        'firmvault-demand-attorney-review-gate',
+        'firmvault-demand-identify-recipients-task',
+        'firmvault-demand-human-send-package',
+        'firmvault-demand-wait-response',
+      ]),
+    )
+    const demandRecipeSlugs = new Set(
+      (demandPhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...demandRecipeSlugs]).toEqual(
+      expect.arrayContaining([
+        'firmvault-demand-gather-materials',
+        'firmvault-demand-check-final-lien-process',
+        'firmvault-demand-draft-letter',
+        'firmvault-demand-identify-recipients',
+      ]),
+    )
+
     const liensPhase = phases.find((phase) => phase.phase_slug === 'liens')
         const lienPlanRefs = new Set((liensPhase?.plans ?? []).map((plan) => plan.plan_ref))
         expect([...lienPlanRefs]).toEqual(
@@ -254,5 +283,5 @@ describe('FirmVault Quest skeleton', () => {
     expect(taskKinds.has('checkpoint')).toBe(true)
 
     await expect(readFile(join(repoRoot, '.waypoint/config.yaml'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
-  })
+  }, 20_000)
 })
