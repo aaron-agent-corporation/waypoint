@@ -14,7 +14,8 @@ The folder host can currently:
 - persist route YAML, event JSONL, task YAML, discussion JSONL, and autopilot run JSONL;
 - pause/resume routes and approve/reject gates;
 - run autopilot in the safe null runtime by default;
-- run Recipes through an explicitly configured local command runtime.
+- run Recipes through an explicitly configured local command runtime;
+- initialize product-owned FirmVault case state and project workflow landmarks from explicit YAML state plus evidence paths.
 
 It does not claim global installation, package publishing, cloud sync, or production packaging yet.
 
@@ -43,6 +44,8 @@ waypoint --version
 waypoint init [--quest <slug>]
 waypoint status
 waypoint doctor firmvault [--json]
+waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
+waypoint firmvault landmarks [--json]
 waypoint quests
 waypoint recipes [--quest <slug>]
 waypoint start [--quest <slug>]
@@ -139,6 +142,41 @@ waypoint pause --route-id route-001 --reason "Waiting for owner review."
 waypoint resume --route-id route-001
 ```
 
+### FirmVault case-state contract
+
+For FirmVault cases, Waypoint owns a simpler product runtime state model instead of scraping arbitrary legacy folder layouts for workflow truth:
+
+```bash
+waypoint firmvault init-case --case-type personal-injury --case-slug smith-v-acme
+waypoint firmvault landmarks
+waypoint firmvault landmarks --json
+```
+
+`init-case` creates `.waypoint/firmvault/` state files. Initial landmarks are deliberately false until explicit state fields and evidence paths satisfy them.
+
+The first supported FirmVault landmark projection includes:
+
+```text
+case_setup_complete
+full_intake_complete
+accident_report_obtained
+providers_setup
+demand_sent
+initial_offer_received
+settlement_reached
+final_distribution_complete
+```
+
+Each landmark is derived from YAML status fields and relative evidence paths that exist inside the case folder. If a status is complete but its evidence path is missing or unsafe, the landmark remains unsatisfied and `landmarks --json` returns a warning.
+
+The Part Three doctor remains a read-only legacy/template inspection helper:
+
+```bash
+waypoint doctor firmvault --json
+```
+
+Use the doctor to inspect whether a folder resembles the starter FirmVault shape. Use `.waypoint/firmvault/` as the runtime source of truth for workflow progress.
+
 ## `.waypoint/` folder layout
 
 A project-local folder host state tree looks like this:
@@ -162,9 +200,20 @@ A project-local folder host state tree looks like this:
     task-003-discussion.jsonl # task-scoped discussion messages
   autopilot/
     runs.jsonl                # append-only autopilot run history
+  firmvault/
+    case.yaml                 # canonical case setup/status state
+    client.yaml               # intake, contract, and HIPAA status + evidence
+    accident.yaml             # accident report/liability state
+    providers.yaml            # provider setup state
+    demand.yaml               # demand package state
+    negotiation.yaml          # offers and negotiation state
+    settlement.yaml           # settlement and distribution state
+    documents.yaml            # optional document index
+    landmarks.yaml            # generated landmark projection cache
+    events.jsonl              # append-only FirmVault state event log
 ```
 
-Key path prefixes are `.waypoint/routes/`, `.waypoint/events/`, `.waypoint/tasks/`, and `.waypoint/autopilot/runs.jsonl`.
+Key path prefixes are `.waypoint/routes/`, `.waypoint/events/`, `.waypoint/tasks/`, `.waypoint/autopilot/runs.jsonl`, and `.waypoint/firmvault/`.
 
 These files are intended to be readable and inspectable. A project may choose to commit or ignore `.waypoint/` depending on whether the route state is part of the repo's audit trail.
 

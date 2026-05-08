@@ -85,6 +85,22 @@ export {
   inspectFirmVaultCaseFolder,
 } from './firmvault/case-folder.ts'
 export type { FirmVaultCaseFolderInspection } from './firmvault/case-folder.ts'
+export {
+  FIRMVAULT_CASE_STATE_FILES,
+  FIRMVAULT_LANDMARK_SLUGS,
+  initFirmVaultCaseState,
+  readFirmVaultLandmarkProjection,
+} from './firmvault/state.ts'
+export type {
+  FirmVaultCaseType,
+  FirmVaultEvidenceRef,
+  FirmVaultLandmarkMap,
+  FirmVaultLandmarkProjection,
+  FirmVaultLandmarkSlug,
+  FirmVaultLandmarkState,
+  InitFirmVaultCaseStateOptions,
+  InitFirmVaultCaseStateResult,
+} from './firmvault/state.ts'
 export type { LocalRecipePayload, LocalRecipePayloadInput } from './runtime/payload.ts'
 export { buildLocalRecipePayload } from './runtime/payload.ts'
 export type {

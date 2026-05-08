@@ -196,24 +196,34 @@ pnpm typecheck
 pnpm exec vitest run packages/waypoint-folder-host/src/firmvault
 ```
 
-## Phase FVP4: Local Landmark Resolver
+## Phase FVP4: Case State Contract + Landmark Projection
 
-**Objective:** Port passive landmark detection from Mission Control into a folder-host adapter that reads canonical case files.
+**Objective:** Define Waypoint-owned FirmVault case state under `.waypoint/firmvault/` and project workflow landmarks from explicit YAML statuses plus evidence paths.
+
+This phase supersedes the earlier passive-landmark-scraper framing. Mission Control's workflow contracts remain source material for what the milestones mean, but standalone Waypoint should not infer workflow truth by scraping arbitrary legacy case-folder shapes.
 
 **Files:**
-- Create: `packages/waypoint-folder-host/src/firmvault/landmarks.ts`
-- Create: `packages/waypoint-folder-host/src/firmvault/landmarks.test.ts`
+- Create: `docs/plans/firmvault-port-part-four-plan.md`
+- Create: `packages/waypoint-folder-host/src/firmvault/state.ts`
+- Create: `packages/waypoint-folder-host/src/firmvault/state.test.ts`
+- Create: `packages/waypoint-cli/src/commands/firmvault.ts`
+- Create: `packages/waypoint-cli/src/commands/firmvault.test.ts`
+- Modify: `packages/waypoint-folder-host/src/index.ts`
+- Modify: `packages/waypoint-cli/src/bin.ts`
+- Modify: `docs/waypoint-folder-host.md`
 
 **Steps:**
-1. Start with a small landmark set: `case_setup_complete`, `full_intake_complete`, `accident_report_obtained`, `providers_setup`, `demand_sent`, `initial_offer_received`, `settlement_reached`, `final_distribution_complete`.
-2. Use temp fixture folders with minimal markdown files.
-3. Return evidence paths/snippets for every satisfied landmark.
-4. Keep unsupported/ambiguous landmarks unsatisfied rather than guessing.
+1. Initialize `.waypoint/firmvault/{case,client,accident,providers,demand,negotiation,settlement,documents,landmarks}.yaml` plus `events.jsonl`.
+2. Start with a small landmark set: `case_setup_complete`, `full_intake_complete`, `accident_report_obtained`, `providers_setup`, `demand_sent`, `initial_offer_received`, `settlement_reached`, `final_distribution_complete`.
+3. Project landmarks deterministically from explicit YAML state fields and evidence paths.
+4. Require evidence paths to be relative, inside the case folder, and present on disk before a completed status can satisfy a landmark.
+5. Keep unsupported/ambiguous landmarks unsatisfied and return warnings rather than guessing.
+6. Expose `waypoint firmvault init-case` and `waypoint firmvault landmarks [--json]`.
 
 **Verification:**
 
 ```bash
-pnpm exec vitest run packages/waypoint-folder-host/src/firmvault/landmarks.test.ts
+pnpm exec vitest run packages/waypoint-folder-host/src/firmvault/state.test.ts packages/waypoint-cli/src/commands/firmvault.test.ts
 ```
 
 ## Phase FVP5: FirmVault Start Smoke
