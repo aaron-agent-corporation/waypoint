@@ -231,6 +231,7 @@ pnpm exec vitest run packages/waypoint-folder-host/src/firmvault/state.test.ts p
 **Objective:** Prove `waypoint init --quest firmvault` and `waypoint start --quest firmvault` work from a temp FirmVault-style folder.
 
 **Files:**
+- Create: `docs/plans/firmvault-port-part-five-plan.md`
 - Create/modify: `scripts/firmvault-folder-smoke.mjs`
 - Create: `src/__tests__/firmvault-folder-smoke.test.ts`
 - Modify: `package.json` scripts if adding `pnpm smoke:firmvault-folder`
