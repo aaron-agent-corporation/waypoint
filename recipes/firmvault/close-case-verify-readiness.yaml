@@ -1,0 +1,49 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-G close-case wave.
+schema_version: 1
+slug: firmvault-close-case-verify-readiness
+name: FirmVault Close Case - Verify Readiness
+description: Verify closure readiness from explicit local case-folder obligations and prepare a closure checklist.
+prompt: |
+  You are running the source-backed Waypoint port of `firmvault-close-case-verify-readiness` for a FirmVault personal-injury case.
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or a mounted `/workspace` path.
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls, client/lien-holder/provider/insurer communications, archive actions, trust-account actions, payments, deposits, releases, or external API calls. Do not claim that a human, bank, insurer, lien holder, provider, client, archive location, or external system was contacted unless the local case folder already contains owner-confirmed evidence. Produce local checklists, ledgers, handoffs, blocked notes, or review questions only.
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, lien holders, treatment facts, signatures, settlement funds, trust-account balances, final-letter send facts, archive references, retention dates, client responses, closure authority, deadlines, or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+  Source purpose: Verify the case is ready for successful closure without archiving, sending communications, or marking the matter closed.
+
+  Adapted Mission Control workflow instructions from `workflows/firmvault-close-case.yaml` node `verify_closure_readiness`:
+
+  Verify the case is ready for successful closure. Confirm final distribution complete, trust account zeroed, settlement/release/funds documented, liens resolved or not applicable, and no unresolved workflow blockers in canonical activity/workflow logs. If any obligation remains open, submit Human Review with the exact blocker. If ready, write a closure readiness checklist under closing/ and append activity/workflow log entries. Do not archive the file or mark the case closed.
+
+  Canonical local evidence to review:
+  - `.waypoint/firmvault/settlement.yaml`
+  - `.waypoint/firmvault/liens.yaml`
+  - `settlement/settlement.md`
+  - `settlement/distribution.md`
+  - `liens/`
+  - `closing/`
+  - `activity/`
+  - `workflow-log/`
+
+  Completion standard: complete only when the local closure readiness checklist, blocked checkpoint, or review note is supported by local Waypoint project folder evidence and the no-external-side-effects rule above. Human send/archive facts require human-gate evidence before landmarks are satisfied.
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-close-case.yaml
+    source_node: verify_closure_readiness
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by explicit local case-folder evidence and canonical FirmVault state.
+    - No external communication, archive action, trust-account action, payment, deposit, release execution, or case-close claim is performed or invented.
+    - Any unresolved closure obligation is recorded as a local blocker/human-review handoff instead of being assumed complete.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - Closure readiness is projected only from explicit `.waypoint/firmvault/settlement.yaml` closing state with existing evidence paths.

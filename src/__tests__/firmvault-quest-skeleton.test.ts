@@ -329,7 +329,36 @@ describe('FirmVault Quest skeleton', () => {
       'firmvault-lien-resolution-document-final-amount',
       'firmvault-lien-resolution-document-payment',
     ]))
-    
+
+    const closePhase = phases.find((phase) => phase.phase_slug === 'close')
+    const closePlanRefs = new Set((closePhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...closePlanRefs]).toEqual(expect.arrayContaining([
+      'firmvault-close-case-verify-readiness-task',
+      'firmvault-close-case-prepare-letter-task',
+      'firmvault-close-case-human-send-letter-gate',
+      'firmvault-close-case-human-archive-file-gate',
+      'firmvault-close-case-document-closure-task',
+    ]))
+    expect(closePlanRefs.has('firmvault-close-deferred')).toBe(false)
+    const closeRecipeSlugs = new Set(
+      (closePhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...closeRecipeSlugs]).toEqual(expect.arrayContaining([
+      'firmvault-close-case-verify-readiness',
+      'firmvault-close-case-prepare-letter',
+      'firmvault-close-case-document-closure',
+    ]))
+    const closeGateRefs = new Set(
+      (closePhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'gate')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...closeGateRefs]).toEqual(expect.arrayContaining([
+      'firmvault-close-case-human-send-letter-gate',
+      'firmvault-close-case-human-archive-file-gate',
+    ]))
   })
 
   it('installs and starts inside a temp FirmVault-style case folder without touching the repo root', async () => {
@@ -358,7 +387,7 @@ describe('FirmVault Quest skeleton', () => {
     expect(taskKinds.has('recipe')).toBe(true)
     expect(taskKinds.has('gate')).toBe(true)
     expect(taskKinds.has('wait')).toBe(true)
-    expect(taskKinds.has('checkpoint')).toBe(true)
+    expect(taskKinds.has('checkpoint')).toBe(false)
 
     await expect(readFile(join(repoRoot, '.waypoint/config.yaml'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
   }, 20_000)

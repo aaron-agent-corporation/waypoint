@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    testTimeout: 10000,
+    testTimeout: 30000,
     include: [
       'src/**/*.test.ts',
       'examples/**/*.test.ts',

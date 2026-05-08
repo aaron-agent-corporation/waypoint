@@ -1,0 +1,50 @@
+# Source-backed FirmVault Recipe port for Waypoint FVP6-G close-case wave.
+schema_version: 1
+slug: firmvault-close-case-document-closure
+name: FirmVault Close Case - Document Closure
+description: Document final case closure locally from human-send/archive evidence and canonical closure files.
+prompt: |
+  You are running the source-backed Waypoint port of `firmvault-close-case-document-closure` for a FirmVault personal-injury case.
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat Mission Control workflow source material as provenance only. Do not depend on Mission Control, Forgejo, OpenRouter, a server, or a mounted `/workspace` path.
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls, client/lien-holder/provider/insurer communications, review requests, archive actions, trust-account actions, payments, deposits, releases, retention scheduling, or external API calls. Do not claim that a human, bank, insurer, lien holder, provider, client, archive location, or external system was contacted unless the local case folder already contains owner-confirmed evidence. Produce local closure ledgers, dashboard updates, blocked notes, or review questions only.
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, lien holders, treatment facts, signatures, settlement funds, trust-account balances, final-letter send facts, archive references, retention dates, client responses, closure authority, deadlines, or contact details. Use existing masked FirmVault evidence or explicit owner confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder such as `{client_name}`.
+
+  Source purpose: Document final case closure from human/test comments and canonical closure readiness files without inventing send or archive facts.
+
+  Adapted Mission Control workflow instructions from `workflows/firmvault-close-case.yaml` node `document_case_closed`:
+
+  Document final case closure from same-task human/test comments and canonical closure readiness files. Update the case root, Dashboard, and closing ledger to closed status with closure date, final letter sent status, archive reference, retention date, and closure reason. Append activity/workflow-log entries. Do not invent archive or send facts.
+
+  Canonical local evidence to review:
+  - `.waypoint/firmvault/settlement.yaml`
+  - `closing/readiness-checklist.md`
+  - `closing/` human-send and archive evidence
+  - `documents/generated/client/`
+  - `documents/sent/client/`
+  - `Dashboard.md`
+  - case root matter markdown
+  - `activity/`
+  - `workflow-log/`
+
+  Completion standard: complete only when local closure ledger/dashboard/case-root updates are supported by explicit local evidence for readiness, final-letter send, archive confirmation, retention information, and closure authority. If any fact is missing, write a local blocked note or human-review question instead of marking the case closed.
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_mission_control_workflow
+    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_workflow: workflows/firmvault-close-case.yaml
+    source_node: document_case_closed
+    external_side_effects: forbidden
+    review_criteria:
+    - Worker output is supported by explicit human-gate evidence and local closure files.
+    - No external communication, archive action, retention scheduling, or case-close authority is performed or invented.
+    - Missing final-letter send, archive, retention, or closure-reason facts are recorded as blockers instead of assumed complete.
+    adaptation_notes:
+    - Converted Mission Control workflow node task_goal into local Waypoint project-folder recipe semantics.
+    - Case-closed projection is explicit state only under `.waypoint/firmvault/settlement.yaml` closing case status with existing evidence.

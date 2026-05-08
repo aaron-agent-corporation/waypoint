@@ -53,6 +53,9 @@ recipes:
 - firmvault-lien-resolution-document-payment
 - firmvault-final-distribution-prepare-statement
 - firmvault-final-distribution-zero-trust
+- firmvault-close-case-verify-readiness
+- firmvault-close-case-prepare-letter
+- firmvault-close-case-document-closure
 scaffolds:
   workstreams:
   - key: case
@@ -1328,19 +1331,86 @@ scaffolds:
         phase_slug: close
         lifecycle_phase: close
         plans:
-        - plan_ref: firmvault-close-deferred
-          title: Checkpoint deferred close-case workflow expansion after Part One
+        - plan_ref: firmvault-close-case-verify-readiness-task
+          title: Verify closure readiness from local case evidence
           wave: 10
           metadata:
             waypoint:
               node:
-                type: checkpoint
+                type: recipe
+              recipe:
+                slug: firmvault-close-case-verify-readiness
             source_port:
               workflow_id: firmvault-close-case
-              status: deferred_after_part_one
+              source_node: verify_closure_readiness
+              source_workflow: workflows/firmvault-close-case.yaml
+              output_landmarks:
+              - all_obligations_verified
+        - plan_ref: firmvault-close-case-prepare-letter-task
+          title: Prepare client closing-letter draft and send handoff
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-close-case-prepare-letter
+            source_port:
+              workflow_id: firmvault-close-case
+              source_node: prepare_closing_letter
+              source_workflow: workflows/firmvault-close-case.yaml
+              output_landmarks:
+              - final_letter_prepared
+        - plan_ref: firmvault-close-case-human-send-letter-gate
+          title: Human send gate for the closing letter
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_send_closing_letter
+            source_port:
+              workflow_id: firmvault-close-case
+              source_node: human_send_closing_letter
+              source_workflow: workflows/firmvault-close-case.yaml
+              output_landmarks:
+              - final_letter_sent
+        - plan_ref: firmvault-close-case-human-archive-file-gate
+          title: Human archive-file confirmation gate
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_archive_file
+            source_port:
+              workflow_id: firmvault-close-case
+              source_node: human_archive_file
+              source_workflow: workflows/firmvault-close-case.yaml
+              output_landmarks:
+              - case_archived
+        - plan_ref: firmvault-close-case-document-closure-task
+          title: Document final case closure from local evidence
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-close-case-document-closure
+            source_port:
+              workflow_id: firmvault-close-case
+              source_node: document_case_closed
+              source_workflow: workflows/firmvault-close-case.yaml
+              output_landmarks:
+              - case_closed
 metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_six_f_settlement_distribution_wave
+    status: part_six_g_close_case_wave
     external_side_effects: forbidden

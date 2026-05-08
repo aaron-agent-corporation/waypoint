@@ -80,6 +80,11 @@ export const FIRMVAULT_LANDMARK_SLUGS = [
   'lien_payment_authorized',
   'liens_paid',
   'final_distribution_complete',
+  'all_obligations_verified',
+  'final_letter_prepared',
+  'final_letter_sent',
+  'case_archived',
+  'case_closed',
 ] as const
 
 export const FIRMVAULT_CASE_STATE_FILES = [
@@ -601,6 +606,31 @@ export async function readFirmVaultLandmarkProjection(
       acceptedStatuses: ['complete'],
       evidence: getPath(settlementState, ['settlement', 'distribution', 'completion', 'evidence']),
     }),
+    all_obligations_verified: await factLandmark(projectRoot, 'all_obligations_verified', warnings, {
+      status: getPath(settlementState, ['settlement', 'closing', 'readiness', 'status']),
+      acceptedStatuses: ['verified', 'complete', 'ready'],
+      evidence: getPath(settlementState, ['settlement', 'closing', 'readiness', 'evidence']),
+    }),
+    final_letter_prepared: await factLandmark(projectRoot, 'final_letter_prepared', warnings, {
+      status: getPath(settlementState, ['settlement', 'closing', 'letter', 'prepared', 'status']),
+      acceptedStatuses: ['prepared', 'drafted', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'closing', 'letter', 'prepared', 'evidence']),
+    }),
+    final_letter_sent: await factLandmark(projectRoot, 'final_letter_sent', warnings, {
+      status: getPath(settlementState, ['settlement', 'closing', 'letter', 'sent', 'status']),
+      acceptedStatuses: ['sent', 'delivered'],
+      evidence: getPath(settlementState, ['settlement', 'closing', 'letter', 'sent', 'evidence']),
+    }),
+    case_archived: await factLandmark(projectRoot, 'case_archived', warnings, {
+      status: getPath(settlementState, ['settlement', 'closing', 'archive', 'status']),
+      acceptedStatuses: ['archived', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'closing', 'archive', 'evidence']),
+    }),
+    case_closed: await factLandmark(projectRoot, 'case_closed', warnings, {
+      status: getPath(settlementState, ['settlement', 'closing', 'case', 'status']),
+      acceptedStatuses: ['closed', 'complete'],
+      evidence: getPath(settlementState, ['settlement', 'closing', 'case', 'evidence']),
+    }),
   }
 
   return {
@@ -861,6 +891,15 @@ function initialSettlementState(): Record<string, unknown> {
         client_receipt: { status: 'not_confirmed', evidence: [] },
         trust_account: { status: 'not_zeroed', evidence: [] },
         completion: { status: 'not_started', evidence: [] },
+      },
+      closing: {
+        readiness: { status: 'not_started', evidence: [] },
+        letter: {
+          prepared: { status: 'not_started', evidence: [] },
+          sent: { status: 'not_sent', evidence: [] },
+        },
+        archive: { status: 'not_archived', evidence: [] },
+        case: { status: 'open', evidence: [] },
       },
     },
   }

@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 84
+- Total Recipes loaded from disk: 87
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -105,7 +105,7 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault` — FirmVault Case Workflow
   - Path: `quests/firmvault.yaml`
   - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
-  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`, `firmvault-demand-gather-materials`, `firmvault-demand-check-final-lien-process`, `firmvault-demand-draft-letter`, `firmvault-demand-identify-recipients`, `firmvault-demand-send-package`, `firmvault-negotiation-track-offer`, `firmvault-negotiation-offer-evaluation`, `firmvault-negotiation-document-client-decision`, `firmvault-negotiation-prepare-response`, `firmvault-negotiation-document-response`, `firmvault-settlement-prepare-statement`, `firmvault-settlement-prepare-authorization`, `firmvault-settlement-document-funds`, `firmvault-settlement-lien-audit`, `firmvault-settlement-lien-document-result`, `firmvault-lien-resolution-review-inventory`, `firmvault-lien-resolution-prepare-final-request`, `firmvault-lien-resolution-document-final-amount`, `firmvault-lien-resolution-document-payment`, `firmvault-final-distribution-prepare-statement`, `firmvault-final-distribution-zero-trust`
+  - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`, `firmvault-demand-gather-materials`, `firmvault-demand-check-final-lien-process`, `firmvault-demand-draft-letter`, `firmvault-demand-identify-recipients`, `firmvault-demand-send-package`, `firmvault-negotiation-track-offer`, `firmvault-negotiation-offer-evaluation`, `firmvault-negotiation-document-client-decision`, `firmvault-negotiation-prepare-response`, `firmvault-negotiation-document-response`, `firmvault-settlement-prepare-statement`, `firmvault-settlement-prepare-authorization`, `firmvault-settlement-document-funds`, `firmvault-settlement-lien-audit`, `firmvault-settlement-lien-document-result`, `firmvault-lien-resolution-review-inventory`, `firmvault-lien-resolution-prepare-final-request`, `firmvault-lien-resolution-document-final-amount`, `firmvault-lien-resolution-document-payment`, `firmvault-final-distribution-prepare-statement`, `firmvault-final-distribution-zero-trust`, `firmvault-close-case-verify-readiness`, `firmvault-close-case-prepare-letter`, `firmvault-close-case-document-closure`
  - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
   - Description: Waypoint catalog Quest port of gsd:forensics for post-mortem investigation for failed or stuck workflows.
@@ -238,6 +238,18 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault-client-check-in-start-cadence` — FirmVault Client Check-In Start Cadence
   - Path: `recipes/firmvault/client-check-in-start-cadence.yaml`
   - Description: Establishes the recurring client check-in cadence without contacting the client.
+  - External side effects: `forbidden`
+- `firmvault-close-case-document-closure` — FirmVault Close Case - Document Closure
+  - Path: `recipes/firmvault/close-case-document-closure.yaml`
+  - Description: Document final case closure locally from human-send/archive evidence and canonical closure files.
+  - External side effects: `forbidden`
+- `firmvault-close-case-prepare-letter` — FirmVault Close Case - Prepare Closing Letter
+  - Path: `recipes/firmvault/close-case-prepare-letter.yaml`
+  - Description: Prepare a local client closing-letter draft and human-send handoff from verified closure facts.
+  - External side effects: `forbidden`
+- `firmvault-close-case-verify-readiness` — FirmVault Close Case - Verify Readiness
+  - Path: `recipes/firmvault/close-case-verify-readiness.yaml`
+  - Description: Verify closure readiness from explicit local case-folder obligations and prepare a closure checklist.
   - External side effects: `forbidden`
 - `firmvault-document-collection-request-missing-documents` — FirmVault Document Collection Request Missing Documents
   - Path: `recipes/firmvault/document-collection-request-missing-documents.yaml`
@@ -462,4 +474,4 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - No first-class sub-Quest schema field exists yet; command mapping intent lives in metadata/docs.
 - No built-in recipe executor is shipped in the standalone core package yet; hosts provide `IRecipeRuntime`.
 - Namespace commands from the upstream source CLI (`ns-*`) remain deferred optional mappings, documented in `docs/quests/waypoint-command-map.md`.
-- FirmVault recipes are source-backed workflow/SOP ports staged wave-by-wave under the FirmVault folder-host plan.
+- FirmVault recipes are source-backed workflow/SOP ports staged wave-by-wave under the FirmVault folder-host plan. Close-case wave status: `part_six_g_close_case_wave`.

@@ -175,7 +175,7 @@ P7 added (implementation commit `4f83277`):
 P8 records the final close-out state for the Track 4 Waypoint Quest/Recipe port.
 
 - Actual Quest count: 38
-- Actual Recipe count: 84
+- Actual Recipe count: 87
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands to run for close-out:
@@ -210,17 +210,15 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 
 The original Waypoint source-port close-out remains recorded above. FirmVault folder-host work is continuing as a standalone runtime integration track.
 
-Latest FirmVault slice: Part Six-F settlement, liens, and final distribution wave. This slice ports workflow-backed settlement-processing, settlement-lien, final lien-resolution, and final-distribution manifests from Mission Control and expands the FirmVault Quest/state contract to:
+Latest FirmVault slice: Part Six-G close-case wave. This slice ports workflow-backed close-case manifests from Mission Control and expands the FirmVault Quest/state contract to:
 
-- FirmVault installed Recipe count: 49
-- FirmVault scaffold plan/task count: 83
-- FirmVault deterministic landmark count: 77
-- Total bundled Recipe count after this slice: 84
+- FirmVault installed Recipe count: 52
+- FirmVault scaffold plan/task count: 87
+- FirmVault deterministic landmark count: 82
+- Total bundled Recipe count after this slice: 87
 
-Source workflows used for this slice:
+Source workflow used for this slice:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-track-offers.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-offer-evaluation.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-negotiate-claim.yaml`
+- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-close-case.yaml`
 
-Deferred FirmVault scope after this slice: settlement processing, final lien resolution, final distribution, and close-case workflow expansion.
+Deferred FirmVault scope after this slice: post-close reporting and optional litigation branch workflows.

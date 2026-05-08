@@ -525,6 +525,50 @@ describe('FirmVault case state contract', () => {
     }
   })
 
+  it('projects close-case landmarks from explicit settlement closing state fields', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'closing'), { recursive: true })
+    await mkdir(join(root, 'documents', 'generated', 'client'), { recursive: true })
+    await mkdir(join(root, 'documents', 'sent', 'client'), { recursive: true })
+    await mkdir(join(root, 'activity'), { recursive: true })
+    const evidencePaths = [
+      'closing/readiness-checklist.md',
+      'documents/generated/client/closing-letter.md',
+      'documents/sent/client/closing-letter-sent.md',
+      'closing/archive-confirmation.md',
+      'closing/closure-ledger.md',
+    ]
+    for (const evidencePath of evidencePaths) {
+      await writeFile(join(root, evidencePath), 'fixture', 'utf8')
+    }
+
+    await patchYaml(join(root, '.waypoint', 'firmvault', 'settlement.yaml'), (settlementState) => {
+      settlementState.settlement.closing.readiness.status = 'verified'
+      settlementState.settlement.closing.readiness.evidence = [{ path: 'closing/readiness-checklist.md' }]
+      settlementState.settlement.closing.letter.prepared.status = 'prepared'
+      settlementState.settlement.closing.letter.prepared.evidence = [{ path: 'documents/generated/client/closing-letter.md' }]
+      settlementState.settlement.closing.letter.sent.status = 'sent'
+      settlementState.settlement.closing.letter.sent.evidence = [{ path: 'documents/sent/client/closing-letter-sent.md' }]
+      settlementState.settlement.closing.archive.status = 'archived'
+      settlementState.settlement.closing.archive.evidence = [{ path: 'closing/archive-confirmation.md' }]
+      settlementState.settlement.closing.case.status = 'closed'
+      settlementState.settlement.closing.case.evidence = [{ path: 'closing/closure-ledger.md' }]
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    for (const slug of [
+      'all_obligations_verified',
+      'final_letter_prepared',
+      'final_letter_sent',
+      'case_archived',
+      'case_closed',
+    ] as const) {
+      expect(projection.landmarks[slug].satisfied, slug).toBe(true)
+      expect(projection.landmarks[slug].evidence.length, slug).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps landmarks unsatisfied when explicit status lacks existing evidence', async () => {
     const root = await tempCaseRoot()
     await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })

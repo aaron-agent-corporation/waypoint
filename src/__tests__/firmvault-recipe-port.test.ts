@@ -62,6 +62,9 @@ const firmVaultRecipeSlugs = [
   'firmvault-lien-resolution-document-payment',
   'firmvault-final-distribution-prepare-statement',
   'firmvault-final-distribution-zero-trust',
+  'firmvault-close-case-verify-readiness',
+  'firmvault-close-case-prepare-letter',
+  'firmvault-close-case-document-closure',
 ] as const
 
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
@@ -103,7 +106,7 @@ async function readRecipeManifest(slug: string) {
 }
 
 describe('FirmVault source-backed Recipe port', () => {
-  it('keeps the FirmVault Quest bound to the current Wave 0/1 plus BI/PIP, treatment-status, early-lien, records/bills, and demand recipe slugs', async () => {
+  it('keeps the FirmVault Quest bound to the current FirmVault source-backed recipe slugs', async () => {
     const questRecipes = await loadQuestRecipes()
     expect(questRecipes).toEqual(firmVaultRecipeSlugs)
 
