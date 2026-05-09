@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { isAbsolute } from 'node:path'
 
 import type { HermesProjectRecord } from './project-registry.ts'
 
@@ -35,8 +36,11 @@ type CommandRule = {
   readonly summaryHint: string
   readonly allowedFlags: Readonly<Record<string, 'value' | 'boolean'>>
   readonly requiredFlags?: readonly string[]
-  readonly customValidate?: (args: readonly string[]) => void
+  readonly customValidate?: (args: readonly string[], project: HermesProjectRecord) => void
 }
+
+const FIRMVAULT_DOCUMENT_KINDS = new Set(['medical-records', 'medical_records', 'bill', 'insurance', 'police-report', 'police_report', 'correspondence', 'unknown'])
+const FIRMVAULT_HANDOFF_STATUSES = new Set(['not-started', 'not_started', 'submitted', 'pr-opened', 'pr_opened', 'merged', 'deferred', 'failed'])
 
 const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
   status: {
@@ -121,7 +125,7 @@ export function buildSafeWaypointCommand(
       mutation: false,
       summaryHint: 'auto status',
       allowedFlags: { '--limit': 'value', '--offset': 'value', '--json': 'boolean' },
-    })
+    }, project)
     return {
       command: process.execPath,
       args: [project.waypointCli, command, 'status', ...subcommandArgs],
@@ -131,44 +135,67 @@ export function buildSafeWaypointCommand(
     }
   }
 
-  if (command === 'firmvault' && rest[0] === 'bootstrap') {
-    const subcommandArgs = rest.slice(1)
-    validateFlags('firmvault bootstrap', subcommandArgs, {
-      mutation: true,
-      summaryHint: 'firmvault bootstrap',
-      allowedFlags: {
-        '--cases-root': 'value',
-        '--case-name': 'value',
-        '--case-type': 'value',
-        '--case-slug': 'value',
-        '--start': 'boolean',
-        '--json': 'boolean',
-      },
-      requiredFlags: ['--cases-root', '--case-name', '--case-type'],
-      customValidate: (args) => {
-        const casesRootIndex = args.indexOf('--cases-root')
-        const caseTypeIndex = args.indexOf('--case-type')
-        if (casesRootIndex === -1 || args[casesRootIndex + 1] !== project.path) {
-          throw new Error('Waypoint firmvault bootstrap requires --cases-root to match the registered project path')
-        }
-        if (caseTypeIndex === -1 || args[caseTypeIndex + 1] !== 'personal-injury') {
-          throw new Error('Waypoint firmvault bootstrap only allows --case-type personal-injury')
-        }
-      },
-    })
-    return {
-      command: process.execPath,
-      args: [project.waypointCli, command, 'bootstrap', ...subcommandArgs],
-      cwd: project.path,
-      mutation: true,
-      summaryHint: 'firmvault bootstrap',
+  if (command === 'firmvault') {
+    const [subcommand, ...subcommandArgs] = rest
+    if (subcommand === 'bootstrap') {
+      return buildFirmVaultCommand(project, subcommand, subcommandArgs, {
+        mutation: true,
+        summaryHint: 'firmvault bootstrap',
+        allowedFlags: {
+          '--cases-root': 'value',
+          '--case-name': 'value',
+          '--case-type': 'value',
+          '--case-slug': 'value',
+          '--start': 'boolean',
+          '--json': 'boolean',
+        },
+        requiredFlags: ['--cases-root', '--case-name', '--case-type'],
+        customValidate: (args, registeredProject) => {
+          const casesRootIndex = args.indexOf('--cases-root')
+          const caseTypeIndex = args.indexOf('--case-type')
+          if (casesRootIndex === -1 || args[casesRootIndex + 1] !== registeredProject.path) {
+            throw new Error('Waypoint firmvault bootstrap requires --cases-root to match the registered project path')
+          }
+          if (caseTypeIndex === -1 || args[caseTypeIndex + 1] !== 'personal-injury') {
+            throw new Error('Waypoint firmvault bootstrap only allows --case-type personal-injury')
+          }
+        },
+      })
     }
+    if (subcommand === 'add-document') {
+      return buildFirmVaultCommand(project, subcommand, subcommandArgs, {
+        mutation: true,
+        summaryHint: 'firmvault add-document',
+        allowedFlags: { '--source': 'value', '--kind': 'value', '--note': 'value', '--json': 'boolean' },
+        requiredFlags: ['--source', '--kind'],
+        customValidate: validateFirmVaultAddDocument,
+      })
+    }
+    if (subcommand === 'document-handoff') {
+      return buildFirmVaultCommand(project, subcommand, subcommandArgs, {
+        mutation: true,
+        summaryHint: 'firmvault document-handoff',
+        allowedFlags: {
+          '--document-id': 'value',
+          '--status': 'value',
+          '--pr-number': 'value',
+          '--pr-url': 'value',
+          '--branch': 'value',
+          '--submitted-at': 'value',
+          '--completed-at': 'value',
+          '--json': 'boolean',
+        },
+        requiredFlags: ['--document-id', '--status'],
+        customValidate: validateFirmVaultDocumentHandoff,
+      })
+    }
+    throw new Error(`Waypoint firmvault subcommand is not allowlisted: ${subcommand ?? '<missing>'}`)
   }
 
   const rule = COMMAND_RULES[command]
   if (!rule) throw new Error(`Waypoint command is not allowlisted: ${command}`)
 
-  validateFlags(command, rest, rule)
+  validateFlags(command, rest, rule, project)
 
   return {
     command: process.execPath,
@@ -228,7 +255,41 @@ async function executeWaypointCommand(spec: SafeWaypointCommandSpec): Promise<{
   })
 }
 
-function validateFlags(command: string, args: readonly string[], rule: CommandRule): void {
+function buildFirmVaultCommand(
+  project: HermesProjectRecord,
+  subcommand: string,
+  args: readonly string[],
+  rule: CommandRule,
+): SafeWaypointCommandSpec {
+  validateFlags(`firmvault ${subcommand}`, args, rule, project)
+  return {
+    command: process.execPath,
+    args: [project.waypointCli, 'firmvault', subcommand, ...args],
+    cwd: project.path,
+    mutation: rule.mutation,
+    summaryHint: rule.summaryHint,
+  }
+}
+
+function validateFirmVaultAddDocument(args: readonly string[]): void {
+  const source = flagValue(args, '--source')
+  const kind = flagValue(args, '--kind')
+  if (source && !isAbsolute(source)) throw new Error('Waypoint firmvault add-document requires --source to be absolute')
+  if (kind && !FIRMVAULT_DOCUMENT_KINDS.has(kind)) {
+    throw new Error(`Waypoint firmvault add-document does not allow document kind: ${kind}`)
+  }
+}
+
+function validateFirmVaultDocumentHandoff(args: readonly string[]): void {
+  const status = flagValue(args, '--status')
+  if (status && !FIRMVAULT_HANDOFF_STATUSES.has(status)) {
+    throw new Error(`Waypoint firmvault document-handoff does not allow status: ${status}`)
+  }
+  const prNumber = flagValue(args, '--pr-number')
+  if (prNumber && !/^\d+$/.test(prNumber)) throw new Error('Waypoint firmvault document-handoff requires --pr-number to be numeric')
+}
+
+function validateFlags(command: string, args: readonly string[], rule: CommandRule, project: HermesProjectRecord): void {
   const seenFlags = new Set<string>()
   for (let index = 0; index < args.length; index += 1) {
     const token = args[index]
@@ -251,5 +312,11 @@ function validateFlags(command: string, args: readonly string[], rule: CommandRu
     if (!seenFlags.has(requiredFlag)) throw new Error(`Waypoint ${command} requires ${requiredFlag}`)
   }
 
-  rule.customValidate?.(args)
+  rule.customValidate?.(args, project)
+}
+
+function flagValue(args: readonly string[], flag: string): string | null {
+  const index = args.indexOf(flag)
+  if (index === -1) return null
+  return args[index + 1] ?? null
 }

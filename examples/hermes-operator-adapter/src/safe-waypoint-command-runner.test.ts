@@ -87,6 +87,65 @@ describe('safe Waypoint command runner', () => {
     )
   })
 
+  it('allowlists only safe FirmVault document intake and handoff commands', () => {
+    const project = projectRecord('/trusted/firmvault/cases/jane-smith-v-acme-trucking')
+
+    expect(buildSafeWaypointCommand(project, [
+      'firmvault',
+      'add-document',
+      '--source',
+      '/trusted/scans/daily-mail.pdf',
+      '--kind',
+      'unknown',
+      '--note',
+      'Daily Mail scan',
+      '--json',
+    ])).toEqual({
+      command: process.execPath,
+      args: [
+        waypointCli,
+        'firmvault',
+        'add-document',
+        '--source',
+        '/trusted/scans/daily-mail.pdf',
+        '--kind',
+        'unknown',
+        '--note',
+        'Daily Mail scan',
+        '--json',
+      ],
+      cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      mutation: true,
+      summaryHint: 'firmvault add-document',
+    })
+    expect(buildSafeWaypointCommand(project, [
+      'firmvault',
+      'document-handoff',
+      '--document-id',
+      'document-001',
+      '--status',
+      'pr-opened',
+      '--pr-number',
+      '123',
+      '--json',
+    ])).toMatchObject({
+      args: [waypointCli, 'firmvault', 'document-handoff', '--document-id', 'document-001', '--status', 'pr-opened', '--pr-number', '123', '--json'],
+      cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      mutation: true,
+      summaryHint: 'firmvault document-handoff',
+    })
+
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'add-document', '--source', 'relative.pdf', '--kind', 'unknown'])).toThrow(
+      'Waypoint firmvault add-document requires --source to be absolute',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'add-document', '--source', '/trusted/scans/daily-mail.pdf', '--kind', 'bad'])).toThrow(
+      'Waypoint firmvault add-document does not allow document kind: bad',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'document-handoff', '--document-id', 'document-001', '--status', 'bogus'])).toThrow(
+      'Waypoint firmvault document-handoff does not allow status: bogus',
+    )
+  })
+
   it('runs an allowlisted command through an injected executor and preserves IDs in output', async () => {
     const calls: Array<{ command: string; args: readonly string[]; cwd: string }> = []
     const executor: WaypointCommandExecutor = async (spec) => {

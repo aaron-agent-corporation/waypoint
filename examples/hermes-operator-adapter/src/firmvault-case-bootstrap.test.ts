@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest'
 import {
   createFirmVaultCaseWithHermesOperator,
   parseFirmVaultCasesRegistry,
+  recordFirmVaultDocumentHandoffWithHermesOperator,
+  addFirmVaultDocumentWithHermesOperator,
   type FirmVaultNewCaseRequest,
 } from './firmvault-case-bootstrap.ts'
 import type { WaypointCommandExecutor } from './safe-waypoint-command-runner.ts'
@@ -117,6 +119,152 @@ cases_roots:
     hermes_profile: gary
 `),
     ).toThrow('FirmVault cases root pi must use Hermes profile paralegal')
+  })
+
+  it('maps trusted document intake and handoff requests to exact FirmVault CLI args', async () => {
+    const registry = parseFirmVaultCasesRegistry(`
+cases_roots:
+  pi:
+    path: /trusted/firmvault/cases
+    waypoint_cli: ${waypointCli}
+    hermes_profile: paralegal
+`)
+    const calls: Array<{ command: string; args: readonly string[]; cwd: string }> = []
+    const executor: WaypointCommandExecutor = async (spec) => {
+      calls.push({ command: spec.command, args: spec.args, cwd: spec.cwd })
+      if (spec.args.includes('add-document')) {
+        return {
+          exitCode: 0,
+          stdout: JSON.stringify({
+            document_id: 'document-001',
+            kind: 'unknown',
+            path: 'documents/inbox/daily-mail.pdf',
+            original_name: 'daily-mail.pdf',
+            added_at: '2026-05-08T12:00:00.000Z',
+            note: 'Daily Mail scan',
+          }),
+          stderr: '',
+        }
+      }
+      return {
+        exitCode: 0,
+        stdout: JSON.stringify({
+          document_id: 'document-001',
+          handoff: {
+            system: 'firmvault-document-pipeline',
+            status: 'pr_opened',
+            pr_number: 123,
+            pr_url: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+            branch: 'ingest/2026-05-08-deadbeef',
+          },
+        }),
+        stderr: '',
+      }
+    }
+
+    const added = await addFirmVaultDocumentWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      source: '/trusted/scans/daily-mail.pdf',
+      kind: 'unknown',
+      note: 'Daily Mail scan',
+    }, { executor })
+    const handoff = await recordFirmVaultDocumentHandoffWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      documentId: added.documentId,
+      status: 'pr_opened',
+      prNumber: 123,
+      prUrl: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+      branch: 'ingest/2026-05-08-deadbeef',
+    }, { executor })
+
+    expect(added).toMatchObject({
+      ok: true,
+      hermesProfile: 'paralegal',
+      caseRoot: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      documentId: 'document-001',
+      path: 'documents/inbox/daily-mail.pdf',
+      summary: 'FirmVault document document-001 added to jane-smith-v-acme-trucking through Hermes profile paralegal.',
+    })
+    expect(handoff).toMatchObject({
+      ok: true,
+      hermesProfile: 'paralegal',
+      caseRoot: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      documentId: 'document-001',
+      status: 'pr_opened',
+      summary: 'FirmVault document document-001 handoff recorded as pr_opened for jane-smith-v-acme-trucking.',
+    })
+    expect(calls).toEqual([
+      {
+        command: process.execPath,
+        args: [
+          waypointCli,
+          'firmvault',
+          'add-document',
+          '--source',
+          '/trusted/scans/daily-mail.pdf',
+          '--kind',
+          'unknown',
+          '--note',
+          'Daily Mail scan',
+          '--json',
+        ],
+        cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      },
+      {
+        command: process.execPath,
+        args: [
+          waypointCli,
+          'firmvault',
+          'document-handoff',
+          '--document-id',
+          'document-001',
+          '--status',
+          'pr-opened',
+          '--pr-number',
+          '123',
+          '--pr-url',
+          'http://localhost:3001/aaron/FirmVault/pulls/123',
+          '--branch',
+          'ingest/2026-05-08-deadbeef',
+          '--json',
+        ],
+        cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      },
+    ])
+  })
+
+  it('rejects unsafe FirmVault document adapter inputs before invoking Waypoint', async () => {
+    const registry = parseFirmVaultCasesRegistry(`
+cases_roots:
+  pi:
+    path: /trusted/firmvault/cases
+    waypoint_cli: ${waypointCli}
+    hermes_profile: paralegal
+`)
+    const executor: WaypointCommandExecutor = async () => {
+      throw new Error('executor should not be called')
+    }
+
+    await expect(addFirmVaultDocumentWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: '../escape',
+      source: '/trusted/scans/daily-mail.pdf',
+      kind: 'unknown',
+    }, { executor })).rejects.toThrow('Invalid FirmVault case slug: ../escape')
+    await expect(addFirmVaultDocumentWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      source: 'daily-mail.pdf',
+      kind: 'unknown',
+    }, { executor })).rejects.toThrow('FirmVault document source must be an absolute path')
+    await expect(recordFirmVaultDocumentHandoffWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      documentId: 'document-001',
+      status: 'bogus' as never,
+    }, { executor })).rejects.toThrow('Unsupported FirmVault document handoff status: bogus')
   })
 
   it('can bootstrap a real temp FirmVault case through the adapter and actual CLI', async () => {

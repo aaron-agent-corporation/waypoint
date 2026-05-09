@@ -63,8 +63,8 @@
   - appends a `firmvault.document.added` event to `.waypoint/firmvault/events.jsonl`;
   - does not satisfy workflow landmarks by itself.
 - `packages/waypoint-cli/src/commands/firmvault.ts` exposes `waypoint firmvault add-document --source <path> --kind ... --json` for the local-only intake rail.
-- `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts` uses key-based trusted `cases_roots`, requires `hermes_profile: paralegal`, and only accepts `personal_injury` bootstrap requests.
-- `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts` currently allowlists `firmvault bootstrap` but not `firmvault add-document` or any external pipeline command.
+- `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts` uses key-based trusted `cases_roots`, requires `hermes_profile: paralegal`, accepts `personal_injury` bootstrap requests, and exposes structured document add/handoff helpers for trusted case slugs.
+- `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts` allowlists `firmvault bootstrap`, `firmvault add-document`, and `firmvault document-handoff`; it still does not allow any external pipeline command.
 
 ---
 
@@ -135,19 +135,23 @@ waypoint firmvault document-handoff \
 
 ### Phase D3 — Add Hermes operator adapter surface for safe document intake
 
-**Objective:** Let Hermes route trusted, structured document-add requests into Waypoint while preserving registry key controls.
+**Status:** Implemented in this slice.
+
+**Objective:** Let Hermes route trusted, structured document-add and handoff requests into Waypoint while preserving registry key controls.
 
 **Files:**
-- Modify: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts` or split to `firmvault-document-intake.ts`
-- Modify: `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`
-- Test: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts` or a new adapter test.
+- Modified: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts`
+- Modified: `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`
+- Tested: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`
+- Tested: `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts`
 
 **Adapter behavior:**
-- Input uses `casesRootKey` plus `caseSlug` or fully resolved registered case root from a trusted registry; do not accept natural-language filesystem paths.
-- Command allowlist should include only:
+- Input uses `casesRootKey` plus safe `caseSlug`; the adapter derives the case root from trusted config and rejects unsafe slug/path attempts before invoking Waypoint.
+- The safe command runner allowlists only:
   - `waypoint firmvault add-document --source <absolute> --kind <allowed> [--note] --json`
-  - later: `waypoint firmvault document-handoff ... --json`
-- The adapter must still require Hermes profile `paralegal`.
+  - `waypoint firmvault document-handoff --document-id <id> --status <allowed> [--pr-number] [--pr-url] [--branch] [--submitted-at] [--completed-at] --json`
+- The adapter still requires Hermes profile `paralegal` through the `cases_roots` registry.
+- No external pipeline command is allowlisted in D3.
 
 ### Phase D4 — Add optional pipeline-run adapter, separate from Waypoint CLI
 
