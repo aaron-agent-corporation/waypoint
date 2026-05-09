@@ -3,6 +3,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
+import { parse as yamlParse } from 'yaml'
 
 import { runWaypointCli } from '../bin.ts'
 
@@ -149,6 +150,50 @@ describe('waypoint firmvault commands', () => {
     expect(body.path).toBe('documents/inbox/client-upload.pdf')
     expect(existsSync(join(root, 'documents', 'inbox', 'client-upload.pdf'))).toBe(true)
     await expect(readFile(join(root, '.waypoint', 'firmvault', 'documents.yaml'), 'utf8')).resolves.toContain('document-001')
+  })
+
+  it('records document-pipeline handoff metadata from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const source = join(root, '..', 'daily-mail.pdf')
+    await writeFile(source, 'fake document')
+    const add = captureIo(root)
+    await runWaypointCli(['firmvault', 'add-document', '--source', source, '--kind', 'unknown'], add.io)
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli([
+      'firmvault',
+      'document-handoff',
+      '--document-id',
+      'document-001',
+      '--status',
+      'pr-opened',
+      '--pr-number',
+      '123',
+      '--pr-url',
+      'http://localhost:3001/aaron/FirmVault/pulls/123',
+      '--branch',
+      'ingest/2026-05-08-deadbeef',
+      '--submitted-at',
+      '2026-05-08T12:00:00.000Z',
+      '--json',
+    ], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.document_id).toBe('document-001')
+    expect(body.handoff).toEqual({
+      system: 'firmvault-document-pipeline',
+      status: 'pr_opened',
+      pr_number: 123,
+      pr_url: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+      branch: 'ingest/2026-05-08-deadbeef',
+      submitted_at: '2026-05-08T12:00:00.000Z',
+    })
+    const documentsYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'documents.yaml'), 'utf8'))
+    expect(documentsYaml.documents[0].handoff).toEqual(body.handoff)
   })
 
   it('rejects unknown FirmVault commands', async () => {

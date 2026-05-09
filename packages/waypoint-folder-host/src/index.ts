@@ -92,12 +92,22 @@ export type {
   FirmVaultCaseBootstrapFolderResult,
   FirmVaultCaseBootstrapInput,
 } from './firmvault/bootstrap.ts'
-export { addFirmVaultDocument, FIRMVAULT_DOCUMENT_KINDS } from './firmvault/documents.ts'
+export {
+  addFirmVaultDocument,
+  FIRMVAULT_DOCUMENT_HANDOFF_STATUSES,
+  FIRMVAULT_DOCUMENT_HANDOFF_SYSTEM,
+  FIRMVAULT_DOCUMENT_KINDS,
+  updateFirmVaultDocumentHandoff,
+} from './firmvault/documents.ts'
 export type {
   AddFirmVaultDocumentInput,
   AddFirmVaultDocumentResult,
+  FirmVaultDocumentHandoff,
+  FirmVaultDocumentHandoffStatus,
   FirmVaultDocumentIndexEntry,
   FirmVaultDocumentKind,
+  UpdateFirmVaultDocumentHandoffInput,
+  UpdateFirmVaultDocumentHandoffResult,
 } from './firmvault/documents.ts'
 export {
   FIRMVAULT_CASE_STATE_FILES,

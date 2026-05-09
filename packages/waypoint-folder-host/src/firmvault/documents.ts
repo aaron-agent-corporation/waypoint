@@ -14,6 +14,29 @@ export const FIRMVAULT_DOCUMENT_KINDS = [
 
 export type FirmVaultDocumentKind = typeof FIRMVAULT_DOCUMENT_KINDS[number]
 
+export const FIRMVAULT_DOCUMENT_HANDOFF_SYSTEM = 'firmvault-document-pipeline' as const
+
+export const FIRMVAULT_DOCUMENT_HANDOFF_STATUSES = [
+  'not_started',
+  'submitted',
+  'pr_opened',
+  'merged',
+  'deferred',
+  'failed',
+] as const
+
+export type FirmVaultDocumentHandoffStatus = typeof FIRMVAULT_DOCUMENT_HANDOFF_STATUSES[number]
+
+export interface FirmVaultDocumentHandoff {
+  readonly system: typeof FIRMVAULT_DOCUMENT_HANDOFF_SYSTEM
+  readonly status: FirmVaultDocumentHandoffStatus
+  readonly pr_number?: number
+  readonly pr_url?: string
+  readonly branch?: string
+  readonly submitted_at?: string
+  readonly completed_at?: string
+}
+
 export interface AddFirmVaultDocumentInput {
   readonly source: string
   readonly kind: FirmVaultDocumentKind
@@ -28,9 +51,21 @@ export interface FirmVaultDocumentIndexEntry {
   readonly original_name: string
   readonly added_at: string
   readonly note?: string
+  readonly handoff?: FirmVaultDocumentHandoff
 }
 
 export interface AddFirmVaultDocumentResult {
+  readonly document: FirmVaultDocumentIndexEntry
+  readonly indexPath: string
+}
+
+export interface UpdateFirmVaultDocumentHandoffInput {
+  readonly documentId: string
+  readonly handoff: FirmVaultDocumentHandoff
+  readonly now?: Date
+}
+
+export interface UpdateFirmVaultDocumentHandoffResult {
   readonly document: FirmVaultDocumentIndexEntry
   readonly indexPath: string
 }
@@ -87,6 +122,40 @@ export async function addFirmVaultDocument(
   return { document, indexPath }
 }
 
+export async function updateFirmVaultDocumentHandoff(
+  projectRoot: string,
+  input: UpdateFirmVaultDocumentHandoffInput,
+): Promise<UpdateFirmVaultDocumentHandoffResult> {
+  validateDocumentHandoff(input.handoff)
+
+  const stateDir = firmVaultStateDir(projectRoot)
+  const indexPath = join(stateDir, 'documents.yaml')
+  const index = await readDocumentsIndex(indexPath)
+  let updatedDocument: FirmVaultDocumentIndexEntry | null = null
+  const documents = index.documents.map((document) => {
+    if (document.id !== input.documentId) return document
+    updatedDocument = { ...document, handoff: input.handoff }
+    return updatedDocument
+  })
+
+  if (!updatedDocument) {
+    throw new Error(`Unknown FirmVault document id: ${input.documentId}`)
+  }
+
+  const nextIndex: FirmVaultDocumentsIndex = {
+    schema_version: 1,
+    documents,
+  }
+  await writeFile(indexPath, yamlStringify(nextIndex), 'utf8')
+  await appendFile(join(stateDir, 'events.jsonl'), `${JSON.stringify({
+    type: 'firmvault.document.handoff_updated',
+    created_at: timestampFor(input.now),
+    payload: documentHandoffEventPayload(updatedDocument),
+  })}\n`, 'utf8')
+
+  return { document: updatedDocument, indexPath }
+}
+
 async function readDocumentsIndex(indexPath: string): Promise<FirmVaultDocumentsIndex> {
   const parsed = yamlParse(await readFile(indexPath, 'utf8'))
   if (!isRecord(parsed) || !Array.isArray(parsed.documents)) {
@@ -134,6 +203,31 @@ function validateDocumentKind(kind: FirmVaultDocumentKind): void {
   }
 }
 
+function validateDocumentHandoff(handoff: FirmVaultDocumentHandoff): void {
+  if (handoff.system !== FIRMVAULT_DOCUMENT_HANDOFF_SYSTEM) {
+    throw new Error(`Unsupported FirmVault document handoff system: ${handoff.system}`)
+  }
+  if (!FIRMVAULT_DOCUMENT_HANDOFF_STATUSES.includes(handoff.status)) {
+    throw new Error(`Unsupported FirmVault document handoff status: ${handoff.status}`)
+  }
+  if (handoff.pr_number !== undefined && (!Number.isInteger(handoff.pr_number) || handoff.pr_number < 1)) {
+    throw new Error(`Invalid FirmVault document handoff PR number: ${handoff.pr_number}`)
+  }
+}
+
+function documentHandoffEventPayload(document: FirmVaultDocumentIndexEntry): Record<string, unknown> {
+  const handoff = document.handoff
+  if (!handoff) throw new Error(`FirmVault document ${document.id} has no handoff metadata`)
+  return {
+    document_id: document.id,
+    system: handoff.system,
+    status: handoff.status,
+    ...(handoff.pr_number !== undefined ? { pr_number: handoff.pr_number } : {}),
+    ...(handoff.pr_url ? { pr_url: handoff.pr_url } : {}),
+    ...(handoff.branch ? { branch: handoff.branch } : {}),
+  }
+}
+
 function timestampFor(now: Date | undefined): string {
   return (now ?? new Date()).toISOString()
 }
@@ -156,6 +250,19 @@ function isDocumentIndexEntry(value: unknown): value is FirmVaultDocumentIndexEn
     && typeof value.path === 'string'
     && typeof value.original_name === 'string'
     && typeof value.added_at === 'string'
+    && (value.handoff === undefined || isDocumentHandoff(value.handoff))
+}
+
+function isDocumentHandoff(value: unknown): value is FirmVaultDocumentHandoff {
+  return isRecord(value)
+    && value.system === FIRMVAULT_DOCUMENT_HANDOFF_SYSTEM
+    && typeof value.status === 'string'
+    && FIRMVAULT_DOCUMENT_HANDOFF_STATUSES.includes(value.status as FirmVaultDocumentHandoffStatus)
+    && (value.pr_number === undefined || typeof value.pr_number === 'number')
+    && (value.pr_url === undefined || typeof value.pr_url === 'string')
+    && (value.branch === undefined || typeof value.branch === 'string')
+    && (value.submitted_at === undefined || typeof value.submitted_at === 'string')
+    && (value.completed_at === undefined || typeof value.completed_at === 'string')
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

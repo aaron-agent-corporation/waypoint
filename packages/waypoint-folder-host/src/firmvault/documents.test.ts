@@ -6,8 +6,8 @@ import { basename, join } from 'node:path'
 import { parse as yamlParse } from 'yaml'
 import { describe, expect, it } from 'vitest'
 
-import { initFirmVaultCaseState } from './state.ts'
-import { addFirmVaultDocument } from './documents'
+import { initFirmVaultCaseState, readFirmVaultLandmarkProjection } from './state.ts'
+import { addFirmVaultDocument, updateFirmVaultDocumentHandoff } from './documents'
 
 async function tempCaseRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-firmvault-documents-'))
@@ -55,6 +55,80 @@ describe('addFirmVaultDocument', () => {
         kind: 'police_report',
       },
     })
+  })
+
+  it('records document-pipeline handoff metadata without satisfying legal landmarks', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    const source = join(root, '..', `${basename(root)}-daily-mail.pdf`)
+    await writeFile(source, 'fake pdf bytes')
+    const added = await addFirmVaultDocument(root, {
+      source,
+      kind: 'unknown',
+      now: new Date('2026-05-08T11:00:00.000Z'),
+    })
+
+    const result = await updateFirmVaultDocumentHandoff(root, {
+      documentId: added.document.id,
+      handoff: {
+        system: 'firmvault-document-pipeline',
+        status: 'pr_opened',
+        pr_number: 123,
+        pr_url: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+        branch: 'ingest/2026-05-08-deadbeef',
+        submitted_at: '2026-05-08T12:00:00.000Z',
+      },
+      now: new Date('2026-05-08T12:01:00.000Z'),
+    })
+
+    expect(result.document.handoff).toEqual({
+      system: 'firmvault-document-pipeline',
+      status: 'pr_opened',
+      pr_number: 123,
+      pr_url: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+      branch: 'ingest/2026-05-08-deadbeef',
+      submitted_at: '2026-05-08T12:00:00.000Z',
+    })
+
+    const documentsYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'documents.yaml'), 'utf8'))
+    expect(documentsYaml.documents[0].handoff).toEqual(result.document.handoff)
+
+    const events = (await readFile(join(root, '.waypoint', 'firmvault', 'events.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line))
+    expect(events.at(-1)).toEqual({
+      type: 'firmvault.document.handoff_updated',
+      created_at: '2026-05-08T12:01:00.000Z',
+      payload: {
+        document_id: 'document-001',
+        system: 'firmvault-document-pipeline',
+        status: 'pr_opened',
+        pr_number: 123,
+        pr_url: 'http://localhost:3001/aaron/FirmVault/pulls/123',
+        branch: 'ingest/2026-05-08-deadbeef',
+      },
+    })
+
+    const projection = await readFirmVaultLandmarkProjection(root)
+    expect(Object.values(projection.landmarks).every((landmark) => landmark.satisfied === false)).toBe(true)
+  })
+
+  it('rejects unsupported document handoff statuses and unknown document ids', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    const source = join(root, 'example.pdf')
+    await writeFile(source, 'example')
+    const added = await addFirmVaultDocument(root, { source, kind: 'unknown' })
+
+    await expect(updateFirmVaultDocumentHandoff(root, {
+      documentId: added.document.id,
+      handoff: { system: 'firmvault-document-pipeline', status: 'bogus' as never },
+    })).rejects.toThrow('Unsupported FirmVault document handoff status')
+    await expect(updateFirmVaultDocumentHandoff(root, {
+      documentId: 'document-999',
+      handoff: { system: 'firmvault-document-pipeline', status: 'submitted' },
+    })).rejects.toThrow('Unknown FirmVault document id: document-999')
   })
 
   it('rejects unsupported document kinds and unsafe source paths', async () => {

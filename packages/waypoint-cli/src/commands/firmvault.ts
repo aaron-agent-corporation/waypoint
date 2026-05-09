@@ -41,9 +41,28 @@ type FirmVaultStateModule = {
     root: string,
     input: { readonly source: string; readonly kind: FirmVaultDocumentKind; readonly note?: string },
   ) => Promise<{ readonly document: FirmVaultDocumentIndexEntry }>
+  readonly updateFirmVaultDocumentHandoff: (
+    root: string,
+    input: {
+      readonly documentId: string
+      readonly handoff: FirmVaultDocumentHandoff
+    },
+  ) => Promise<{ readonly document: FirmVaultDocumentIndexEntry }>
 }
 
 type FirmVaultDocumentKind = 'medical_records' | 'bill' | 'insurance' | 'police_report' | 'correspondence' | 'unknown'
+
+type FirmVaultDocumentHandoffStatus = 'not_started' | 'submitted' | 'pr_opened' | 'merged' | 'deferred' | 'failed'
+
+interface FirmVaultDocumentHandoff {
+  readonly system: 'firmvault-document-pipeline'
+  readonly status: FirmVaultDocumentHandoffStatus
+  readonly pr_number?: number
+  readonly pr_url?: string
+  readonly branch?: string
+  readonly submitted_at?: string
+  readonly completed_at?: string
+}
 
 interface FirmVaultDocumentIndexEntry {
   readonly id: string
@@ -52,11 +71,13 @@ interface FirmVaultDocumentIndexEntry {
   readonly original_name: string
   readonly added_at: string
   readonly note?: string
+  readonly handoff?: FirmVaultDocumentHandoff
 }
 
 const usageLines = [
   'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]',
   'Usage: waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]',
+  'Usage: waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
   '       waypoint firmvault landmarks [--json]',
 ]
@@ -74,6 +95,10 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
 
   if (subcommand === 'add-document') {
     return runAddDocument(rest, io)
+  }
+
+  if (subcommand === 'document-handoff') {
+    return runDocumentHandoff(rest, io)
   }
 
   if (subcommand === 'landmarks') {
@@ -162,6 +187,44 @@ async function runAddDocument(args: readonly string[], io: WaypointCliIo): Promi
   io.stdout(`document_id: ${result.document.id}`)
   io.stdout(`kind: ${result.document.kind}`)
   io.stdout(`path: ${result.document.path}`)
+  return 0
+}
+
+async function runDocumentHandoff(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseDocumentHandoffArgs(args)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault document-handoff arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+
+  const module = await importFirmVaultStateModule()
+  const result = await module.updateFirmVaultDocumentHandoff(io.cwd ?? process.cwd(), {
+    documentId: parsed.documentId,
+    handoff: {
+      system: 'firmvault-document-pipeline',
+      status: parsed.status,
+      ...(parsed.prNumber !== undefined ? { pr_number: parsed.prNumber } : {}),
+      ...(parsed.prUrl ? { pr_url: parsed.prUrl } : {}),
+      ...(parsed.branch ? { branch: parsed.branch } : {}),
+      ...(parsed.submittedAt ? { submitted_at: parsed.submittedAt } : {}),
+      ...(parsed.completedAt ? { completed_at: parsed.completedAt } : {}),
+    },
+  })
+
+  if (parsed.json) {
+    io.stdout(JSON.stringify({
+      document_id: result.document.id,
+      handoff: result.document.handoff,
+    }, null, 2))
+    return 0
+  }
+
+  io.stdout('Waypoint FirmVault document handoff updated')
+  io.stdout(`document_id: ${result.document.id}`)
+  io.stdout(`status: ${result.document.handoff?.status ?? 'null'}`)
+  if (result.document.handoff?.pr_url) io.stdout(`pr_url: ${result.document.handoff.pr_url}`)
   return 0
 }
 
@@ -280,6 +343,116 @@ function parseDocumentKind(value: string): FirmVaultDocumentKind | null {
   if (value === 'police-report' || value === 'police_report') return 'police_report'
   if (value === 'correspondence') return 'correspondence'
   if (value === 'unknown') return 'unknown'
+  return null
+}
+
+function parseDocumentHandoffArgs(args: readonly string[]):
+  | {
+    readonly ok: true
+    readonly documentId: string
+    readonly status: FirmVaultDocumentHandoffStatus
+    readonly prNumber?: number
+    readonly prUrl?: string
+    readonly branch?: string
+    readonly submittedAt?: string
+    readonly completedAt?: string
+    readonly json: boolean
+  }
+  | { readonly ok: false; readonly error: string } {
+  let documentId: string | undefined
+  let status: FirmVaultDocumentHandoffStatus | undefined
+  let prNumber: number | undefined
+  let prUrl: string | undefined
+  let branch: string | undefined
+  let submittedAt: string | undefined
+  let completedAt: string | undefined
+  let json = false
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--document-id') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --document-id' }
+      documentId = value
+      index += 1
+      continue
+    }
+    if (arg === '--status') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --status' }
+      const parsedStatus = parseDocumentHandoffStatus(value)
+      if (!parsedStatus) return { ok: false, error: `Unsupported FirmVault document handoff status: ${value}` }
+      status = parsedStatus
+      index += 1
+      continue
+    }
+    if (arg === '--pr-number') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --pr-number' }
+      const parsedNumber = Number(value)
+      if (!Number.isInteger(parsedNumber) || parsedNumber < 1) return { ok: false, error: `Invalid FirmVault document handoff PR number: ${value}` }
+      prNumber = parsedNumber
+      index += 1
+      continue
+    }
+    if (arg === '--pr-url') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --pr-url' }
+      prUrl = value
+      index += 1
+      continue
+    }
+    if (arg === '--branch') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --branch' }
+      branch = value
+      index += 1
+      continue
+    }
+    if (arg === '--submitted-at') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --submitted-at' }
+      submittedAt = value
+      index += 1
+      continue
+    }
+    if (arg === '--completed-at') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --completed-at' }
+      completedAt = value
+      index += 1
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault document-handoff option: ${arg}` }
+  }
+
+  if (!documentId) return { ok: false, error: 'Missing required --document-id' }
+  if (!status) return { ok: false, error: 'Missing required --status' }
+
+  return {
+    ok: true,
+    documentId,
+    status,
+    json,
+    ...(prNumber !== undefined ? { prNumber } : {}),
+    ...(prUrl ? { prUrl } : {}),
+    ...(branch ? { branch } : {}),
+    ...(submittedAt ? { submittedAt } : {}),
+    ...(completedAt ? { completedAt } : {}),
+  }
+}
+
+function parseDocumentHandoffStatus(value: string): FirmVaultDocumentHandoffStatus | null {
+  if (value === 'not-started' || value === 'not_started') return 'not_started'
+  if (value === 'submitted') return 'submitted'
+  if (value === 'pr-opened' || value === 'pr_opened') return 'pr_opened'
+  if (value === 'merged') return 'merged'
+  if (value === 'deferred') return 'deferred'
+  if (value === 'failed') return 'failed'
   return null
 }
 

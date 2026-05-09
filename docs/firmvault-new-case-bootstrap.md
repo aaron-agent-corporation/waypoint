@@ -95,6 +95,20 @@ waypoint firmvault add-document \
 
 The command copies the file into `documents/inbox/`, appends metadata to `.waypoint/firmvault/documents.yaml`, and appends a `firmvault.document.added` event to `.waypoint/firmvault/events.jsonl`.
 
+When the external FirmVault document pipeline opens or completes its Forgejo review PR, attach that handoff state without marking legal landmarks complete:
+
+```bash
+waypoint firmvault document-handoff \
+  --document-id document-001 \
+  --status pr-opened \
+  --pr-number 123 \
+  --pr-url http://localhost:3001/aaron/FirmVault/pulls/123 \
+  --branch ingest/2026-05-08-deadbeef \
+  --json
+```
+
+The command updates the matching `.waypoint/firmvault/documents.yaml` entry and appends a `firmvault.document.handoff_updated` event.
+
 Supported kinds:
 
 - `medical-records`

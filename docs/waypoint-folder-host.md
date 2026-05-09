@@ -47,6 +47,7 @@ waypoint status
 waypoint doctor firmvault [--json]
 waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
 waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
+waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
 waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
 waypoint firmvault landmarks [--json]
 waypoint quests
@@ -164,6 +165,21 @@ waypoint firmvault add-document --source /path/to/local/file.pdf --kind medical-
 ```
 
 `add-document` copies the source file into `documents/inbox/`, appends an entry to `.waypoint/firmvault/documents.yaml`, and records a `firmvault.document.added` event in `.waypoint/firmvault/events.jsonl`. It is local-only: it does not send email, fax, portal messages, API calls, or trust-account actions, and it does not mark workflow landmarks complete solely because a file exists.
+
+To attach the external FirmVault document-pipeline review state to an indexed document:
+
+```bash
+waypoint firmvault document-handoff \
+  --document-id document-001 \
+  --status pr-opened \
+  --pr-number 123 \
+  --pr-url http://localhost:3001/aaron/FirmVault/pulls/123 \
+  --branch ingest/2026-05-08-deadbeef \
+  --submitted-at 2026-05-08T12:00:00.000Z \
+  --json
+```
+
+`document-handoff` updates only the matching entry in `.waypoint/firmvault/documents.yaml` and appends a `firmvault.document.handoff_updated` event. It records pipeline handoff/review state for the Python/Forgejo ingestion pipeline; it still does not satisfy legal workflow landmarks by itself.
 
 For an existing FirmVault-style folder, initialize only the case-state contract:
 
