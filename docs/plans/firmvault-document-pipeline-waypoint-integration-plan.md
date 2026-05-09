@@ -155,6 +155,8 @@ waypoint firmvault document-handoff \
 
 ### Phase D4 — Add optional pipeline-run adapter, separate from Waypoint CLI
 
+**Status:** Implemented in this slice.
+
 **Objective:** Allow a trusted operator flow to invoke the Python pipeline for a source PDF and capture returned PR metadata.
 
 **Files:**
@@ -165,7 +167,7 @@ waypoint firmvault document-handoff \
 
 ```bash
 cd /Users/aaronwhaley/Github/firmvault-document-pipeline
-uv run firmvault ingest --workflow forgejo /absolute/path/to/source.pdf --json
+uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forgejo
 ```
 
 **Guardrails:**

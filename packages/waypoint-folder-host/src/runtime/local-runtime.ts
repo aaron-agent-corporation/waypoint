@@ -81,10 +81,18 @@ function runCommand(command: string, args: readonly string[], stdin: string): Pr
     child.stderr.on('data', (chunk) => {
       stderr += chunk
     })
+    child.stdin.on('error', (error) => {
+      if (isNodeError(error) && error.code === 'EPIPE') return
+      reject(error)
+    })
     child.on('error', reject)
     child.on('close', (exitCode, signal) => {
       resolve({ exitCode, signal, stdout, stderr })
     })
     child.stdin.end(`${stdin}\n`, 'utf8')
   })
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error
 }
