@@ -178,14 +178,21 @@ uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forg
 
 ### Phase D5 — Map PR events back into Waypoint state
 
+**Status:** Implemented in this slice for the manual/operator path.
+
 **Objective:** After a pipeline PR opens or merges, store a local Waypoint event and leave legal workflow landmarks untouched until explicit evidence/status files are updated.
 
-**Implementation options:**
-- Manual/operator: command copies PR number/url into `document-handoff`.
+**Implemented first path:** `examples/hermes-operator-adapter/src/firmvault-document-flow.ts` composes the existing safe pieces:
+- `addFirmVaultDocumentWithHermesOperator(...)` records the scanned source PDF in the case-local inbox/index.
+- `runFirmVaultDocumentPipelineWithHermesOperator(...)` invokes the external Python pipeline adapter and returns redacted PR/branch status.
+- `recordFirmVaultDocumentHandoffWithHermesOperator(...)` stores `submitted`, `pr_opened`, or `failed` handoff metadata through the Waypoint CLI.
+- The result explicitly reports `legalLandmarksUpdated: false`.
+
+**Remaining implementation options:**
 - Webhook-adjacent: FirmVault pipeline webhook calls a local Waypoint handoff update after `post_merge_handler` succeeds.
 - Polling: Waypoint/Hermes checks Forgejo PR status and calls `document-handoff`.
 
-**Recommended first implementation:** manual/operator path. It has the smallest safety surface and is testable without Forgejo credentials.
+**Verification:** `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts` covers PR-opened, dry-run/submitted, failed-pipeline, unsafe-input rejection, and unchanged legal landmarks.
 
 ### Phase D6 — Add source-backed workflow tasks/recipes only after handoff state exists
 
