@@ -65,8 +65,20 @@ const firmVaultRecipeSlugs = [
   'firmvault-close-case-verify-readiness',
   'firmvault-close-case-prepare-letter',
   'firmvault-close-case-document-closure',
+  'firmvault-document-intake-record-source',
+  'firmvault-document-pipeline-submit-for-review',
+  'firmvault-document-pipeline-review-pr',
+  'firmvault-document-pipeline-record-merge',
 ] as const
 
+const documentPipelineRecipeSlugs = new Set<string>([
+  'firmvault-document-intake-record-source',
+  'firmvault-document-pipeline-submit-for-review',
+  'firmvault-document-pipeline-review-pr',
+  'firmvault-document-pipeline-record-merge',
+])
+
+const firmvaultDocumentPipelineRoot = '/Users/aaronwhaley/Github/firmvault-document-pipeline'
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
 const placeholderPhrase = 'Placeholder Recipe manifest for Part One Quest skeleton resolution'
 
@@ -138,11 +150,19 @@ describe('FirmVault source-backed Recipe port', () => {
       expect(manifest.prompt, `${slug} active OpenRouter secret instruction`).not.toContain('OPENROUTER_API_KEY')
       expect(manifest.prompt, `${slug} token-looking secret`).not.toMatch(/sk-[A-Za-z0-9_-]{16,}/)
 
-      expect(sourcePort?.status, `${slug} source status`).toMatch(/^ported_from_mission_control/)
-      expect(sourcePort?.source_repository, `${slug} source repository`).toBe(missionControlRoot)
+      expect(sourcePort?.status, `${slug} source status`).toMatch(/^ported_from_/)
+      expect(sourcePort?.source_repository, `${slug} source repository`).toBe(
+        documentPipelineRecipeSlugs.has(slug) ? firmvaultDocumentPipelineRoot : missionControlRoot,
+      )
       expect(sourcePort?.external_side_effects, `${slug} external side effects`).toBe('forbidden')
       expect(sourcePort?.review_criteria, `${slug} review criteria`).toEqual(expect.any(Array))
       expect(sourcePort?.review_criteria?.length ?? 0, `${slug} review criteria length`).toBeGreaterThan(0)
+
+      if (documentPipelineRecipeSlugs.has(slug)) {
+        expect(sourcePort?.source_workflow, `${slug} pipeline source`).toMatch(/^firmvault-document-pipeline\//)
+        expect(sourcePort?.source_node, `${slug} pipeline source node`).toEqual(expect.any(String))
+        continue
+      }
 
       if (sourcePort?.source_recipe) {
         expect(sourcePort.source_recipe, `${slug} source recipe`).toBe(`recipes/${slug}`)

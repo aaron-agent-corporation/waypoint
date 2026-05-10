@@ -196,6 +196,8 @@ uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forg
 
 ### Phase D6 — Add source-backed workflow tasks/recipes only after handoff state exists
 
+**Status:** Implemented in this slice.
+
 **Objective:** Add Waypoint tasks that point at document review state without pretending the pipeline completes legal work.
 
 **Candidate recipe names:**
@@ -203,6 +205,11 @@ uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forg
 - `firmvault-document-pipeline-submit-for-review`
 - `firmvault-document-pipeline-review-pr`
 - `firmvault-document-pipeline-record-merge`
+
+**Implemented Quest rail:**
+- Added the `document-pipeline` phase to `quests/firmvault.yaml` between onboarding and file setup.
+- Added Recipe tasks for recording the source, submitting/recording pipeline review submission, preparing PR review, and recording merge/defer/failure handoff state.
+- Added a required human gate for Forgejo PR review/approval.
 
 **Gate model:**
 - PR merge is a review/filing gate for documents.

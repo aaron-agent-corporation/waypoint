@@ -269,7 +269,7 @@ Each phase below has:
 Final close-out state for the accepted Track 4 recovery plan:
 
 - Actual Quest count: 38
-- Actual Recipe count: 87
+- Actual Recipe count: 91
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands run for close-out:
@@ -315,7 +315,7 @@ Gary updates this table as real phases land, with real commit hashes from `git l
 
 Current verified direction: standalone Waypoint can be initialized inside a FirmVault case folder, with canonical explicit state files under `.waypoint/firmvault/` and deterministic landmark projection from explicit statuses plus existing evidence paths.
 
-Latest FirmVault source-port slice in progress/completed in this branch: Part Six-G close-case wave. Expected local case state after this slice includes 82 FirmVault landmarks, 52 FirmVault Recipe manifests, and 87 scaffolded FirmVault plans/tasks.
+Latest FirmVault source-port slice in progress/completed in this branch: document-pipeline review tasks wave. Expected local case state after this slice includes 82 FirmVault landmarks, 56 FirmVault Recipe manifests, and 92 scaffolded FirmVault plans/tasks. The new document-pipeline rail records source PDFs, pipeline submission state, Forgejo PR review, and merge/defer/failure handoff metadata without satisfying legal workflow landmarks.
 
 Verification gates for this continuation remain:
 
@@ -324,4 +324,4 @@ Verification gates for this continuation remain:
 - `pnpm build`
 - `node scripts/firmvault-folder-smoke.mjs`
 
-Explicit deferred work remains: post-close reporting and optional litigation branch workflows.
+Explicit deferred work remains: post-close reporting, optional litigation branch workflows, and automated webhook/polling sync from Forgejo PR state into Waypoint handoff metadata.

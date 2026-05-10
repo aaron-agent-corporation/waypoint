@@ -68,6 +68,7 @@ describe('FirmVault Quest skeleton', () => {
     const phaseSlugs = phases.map((phase) => phase.phase_slug)
     expect(phaseSlugs).toEqual([
       'onboarding',
+      'document-pipeline',
       'file-setup',
       'treatment-monitoring',
       'records-bills',
@@ -102,6 +103,35 @@ describe('FirmVault Quest skeleton', () => {
     for (const plan of waitPlans) {
       expect(plan.metadata?.waypoint?.wait, `${plan.plan_ref} wait metadata`).toBeDefined()
     }
+
+    const documentPipelinePhase = phases.find((phase) => phase.phase_slug === 'document-pipeline')
+    const documentPipelinePlanRefs = new Set((documentPipelinePhase?.plans ?? []).map((plan) => plan.plan_ref))
+    expect([...documentPipelinePlanRefs]).toEqual(expect.arrayContaining([
+      'firmvault-document-intake-record-source-task',
+      'firmvault-document-pipeline-submit-for-review-task',
+      'firmvault-document-pipeline-review-pr-task',
+      'firmvault-document-pipeline-human-review-pr-gate',
+      'firmvault-document-pipeline-record-merge-task',
+    ]))
+    const documentPipelineRecipeSlugs = new Set(
+      (documentPipelinePhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
+        .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    expect([...documentPipelineRecipeSlugs]).toEqual(expect.arrayContaining([
+      'firmvault-document-intake-record-source',
+      'firmvault-document-pipeline-submit-for-review',
+      'firmvault-document-pipeline-review-pr',
+      'firmvault-document-pipeline-record-merge',
+    ]))
+    const documentPipelineGateRefs = new Set(
+      (documentPipelinePhase?.plans ?? [])
+        .filter((plan) => plan.metadata?.waypoint?.node?.type === 'gate')
+        .map((plan) => plan.plan_ref),
+    )
+    expect([...documentPipelineGateRefs]).toEqual(expect.arrayContaining([
+      'firmvault-document-pipeline-human-review-pr-gate',
+    ]))
 
     const treatmentMonitoring = phases.find((phase) => phase.phase_slug === 'treatment-monitoring')
     const treatmentPlanRefs = new Set((treatmentMonitoring?.plans ?? []).map((plan) => plan.plan_ref))

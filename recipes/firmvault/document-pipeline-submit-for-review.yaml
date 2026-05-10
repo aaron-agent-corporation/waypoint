@@ -1,0 +1,52 @@
+# Source-backed FirmVault document-pipeline Recipe port for Waypoint D6.
+schema_version: 1
+slug: firmvault-document-pipeline-submit-for-review
+name: FirmVault Document Pipeline - Submit for Review
+description: Prepare or record submission of an indexed source PDF to the external document pipeline review flow.
+prompt: |
+  You are running the source-backed Waypoint document-pipeline Recipe `firmvault-document-pipeline-submit-for-review` for a FirmVault personal-injury case.
+
+  Workspace boundary: work only in the local Waypoint project folder, which is the current FirmVault case folder. Treat the external FirmVault document pipeline repository as provenance and an explicitly configured operator subsystem only. Do not depend on Mission Control, OpenRouter, a server, arbitrary natural-language paths, or a mounted `/workspace` path.
+
+  No external side effects: do not send emails, faxes, portal submissions, DocuSign/Lob packets, text messages, phone calls, insurer/provider/client communications, trust-account actions, payments, deposits, releases, or external API calls. Do not invoke Forgejo, mutate the Python pipeline repository, push branches, merge PRs, archive files, or contact any external system from this Recipe. Produce local checklists, handoff notes, review questions, and Waypoint/FirmVault state recommendations only.
+
+  Sensitive-data rule: do not invent facts, raw PHI, credentials, party names, dates, insurance, medical providers, treatment facts, signatures, settlement facts, Forgejo credentials, token values, PR links, branch names, or contact details. Use existing masked FirmVault evidence, `.waypoint/firmvault/documents.yaml`, `.waypoint/firmvault/events.jsonl`, and explicit owner/operator confirmation. If a sensitive sample value would be needed, write `[REDACTED]` or a placeholder such as `{document_id}`.
+
+  Source purpose: Bridge an indexed Waypoint document into the external pipeline adapter/Forgejo PR review path without running live side effects from the Recipe.
+
+  Adapted source-backed document-pipeline behavior:
+  - The external pipeline lives at `/Users/aaronwhaley/Github/firmvault-document-pipeline` and owns scanner intake, splitting, simple naming, staged files, Forgejo PR creation, needs-review sidecars, post-merge relocation, cleanup, QMD sync, and form-fill follow-up.
+  - Waypoint owns lifecycle, case-local document index, handoff status, explicit legal state, gates, and landmark projection.
+  - A scanned PDF, classifier result, opened PR, or merged PR is not legal workflow completion. Legal landmarks remain governed by explicit `.waypoint/firmvault/*.yaml` state plus existing evidence paths.
+
+  Expected local work for this Recipe:
+  - Inspect the indexed document entry and existing handoff metadata in `.waypoint/firmvault/documents.yaml`.
+  - If no handoff exists, prepare a trusted Hermes/paralegal operator request to run the document-flow adapter.
+  - If handoff metadata already exists, summarize status, branch, PR number, PR URL, submitted timestamp, and any failure/deferred reason available locally.
+  - Do not invoke the Python pipeline, Forgejo, git, network calls, or external APIs directly from this Recipe.
+
+  Required outputs:
+  - A concise task note under `activity/` or `workflow-log/` if the case folder has those directories, using a new non-colliding filename.
+  - Any proposed `waypoint firmvault add-document` or `waypoint firmvault document-handoff` command must be written as a human/operator handoff, not executed unless the task runtime explicitly authorizes local CLI execution.
+  - Any blocker must name the missing local evidence or missing operator confirmation exactly.
+
+  Completion standard: complete only when the local note, handoff, blocked checkpoint, or review question is supported by case-local evidence and the no-external-side-effects rule above. Do not mark any legal workflow landmark complete.
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source_port:
+    status: ported_from_document_pipeline
+    source_repository: /Users/aaronwhaley/Github/firmvault-document-pipeline
+    source_workflow: firmvault-document-pipeline/pipeline/run_pr_ingest.py
+    source_node: submit_for_review
+    external_side_effects: forbidden
+    review_criteria:
+    - The task distinguishes indexed source state from submitted/pr_opened/failed/deferred handoff state.
+    - The Recipe never reads or writes secrets, `.env`, or token values.
+    - The Recipe does not invoke Forgejo or the Python pipeline directly.
+    adaptation_notes:
+    - Converted the completed Python scanner/splitter/naming/Forgejo review pipeline into Waypoint lifecycle task semantics.
+    - Preserves Waypoint's rule that document intake and PR state are handoff metadata, not legal landmark satisfaction.
+    - Keeps live Forgejo and pipeline execution behind the trusted Hermes/paralegal adapter instead of generic Recipe execution.

@@ -56,6 +56,10 @@ recipes:
 - firmvault-close-case-verify-readiness
 - firmvault-close-case-prepare-letter
 - firmvault-close-case-document-closure
+- firmvault-document-intake-record-source
+- firmvault-document-pipeline-submit-for-review
+- firmvault-document-pipeline-review-pr
+- firmvault-document-pipeline-record-merge
 scaffolds:
   workstreams:
   - key: case
@@ -156,6 +160,76 @@ scaffolds:
             source_port:
               workflow_id: firmvault-document-collection
               source_node: confirm_onboarding_documents
+      - phase_key: '05'
+        phase_slug: document-pipeline
+        lifecycle_phase: document-pipeline
+        plans:
+        - plan_ref: firmvault-document-intake-record-source-task
+          title: Record scanned source PDF in the case-local document inbox
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-intake-record-source
+            source_port:
+              workflow_id: firmvault-document-pipeline
+              source_node: record_source_document
+              source_workflow: firmvault-document-pipeline/pipeline/run_pr_ingest.py
+        - plan_ref: firmvault-document-pipeline-submit-for-review-task
+          title: Prepare or record document-pipeline submission for Forgejo review
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-pipeline-submit-for-review
+            source_port:
+              workflow_id: firmvault-document-pipeline
+              source_node: submit_for_review
+              source_workflow: firmvault-document-pipeline/pipeline/run_pr_ingest.py
+        - plan_ref: firmvault-document-pipeline-review-pr-task
+          title: Prepare the document-pipeline Forgejo PR review checklist
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-pipeline-review-pr
+            source_port:
+              workflow_id: firmvault-document-pipeline
+              source_node: review_pr
+              source_workflow: firmvault-document-pipeline/forgejo/pr_body.py
+        - plan_ref: firmvault-document-pipeline-human-review-pr-gate
+          title: Human review and approval gate for the Forgejo document PR
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+                kind: human_review_document_pipeline_pr
+            source_port:
+              workflow_id: firmvault-document-pipeline
+              source_node: human_review_pr
+              source_workflow: firmvault-document-pipeline/forgejo/pr_body.py
+        - plan_ref: firmvault-document-pipeline-record-merge-task
+          title: Record document-pipeline merge or deferred result in Waypoint handoff state
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-document-pipeline-record-merge
+            source_port:
+              workflow_id: firmvault-document-pipeline
+              source_node: record_merge
+              source_workflow: firmvault-document-pipeline/webhook/handler.py
       - phase_key: '10'
         phase_slug: file-setup
         lifecycle_phase: file-setup
@@ -1412,5 +1486,5 @@ metadata:
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
-    status: part_six_g_close_case_wave
+    status: document_pipeline_review_tasks_wave
     external_side_effects: forbidden

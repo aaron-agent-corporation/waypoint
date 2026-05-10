@@ -175,7 +175,7 @@ P7 added (implementation commit `4f83277`):
 P8 records the final close-out state for the Track 4 Waypoint Quest/Recipe port.
 
 - Actual Quest count: 38
-- Actual Recipe count: 87
+- Actual Recipe count: 91
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands to run for close-out:
@@ -210,15 +210,17 @@ Per the accepted recovery plan in `WAYPOINT_RESUME_PLAN.md` (which supersedes th
 
 The original Waypoint source-port close-out remains recorded above. FirmVault folder-host work is continuing as a standalone runtime integration track.
 
-Latest FirmVault slice: Part Six-G close-case wave. This slice ports workflow-backed close-case manifests from Mission Control and expands the FirmVault Quest/state contract to:
+Latest FirmVault slice: Document-pipeline review tasks wave. This slice adds source-backed document-pipeline review Recipe manifests and a FirmVault Quest rail for recording source PDFs, pipeline submission state, Forgejo PR review, and merge/defer/failure handoff metadata while preserving legal-landmark separation:
 
-- FirmVault installed Recipe count: 52
-- FirmVault scaffold plan/task count: 87
+- FirmVault installed Recipe count: 56
+- FirmVault scaffold plan/task count: 92
 - FirmVault deterministic landmark count: 82
-- Total bundled Recipe count after this slice: 87
+- Total bundled Recipe count after this slice: 91
 
-Source workflow used for this slice:
+Source systems used for this slice:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-close-case.yaml`
+- `/Users/aaronwhaley/Github/firmvault-document-pipeline/pipeline/run_pr_ingest.py`
+- `/Users/aaronwhaley/Github/firmvault-document-pipeline/forgejo/pr_body.py`
+- `/Users/aaronwhaley/Github/firmvault-document-pipeline/webhook/handler.py`
 
-Deferred FirmVault scope after this slice: post-close reporting and optional litigation branch workflows.
+Deferred FirmVault scope after this slice: post-close reporting, optional litigation branch workflows, and automated webhook/polling sync from Forgejo PR state into Waypoint handoff metadata.
