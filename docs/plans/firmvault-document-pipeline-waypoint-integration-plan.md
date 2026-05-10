@@ -188,11 +188,33 @@ uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forg
 - `recordFirmVaultDocumentHandoffWithHermesOperator(...)` stores `submitted`, `pr_opened`, or `failed` handoff metadata through the Waypoint CLI.
 - The result explicitly reports `legalLandmarksUpdated: false`.
 
-**Remaining implementation options:**
-- Webhook-adjacent: FirmVault pipeline webhook calls a local Waypoint handoff update after `post_merge_handler` succeeds.
-- Polling: Waypoint/Hermes checks Forgejo PR status and calls `document-handoff`.
+**Follow-up path:**
+- Webhook-adjacent remains deferred; FirmVault pipeline webhook may later call a local Waypoint handoff update after `post_merge_handler` succeeds.
+- Polling/manual sync is implemented in D7 through `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.ts`.
 
 **Verification:** `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts` covers PR-opened, dry-run/submitted, failed-pipeline, unsafe-input rejection, and unchanged legal landmarks.
+
+### Phase D7 — Poll Forgejo PR status and sync document handoff state
+
+**Status:** Implemented in this slice for the manual/operator polling path.
+
+**Objective:** Let Hermes/paralegal check a known document-pipeline PR and record `merged`, `deferred`, or unchanged `pr_opened` handoff state without opening a Waypoint webhook surface.
+
+**Implemented adapter:** `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.ts` accepts trusted case registry context, a safe case slug, a document id, existing handoff lookup metadata, and an injected PR status client.
+
+**Mapping:**
+- Forgejo `open` leaves the local handoff unchanged and does not write a duplicate Waypoint event.
+- Forgejo `merged` records `status: merged` and passes `completed_at` when available.
+- Forgejo `closed` without merge records `status: deferred` and passes `completed_at` from the close timestamp when available.
+- Forgejo/client failure records `status: failed`.
+
+**Guardrails:**
+- The adapter rejects unsafe case slugs and blank document ids before polling or mutating Waypoint.
+- It requires at least one PR lookup key: `prNumber`, `prUrl`, or `branch`.
+- All mutations go through the existing safe `recordFirmVaultDocumentHandoffWithHermesOperator(...)` path.
+- The result explicitly reports `legalLandmarksUpdated: false`.
+
+**Verification:** `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.test.ts` covers merged, open/no-op, closed/deferred, unsafe-input rejection, and unchanged legal landmarks.
 
 ### Phase D6 — Add source-backed workflow tasks/recipes only after handoff state exists
 
