@@ -114,4 +114,29 @@ describe('Waypoint Quest operator documentation', () => {
       expect(doc).toContain('live Recipe execution')
     }
   })
+
+  it('publishes a FirmVault document ingestion runbook and smoke command', () => {
+    const runbook = readRepoFile('docs/firmvault-document-ingestion-runbook.md')
+    const plan = readRepoFile('docs/plans/firmvault-document-pipeline-waypoint-integration-plan.md')
+    const packageJson = JSON.parse(readRepoFile('package.json'))
+
+    expect(packageJson.scripts['smoke:firmvault-document-ingestion']).toBe('node scripts/firmvault-document-ingestion-smoke.mjs')
+    expect(plan).toContain('Phase D8 — Operator runbook and injected end-to-end smoke')
+    expect(plan).toContain('docs/firmvault-document-ingestion-runbook.md')
+    expect(plan).toContain('scripts/firmvault-document-ingestion-smoke.mjs')
+
+    for (const phrase of [
+      'bootstrap or select a trusted FirmVault case',
+      'waypoint firmvault add-document',
+      'firmvault-document-pipeline',
+      'Forgejo PR',
+      'waypoint firmvault document-handoff',
+      'sync the PR result',
+      'legalLandmarksUpdated: false',
+      'does not satisfy legal workflow landmarks',
+      'pnpm smoke:firmvault-document-ingestion',
+    ]) {
+      expect(runbook).toContain(phrase)
+    }
+  })
 })

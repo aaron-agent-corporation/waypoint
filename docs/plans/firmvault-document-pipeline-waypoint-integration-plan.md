@@ -237,6 +237,31 @@ uv run firmvault_ingest_once ingest /absolute/path/to/source.pdf --workflow forg
 - PR merge is a review/filing gate for documents.
 - Legal landmarks such as records requested/received, bills verified, lien statuses, demand package sent, or case closed remain governed by existing explicit FirmVault state files and evidence paths.
 
+### Phase D8 — Operator runbook and injected end-to-end smoke
+
+**Status:** Implemented in this slice.
+
+**Objective:** Make the scanner → Waypoint intake → document pipeline → Forgejo PR → Waypoint handoff sync loop operator-ready without requiring live Forgejo credentials in the verification gate.
+
+**Files:**
+- Created: `docs/firmvault-document-ingestion-runbook.md`
+- Created: `scripts/firmvault-document-ingestion-smoke.mjs`
+- Modified: `package.json` with `pnpm smoke:firmvault-document-ingestion`
+- Tested: `src/__tests__/waypoint-docs.test.ts`
+
+**Smoke behavior:**
+- Bootstraps a temporary FirmVault case.
+- Adds a fake scanned PDF through `waypoint firmvault add-document`.
+- Records a fake pipeline/Forgejo PR handoff as `pr_opened`.
+- Records a fake PR sync result as `merged`.
+- Verifies `.waypoint/firmvault/documents.yaml` and `events.jsonl` contain the expected document/handoff metadata.
+- Verifies `waypoint firmvault landmarks --json` still reports zero legal landmarks satisfied by ingestion alone.
+
+**Guardrails:**
+- The smoke uses injected/fake PR metadata and does not invoke the real Python pipeline or Forgejo.
+- The runbook instructs operators to use trusted case-root keys, the Hermes `paralegal` profile, and explicit handoff recording.
+- The runbook states that `legalLandmarksUpdated: false` remains the expected outcome for ingestion/PR handoff flows.
+
 ---
 
 ## Acceptance gates
