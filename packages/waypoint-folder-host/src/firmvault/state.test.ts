@@ -6,6 +6,7 @@ import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import { describe, expect, it } from 'vitest'
 
 import {
+  checkFirmVaultEvidencePath,
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
   initFirmVaultCaseState,
@@ -61,6 +62,39 @@ describe('FirmVault case state contract', () => {
         expect(landmarkSlugs.has(slug), `${definition.fact} -> ${slug}`).toBe(true)
       }
     }
+  })
+
+  it('checks evidence paths for safety and existence before state mutations', async () => {
+    const root = await tempCaseRoot()
+    await mkdir(join(root, 'documents', 'sent'), { recursive: true })
+    await writeFile(join(root, 'documents', 'sent', 'demand.pdf'), 'fixture', 'utf8')
+
+    await expect(checkFirmVaultEvidencePath(root, 'documents/sent/demand.pdf')).resolves.toEqual({
+      ok: true,
+      path: 'documents/sent/demand.pdf',
+      exists: true,
+      safe: true,
+      reason: null,
+    })
+    await expect(checkFirmVaultEvidencePath(root, 'documents/sent/missing.pdf')).resolves.toEqual({
+      ok: false,
+      path: 'documents/sent/missing.pdf',
+      exists: false,
+      safe: true,
+      reason: 'missing',
+    })
+    await expect(checkFirmVaultEvidencePath(root, '../escape.pdf')).resolves.toMatchObject({
+      ok: false,
+      exists: false,
+      safe: false,
+      reason: 'unsafe',
+    })
+    await expect(checkFirmVaultEvidencePath(root, join(root, 'documents', 'sent', 'demand.pdf'))).resolves.toMatchObject({
+      ok: false,
+      exists: false,
+      safe: false,
+      reason: 'unsafe',
+    })
   })
 
   it('initializes product-owned FirmVault YAML state with all landmarks unsatisfied', async () => {

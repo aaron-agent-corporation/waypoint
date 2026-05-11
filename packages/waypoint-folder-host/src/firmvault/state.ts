@@ -137,6 +137,14 @@ export interface InitFirmVaultCaseStateResult {
   readonly projection: FirmVaultLandmarkProjection
 }
 
+export interface FirmVaultEvidencePathCheck {
+  readonly ok: boolean
+  readonly path: string
+  readonly exists: boolean
+  readonly safe: boolean
+  readonly reason: 'missing' | 'unsafe' | null
+}
+
 interface FactInput {
   readonly status?: unknown
   readonly acceptedStatuses: readonly string[]
@@ -178,6 +186,23 @@ export async function initFirmVaultCaseState(
   })
 
   return { stateDir, projection }
+}
+
+export async function checkFirmVaultEvidencePath(
+  projectRoot: string,
+  path: string,
+): Promise<FirmVaultEvidencePathCheck> {
+  if (!isSafeRelativePath(path)) {
+    return { ok: false, path, exists: false, safe: false, reason: 'unsafe' }
+  }
+  const exists = await pathExists(join(projectRoot, path))
+  return {
+    ok: exists,
+    path,
+    exists,
+    safe: true,
+    reason: exists ? null : 'missing',
+  }
 }
 
 export async function readFirmVaultLandmarkProjection(

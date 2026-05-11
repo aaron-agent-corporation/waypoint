@@ -110,6 +110,7 @@ export type {
   UpdateFirmVaultDocumentHandoffResult,
 } from './firmvault/documents.ts'
 export {
+  checkFirmVaultEvidencePath,
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
   initFirmVaultCaseState,
@@ -119,6 +120,7 @@ export { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './firmva
 export type { FirmVaultFactDefinition, FirmVaultStateSection } from './firmvault/facts.ts'
 export type {
   FirmVaultCaseType,
+  FirmVaultEvidencePathCheck,
   FirmVaultEvidenceRef,
   FirmVaultLandmarkMap,
   FirmVaultLandmarkProjection,
