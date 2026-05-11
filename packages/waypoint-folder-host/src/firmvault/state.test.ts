@@ -11,6 +11,7 @@ import {
   FIRMVAULT_LANDMARK_SLUGS,
   initFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
+  setFirmVaultCaseFact,
 } from './state.ts'
 import { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './facts.ts'
 
@@ -95,6 +96,94 @@ describe('FirmVault case state contract', () => {
       safe: false,
       reason: 'unsafe',
     })
+  })
+
+  it('sets an allowlisted FirmVault fact, refreshes projection, and appends an audit event', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, {
+      caseType: 'personal_injury',
+      caseSlug: 'smith-v-acme',
+      now: new Date('2026-05-08T00:00:00.000Z'),
+    })
+    await mkdir(join(root, 'documents', 'sent'), { recursive: true })
+    await writeFile(join(root, 'documents', 'sent', 'demand.pdf'), 'fixture', 'utf8')
+
+    const result = await setFirmVaultCaseFact(root, {
+      fact: 'demand.send',
+      status: 'sent',
+      evidence: [{ path: 'documents/sent/demand.pdf', kind: 'sent_package' }],
+      note: 'Sent by human after attorney approval.',
+      now: new Date('2026-05-08T12:00:00.000Z'),
+    })
+
+    expect(result.fact).toBe('demand.send')
+    expect(result.file).toBe('demand.yaml')
+    expect(result.status).toBe('sent')
+    expect(result.landmarksBefore.satisfied).toBe(0)
+    expect(result.landmarksAfter.satisfied).toBe(1)
+    expect(result.newlySatisfied).toEqual(['demand_sent'])
+    expect(result.newlyUnsatisfied).toEqual([])
+    expect(result.projection.landmarks.demand_sent).toMatchObject({ satisfied: true })
+
+    const demandYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'demand.yaml'), 'utf8')) as any
+    expect(demandYaml.demand.send).toEqual({
+      status: 'sent',
+      evidence: [{ path: 'documents/sent/demand.pdf', kind: 'sent_package' }],
+      note: 'Sent by human after attorney approval.',
+      updated_at: '2026-05-08T12:00:00.000Z',
+    })
+
+    const landmarksYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'landmarks.yaml'), 'utf8')) as any
+    expect(landmarksYaml.landmarks.demand_sent.satisfied).toBe(true)
+
+    const events = (await readFile(join(root, '.waypoint', 'firmvault', 'events.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line))
+    expect(events.at(-1)).toEqual({
+      type: 'firmvault.state.updated',
+      created_at: '2026-05-08T12:00:00.000Z',
+      payload: {
+        fact: 'demand.send',
+        file: 'demand.yaml',
+        status: 'sent',
+        evidence: [{ path: 'documents/sent/demand.pdf', kind: 'sent_package' }],
+        note: 'Sent by human after attorney approval.',
+        newly_satisfied: ['demand_sent'],
+        newly_unsatisfied: [],
+      },
+    })
+  })
+
+  it('rejects unknown facts, invalid statuses, and unsafe or missing evidence', async () => {
+    const root = await tempCaseRoot()
+    await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+    await mkdir(join(root, 'documents', 'sent'), { recursive: true })
+    await writeFile(join(root, 'documents', 'sent', 'demand.pdf'), 'fixture', 'utf8')
+
+    await expect(setFirmVaultCaseFact(root, {
+      fact: 'demand.fake',
+      status: 'sent',
+      evidence: [{ path: 'documents/sent/demand.pdf' }],
+    })).rejects.toThrow('Unknown FirmVault fact: demand.fake')
+
+    await expect(setFirmVaultCaseFact(root, {
+      fact: 'demand.send',
+      status: 'emailed',
+      evidence: [{ path: 'documents/sent/demand.pdf' }],
+    })).rejects.toThrow('Unsupported status for FirmVault fact demand.send: emailed')
+
+    await expect(setFirmVaultCaseFact(root, {
+      fact: 'demand.send',
+      status: 'sent',
+      evidence: [{ path: '../escape.pdf' }],
+    })).rejects.toThrow('Unsafe FirmVault evidence path for demand.send: ../escape.pdf')
+
+    await expect(setFirmVaultCaseFact(root, {
+      fact: 'demand.send',
+      status: 'sent',
+      evidence: [{ path: 'documents/sent/missing.pdf' }],
+    })).rejects.toThrow('Missing FirmVault evidence path for demand.send: documents/sent/missing.pdf')
   })
 
   it('initializes product-owned FirmVault YAML state with all landmarks unsatisfied', async () => {

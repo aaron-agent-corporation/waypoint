@@ -2,6 +2,8 @@ import { appendFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, normalize, relative } from 'node:path'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
+import { getFirmVaultFactDefinition, type FirmVaultStateSection } from './facts.ts'
+
 export const FIRMVAULT_LANDMARK_SLUGS = [
   'case_setup_complete',
   'full_intake_complete',
@@ -145,6 +147,31 @@ export interface FirmVaultEvidencePathCheck {
   readonly reason: 'missing' | 'unsafe' | null
 }
 
+export interface SetFirmVaultCaseFactInput {
+  readonly fact: string
+  readonly status: string
+  readonly evidence: readonly FirmVaultEvidenceRef[]
+  readonly note?: string
+  readonly now?: Date
+}
+
+export interface FirmVaultLandmarkCounts {
+  readonly satisfied: number
+  readonly total: number
+}
+
+export interface SetFirmVaultCaseFactResult {
+  readonly fact: string
+  readonly file: FirmVaultStateSection
+  readonly status: string
+  readonly evidence: readonly FirmVaultEvidenceRef[]
+  readonly landmarksBefore: FirmVaultLandmarkCounts
+  readonly landmarksAfter: FirmVaultLandmarkCounts
+  readonly newlySatisfied: readonly FirmVaultLandmarkSlug[]
+  readonly newlyUnsatisfied: readonly FirmVaultLandmarkSlug[]
+  readonly projection: FirmVaultLandmarkProjection
+}
+
 interface FactInput {
   readonly status?: unknown
   readonly acceptedStatuses: readonly string[]
@@ -202,6 +229,68 @@ export async function checkFirmVaultEvidencePath(
     exists,
     safe: true,
     reason: exists ? null : 'missing',
+  }
+}
+
+export async function setFirmVaultCaseFact(
+  projectRoot: string,
+  input: SetFirmVaultCaseFactInput,
+): Promise<SetFirmVaultCaseFactResult> {
+  const definition = getFirmVaultFactDefinition(input.fact)
+  if (!definition) throw new Error(`Unknown FirmVault fact: ${input.fact}`)
+  if (!definition.allowedStatuses.includes(input.status)) {
+    throw new Error(`Unsupported status for FirmVault fact ${input.fact}: ${input.status}`)
+  }
+
+  const normalizedEvidence = normalizeEvidenceRefs(input.evidence)
+  if (definition.evidenceRequiredFor.includes(input.status) && normalizedEvidence.length === 0) {
+    throw new Error(`FirmVault evidence is required for ${input.fact} status ${input.status}`)
+  }
+  for (const evidence of normalizedEvidence) {
+    const check = await checkFirmVaultEvidencePath(projectRoot, evidence.path)
+    if (!check.safe) throw new Error(`Unsafe FirmVault evidence path for ${input.fact}: ${evidence.path}`)
+    if (!check.exists) throw new Error(`Missing FirmVault evidence path for ${input.fact}: ${evidence.path}`)
+  }
+
+  const before = await readFirmVaultLandmarkProjection(projectRoot, { now: input.now })
+  const statePath = join(firmVaultStateDir(projectRoot), definition.file)
+  const state = await readYamlRecord(statePath)
+  setPath(state, definition.path, {
+    status: input.status,
+    evidence: normalizedEvidence,
+    ...(input.note ? { note: input.note } : {}),
+    updated_at: timestampFor(input.now),
+  })
+  await writeYaml(statePath, state)
+
+  const projection = await readFirmVaultLandmarkProjection(projectRoot, { now: input.now })
+  await writeYaml(join(firmVaultStateDir(projectRoot), 'landmarks.yaml'), projection)
+  const newlySatisfied = diffSatisfiedLandmarks(before, projection, true)
+  const newlyUnsatisfied = diffSatisfiedLandmarks(before, projection, false)
+  await appendFirmVaultEvent(projectRoot, {
+    type: 'firmvault.state.updated',
+    created_at: timestampFor(input.now),
+    payload: {
+      fact: input.fact,
+      file: definition.file,
+      status: input.status,
+      evidence: normalizedEvidence,
+      ...(input.note ? { note: input.note } : {}),
+      newly_satisfied: newlySatisfied,
+      newly_unsatisfied: newlyUnsatisfied,
+    },
+  })
+
+  return {
+    fact: input.fact,
+    file: definition.file,
+    status: input.status,
+    evidence: normalizedEvidence,
+    landmarksBefore: countLandmarks(before),
+    landmarksAfter: countLandmarks(projection),
+    newlySatisfied,
+    newlyUnsatisfied,
+    projection,
   }
 }
 
@@ -962,6 +1051,43 @@ function getPath(value: unknown, path: readonly string[]): unknown {
     current = current[segment]
   }
   return current
+}
+
+function setPath(root: Record<string, unknown>, path: readonly string[], value: unknown): void {
+  let current: Record<string, unknown> = root
+  for (const segment of path.slice(0, -1)) {
+    const next = current[segment]
+    if (!isRecord(next)) {
+      current[segment] = {}
+    }
+    current = current[segment] as Record<string, unknown>
+  }
+  const leaf = path.at(-1)
+  if (!leaf) throw new Error('FirmVault fact path cannot be empty')
+  current[leaf] = value
+}
+
+function normalizeEvidenceRefs(evidence: readonly FirmVaultEvidenceRef[]): readonly FirmVaultEvidenceRef[] {
+  return evidence.map((item) => ({
+    path: item.path,
+    ...(item.kind ? { kind: item.kind } : {}),
+    ...(item.note ? { note: item.note } : {}),
+  }))
+}
+
+function countLandmarks(projection: FirmVaultLandmarkProjection): FirmVaultLandmarkCounts {
+  return {
+    satisfied: Object.values(projection.landmarks).filter((landmark) => landmark.satisfied).length,
+    total: FIRMVAULT_LANDMARK_SLUGS.length,
+  }
+}
+
+function diffSatisfiedLandmarks(
+  before: FirmVaultLandmarkProjection,
+  after: FirmVaultLandmarkProjection,
+  targetSatisfied: boolean,
+): FirmVaultLandmarkSlug[] {
+  return FIRMVAULT_LANDMARK_SLUGS.filter((slug) => before.landmarks[slug].satisfied !== targetSatisfied && after.landmarks[slug].satisfied === targetSatisfied)
 }
 
 function acceptedStatusOrFallback(status: unknown, acceptedStatuses: readonly string[], fallback: unknown): unknown {
