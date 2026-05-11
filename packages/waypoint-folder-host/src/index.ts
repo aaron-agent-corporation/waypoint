@@ -114,12 +114,14 @@ export {
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
   initFirmVaultCaseState,
+  readFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
   setFirmVaultCaseFact,
 } from './firmvault/state.ts'
 export { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './firmvault/facts.ts'
 export type { FirmVaultFactDefinition, FirmVaultStateSection } from './firmvault/facts.ts'
 export type {
+  FirmVaultCaseStateSectionName,
   FirmVaultCaseType,
   FirmVaultEvidencePathCheck,
   FirmVaultEvidenceRef,

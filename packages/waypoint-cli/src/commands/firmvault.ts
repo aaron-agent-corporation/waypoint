@@ -22,6 +22,34 @@ interface FirmVaultLandmarkProjection {
   readonly warnings: readonly string[]
 }
 
+interface FirmVaultEvidencePathCheck {
+  readonly ok: boolean
+  readonly path: string
+  readonly exists: boolean
+  readonly safe: boolean
+  readonly reason: 'missing' | 'unsafe' | null
+}
+
+interface SetFirmVaultCaseFactResult {
+  readonly fact: string
+  readonly file: string
+  readonly status: string
+  readonly evidence: readonly { readonly path: string; readonly kind?: string; readonly note?: string }[]
+  readonly landmarksBefore: { readonly satisfied: number; readonly total: number }
+  readonly landmarksAfter: { readonly satisfied: number; readonly total: number }
+  readonly newlySatisfied: readonly string[]
+  readonly newlyUnsatisfied: readonly string[]
+  readonly projection: FirmVaultLandmarkProjection
+}
+
+interface ReadFirmVaultCaseStateResult {
+  readonly schema_version: 1
+  readonly section: string | null
+  readonly state: Record<string, unknown>
+  readonly landmarks: { readonly satisfied: number; readonly total: number }
+  readonly warnings: readonly string[]
+}
+
 type FirmVaultStateModule = {
   readonly bootstrapFirmVaultCase: (
     input: {
@@ -37,6 +65,12 @@ type FirmVaultStateModule = {
     options: { readonly caseType: 'personal_injury'; readonly caseSlug?: string },
   ) => Promise<InitFirmVaultCaseStateResult>
   readonly readFirmVaultLandmarkProjection: (root: string) => Promise<FirmVaultLandmarkProjection>
+  readonly readFirmVaultCaseState: (root: string, options?: { readonly section?: string }) => Promise<ReadFirmVaultCaseStateResult>
+  readonly checkFirmVaultEvidencePath: (root: string, path: string) => Promise<FirmVaultEvidencePathCheck>
+  readonly setFirmVaultCaseFact: (
+    root: string,
+    input: { readonly fact: string; readonly status: string; readonly evidence: readonly { readonly path: string }[]; readonly note?: string },
+  ) => Promise<SetFirmVaultCaseFactResult>
   readonly addFirmVaultDocument: (
     root: string,
     input: { readonly source: string; readonly kind: FirmVaultDocumentKind; readonly note?: string },
@@ -78,6 +112,9 @@ const usageLines = [
   'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]',
   'Usage: waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]',
   'Usage: waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]',
+  'Usage: waypoint firmvault state show [--section <section>] [--json]',
+  'Usage: waypoint firmvault state set --fact <fact> --status <status> [--evidence <path>]... [--note <note>] [--json]',
+  'Usage: waypoint firmvault evidence check --path <path> [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
   '       waypoint firmvault landmarks [--json]',
 ]
@@ -99,6 +136,14 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
 
   if (subcommand === 'document-handoff') {
     return runDocumentHandoff(rest, io)
+  }
+
+  if (subcommand === 'state') {
+    return runState(rest, io)
+  }
+
+  if (subcommand === 'evidence') {
+    return runEvidence(rest, io)
   }
 
   if (subcommand === 'landmarks') {
@@ -228,6 +273,106 @@ async function runDocumentHandoff(args: readonly string[], io: WaypointCliIo): P
   return 0
 }
 
+async function runState(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const [action, ...rest] = args
+  if (action === 'show') return runStateShow(rest, io)
+  if (action === 'set') return runStateSet(rest, io)
+  io.stderr(`Unknown firmvault state action: ${action ?? '<missing>'}`)
+  usageLines.forEach((line) => io.stderr(line))
+  return 1
+}
+
+async function runStateShow(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseStateShowArgs(args)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault state show arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const module = await importFirmVaultStateModule()
+  const result = await module.readFirmVaultCaseState(io.cwd ?? process.cwd(), parsed.section ? { section: parsed.section } : {})
+  if (parsed.json) {
+    io.stdout(JSON.stringify(result, null, 2))
+    return 0
+  }
+  io.stdout('Waypoint FirmVault state')
+  io.stdout(`section: ${result.section ?? 'all'}`)
+  io.stdout(`landmarks satisfied: ${result.landmarks.satisfied}/${result.landmarks.total}`)
+  return 0
+}
+
+async function runStateSet(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseStateSetArgs(args)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault state set arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const module = await importFirmVaultStateModule()
+  try {
+    const result = await module.setFirmVaultCaseFact(io.cwd ?? process.cwd(), {
+      fact: parsed.fact,
+      status: parsed.status,
+      evidence: parsed.evidence.map((path) => ({ path })),
+      ...(parsed.note ? { note: parsed.note } : {}),
+    })
+    if (parsed.json) {
+      io.stdout(JSON.stringify({
+        ok: true,
+        fact: result.fact,
+        section: stateSectionFromFile(result.file),
+        status: result.status,
+        evidence: result.evidence.map((item) => item.path),
+        landmarks_before: result.landmarksBefore,
+        landmarks_after: result.landmarksAfter,
+        newly_satisfied: result.newlySatisfied,
+        newly_unsatisfied: result.newlyUnsatisfied,
+        warnings: result.projection.warnings,
+        legal_landmarks_updated: result.newlySatisfied.length > 0 || result.newlyUnsatisfied.length > 0,
+      }, null, 2))
+      return 0
+    }
+    io.stdout('Waypoint FirmVault state fact updated')
+    io.stdout(`fact: ${result.fact}`)
+    io.stdout(`status: ${result.status}`)
+    io.stdout(`landmarks satisfied: ${result.landmarksBefore.satisfied}/${result.landmarksBefore.total} -> ${result.landmarksAfter.satisfied}/${result.landmarksAfter.total}`)
+    if (result.newlySatisfied.length > 0) io.stdout(`newly_satisfied: ${result.newlySatisfied.join(', ')}`)
+    return 0
+  } catch (error) {
+    io.stderr(error instanceof Error ? error.message : String(error))
+    return 1
+  }
+}
+
+async function runEvidence(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const [action, ...rest] = args
+  if (action !== 'check') {
+    io.stderr(`Unknown firmvault evidence action: ${action ?? '<missing>'}`)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const parsed = parseEvidenceCheckArgs(rest)
+  if (!parsed.ok) {
+    const error = 'error' in parsed ? parsed.error : 'Invalid firmvault evidence check arguments'
+    io.stderr(error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const module = await importFirmVaultStateModule()
+  const result = await module.checkFirmVaultEvidencePath(io.cwd ?? process.cwd(), parsed.path)
+  if (parsed.json) {
+    io.stdout(JSON.stringify(result, null, 2))
+    return result.safe ? 0 : 1
+  }
+  io.stdout(`ok: ${result.ok}`)
+  io.stdout(`path: ${result.path}`)
+  io.stdout(`exists: ${result.exists}`)
+  io.stdout(`safe: ${result.safe}`)
+  return result.safe ? 0 : 1
+}
+
 async function runInitCase(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const parsed = parseInitCaseArgs(args)
   if (!parsed.ok) {
@@ -282,6 +427,102 @@ async function runLandmarks(args: readonly string[], io: WaypointCliIo): Promise
     io.stdout(`warnings:\n${projection.warnings.map((warning) => `  - ${warning}`).join('\n')}`)
   }
   return 0
+}
+
+function parseStateShowArgs(args: readonly string[]):
+  | { readonly ok: true; readonly section?: string; readonly json: boolean }
+  | { readonly ok: false; readonly error: string } {
+  let section: string | undefined
+  let json = false
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--section') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --section' }
+      section = value
+      index += 1
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault state show option: ${arg}` }
+  }
+  return { ok: true, json, ...(section ? { section } : {}) }
+}
+
+function parseStateSetArgs(args: readonly string[]):
+  | { readonly ok: true; readonly fact: string; readonly status: string; readonly evidence: readonly string[]; readonly note?: string; readonly json: boolean }
+  | { readonly ok: false; readonly error: string } {
+  let fact: string | undefined
+  let status: string | undefined
+  const evidence: string[] = []
+  let note: string | undefined
+  let json = false
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--fact') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --fact' }
+      fact = value
+      index += 1
+      continue
+    }
+    if (arg === '--status') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --status' }
+      status = value
+      index += 1
+      continue
+    }
+    if (arg === '--evidence') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --evidence' }
+      evidence.push(value)
+      index += 1
+      continue
+    }
+    if (arg === '--note') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --note' }
+      note = value
+      index += 1
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault state set option: ${arg}` }
+  }
+  if (!fact) return { ok: false, error: 'Missing required --fact' }
+  if (!status) return { ok: false, error: 'Missing required --status' }
+  return { ok: true, fact, status, evidence, json, ...(note ? { note } : {}) }
+}
+
+function parseEvidenceCheckArgs(args: readonly string[]):
+  | { readonly ok: true; readonly path: string; readonly json: boolean }
+  | { readonly ok: false; readonly error: string } {
+  let path: string | undefined
+  let json = false
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--path') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --path' }
+      path = value
+      index += 1
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault evidence check option: ${arg}` }
+  }
+  if (!path) return { ok: false, error: 'Missing required --path' }
+  return { ok: true, path, json }
 }
 
 function parseAddDocumentArgs(args: readonly string[]):
@@ -563,6 +804,10 @@ function parseBootstrapArgs(args: readonly string[]):
 
 function countSatisfiedLandmarks(projection: FirmVaultLandmarkProjection): number {
   return Object.values(projection.landmarks).filter((landmark) => landmark.satisfied).length
+}
+
+function stateSectionFromFile(file: string): string {
+  return file.endsWith('.yaml') ? file.slice(0, -'.yaml'.length) : file
 }
 
 async function importFirmVaultStateModule(): Promise<FirmVaultStateModule> {

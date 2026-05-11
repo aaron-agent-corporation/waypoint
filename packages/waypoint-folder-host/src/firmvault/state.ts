@@ -172,6 +172,46 @@ export interface SetFirmVaultCaseFactResult {
   readonly projection: FirmVaultLandmarkProjection
 }
 
+export type FirmVaultCaseStateSectionName =
+  | 'case'
+  | 'client'
+  | 'accident'
+  | 'providers'
+  | 'insurance'
+  | 'liens'
+  | 'records'
+  | 'demand'
+  | 'negotiation'
+  | 'settlement'
+  | 'documents'
+
+const FIRMVAULT_CASE_STATE_SECTION_NAMES = [
+  'case',
+  'client',
+  'accident',
+  'providers',
+  'insurance',
+  'liens',
+  'records',
+  'demand',
+  'negotiation',
+  'settlement',
+  'documents',
+] as const satisfies readonly FirmVaultCaseStateSectionName[]
+
+export interface ReadFirmVaultCaseStateOptions {
+  readonly section?: FirmVaultCaseStateSectionName
+  readonly now?: Date
+}
+
+export interface ReadFirmVaultCaseStateResult {
+  readonly schema_version: 1
+  readonly section: FirmVaultCaseStateSectionName | null
+  readonly state: Record<string, unknown>
+  readonly landmarks: FirmVaultLandmarkCounts
+  readonly warnings: readonly string[]
+}
+
 interface FactInput {
   readonly status?: unknown
   readonly acceptedStatuses: readonly string[]
@@ -229,6 +269,37 @@ export async function checkFirmVaultEvidencePath(
     exists,
     safe: true,
     reason: exists ? null : 'missing',
+  }
+}
+
+export async function readFirmVaultCaseState(
+  projectRoot: string,
+  options: ReadFirmVaultCaseStateOptions = {},
+): Promise<ReadFirmVaultCaseStateResult> {
+  const projection = await readFirmVaultLandmarkProjection(projectRoot, { now: options.now })
+  const stateDir = firmVaultStateDir(projectRoot)
+  if (options.section) {
+    const file = stateSectionFile(options.section)
+    return {
+      schema_version: 1,
+      section: options.section,
+      state: await readYamlRecord(join(stateDir, file)),
+      landmarks: countLandmarks(projection),
+      warnings: projection.warnings,
+    }
+  }
+
+  const state: Record<string, unknown> = {}
+  for (const section of FIRMVAULT_CASE_STATE_SECTION_NAMES) {
+    state[section] = await readYamlRecord(join(stateDir, stateSectionFile(section)))
+  }
+
+  return {
+    schema_version: 1,
+    section: null,
+    state,
+    landmarks: countLandmarks(projection),
+    warnings: projection.warnings,
   }
 }
 
@@ -1029,6 +1100,10 @@ async function appendFirmVaultEvent(projectRoot: string, event: Record<string, u
 
 async function writeYaml(path: string, value: unknown): Promise<void> {
   await writeFile(path, yamlStringify(value), 'utf8')
+}
+
+function stateSectionFile(section: FirmVaultCaseStateSectionName): Exclude<FirmVaultStateSection, 'landmarks.yaml'> {
+  return `${section}.yaml` as Exclude<FirmVaultStateSection, 'landmarks.yaml'>
 }
 
 async function readYamlRecord(path: string): Promise<Record<string, unknown>> {

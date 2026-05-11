@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
@@ -194,6 +194,120 @@ describe('waypoint firmvault commands', () => {
     })
     const documentsYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'documents.yaml'), 'utf8'))
     expect(documentsYaml.documents[0].handoff).toEqual(body.handoff)
+  })
+
+  it('prints full FirmVault explicit state from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'state', 'show', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.schema_version).toBe(1)
+    expect(body.section).toBeNull()
+    expect(body.state.case.case.slug).toBe('smith-v-acme')
+    expect(body.state.demand.demand.send.status).toBe('not_sent')
+    expect(body.landmarks).toEqual({ satisfied: 0, total: 82 })
+    expect(body.warnings).toEqual([])
+  })
+
+  it('prints a single FirmVault state section from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'state', 'show', '--section', 'demand', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.section).toBe('demand')
+    expect(body.state.demand.send.status).toBe('not_sent')
+    expect(body.state.case).toBeUndefined()
+    expect(body.landmarks).toEqual({ satisfied: 0, total: 82 })
+  })
+
+  it('checks FirmVault evidence paths from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    await mkdir(join(root, 'documents', 'sent'), { recursive: true })
+    await writeFile(join(root, 'documents', 'sent', 'demand.md'), '# Demand sent\n')
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'evidence', 'check', '--path', 'documents/sent/demand.md', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body).toEqual({
+      ok: true,
+      path: 'documents/sent/demand.md',
+      exists: true,
+      safe: true,
+      reason: null,
+    })
+  })
+
+  it('sets a FirmVault legal state fact from the CLI and reports landmark impact', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    await mkdir(join(root, 'documents', 'sent'), { recursive: true })
+    await writeFile(join(root, 'documents', 'sent', 'demand.md'), '# Demand sent\n')
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli([
+      'firmvault',
+      'state',
+      'set',
+      '--fact',
+      'demand.send',
+      '--status',
+      'sent',
+      '--evidence',
+      'documents/sent/demand.md',
+      '--note',
+      'Sent by human after attorney approval.',
+      '--json',
+    ], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body).toMatchObject({
+      ok: true,
+      fact: 'demand.send',
+      section: 'demand',
+      status: 'sent',
+      evidence: ['documents/sent/demand.md'],
+      landmarks_before: { satisfied: 0, total: 82 },
+      landmarks_after: { satisfied: 1, total: 82 },
+      newly_satisfied: ['demand_sent'],
+      newly_unsatisfied: [],
+      legal_landmarks_updated: true,
+    })
+    const demandYaml = yamlParse(await readFile(join(root, '.waypoint', 'firmvault', 'demand.yaml'), 'utf8'))
+    expect(demandYaml.demand.send.status).toBe('sent')
+    expect(demandYaml.demand.send.evidence).toEqual([{ path: 'documents/sent/demand.md' }])
+    await expect(readFile(join(root, '.waypoint', 'firmvault', 'events.jsonl'), 'utf8')).resolves.toContain('firmvault.state.updated')
+  })
+
+  it('rejects invalid FirmVault state facts from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const { io, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'state', 'set', '--fact', 'bogus.fact', '--status', 'sent'], io)
+
+    expect(exitCode).toBe(1)
+    expect(stderr[0]).toContain('Unknown FirmVault fact: bogus.fact')
   })
 
   it('rejects unknown FirmVault commands', async () => {
