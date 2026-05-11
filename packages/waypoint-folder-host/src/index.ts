@@ -115,6 +115,8 @@ export {
   initFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
 } from './firmvault/state.ts'
+export { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './firmvault/facts.ts'
+export type { FirmVaultFactDefinition, FirmVaultStateSection } from './firmvault/facts.ts'
 export type {
   FirmVaultCaseType,
   FirmVaultEvidenceRef,

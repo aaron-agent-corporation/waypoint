@@ -11,6 +11,7 @@ import {
   initFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
 } from './state.ts'
+import { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './facts.ts'
 
 async function tempCaseRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-firmvault-state-'))
@@ -23,6 +24,45 @@ async function patchYaml(path: string, patcher: (value: any) => void): Promise<v
 }
 
 describe('FirmVault case state contract', () => {
+  it('exposes an allowlisted fact registry for core start-to-close legal state inputs', () => {
+    const expectedFacts = [
+      'case.setup',
+      'client.intake',
+      'client.contracts.fee_agreement',
+      'client.authorizations.hipaa',
+      'accident.police_report',
+      'providers.setup',
+      'insurance.bi.carrier_identified',
+      'insurance.bi.lor.sent',
+      'records.authorization',
+      'records.processing',
+      'demand.send',
+      'negotiation.client_decision',
+      'settlement.release',
+      'settlement.funds',
+      'settlement.distribution.completion',
+      'settlement.closing.case',
+    ]
+
+    expect(FIRMVAULT_FACT_DEFINITIONS.map((definition) => definition.fact)).toEqual(expect.arrayContaining(expectedFacts))
+    for (const fact of expectedFacts) {
+      expect(getFirmVaultFactDefinition(fact)?.fact).toBe(fact)
+    }
+
+    const stateFiles = new Set(FIRMVAULT_CASE_STATE_FILES.filter((file) => file.endsWith('.yaml')))
+    const landmarkSlugs = new Set(FIRMVAULT_LANDMARK_SLUGS)
+    for (const definition of FIRMVAULT_FACT_DEFINITIONS) {
+      expect(stateFiles.has(definition.file), definition.fact).toBe(true)
+      expect(definition.path.length, definition.fact).toBeGreaterThan(0)
+      expect(definition.allowedStatuses.length, definition.fact).toBeGreaterThan(0)
+      expect(definition.evidenceRequiredFor.length, definition.fact).toBeGreaterThan(0)
+      expect(definition.projectedLandmarks.length, definition.fact).toBeGreaterThan(0)
+      for (const slug of definition.projectedLandmarks) {
+        expect(landmarkSlugs.has(slug), `${definition.fact} -> ${slug}`).toBe(true)
+      }
+    }
+  })
+
   it('initializes product-owned FirmVault YAML state with all landmarks unsatisfied', async () => {
     const root = await tempCaseRoot()
 
