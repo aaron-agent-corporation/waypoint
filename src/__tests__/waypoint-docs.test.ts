@@ -201,4 +201,24 @@ describe('Waypoint Quest operator documentation', () => {
       expect(plan).toContain(phrase)
     }
   })
+
+  it('publishes the FirmVault completed-case replay template, synthetic example, and smoke command', () => {
+    const packageJson = JSON.parse(readRepoFile('package.json'))
+    const template = readRepoFile('examples/firmvault-lifecycle-simulation/completed-case-replay.template.yaml')
+    const example = readRepoFile('examples/firmvault-lifecycle-simulation/completed-case-replay.example.yaml')
+    const smoke = readRepoFile('scripts/firmvault-completed-case-replay.mjs')
+
+    expect(packageJson.scripts['smoke:firmvault-completed-case-replay']).toBe('node scripts/firmvault-completed-case-replay.mjs')
+    expect(template).toContain('[REDACTED]')
+    expect(template).toContain('source:')
+    expect(template).toContain('root:')
+    expect(template).toContain('steps:')
+    expect(template).toContain('fact: settlement.closing.case')
+    expect(example).toContain('Synthetic Completed Case Replay')
+    expect(example).toContain('fact: case.setup')
+    expect(example).toContain('fact: settlement.closing.case')
+    expect(smoke).toContain('Waypoint FirmVault completed-case replay smoke passed')
+    expect(smoke).toContain('FIRMVAULT_COMPLETED_CASE_REPLAY_MANIFEST')
+    expect(smoke).toContain('firmvault.state.updated')
+  })
 })

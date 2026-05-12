@@ -22,6 +22,7 @@
     "smoke:firmvault-bootstrap": "node scripts/firmvault-bootstrap-smoke.mjs",
     "smoke:firmvault-document-ingestion": "node scripts/firmvault-document-ingestion-smoke.mjs",
     "smoke:firmvault-lifecycle-simulation": "node scripts/firmvault-lifecycle-simulation-smoke.mjs",
+    "smoke:firmvault-completed-case-replay": "node scripts/firmvault-completed-case-replay.mjs",
     "build": "tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs",
     "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
     "prepack": "pnpm clean && pnpm build",

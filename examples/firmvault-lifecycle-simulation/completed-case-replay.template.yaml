@@ -1,0 +1,436 @@
+schema_version: 1
+source:
+  description: "[REDACTED] completed PI source case"
+  root: "/absolute/path/to/[REDACTED]/completed-source-case"
+case:
+  name: "[REDACTED] Completed Case Replay"
+  type: personal_injury
+  slug: completed-case-replay
+options:
+  copy_mode: copy
+  redact_log_output: true
+notes:
+  - Completed-case replay maps existing source evidence into a temp sandbox case.
+  - Legal progress is recorded only with waypoint firmvault state set.
+  - The replay does not edit .waypoint/firmvault/*.yaml directly.
+steps:
+  - fact: case.setup
+    status: complete
+    source: "synthetic-source/case-setup.md"
+    evidence: "evidence/case-setup.md"
+    note: "Case shell and required starter paths are complete."
+  - fact: client.intake
+    status: complete
+    source: "synthetic-source/client-intake.md"
+    evidence: "evidence/client-intake.md"
+    note: "Client intake information is complete."
+  - fact: client.contracts.fee_agreement
+    status: signed
+    source: "synthetic-source/client-contracts-fee-agreement.md"
+    evidence: "evidence/client-contracts-fee-agreement.md"
+    note: "Client fee agreement has been signed."
+  - fact: client.authorizations.hipaa
+    status: signed
+    source: "synthetic-source/client-authorizations-hipaa.md"
+    evidence: "evidence/client-authorizations-hipaa.md"
+    note: "Client HIPAA authorization has been signed."
+  - fact: accident.police_report
+    status: received
+    source: "synthetic-source/accident-police-report.md"
+    evidence: "evidence/accident-police-report.md"
+    note: "Accident or police report has been obtained."
+  - fact: providers.setup
+    status: complete
+    source: "synthetic-source/providers-setup.md"
+    evidence: "evidence/providers-setup.md"
+    note: "Medical provider ledger setup is complete."
+  - fact: insurance.bi.carrier_identified
+    status: identified
+    source: "synthetic-source/insurance-bi-carrier-identified.md"
+    evidence: "evidence/insurance-bi-carrier-identified.md"
+    note: "At-fault BI carrier has been identified."
+  - fact: insurance.bi.lor.prepared
+    status: prepared
+    source: "synthetic-source/insurance-bi-lor-prepared.md"
+    evidence: "evidence/insurance-bi-lor-prepared.md"
+    note: "BI letter of representation has been prepared."
+  - fact: insurance.bi.lor.sent
+    status: sent
+    source: "synthetic-source/insurance-bi-lor-sent.md"
+    evidence: "evidence/insurance-bi-lor-sent.md"
+    note: "BI letter of representation has been sent by a human/operator."
+  - fact: insurance.bi.acknowledgment
+    status: checked
+    source: "synthetic-source/insurance-bi-acknowledgment.md"
+    evidence: "evidence/insurance-bi-acknowledgment.md"
+    note: "BI acknowledgment or follow-up status has been checked."
+  - fact: insurance.pip.track
+    status: active
+    source: "synthetic-source/insurance-pip-track.md"
+    evidence: "evidence/insurance-pip-track.md"
+    note: "PIP track has been activated or ruled into workflow."
+  - fact: insurance.pip.carrier_identified
+    status: identified
+    source: "synthetic-source/insurance-pip-carrier-identified.md"
+    evidence: "evidence/insurance-pip-carrier-identified.md"
+    note: "PIP carrier has been identified."
+  - fact: insurance.pip.application.prepared
+    status: prepared
+    source: "synthetic-source/insurance-pip-application-prepared.md"
+    evidence: "evidence/insurance-pip-application-prepared.md"
+    note: "PIP application has been prepared."
+  - fact: insurance.pip.lor.prepared
+    status: prepared
+    source: "synthetic-source/insurance-pip-lor-prepared.md"
+    evidence: "evidence/insurance-pip-lor-prepared.md"
+    note: "PIP letter of representation has been prepared."
+  - fact: insurance.pip.application.filed
+    status: filed
+    source: "synthetic-source/insurance-pip-application-filed.md"
+    evidence: "evidence/insurance-pip-application-filed.md"
+    note: "PIP application has been filed."
+  - fact: insurance.pip.lor.sent
+    status: sent
+    source: "synthetic-source/insurance-pip-lor-sent.md"
+    evidence: "evidence/insurance-pip-lor-sent.md"
+    note: "PIP letter of representation has been sent."
+  - fact: insurance.pip.acknowledgment
+    status: checked
+    source: "synthetic-source/insurance-pip-acknowledgment.md"
+    evidence: "evidence/insurance-pip-acknowledgment.md"
+    note: "PIP acknowledgment or follow-up status has been checked."
+  - fact: insurance.pip.approval
+    status: approved
+    source: "synthetic-source/insurance-pip-approval.md"
+    evidence: "evidence/insurance-pip-approval.md"
+    note: "PIP approval has been documented."
+  - fact: insurance.pip.status_check
+    status: checked
+    source: "synthetic-source/insurance-pip-status-check.md"
+    evidence: "evidence/insurance-pip-status-check.md"
+    note: "PIP status has been checked."
+  - fact: insurance.pip.benefits
+    status: exhausted
+    source: "synthetic-source/insurance-pip-benefits.md"
+    evidence: "evidence/insurance-pip-benefits.md"
+    note: "PIP benefits exhaustion has been documented."
+  - fact: providers.treatment_status.provider_list_reviewed
+    status: reviewed
+    source: "synthetic-source/providers-treatment-status-provider-list-reviewed.md"
+    evidence: "evidence/providers-treatment-status-provider-list-reviewed.md"
+    note: "Provider list has been reviewed."
+  - fact: providers.treatment_status.provider_status_updated
+    status: updated
+    source: "synthetic-source/providers-treatment-status-provider-status-updated.md"
+    evidence: "evidence/providers-treatment-status-provider-status-updated.md"
+    note: "Provider treatment status has been updated."
+  - fact: providers.treatment_status.provider_followups_flagged
+    status: flagged
+    source: "synthetic-source/providers-treatment-status-provider-followups-flagged.md"
+    evidence: "evidence/providers-treatment-status-provider-followups-flagged.md"
+    note: "Provider follow-ups have been flagged or cleared."
+  - fact: providers.treatment_status.human_review
+    status: reviewed
+    source: "synthetic-source/providers-treatment-status-human-review.md"
+    evidence: "evidence/providers-treatment-status-human-review.md"
+    note: "Human treatment-status review is complete."
+  - fact: providers.treatment_status.treatment_complete
+    status: complete
+    source: "synthetic-source/providers-treatment-status-treatment-complete.md"
+    evidence: "evidence/providers-treatment-status-treatment-complete.md"
+    note: "Treatment completion has been documented."
+  - fact: liens.early_identification.health_coverage
+    status: categorized
+    source: "synthetic-source/liens-early-identification-health-coverage.md"
+    evidence: "evidence/liens-early-identification-health-coverage.md"
+    note: "Health coverage has been categorized for lien discovery."
+  - fact: liens.early_identification.clues_reviewed
+    status: reviewed
+    source: "synthetic-source/liens-early-identification-clues-reviewed.md"
+    evidence: "evidence/liens-early-identification-clues-reviewed.md"
+    note: "Lien clues have been reviewed."
+  - fact: liens.early_identification.liens
+    status: identified
+    source: "synthetic-source/liens-early-identification-liens.md"
+    evidence: "evidence/liens-early-identification-liens.md"
+    note: "Potential liens have been identified or ruled out."
+  - fact: liens.early_identification.inventory_review
+    status: reviewed
+    source: "synthetic-source/liens-early-identification-inventory-review.md"
+    evidence: "evidence/liens-early-identification-inventory-review.md"
+    note: "Early lien inventory has been reviewed."
+  - fact: records.authorization
+    status: verified
+    source: "synthetic-source/records-authorization.md"
+    evidence: "evidence/records-authorization.md"
+    note: "Medical authorization has been verified."
+  - fact: records.request_packet
+    status: prepared
+    source: "synthetic-source/records-request-packet.md"
+    evidence: "evidence/records-request-packet.md"
+    note: "Records request packet has been prepared."
+  - fact: records.requests
+    status: sent_all
+    source: "synthetic-source/records-requests.md"
+    evidence: "evidence/records-requests.md"
+    note: "Records requests have been sent to all providers."
+  - fact: records.followups.first
+    status: complete
+    source: "synthetic-source/records-followups-first.md"
+    evidence: "evidence/records-followups-first.md"
+    note: "First records follow-up is complete or not needed."
+  - fact: records.followups.second
+    status: complete
+    source: "synthetic-source/records-followups-second.md"
+    evidence: "evidence/records-followups-second.md"
+    note: "Second records follow-up is complete or not needed."
+  - fact: records.followups.third
+    status: complete
+    source: "synthetic-source/records-followups-third.md"
+    evidence: "evidence/records-followups-third.md"
+    note: "Third records follow-up is complete or not needed."
+  - fact: records.escalation
+    status: escalated
+    source: "synthetic-source/records-escalation.md"
+    evidence: "evidence/records-escalation.md"
+    note: "Records request escalation is complete or not needed."
+  - fact: records.processing
+    status: processed
+    source: "synthetic-source/records-processing.md"
+    evidence: "evidence/records-processing.md"
+    note: "Records and bills have been processed."
+  - fact: records.received
+    status: all_received
+    source: "synthetic-source/records-received.md"
+    evidence: "evidence/records-received.md"
+    note: "All requested records have been received."
+  - fact: records.chronology
+    status: updated
+    source: "synthetic-source/records-chronology.md"
+    evidence: "evidence/records-chronology.md"
+    note: "Medical chronology has been updated."
+  - fact: records.workflow_review
+    status: complete
+    source: "synthetic-source/records-workflow-review.md"
+    evidence: "evidence/records-workflow-review.md"
+    note: "Medical records request workflow has been reviewed as complete."
+  - fact: demand.readiness.materials
+    status: gathered
+    source: "synthetic-source/demand-readiness-materials.md"
+    evidence: "evidence/demand-readiness-materials.md"
+    note: "Demand materials have been gathered."
+  - fact: demand.readiness.damages
+    status: calculated
+    source: "synthetic-source/demand-readiness-damages.md"
+    evidence: "evidence/demand-readiness-damages.md"
+    note: "Damages have been calculated."
+  - fact: demand.readiness.review
+    status: reviewed
+    source: "synthetic-source/demand-readiness-review.md"
+    evidence: "evidence/demand-readiness-review.md"
+    note: "Demand readiness has been reviewed."
+  - fact: demand.liens.final_process_check
+    status: checked
+    source: "synthetic-source/demand-liens-final-process-check.md"
+    evidence: "evidence/demand-liens-final-process-check.md"
+    note: "Demand-stage lien process has been checked."
+  - fact: demand.draft
+    status: drafted
+    source: "synthetic-source/demand-draft.md"
+    evidence: "evidence/demand-draft.md"
+    note: "Demand package draft has been prepared."
+  - fact: demand.attorney_review
+    status: approved
+    source: "synthetic-source/demand-attorney-review.md"
+    evidence: "evidence/demand-attorney-review.md"
+    note: "Attorney reviewed the demand package."
+  - fact: demand.recipients
+    status: identified
+    source: "synthetic-source/demand-recipients.md"
+    evidence: "evidence/demand-recipients.md"
+    note: "Demand recipients have been identified."
+  - fact: demand.send
+    status: sent
+    source: "synthetic-source/demand-send.md"
+    evidence: "evidence/demand-send.md"
+    note: "Demand package has been sent by a human/operator."
+  - fact: negotiation.initial_offer
+    status: received
+    source: "synthetic-source/negotiation-initial-offer.md"
+    evidence: "evidence/negotiation-initial-offer.md"
+    note: "Initial offer has been received."
+  - fact: negotiation.offer_documented
+    status: documented
+    source: "synthetic-source/negotiation-offer-documented.md"
+    evidence: "evidence/negotiation-offer-documented.md"
+    note: "Offer has been documented."
+  - fact: negotiation.evaluation
+    status: evaluated
+    source: "synthetic-source/negotiation-evaluation.md"
+    evidence: "evidence/negotiation-evaluation.md"
+    note: "Offer evaluation is complete."
+  - fact: negotiation.net_to_client
+    status: prepared
+    source: "synthetic-source/negotiation-net-to-client.md"
+    evidence: "evidence/negotiation-net-to-client.md"
+    note: "Net-to-client scenarios are prepared."
+  - fact: negotiation.client_advice
+    status: advised
+    source: "synthetic-source/negotiation-client-advice.md"
+    evidence: "evidence/negotiation-client-advice.md"
+    note: "Client has been advised of the offer."
+  - fact: negotiation.client_decision
+    status: documented
+    source: "synthetic-source/negotiation-client-decision.md"
+    evidence: "evidence/negotiation-client-decision.md"
+    note: "Client offer decision has been documented."
+  - fact: negotiation.response.prepared
+    status: prepared
+    source: "synthetic-source/negotiation-response-prepared.md"
+    evidence: "evidence/negotiation-response-prepared.md"
+    note: "Negotiation response has been prepared."
+  - fact: negotiation.response.human_sent
+    status: sent
+    source: "synthetic-source/negotiation-response-human-sent.md"
+    evidence: "evidence/negotiation-response-human-sent.md"
+    note: "Negotiation response has been sent by a human/operator."
+  - fact: negotiation.response.result
+    status: documented
+    source: "synthetic-source/negotiation-response-result.md"
+    evidence: "evidence/negotiation-response-result.md"
+    note: "Negotiation response result has been documented."
+  - fact: settlement
+    status: reached
+    source: "synthetic-source/settlement.md"
+    evidence: "evidence/settlement.md"
+    note: "Settlement has been reached or progressed into signed/funded/distributed status."
+  - fact: settlement.statement
+    status: prepared
+    source: "synthetic-source/settlement-statement.md"
+    evidence: "evidence/settlement-statement.md"
+    note: "Settlement statement has been prepared."
+  - fact: settlement.authorization_to_settle
+    status: prepared
+    source: "synthetic-source/settlement-authorization-to-settle.md"
+    evidence: "evidence/settlement-authorization-to-settle.md"
+    note: "Authorization-to-settle document has been prepared."
+  - fact: settlement.client_authorization
+    status: authorized
+    source: "synthetic-source/settlement-client-authorization.md"
+    evidence: "evidence/settlement-client-authorization.md"
+    note: "Client settlement authorization has been documented."
+  - fact: settlement.release
+    status: executed
+    source: "synthetic-source/settlement-release.md"
+    evidence: "evidence/settlement-release.md"
+    note: "Release has been executed."
+  - fact: settlement.funds
+    status: received
+    source: "synthetic-source/settlement-funds.md"
+    evidence: "evidence/settlement-funds.md"
+    note: "Settlement funds have been received or cleared."
+  - fact: settlement.liens.audit
+    status: audited
+    source: "synthetic-source/settlement-liens-audit.md"
+    evidence: "evidence/settlement-liens-audit.md"
+    note: "Settlement liens have been audited."
+  - fact: settlement.liens.prioritization
+    status: prioritized
+    source: "synthetic-source/settlement-liens-prioritization.md"
+    evidence: "evidence/settlement-liens-prioritization.md"
+    note: "Settlement liens have been prioritized."
+  - fact: settlement.liens.available_funds
+    status: calculated
+    source: "synthetic-source/settlement-liens-available-funds.md"
+    evidence: "evidence/settlement-liens-available-funds.md"
+    note: "Available funds for liens have been calculated."
+  - fact: settlement.liens.strategy_review
+    status: reviewed
+    source: "synthetic-source/settlement-liens-strategy-review.md"
+    evidence: "evidence/settlement-liens-strategy-review.md"
+    note: "Settlement lien strategy has been reviewed."
+  - fact: settlement.liens.result
+    status: negotiated
+    source: "synthetic-source/settlement-liens-result.md"
+    evidence: "evidence/settlement-liens-result.md"
+    note: "Settlement lien negotiation result has been documented."
+  - fact: settlement.distribution.statement
+    status: prepared
+    source: "synthetic-source/settlement-distribution-statement.md"
+    evidence: "evidence/settlement-distribution-statement.md"
+    note: "Final distribution statement has been prepared."
+  - fact: settlement.distribution.client_issuance
+    status: issued
+    source: "synthetic-source/settlement-distribution-client-issuance.md"
+    evidence: "evidence/settlement-distribution-client-issuance.md"
+    note: "Client distribution has been issued."
+  - fact: settlement.distribution.client_receipt
+    status: confirmed
+    source: "synthetic-source/settlement-distribution-client-receipt.md"
+    evidence: "evidence/settlement-distribution-client-receipt.md"
+    note: "Client receipt of distribution has been confirmed."
+  - fact: settlement.distribution.trust_account
+    status: zeroed
+    source: "synthetic-source/settlement-distribution-trust-account.md"
+    evidence: "evidence/settlement-distribution-trust-account.md"
+    note: "Trust account has been zeroed for the case."
+  - fact: liens.final_resolution.inventory
+    status: opened
+    source: "synthetic-source/liens-final-resolution-inventory.md"
+    evidence: "evidence/liens-final-resolution-inventory.md"
+    note: "Final lien resolution inventory has been opened or reviewed."
+  - fact: liens.final_resolution.final_amount_request.prepared
+    status: prepared
+    source: "synthetic-source/liens-final-resolution-final-amount-request-prepared.md"
+    evidence: "evidence/liens-final-resolution-final-amount-request-prepared.md"
+    note: "Final lien amount request has been prepared."
+  - fact: liens.final_resolution.final_amount_request.sent
+    status: sent
+    source: "synthetic-source/liens-final-resolution-final-amount-request-sent.md"
+    evidence: "evidence/liens-final-resolution-final-amount-request-sent.md"
+    note: "Final lien amounts have been requested."
+  - fact: liens.final_resolution.final_amount_receipt
+    status: received
+    source: "synthetic-source/liens-final-resolution-final-amount-receipt.md"
+    evidence: "evidence/liens-final-resolution-final-amount-receipt.md"
+    note: "Final lien amounts have been received."
+  - fact: liens.final_resolution.payment_authorization
+    status: authorized
+    source: "synthetic-source/liens-final-resolution-payment-authorization.md"
+    evidence: "evidence/liens-final-resolution-payment-authorization.md"
+    note: "Lien payment has been authorized or reviewed."
+  - fact: liens.final_resolution.payment
+    status: paid
+    source: "synthetic-source/liens-final-resolution-payment.md"
+    evidence: "evidence/liens-final-resolution-payment.md"
+    note: "Liens have been paid or documented as resolved."
+  - fact: settlement.distribution.completion
+    status: complete
+    source: "synthetic-source/settlement-distribution-completion.md"
+    evidence: "evidence/settlement-distribution-completion.md"
+    note: "Final distribution is complete."
+  - fact: settlement.closing.readiness
+    status: verified
+    source: "synthetic-source/settlement-closing-readiness.md"
+    evidence: "evidence/settlement-closing-readiness.md"
+    note: "Close-case readiness and obligations have been verified."
+  - fact: settlement.closing.letter.prepared
+    status: prepared
+    source: "synthetic-source/settlement-closing-letter-prepared.md"
+    evidence: "evidence/settlement-closing-letter-prepared.md"
+    note: "Final client letter has been prepared."
+  - fact: settlement.closing.letter.sent
+    status: sent
+    source: "synthetic-source/settlement-closing-letter-sent.md"
+    evidence: "evidence/settlement-closing-letter-sent.md"
+    note: "Final client letter has been sent."
+  - fact: settlement.closing.archive
+    status: archived
+    source: "synthetic-source/settlement-closing-archive.md"
+    evidence: "evidence/settlement-closing-archive.md"
+    note: "Case archive has been confirmed."
+  - fact: settlement.closing.case
+    status: closed
+    source: "synthetic-source/settlement-closing-case.md"
+    evidence: "evidence/settlement-closing-case.md"
+    note: "Case closure has been documented."
