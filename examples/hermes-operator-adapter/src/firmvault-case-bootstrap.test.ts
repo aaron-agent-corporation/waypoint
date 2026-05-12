@@ -9,6 +9,9 @@ import {
   parseFirmVaultCasesRegistry,
   recordFirmVaultDocumentHandoffWithHermesOperator,
   addFirmVaultDocumentWithHermesOperator,
+  checkFirmVaultEvidenceWithHermesOperator,
+  setFirmVaultStateFactWithHermesOperator,
+  showFirmVaultStateWithHermesOperator,
   type FirmVaultNewCaseRequest,
 } from './firmvault-case-bootstrap.ts'
 import type { WaypointCommandExecutor } from './safe-waypoint-command-runner.ts'
@@ -265,6 +268,161 @@ cases_roots:
       documentId: 'document-001',
       status: 'bogus' as never,
     }, { executor })).rejects.toThrow('Unsupported FirmVault document handoff status: bogus')
+  })
+
+  it('maps trusted state show, evidence check, and state set requests to exact FirmVault CLI args', async () => {
+    const registry = parseFirmVaultCasesRegistry(`
+cases_roots:
+  pi:
+    path: /trusted/firmvault/cases
+    waypoint_cli: ${waypointCli}
+    hermes_profile: paralegal
+`)
+    const calls: Array<{ command: string; args: readonly string[]; cwd: string }> = []
+    const executor: WaypointCommandExecutor = async (spec) => {
+      calls.push({ command: spec.command, args: spec.args, cwd: spec.cwd })
+      if (spec.args.includes('show')) {
+        return {
+          exitCode: 0,
+          stdout: JSON.stringify({
+            schema_version: 1,
+            section: 'demand',
+            state: { demand: { send: { status: 'not_started', evidence: [] } } },
+            landmarks: { satisfied: 0, total: 82 },
+            warnings: [],
+          }),
+          stderr: '',
+        }
+      }
+      if (spec.args.includes('evidence')) {
+        return {
+          exitCode: 0,
+          stdout: JSON.stringify({ ok: true, path: 'documents/sent/demand.md', exists: true, safe: true, reason: null }),
+          stderr: '',
+        }
+      }
+      return {
+        exitCode: 0,
+        stdout: JSON.stringify({
+          ok: true,
+          fact: 'demand.send',
+          section: 'demand',
+          status: 'sent',
+          evidence: ['documents/sent/demand.md'],
+          landmarks_before: { satisfied: 0, total: 82 },
+          landmarks_after: { satisfied: 1, total: 82 },
+          newly_satisfied: ['demand_sent'],
+          newly_unsatisfied: [],
+          warnings: [],
+          legal_landmarks_updated: true,
+        }),
+        stderr: '',
+      }
+    }
+
+    const shown = await showFirmVaultStateWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      section: 'demand',
+    }, { executor })
+    const evidence = await checkFirmVaultEvidenceWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      path: 'documents/sent/demand.md',
+    }, { executor })
+    const updated = await setFirmVaultStateFactWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      fact: 'demand.send',
+      status: 'sent',
+      evidence: ['documents/sent/demand.md'],
+      note: 'Sent by human after attorney approval.',
+    }, { executor })
+
+    expect(shown).toMatchObject({
+      ok: true,
+      hermesProfile: 'paralegal',
+      caseRoot: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      section: 'demand',
+      landmarkCount: 82,
+      summary: 'FirmVault state demand read for jane-smith-v-acme-trucking through Hermes profile paralegal.',
+    })
+    expect(evidence).toMatchObject({
+      ok: true,
+      path: 'documents/sent/demand.md',
+      exists: true,
+      safe: true,
+      summary: 'FirmVault evidence documents/sent/demand.md is safe and exists for jane-smith-v-acme-trucking.',
+    })
+    expect(updated).toMatchObject({
+      ok: true,
+      fact: 'demand.send',
+      status: 'sent',
+      newlySatisfied: ['demand_sent'],
+      legalLandmarksUpdated: true,
+      summary: 'FirmVault fact demand.send set to sent for jane-smith-v-acme-trucking; newly satisfied: demand_sent.',
+    })
+    expect(calls).toEqual([
+      {
+        command: process.execPath,
+        args: [waypointCli, 'firmvault', 'state', 'show', '--section', 'demand', '--json'],
+        cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      },
+      {
+        command: process.execPath,
+        args: [waypointCli, 'firmvault', 'evidence', 'check', '--path', 'documents/sent/demand.md', '--json'],
+        cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      },
+      {
+        command: process.execPath,
+        args: [
+          waypointCli,
+          'firmvault',
+          'state',
+          'set',
+          '--fact',
+          'demand.send',
+          '--status',
+          'sent',
+          '--evidence',
+          'documents/sent/demand.md',
+          '--note',
+          'Sent by human after attorney approval.',
+          '--json',
+        ],
+        cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      },
+    ])
+  })
+
+  it('rejects unsafe FirmVault state adapter inputs before invoking Waypoint', async () => {
+    const registry = parseFirmVaultCasesRegistry(`
+cases_roots:
+  pi:
+    path: /trusted/firmvault/cases
+    waypoint_cli: ${waypointCli}
+    hermes_profile: paralegal
+`)
+    const executor: WaypointCommandExecutor = async () => {
+      throw new Error('executor should not be called')
+    }
+
+    await expect(showFirmVaultStateWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: '../escape',
+    }, { executor })).rejects.toThrow('Invalid FirmVault case slug: ../escape')
+    await expect(checkFirmVaultEvidenceWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      path: '/tmp/demand.md',
+    }, { executor })).rejects.toThrow('FirmVault evidence path must be a safe relative path: /tmp/demand.md')
+    await expect(setFirmVaultStateFactWithHermesOperator(registry, {
+      casesRootKey: 'pi',
+      caseSlug: 'jane-smith-v-acme-trucking',
+      fact: 'demand.send',
+      status: 'sent',
+      evidence: ['../demand.md'],
+    }, { executor })).rejects.toThrow('FirmVault evidence path must be a safe relative path: ../demand.md')
   })
 
   it('can bootstrap a real temp FirmVault case through the adapter and actual CLI', async () => {

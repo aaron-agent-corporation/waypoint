@@ -146,6 +146,71 @@ describe('safe Waypoint command runner', () => {
     )
   })
 
+  it('allowlists safe FirmVault legal state commands for paralegal operation', () => {
+    const project = projectRecord('/trusted/firmvault/cases/jane-smith-v-acme-trucking')
+
+    expect(buildSafeWaypointCommand(project, ['firmvault', 'state', 'show', '--section', 'demand', '--json'])).toMatchObject({
+      args: [waypointCli, 'firmvault', 'state', 'show', '--section', 'demand', '--json'],
+      cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      mutation: false,
+      summaryHint: 'firmvault state show',
+    })
+    expect(buildSafeWaypointCommand(project, [
+      'firmvault',
+      'state',
+      'set',
+      '--fact',
+      'demand.send',
+      '--status',
+      'sent',
+      '--evidence',
+      'documents/sent/demand.md',
+      '--note',
+      'Sent by human after attorney approval.',
+      '--json',
+    ])).toMatchObject({
+      args: [
+        waypointCli,
+        'firmvault',
+        'state',
+        'set',
+        '--fact',
+        'demand.send',
+        '--status',
+        'sent',
+        '--evidence',
+        'documents/sent/demand.md',
+        '--note',
+        'Sent by human after attorney approval.',
+        '--json',
+      ],
+      cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      mutation: true,
+      summaryHint: 'firmvault state set',
+    })
+    expect(buildSafeWaypointCommand(project, ['firmvault', 'evidence', 'check', '--path', 'documents/sent/demand.md', '--json'])).toMatchObject({
+      args: [waypointCli, 'firmvault', 'evidence', 'check', '--path', 'documents/sent/demand.md', '--json'],
+      cwd: '/trusted/firmvault/cases/jane-smith-v-acme-trucking',
+      mutation: false,
+      summaryHint: 'firmvault evidence check',
+    })
+    expect(buildSafeWaypointCommand(project, ['firmvault', 'landmarks', '--json'])).toMatchObject({
+      args: [waypointCli, 'firmvault', 'landmarks', '--json'],
+      mutation: false,
+      summaryHint: 'firmvault landmarks',
+    })
+
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'state', 'set', '--status', 'sent'])).toThrow(
+      'Waypoint firmvault state set requires --fact',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'state', 'set', '--fact', 'demand.send', '--status', 'sent', '--evidence', '../demand.md'])).toThrow(
+      'Waypoint firmvault state set requires --evidence to be a safe relative path: ../demand.md',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['firmvault', 'evidence', 'check', '--path', '/tmp/demand.md'])).toThrow(
+      'Waypoint firmvault evidence check requires --path to be a safe relative path: /tmp/demand.md',
+    )
+  })
+
   it('runs an allowlisted command through an injected executor and preserves IDs in output', async () => {
     const calls: Array<{ command: string; args: readonly string[]; cwd: string }> = []
     const executor: WaypointCommandExecutor = async (spec) => {

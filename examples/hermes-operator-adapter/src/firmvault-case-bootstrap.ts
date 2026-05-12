@@ -90,6 +90,74 @@ export interface FirmVaultHermesDocumentHandoffResult {
   readonly summary: string
 }
 
+export interface FirmVaultStateShowRequest {
+  readonly casesRootKey: string
+  readonly caseSlug: string
+  readonly section?: string
+}
+
+export interface FirmVaultEvidenceCheckRequest {
+  readonly casesRootKey: string
+  readonly caseSlug: string
+  readonly path: string
+}
+
+export interface FirmVaultStateSetRequest {
+  readonly casesRootKey: string
+  readonly caseSlug: string
+  readonly fact: string
+  readonly status: string
+  readonly evidence?: readonly string[]
+  readonly note?: string
+}
+
+export interface FirmVaultHermesStateShowResult {
+  readonly ok: boolean
+  readonly casesRootKey: string
+  readonly hermesProfile: 'paralegal'
+  readonly caseRoot: string
+  readonly caseSlug: string
+  readonly section: string | null
+  readonly landmarkCount: number
+  readonly state: Record<string, unknown>
+  readonly warnings: readonly string[]
+  readonly stdout: string
+  readonly stderr: string
+  readonly summary: string
+}
+
+export interface FirmVaultHermesEvidenceCheckResult {
+  readonly ok: boolean
+  readonly casesRootKey: string
+  readonly hermesProfile: 'paralegal'
+  readonly caseRoot: string
+  readonly caseSlug: string
+  readonly path: string
+  readonly exists: boolean
+  readonly safe: boolean
+  readonly reason: string | null
+  readonly stdout: string
+  readonly stderr: string
+  readonly summary: string
+}
+
+export interface FirmVaultHermesStateSetResult {
+  readonly ok: boolean
+  readonly casesRootKey: string
+  readonly hermesProfile: 'paralegal'
+  readonly caseRoot: string
+  readonly caseSlug: string
+  readonly fact: string
+  readonly status: string
+  readonly evidence: readonly string[]
+  readonly newlySatisfied: readonly string[]
+  readonly newlyUnsatisfied: readonly string[]
+  readonly legalLandmarksUpdated: boolean
+  readonly stdout: string
+  readonly stderr: string
+  readonly summary: string
+}
+
 interface FirmVaultBootstrapJson {
   readonly case_root?: unknown
   readonly case_slug?: unknown
@@ -105,6 +173,31 @@ interface FirmVaultDocumentAddJson {
 interface FirmVaultDocumentHandoffJson {
   readonly document_id?: unknown
   readonly handoff?: unknown
+}
+
+interface FirmVaultStateShowJson {
+  readonly section?: unknown
+  readonly state?: unknown
+  readonly landmarks?: unknown
+  readonly warnings?: unknown
+}
+
+interface FirmVaultEvidenceCheckJson {
+  readonly ok?: unknown
+  readonly path?: unknown
+  readonly exists?: unknown
+  readonly safe?: unknown
+  readonly reason?: unknown
+}
+
+interface FirmVaultStateSetJson {
+  readonly ok?: unknown
+  readonly fact?: unknown
+  readonly status?: unknown
+  readonly evidence?: unknown
+  readonly newly_satisfied?: unknown
+  readonly newly_unsatisfied?: unknown
+  readonly legal_landmarks_updated?: unknown
 }
 
 const FIRMVAULT_DOCUMENT_KINDS = new Set<FirmVaultDocumentKind>(['medical_records', 'bill', 'insurance', 'police_report', 'correspondence', 'unknown'])
@@ -276,6 +369,128 @@ export async function recordFirmVaultDocumentHandoffWithHermesOperator(
   })
 }
 
+export async function showFirmVaultStateWithHermesOperator(
+  registry: FirmVaultCasesRegistry,
+  request: FirmVaultStateShowRequest,
+  options: FirmVaultHermesOperatorOptions = {},
+): Promise<FirmVaultHermesStateShowResult> {
+  const casesRoot = resolveFirmVaultCasesRoot(registry, request.casesRootKey)
+  const caseRoot = resolveCaseRoot(casesRoot, request.caseSlug)
+  const args = ['firmvault', 'state', 'show', ...(request.section ? ['--section', request.section] : []), '--json']
+
+  return await runSafeWaypointCommand({ name: casesRoot.key, path: caseRoot, waypointCli: casesRoot.waypointCli }, args, {
+    executor: options.executor,
+  }).then((commandResult) => {
+    const parsed = parseStateShowJson(commandResult.stdout)
+    const section = parsed.section === null ? null : typeof parsed.section === 'string' ? parsed.section : null
+    const landmarks = asRecord(parsed.landmarks, 'FirmVault state show JSON missing landmarks')
+    const landmarkCount = numberJsonField(landmarks.total, 'landmarks.total')
+    const state = asRecord(parsed.state, 'FirmVault state show JSON missing state')
+    const warnings = stringArrayJsonField(parsed.warnings, 'warnings')
+    return {
+      ok: commandResult.ok,
+      casesRootKey: casesRoot.key,
+      hermesProfile: casesRoot.hermesProfile,
+      caseRoot,
+      caseSlug: request.caseSlug,
+      section,
+      landmarkCount,
+      state,
+      warnings,
+      stdout: commandResult.stdout,
+      stderr: commandResult.stderr,
+      summary: `FirmVault state ${section ?? 'all'} read for ${request.caseSlug} through Hermes profile ${casesRoot.hermesProfile}.`,
+    }
+  })
+}
+
+export async function checkFirmVaultEvidenceWithHermesOperator(
+  registry: FirmVaultCasesRegistry,
+  request: FirmVaultEvidenceCheckRequest,
+  options: FirmVaultHermesOperatorOptions = {},
+): Promise<FirmVaultHermesEvidenceCheckResult> {
+  const casesRoot = resolveFirmVaultCasesRoot(registry, request.casesRootKey)
+  const caseRoot = resolveCaseRoot(casesRoot, request.caseSlug)
+  assertSafeEvidencePath(request.path)
+  const args = ['firmvault', 'evidence', 'check', '--path', request.path, '--json']
+
+  return await runSafeWaypointCommand({ name: casesRoot.key, path: caseRoot, waypointCli: casesRoot.waypointCli }, args, {
+    executor: options.executor,
+  }).then((commandResult) => {
+    const parsed = parseEvidenceCheckJson(commandResult.stdout)
+    const path = stringJsonField(parsed.path, 'path')
+    const exists = booleanJsonField(parsed.exists, 'exists')
+    const safe = booleanJsonField(parsed.safe, 'safe')
+    const ok = booleanJsonField(parsed.ok, 'ok')
+    const reason = parsed.reason === null || typeof parsed.reason === 'string' ? parsed.reason : null
+    return {
+      ok,
+      casesRootKey: casesRoot.key,
+      hermesProfile: casesRoot.hermesProfile,
+      caseRoot,
+      caseSlug: request.caseSlug,
+      path,
+      exists,
+      safe,
+      reason,
+      stdout: commandResult.stdout,
+      stderr: commandResult.stderr,
+      summary: `FirmVault evidence ${path} is ${safe ? 'safe' : 'unsafe'} and ${exists ? 'exists' : 'missing'} for ${request.caseSlug}.`,
+    }
+  })
+}
+
+export async function setFirmVaultStateFactWithHermesOperator(
+  registry: FirmVaultCasesRegistry,
+  request: FirmVaultStateSetRequest,
+  options: FirmVaultHermesOperatorOptions = {},
+): Promise<FirmVaultHermesStateSetResult> {
+  const casesRoot = resolveFirmVaultCasesRoot(registry, request.casesRootKey)
+  const caseRoot = resolveCaseRoot(casesRoot, request.caseSlug)
+  validateStateSetRequest(request)
+  const evidenceArgs = (request.evidence ?? []).flatMap((path) => ['--evidence', path])
+  const args = [
+    'firmvault',
+    'state',
+    'set',
+    '--fact',
+    request.fact,
+    '--status',
+    request.status,
+    ...evidenceArgs,
+    ...(request.note ? ['--note', request.note] : []),
+    '--json',
+  ]
+
+  return await runSafeWaypointCommand({ name: casesRoot.key, path: caseRoot, waypointCli: casesRoot.waypointCli }, args, {
+    executor: options.executor,
+  }).then((commandResult) => {
+    const parsed = parseStateSetJson(commandResult.stdout)
+    const fact = stringJsonField(parsed.fact, 'fact')
+    const status = stringJsonField(parsed.status, 'status')
+    const evidence = stringArrayJsonField(parsed.evidence, 'evidence')
+    const newlySatisfied = stringArrayJsonField(parsed.newly_satisfied, 'newly_satisfied')
+    const newlyUnsatisfied = stringArrayJsonField(parsed.newly_unsatisfied, 'newly_unsatisfied')
+    const legalLandmarksUpdated = booleanJsonField(parsed.legal_landmarks_updated, 'legal_landmarks_updated')
+    return {
+      ok: commandResult.ok,
+      casesRootKey: casesRoot.key,
+      hermesProfile: casesRoot.hermesProfile,
+      caseRoot,
+      caseSlug: request.caseSlug,
+      fact,
+      status,
+      evidence,
+      newlySatisfied,
+      newlyUnsatisfied,
+      legalLandmarksUpdated,
+      stdout: commandResult.stdout,
+      stderr: commandResult.stderr,
+      summary: `FirmVault fact ${fact} set to ${status} for ${request.caseSlug}; newly satisfied: ${newlySatisfied.length > 0 ? newlySatisfied.join(', ') : 'none'}.`,
+    }
+  })
+}
+
 function parseBootstrapJson(stdout: string): FirmVaultBootstrapJson {
   try {
     return JSON.parse(stdout) as FirmVaultBootstrapJson
@@ -303,6 +518,33 @@ function parseDocumentHandoffJson(stdout: string): FirmVaultDocumentHandoffJson 
   }
 }
 
+function parseStateShowJson(stdout: string): FirmVaultStateShowJson {
+  try {
+    return JSON.parse(stdout) as FirmVaultStateShowJson
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`FirmVault state show did not return valid JSON: ${message}`)
+  }
+}
+
+function parseEvidenceCheckJson(stdout: string): FirmVaultEvidenceCheckJson {
+  try {
+    return JSON.parse(stdout) as FirmVaultEvidenceCheckJson
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`FirmVault evidence check did not return valid JSON: ${message}`)
+  }
+}
+
+function parseStateSetJson(stdout: string): FirmVaultStateSetJson {
+  try {
+    return JSON.parse(stdout) as FirmVaultStateSetJson
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`FirmVault state set did not return valid JSON: ${message}`)
+  }
+}
+
 function resolveCaseRoot(casesRoot: FirmVaultCasesRootRecord, caseSlug: string): string {
   assertSafeCaseSlug(caseSlug)
   return join(casesRoot.path, caseSlug)
@@ -318,6 +560,19 @@ function validateDocumentHandoffRequest(request: FirmVaultDocumentHandoffRequest
   assertSafeCaseSlug(request.caseSlug)
   if (request.documentId.trim() === '') throw new Error('FirmVault documentId is required')
   if (!FIRMVAULT_HANDOFF_STATUSES.has(request.status)) throw new Error(`Unsupported FirmVault document handoff status: ${request.status}`)
+}
+
+function validateStateSetRequest(request: FirmVaultStateSetRequest): void {
+  assertSafeCaseSlug(request.caseSlug)
+  if (request.fact.trim() === '') throw new Error('FirmVault fact is required')
+  if (request.status.trim() === '') throw new Error('FirmVault status is required')
+  for (const evidencePath of request.evidence ?? []) assertSafeEvidencePath(evidencePath)
+}
+
+function assertSafeEvidencePath(path: string): void {
+  if (isAbsolute(path) || path.trim() === '' || path.split(/[/\\]+/).includes('..')) {
+    throw new Error(`FirmVault evidence path must be a safe relative path: ${path}`)
+  }
 }
 
 function cliDocumentKind(kind: FirmVaultDocumentKind): string {
@@ -345,6 +600,21 @@ function readLandmarkCount(value: unknown): number {
 function stringJsonField(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') throw new Error(`FirmVault bootstrap JSON missing ${field}`)
   return value
+}
+
+function numberJsonField(value: unknown, field: string): number {
+  if (typeof value !== 'number') throw new Error(`FirmVault JSON missing numeric ${field}`)
+  return value
+}
+
+function booleanJsonField(value: unknown, field: string): boolean {
+  if (typeof value !== 'boolean') throw new Error(`FirmVault JSON missing boolean ${field}`)
+  return value
+}
+
+function stringArrayJsonField(value: unknown, field: string): readonly string[] {
+  if (!Array.isArray(value)) throw new Error(`FirmVault JSON missing string array ${field}`)
+  return value.filter((item): item is string => typeof item === 'string')
 }
 
 function assertSafeCasesRootKey(key: string): void {

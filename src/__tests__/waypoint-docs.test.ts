@@ -139,4 +139,26 @@ describe('Waypoint Quest operator documentation', () => {
       expect(runbook).toContain(phrase)
     }
   })
+
+  it('publishes a FirmVault paralegal state operator runbook', () => {
+    const runbook = readRepoFile('docs/firmvault-paralegal-state-operator-runbook.md')
+    const plan = readRepoFile('docs/plans/2026-05-10-firmvault-state-cli-and-lifecycle-simulation-plan.md')
+
+    expect(plan).toContain('Milestone FVL3 — Hermes/paralegal state adapter wiring')
+    expect(plan).toContain('docs/firmvault-paralegal-state-operator-runbook.md')
+
+    for (const phrase of [
+      'Never edit `.waypoint/firmvault/*.yaml` directly',
+      'Always inspect state and landmarks before mutation',
+      'waypoint firmvault evidence check',
+      'waypoint firmvault state set',
+      'waypoint firmvault document-handoff',
+      'does not satisfy legal landmarks',
+      'newly_satisfied',
+      'trusted `casesRootKey`',
+      '`paralegal` profile',
+    ]) {
+      expect(runbook).toContain(phrase)
+    }
+  })
 })

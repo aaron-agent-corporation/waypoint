@@ -41,6 +41,7 @@ type CommandRule = {
 
 const FIRMVAULT_DOCUMENT_KINDS = new Set(['medical-records', 'medical_records', 'bill', 'insurance', 'police-report', 'police_report', 'correspondence', 'unknown'])
 const FIRMVAULT_HANDOFF_STATUSES = new Set(['not-started', 'not_started', 'submitted', 'pr-opened', 'pr_opened', 'merged', 'deferred', 'failed'])
+const FIRMVAULT_STATE_SECTIONS = new Set(['case', 'client', 'accident', 'providers', 'insurance', 'liens', 'records', 'demand', 'negotiation', 'settlement', 'documents'])
 
 const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
   status: {
@@ -189,6 +190,47 @@ export function buildSafeWaypointCommand(
         customValidate: validateFirmVaultDocumentHandoff,
       })
     }
+    if (subcommand === 'state') {
+      const [stateAction, ...stateActionArgs] = subcommandArgs
+      if (stateAction === 'show') {
+        return buildFirmVaultNestedCommand(project, ['state', 'show'], stateActionArgs, {
+          mutation: false,
+          summaryHint: 'firmvault state show',
+          allowedFlags: { '--section': 'value', '--json': 'boolean' },
+          customValidate: validateFirmVaultStateShow,
+        })
+      }
+      if (stateAction === 'set') {
+        return buildFirmVaultNestedCommand(project, ['state', 'set'], stateActionArgs, {
+          mutation: true,
+          summaryHint: 'firmvault state set',
+          allowedFlags: { '--fact': 'value', '--status': 'value', '--evidence': 'value', '--note': 'value', '--json': 'boolean' },
+          requiredFlags: ['--fact', '--status'],
+          customValidate: validateFirmVaultStateSet,
+        })
+      }
+      throw new Error(`Waypoint firmvault state action is not allowlisted: ${stateAction ?? '<missing>'}`)
+    }
+    if (subcommand === 'evidence') {
+      const [evidenceAction, ...evidenceActionArgs] = subcommandArgs
+      if (evidenceAction === 'check') {
+        return buildFirmVaultNestedCommand(project, ['evidence', 'check'], evidenceActionArgs, {
+          mutation: false,
+          summaryHint: 'firmvault evidence check',
+          allowedFlags: { '--path': 'value', '--json': 'boolean' },
+          requiredFlags: ['--path'],
+          customValidate: validateFirmVaultEvidenceCheck,
+        })
+      }
+      throw new Error(`Waypoint firmvault evidence action is not allowlisted: ${evidenceAction ?? '<missing>'}`)
+    }
+    if (subcommand === 'landmarks') {
+      return buildFirmVaultCommand(project, subcommand, subcommandArgs, {
+        mutation: false,
+        summaryHint: 'firmvault landmarks',
+        allowedFlags: { '--json': 'boolean' },
+      })
+    }
     throw new Error(`Waypoint firmvault subcommand is not allowlisted: ${subcommand ?? '<missing>'}`)
   }
 
@@ -271,6 +313,22 @@ function buildFirmVaultCommand(
   }
 }
 
+function buildFirmVaultNestedCommand(
+  project: HermesProjectRecord,
+  path: readonly string[],
+  args: readonly string[],
+  rule: CommandRule,
+): SafeWaypointCommandSpec {
+  validateFlags(`firmvault ${path.join(' ')}`, args, rule, project)
+  return {
+    command: process.execPath,
+    args: [project.waypointCli, 'firmvault', ...path, ...args],
+    cwd: project.path,
+    mutation: rule.mutation,
+    summaryHint: rule.summaryHint,
+  }
+}
+
 function validateFirmVaultAddDocument(args: readonly string[]): void {
   const source = flagValue(args, '--source')
   const kind = flagValue(args, '--kind')
@@ -287,6 +345,28 @@ function validateFirmVaultDocumentHandoff(args: readonly string[]): void {
   }
   const prNumber = flagValue(args, '--pr-number')
   if (prNumber && !/^\d+$/.test(prNumber)) throw new Error('Waypoint firmvault document-handoff requires --pr-number to be numeric')
+}
+
+function validateFirmVaultStateShow(args: readonly string[]): void {
+  const section = flagValue(args, '--section')
+  if (section && !FIRMVAULT_STATE_SECTIONS.has(section)) {
+    throw new Error(`Waypoint firmvault state show does not allow section: ${section}`)
+  }
+}
+
+function validateFirmVaultStateSet(args: readonly string[]): void {
+  for (const evidencePath of flagValues(args, '--evidence')) {
+    if (!isSafeRelativePath(evidencePath)) {
+      throw new Error(`Waypoint firmvault state set requires --evidence to be a safe relative path: ${evidencePath}`)
+    }
+  }
+}
+
+function validateFirmVaultEvidenceCheck(args: readonly string[]): void {
+  const evidencePath = flagValue(args, '--path')
+  if (evidencePath && !isSafeRelativePath(evidencePath)) {
+    throw new Error(`Waypoint firmvault evidence check requires --path to be a safe relative path: ${evidencePath}`)
+  }
 }
 
 function validateFlags(command: string, args: readonly string[], rule: CommandRule, project: HermesProjectRecord): void {
@@ -319,4 +399,18 @@ function flagValue(args: readonly string[], flag: string): string | null {
   const index = args.indexOf(flag)
   if (index === -1) return null
   return args[index + 1] ?? null
+}
+
+function flagValues(args: readonly string[], flag: string): readonly string[] {
+  const values: string[] = []
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === flag && args[index + 1] !== undefined) values.push(args[index + 1])
+  }
+  return values
+}
+
+function isSafeRelativePath(path: string): boolean {
+  return !isAbsolute(path)
+    && path.trim() !== ''
+    && !path.split(/[\\/]+/).includes('..')
 }
