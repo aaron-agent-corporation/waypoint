@@ -161,4 +161,25 @@ describe('Waypoint Quest operator documentation', () => {
       expect(runbook).toContain(phrase)
     }
   })
+
+  it('publishes the FirmVault full lifecycle simulation fixture and smoke command', () => {
+    const packageJson = JSON.parse(readRepoFile('package.json'))
+    const fixture = readRepoFile('examples/firmvault-lifecycle-simulation/fixture.yaml')
+    const readme = readRepoFile('examples/firmvault-lifecycle-simulation/README.md')
+    const smoke = readRepoFile('scripts/firmvault-lifecycle-simulation-smoke.mjs')
+    const plan = readRepoFile('docs/plans/2026-05-10-firmvault-state-cli-and-lifecycle-simulation-plan.md')
+
+    expect(packageJson.scripts['smoke:firmvault-lifecycle-simulation']).toBe('node scripts/firmvault-lifecycle-simulation-smoke.mjs')
+    expect(plan).toContain('Milestone FVL4 — Full lifecycle simulation harness, fixture-first')
+    expect(fixture).toContain('schema_version: 1')
+    expect(fixture).toContain('case:')
+    expect(fixture).toContain('steps:')
+    expect(fixture).toContain('fact: settlement.closing.case')
+    expect(readme).toContain('waypoint firmvault bootstrap')
+    expect(readme).toContain('waypoint firmvault state set')
+    expect(readme).toContain('all 82 deterministic legal landmarks')
+    expect(readme).toContain('does not edit `.waypoint/firmvault/*.yaml` directly')
+    expect(smoke).toContain('Waypoint FirmVault lifecycle simulation smoke passed')
+    expect(smoke).toContain('firmvault.state.updated')
+  })
 })

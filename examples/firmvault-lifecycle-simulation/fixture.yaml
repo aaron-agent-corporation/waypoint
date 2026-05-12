@@ -1,0 +1,346 @@
+schema_version: 1
+case:
+  name: Lifecycle Smoke Client v. Acme Insurance
+  type: personal_injury
+  slug: lifecycle-smoke-client-v-acme-insurance
+notes:
+  - Deterministic fixture for Waypoint FirmVault open-to-close command-surface smoke.
+  - Evidence files are synthetic placeholders created inside the temp case folder by the smoke runner.
+  - Document intake and pipeline handoff are intentionally not used to satisfy legal landmarks.
+steps:
+  - fact: case.setup
+    status: complete
+    evidence: [evidence/case-setup.md]
+    note: Case shell and required starter paths are complete.
+  - fact: client.intake
+    status: complete
+    evidence: [evidence/client-intake.md]
+    note: Client intake information is complete.
+  - fact: client.contracts.fee_agreement
+    status: signed
+    evidence: [evidence/client-contracts-fee-agreement.md]
+    note: Client fee agreement has been signed.
+  - fact: client.authorizations.hipaa
+    status: signed
+    evidence: [evidence/client-authorizations-hipaa.md]
+    note: Client HIPAA authorization has been signed.
+  - fact: accident.police_report
+    status: received
+    evidence: [evidence/accident-police-report.md]
+    note: Accident or police report has been obtained.
+  - fact: providers.setup
+    status: complete
+    evidence: [evidence/providers-setup.md]
+    note: Medical provider ledger setup is complete.
+  - fact: insurance.bi.carrier_identified
+    status: identified
+    evidence: [evidence/insurance-bi-carrier-identified.md]
+    note: At-fault BI carrier has been identified.
+  - fact: insurance.bi.lor.prepared
+    status: prepared
+    evidence: [evidence/insurance-bi-lor-prepared.md]
+    note: BI letter of representation has been prepared.
+  - fact: insurance.bi.lor.sent
+    status: sent
+    evidence: [evidence/insurance-bi-lor-sent.md]
+    note: BI letter of representation has been sent by a human/operator.
+  - fact: insurance.bi.acknowledgment
+    status: checked
+    evidence: [evidence/insurance-bi-acknowledgment.md]
+    note: BI acknowledgment or follow-up status has been checked.
+  - fact: insurance.pip.track
+    status: active
+    evidence: [evidence/insurance-pip-track.md]
+    note: PIP track has been activated or ruled into workflow.
+  - fact: insurance.pip.carrier_identified
+    status: identified
+    evidence: [evidence/insurance-pip-carrier-identified.md]
+    note: PIP carrier has been identified.
+  - fact: insurance.pip.application.prepared
+    status: prepared
+    evidence: [evidence/insurance-pip-application-prepared.md]
+    note: PIP application has been prepared.
+  - fact: insurance.pip.lor.prepared
+    status: prepared
+    evidence: [evidence/insurance-pip-lor-prepared.md]
+    note: PIP letter of representation has been prepared.
+  - fact: insurance.pip.application.filed
+    status: filed
+    evidence: [evidence/insurance-pip-application-filed.md]
+    note: PIP application has been filed.
+  - fact: insurance.pip.lor.sent
+    status: sent
+    evidence: [evidence/insurance-pip-lor-sent.md]
+    note: PIP letter of representation has been sent.
+  - fact: insurance.pip.acknowledgment
+    status: checked
+    evidence: [evidence/insurance-pip-acknowledgment.md]
+    note: PIP acknowledgment or follow-up status has been checked.
+  - fact: insurance.pip.approval
+    status: approved
+    evidence: [evidence/insurance-pip-approval.md]
+    note: PIP approval has been documented.
+  - fact: insurance.pip.status_check
+    status: checked
+    evidence: [evidence/insurance-pip-status-check.md]
+    note: PIP status has been checked.
+  - fact: insurance.pip.benefits
+    status: exhausted
+    evidence: [evidence/insurance-pip-benefits.md]
+    note: PIP benefits exhaustion has been documented.
+  - fact: providers.treatment_status.provider_list_reviewed
+    status: reviewed
+    evidence: [evidence/providers-treatment-status-provider-list-reviewed.md]
+    note: Provider list has been reviewed.
+  - fact: providers.treatment_status.provider_status_updated
+    status: updated
+    evidence: [evidence/providers-treatment-status-provider-status-updated.md]
+    note: Provider treatment status has been updated.
+  - fact: providers.treatment_status.provider_followups_flagged
+    status: flagged
+    evidence: [evidence/providers-treatment-status-provider-followups-flagged.md]
+    note: Provider follow-ups have been flagged or cleared.
+  - fact: providers.treatment_status.human_review
+    status: reviewed
+    evidence: [evidence/providers-treatment-status-human-review.md]
+    note: Human treatment-status review is complete.
+  - fact: providers.treatment_status.treatment_complete
+    status: complete
+    evidence: [evidence/providers-treatment-status-treatment-complete.md]
+    note: Treatment completion has been documented.
+  - fact: liens.early_identification.health_coverage
+    status: categorized
+    evidence: [evidence/liens-early-identification-health-coverage.md]
+    note: Health coverage has been categorized for lien discovery.
+  - fact: liens.early_identification.clues_reviewed
+    status: reviewed
+    evidence: [evidence/liens-early-identification-clues-reviewed.md]
+    note: Lien clues have been reviewed.
+  - fact: liens.early_identification.liens
+    status: identified
+    evidence: [evidence/liens-early-identification-liens.md]
+    note: Potential liens have been identified or ruled out.
+  - fact: liens.early_identification.inventory_review
+    status: reviewed
+    evidence: [evidence/liens-early-identification-inventory-review.md]
+    note: Early lien inventory has been reviewed.
+  - fact: records.authorization
+    status: verified
+    evidence: [evidence/records-authorization.md]
+    note: Medical authorization has been verified.
+  - fact: records.request_packet
+    status: prepared
+    evidence: [evidence/records-request-packet.md]
+    note: Records request packet has been prepared.
+  - fact: records.requests
+    status: sent_all
+    evidence: [evidence/records-requests.md]
+    note: Records requests have been sent to all providers.
+  - fact: records.followups.first
+    status: complete
+    evidence: [evidence/records-followups-first.md]
+    note: First records follow-up is complete or not needed.
+  - fact: records.followups.second
+    status: complete
+    evidence: [evidence/records-followups-second.md]
+    note: Second records follow-up is complete or not needed.
+  - fact: records.followups.third
+    status: complete
+    evidence: [evidence/records-followups-third.md]
+    note: Third records follow-up is complete or not needed.
+  - fact: records.escalation
+    status: escalated
+    evidence: [evidence/records-escalation.md]
+    note: Records request escalation is complete or not needed.
+  - fact: records.processing
+    status: processed
+    evidence: [evidence/records-processing.md]
+    note: Records and bills have been processed.
+  - fact: records.received
+    status: all_received
+    evidence: [evidence/records-received.md]
+    note: All requested records have been received.
+  - fact: records.chronology
+    status: updated
+    evidence: [evidence/records-chronology.md]
+    note: Medical chronology has been updated.
+  - fact: records.workflow_review
+    status: complete
+    evidence: [evidence/records-workflow-review.md]
+    note: Medical records request workflow has been reviewed as complete.
+  - fact: demand.readiness.materials
+    status: gathered
+    evidence: [evidence/demand-readiness-materials.md]
+    note: Demand materials have been gathered.
+  - fact: demand.readiness.damages
+    status: calculated
+    evidence: [evidence/demand-readiness-damages.md]
+    note: Damages have been calculated.
+  - fact: demand.readiness.review
+    status: reviewed
+    evidence: [evidence/demand-readiness-review.md]
+    note: Demand readiness has been reviewed.
+  - fact: demand.liens.final_process_check
+    status: checked
+    evidence: [evidence/demand-liens-final-process-check.md]
+    note: Demand-stage lien process has been checked.
+  - fact: demand.draft
+    status: drafted
+    evidence: [evidence/demand-draft.md]
+    note: Demand package draft has been prepared.
+  - fact: demand.attorney_review
+    status: approved
+    evidence: [evidence/demand-attorney-review.md]
+    note: Attorney reviewed the demand package.
+  - fact: demand.recipients
+    status: identified
+    evidence: [evidence/demand-recipients.md]
+    note: Demand recipients have been identified.
+  - fact: demand.send
+    status: sent
+    evidence: [evidence/demand-send.md]
+    note: Demand package has been sent by a human/operator.
+  - fact: negotiation.initial_offer
+    status: received
+    evidence: [evidence/negotiation-initial-offer.md]
+    note: Initial offer has been received.
+  - fact: negotiation.offer_documented
+    status: documented
+    evidence: [evidence/negotiation-offer-documented.md]
+    note: Offer has been documented.
+  - fact: negotiation.evaluation
+    status: evaluated
+    evidence: [evidence/negotiation-evaluation.md]
+    note: Offer evaluation is complete.
+  - fact: negotiation.net_to_client
+    status: prepared
+    evidence: [evidence/negotiation-net-to-client.md]
+    note: Net-to-client scenarios are prepared.
+  - fact: negotiation.client_advice
+    status: advised
+    evidence: [evidence/negotiation-client-advice.md]
+    note: Client has been advised of the offer.
+  - fact: negotiation.client_decision
+    status: documented
+    evidence: [evidence/negotiation-client-decision.md]
+    note: Client offer decision has been documented.
+  - fact: negotiation.response.prepared
+    status: prepared
+    evidence: [evidence/negotiation-response-prepared.md]
+    note: Negotiation response has been prepared.
+  - fact: negotiation.response.human_sent
+    status: sent
+    evidence: [evidence/negotiation-response-human-sent.md]
+    note: Negotiation response has been sent by a human/operator.
+  - fact: negotiation.response.result
+    status: documented
+    evidence: [evidence/negotiation-response-result.md]
+    note: Negotiation response result has been documented.
+  - fact: settlement
+    status: reached
+    evidence: [evidence/settlement.md]
+    note: Settlement has been reached or progressed into signed/funded/distributed status.
+  - fact: settlement.statement
+    status: prepared
+    evidence: [evidence/settlement-statement.md]
+    note: Settlement statement has been prepared.
+  - fact: settlement.authorization_to_settle
+    status: prepared
+    evidence: [evidence/settlement-authorization-to-settle.md]
+    note: Authorization-to-settle document has been prepared.
+  - fact: settlement.client_authorization
+    status: authorized
+    evidence: [evidence/settlement-client-authorization.md]
+    note: Client settlement authorization has been documented.
+  - fact: settlement.release
+    status: executed
+    evidence: [evidence/settlement-release.md]
+    note: Release has been executed.
+  - fact: settlement.funds
+    status: received
+    evidence: [evidence/settlement-funds.md]
+    note: Settlement funds have been received or cleared.
+  - fact: settlement.liens.audit
+    status: audited
+    evidence: [evidence/settlement-liens-audit.md]
+    note: Settlement liens have been audited.
+  - fact: settlement.liens.prioritization
+    status: prioritized
+    evidence: [evidence/settlement-liens-prioritization.md]
+    note: Settlement liens have been prioritized.
+  - fact: settlement.liens.available_funds
+    status: calculated
+    evidence: [evidence/settlement-liens-available-funds.md]
+    note: Available funds for liens have been calculated.
+  - fact: settlement.liens.strategy_review
+    status: reviewed
+    evidence: [evidence/settlement-liens-strategy-review.md]
+    note: Settlement lien strategy has been reviewed.
+  - fact: settlement.liens.result
+    status: negotiated
+    evidence: [evidence/settlement-liens-result.md]
+    note: Settlement lien negotiation result has been documented.
+  - fact: settlement.distribution.statement
+    status: prepared
+    evidence: [evidence/settlement-distribution-statement.md]
+    note: Final distribution statement has been prepared.
+  - fact: settlement.distribution.client_issuance
+    status: issued
+    evidence: [evidence/settlement-distribution-client-issuance.md]
+    note: Client distribution has been issued.
+  - fact: settlement.distribution.client_receipt
+    status: confirmed
+    evidence: [evidence/settlement-distribution-client-receipt.md]
+    note: Client receipt of distribution has been confirmed.
+  - fact: settlement.distribution.trust_account
+    status: zeroed
+    evidence: [evidence/settlement-distribution-trust-account.md]
+    note: Trust account has been zeroed for the case.
+  - fact: liens.final_resolution.inventory
+    status: opened
+    evidence: [evidence/liens-final-resolution-inventory.md]
+    note: Final lien resolution inventory has been opened or reviewed.
+  - fact: liens.final_resolution.final_amount_request.prepared
+    status: prepared
+    evidence: [evidence/liens-final-resolution-final-amount-request-prepared.md]
+    note: Final lien amount request has been prepared.
+  - fact: liens.final_resolution.final_amount_request.sent
+    status: sent
+    evidence: [evidence/liens-final-resolution-final-amount-request-sent.md]
+    note: Final lien amounts have been requested.
+  - fact: liens.final_resolution.final_amount_receipt
+    status: received
+    evidence: [evidence/liens-final-resolution-final-amount-receipt.md]
+    note: Final lien amounts have been received.
+  - fact: liens.final_resolution.payment_authorization
+    status: authorized
+    evidence: [evidence/liens-final-resolution-payment-authorization.md]
+    note: Lien payment has been authorized or reviewed.
+  - fact: liens.final_resolution.payment
+    status: paid
+    evidence: [evidence/liens-final-resolution-payment.md]
+    note: Liens have been paid or documented as resolved.
+  - fact: settlement.distribution.completion
+    status: complete
+    evidence: [evidence/settlement-distribution-completion.md]
+    note: Final distribution is complete.
+  - fact: settlement.closing.readiness
+    status: verified
+    evidence: [evidence/settlement-closing-readiness.md]
+    note: Close-case readiness and obligations have been verified.
+  - fact: settlement.closing.letter.prepared
+    status: prepared
+    evidence: [evidence/settlement-closing-letter-prepared.md]
+    note: Final client letter has been prepared.
+  - fact: settlement.closing.letter.sent
+    status: sent
+    evidence: [evidence/settlement-closing-letter-sent.md]
+    note: Final client letter has been sent.
+  - fact: settlement.closing.archive
+    status: archived
+    evidence: [evidence/settlement-closing-archive.md]
+    note: Case archive has been confirmed.
+  - fact: settlement.closing.case
+    status: closed
+    evidence: [evidence/settlement-closing-case.md]
+    note: Case closure has been documented.
