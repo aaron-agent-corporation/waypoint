@@ -221,4 +221,27 @@ describe('Waypoint Quest operator documentation', () => {
     expect(smoke).toContain('FIRMVAULT_COMPLETED_CASE_REPLAY_MANIFEST')
     expect(smoke).toContain('firmvault.state.updated')
   })
+
+  it('publishes a clickable FirmVault case-folder blueprint with per-file fill guidance', () => {
+    const blueprint = readRepoFile('docs/firmvault-case-folder-blueprint.html')
+
+    for (const phrase of [
+      'FirmVault Case Folder Blueprint v2',
+      'Click a markdown file to see what you add',
+      'What you add',
+      'Source documents usually live in',
+      'Supports state facts',
+      'Example completed stub',
+      'Blank starter file',
+      'Summary file',
+      'Index file',
+      'Evidence file',
+      'Machine-generated / do not edit',
+      'client/intake.md',
+      'settlement/closing/case-closed.md',
+      'waypoint firmvault state set',
+    ]) {
+      expect(blueprint).toContain(phrase)
+    }
+  })
 })

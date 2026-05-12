@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FirmVault Case Folder Blueprint v2</title>
+<style>
+  :root {
+    --bg: #0f0f12;
+    --surface: #18181b;
+    --surface-hover: #1e1e23;
+    --surface-active: #27272a;
+    --surface-raised: #1f1f24;
+    --border: #27272a;
+    --text: #fafafa;
+    --text-muted: #71717a;
+    --text-dim: #a1a1aa;
+    --accent: #6366f1;
+    --accent-dim: #4f46e5;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --teal: #14b8a6;
+    --font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    overflow-y: auto;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  .sidebar-header {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .sidebar-header .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .sidebar-header .version-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    background: rgba(99,102,241,0.15);
+    color: var(--accent);
+    border-radius: 4px;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  .tree-node {
+    display: flex;
+    align-items: center;
+    padding: 4px 20px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    transition: background 0.1s;
+    white-space: nowrap;
+  }
+
+  .tree-node:hover { background: var(--surface-hover); }
+  .tree-node.active { background: var(--surface-active); color: var(--accent); }
+
+  .tree-node .icon {
+    width: 18px;
+    text-align: center;
+    margin-right: 6px;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+
+  .tree-node .toggle {
+    width: 16px;
+    text-align: center;
+    margin-right: 4px;
+    color: var(--text-dim);
+    font-size: 10px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  .tree-node .toggle.open { transform: rotate(90deg); }
+  .tree-node .toggle.hidden { visibility: hidden; }
+
+  .tree-node .name { color: var(--text); }
+  .tree-node .ext { color: var(--text-dim); }
+
+  .tree-node .tags {
+    display: flex;
+    gap: 3px;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge.purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .badge.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .badge.amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .badge.teal { background: rgba(20,184,166,0.15); color: var(--teal); }
+
+  .children { display: none; }
+  .children.open { display: block; }
+
+  .indent-1 { padding-left: 36px; }
+  .indent-2 { padding-left: 54px; }
+  .indent-3 { padding-left: 72px; }
+
+  .section-label {
+    padding: 12px 20px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  /* Main */
+  .main {
+    padding: 32px 40px;
+    max-width: 960px;
+    overflow-y: auto;
+  }
+
+  .main h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .main .version-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    background: rgba(99,102,241,0.15);
+    color: var(--accent);
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .main .description {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    max-width: 680px;
+  }
+
+  /* Info banner */
+  .info-banner {
+    background: rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .info-banner .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+    font-family: var(--font-sans);
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+
+  .card-header .chevron {
+    transition: transform 0.15s;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+  .card-header.expanded .chevron { transform: rotate(90deg); }
+
+  .card-body {
+    display: none;
+    padding: 16px 18px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-dim);
+  }
+  .card-body.visible { display: block; }
+
+  .card-body code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: rgba(99,102,241,0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  .card-body .line { padding: 1px 0; }
+  .card-body .line.dir { color: var(--blue); }
+  .card-body .line.file { color: var(--text); }
+  .card-body .line.dim { color: var(--text-dim); }
+  .card-body .line.machine { color: var(--purple); }
+  .card-body .line.evidence { color: var(--green); }
+
+  /* Detail panels */
+  .detail-panel {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .detail-panel h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .detail-panel .meta-line {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .detail-panel .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin: 12px 0 4px;
+  }
+
+  .detail-panel .field-value {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding-left: 2px;
+  }
+
+  .detail-panel pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  .detail-panel table.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 13px;
+  }
+  .detail-panel table.info-table td {
+    padding: 4px 8px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-panel table.info-table td:first-child {
+    color: var(--text-dim);
+    width: 140px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .donot {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+  .donot-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .donot li { color: var(--text-dim); font-size: 13px; margin-left: 16px; }
+  .donot li::marker { color: var(--red); }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  .preview-pane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+  }
+
+  .state-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+  }
+  .state-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .state-table td {
+    padding: 6px 8px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .state-table .tag-required { color: var(--green); }
+  .state-table .tag-optional { color: var(--amber); }
+  .state-table .tag-placeholder { color: var(--blue); }
+
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { height: auto; position: relative; }
+    .main { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar: Folder Tree -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h2>Case Folder Structure</h2>
+      <div class="subtitle">Personal-Injury · Waypoint FirmVault</div>
+      <div class="version-badge">FVP8 — v2 Blueprint</div>
+    </div>
+
+    <div class="section-label">Top Level</div>
+    <div class="tree-node" onclick="toggle(event, 'root-children')">
+      <span class="toggle open" id="root-toggle">▶</span>
+      <span class="icon">📁</span>
+      <span class="name">jane-smith-v-acme-trucking<span class="ext">.md</span></span>
+      <span class="tags"><span class="badge purple">case index</span></span>
+    </div>
+    <div class="children open" id="root-children">
+
+      <div class="section-label">Config &amp; Meta</div>
+      <div class="tree-node" onclick="select(this, 'agents')">
+        <span class="toggle hidden"></span>
+        <span class="icon">📋</span>
+        <span class="name">AGENTS.md</span>
+        <span class="tags"><span class="badge green">required</span></span>
+      </div>
+      <div class="tree-node" onclick="select(this, 'dashboard')">
+        <span class="toggle hidden"></span>
+        <span class="icon">📊</span>
+        <span class="name">Dashboard.md</span>
+        <span class="tags"><span class="badge green">required</span></span>
+      </div>
+
+      <div class="section-label">Human Folders</div>
+      <div class="tree-node" onclick="toggle(event, 'client-children')">
+        <span class="toggle open" id="client-toggle">▶</span>
+        <span class="icon">👤</span>
+        <span class="name">client/</span>
+        <span class="tags"><span class="badge amber">5 files</span></span>
+      </div>
+      <div class="children open" id="client-children">
+        <div class="tree-node indent-1" onclick="select(this, 'intake')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client<span class="ext">/</span>intake.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'contracts')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">contracts.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'authorizations')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">authorizations.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'contactability')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">contactability.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'checkins')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">check-ins.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'accident-children')">
+        <span class="toggle open" id="accident-toggle">▶</span>
+        <span class="icon">⚠️</span>
+        <span class="name">accident/</span>
+        <span class="tags"><span class="badge amber">3 files</span></span>
+      </div>
+      <div class="children open" id="accident-children">
+        <div class="tree-node indent-1" onclick="select(this, 'accident_md')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">accident.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'police')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">police-report.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'liability')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">liability.md</span>
+          <span class="tags"><span class="badge green">required</span></span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'contacts-children')">
+        <span class="toggle open" id="contacts-toggle">▶</span>
+        <span class="icon">👥</span>
+        <span class="name">contacts/</span>
+        <span class="tags"><span class="badge amber">5 files</span></span>
+      </div>
+      <div class="children open" id="contacts-children">
+        <div class="tree-node indent-1" onclick="select(this, 'cont-client')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'cont-adjusters')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">adjusters.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'cont-providers')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">providers.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'cont-lienholders')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">lienholders.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'cont-witnesses')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">witnesses.md</span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'insurance-children')">
+        <span class="toggle open" id="insurance-toggle">▶</span>
+        <span class="icon">🛡️</span>
+        <span class="name">insurance/</span>
+        <span class="tags"><span class="badge amber">10 files</span></span>
+      </div>
+      <div class="children open" id="insurance-children">
+        <div class="tree-node indent-1" onclick="toggle(event, 'ins-bi')">
+          <span class="toggle open" id="ins-bi-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">bi/</span>
+        </div>
+        <div class="children open" id="ins-bi">
+          <div class="tree-node indent-2" onclick="select(this, 'bi-carrier')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">carrier.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'bi-lor')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">letter-of-representation.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'bi-ack')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">acknowledgment.md</span>
+          </div>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'ins-pip')">
+          <span class="toggle open" id="ins-pip-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">pip/</span>
+        </div>
+        <div class="children open" id="ins-pip">
+          <div class="tree-node indent-2" onclick="select(this, 'pip-carrier')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">carrier.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-app')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">application.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-lor')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">letter-of-representation.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-ack')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">acknowledgment.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-approval')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">approval.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-status')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">status-checks.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'pip-benefits')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">benefits.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'providers-children')">
+        <span class="toggle open" id="providers-toggle">▶</span>
+        <span class="icon">🏥</span>
+        <span class="name">medical-providers/</span>
+        <span class="tags"><span class="badge amber">3 files</span></span>
+      </div>
+      <div class="children open" id="providers-children">
+        <div class="tree-node indent-1" onclick="select(this, 'prov-index')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">index.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'prov-status')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">treatment-status.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'prov-followup')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">followup-flags.md</span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'liens-children')">
+        <span class="toggle open" id="liens-toggle">▶</span>
+        <span class="icon">🔗</span>
+        <span class="name">liens/</span>
+        <span class="tags"><span class="badge amber">6 files</span></span>
+      </div>
+      <div class="children open" id="liens-children">
+        <div class="tree-node indent-1" onclick="select(this, 'liens-inv')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">inventory.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'liens-early')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">early-identification.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'liens-final')">
+          <span class="toggle open" id="liens-final-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">final-resolution/</span>
+        </div>
+        <div class="children open" id="liens-final">
+          <div class="tree-node indent-2" onclick="select(this, 'lr-inv')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">inventory.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'lr-requests')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">final-amount-requests.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'lr-receipts')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">final-amounts-received.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'lr-auth')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">payment-authorization.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'lr-pay')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">payments.md</span>
+          </div>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'liens-corr')">
+          <span class="toggle hidden"></span><span class="icon">📁</span>
+          <span class="name">correspondence/</span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'demand-children')">
+        <span class="toggle open" id="demand-toggle">▶</span>
+        <span class="icon">📝</span>
+        <span class="name">demand/</span>
+        <span class="tags"><span class="badge amber">6 files</span></span>
+      </div>
+      <div class="children open" id="demand-children">
+        <div class="tree-node indent-1" onclick="select(this, 'dem-readiness')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">readiness.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-damages')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">damages.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-liencheck')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">lien-check.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-draft')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">draft.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-review')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">attorney-review.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-recipients')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">recipients.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'dem-sent')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">sent.md</span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'negotiation-children')">
+        <span class="toggle open" id="negotiation-toggle">▶</span>
+        <span class="icon">🤝</span>
+        <span class="name">negotiation/</span>
+        <span class="tags"><span class="badge amber">7 files</span></span>
+      </div>
+      <div class="children open" id="negotiation-children">
+        <div class="tree-node indent-1" onclick="select(this, 'neg-offer')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">initial-offer.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-log')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">offer-log.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-eval')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">evaluation.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-nett')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">net-to-client.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-advice')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-advice.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-decision')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-decision.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-response')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">response.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'neg-result')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">result.md</span>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'settlement-children')">
+        <span class="toggle open" id="settlement-toggle">▶</span>
+        <span class="icon">💰</span>
+        <span class="name">settlement/</span>
+        <span class="tags"><span class="badge amber">5 files + subfolders</span></span>
+      </div>
+      <div class="children open" id="settlement-children">
+        <div class="tree-node indent-1" onclick="select(this, 'set-main')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">settlement.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'set-stmt')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">statement.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'set-auth')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">authorization-to-settle.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'set-clientauth')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-authorization.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'set-release')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">release.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'set-funds')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">funds.md</span>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'set-close')">
+          <span class="toggle open" id="set-close-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">closing/</span>
+        </div>
+        <div class="children open" id="set-close">
+          <div class="tree-node indent-2" onclick="select(this, 'set-c1')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">readiness.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'set-c2')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">final-letter-prepared.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'set-c3')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">final-letter-sent.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'set-c4')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">archive.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'set-c5')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">settlement<span class="ext">/</span>closing<span class="ext">/</span>case-closed.md</span>
+            <span class="tags"><span class="badge teal">close-case</span></span>
+          </div>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'set-liens')">
+          <span class="toggle open" id="set-liens-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">liens/</span>
+        </div>
+        <div class="children open" id="set-liens">
+          <div class="tree-node indent-2" onclick="select(this, 'sl-audit')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">audit.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sl-prior')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">prioritization.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sl-funds')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">available-funds.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sl-review')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">strategy-review.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sl-result')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">result.md</span>
+          </div>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'set-dist')">
+          <span class="toggle open" id="set-dist-toggle">▶</span>
+          <span class="icon">📁</span>
+          <span class="name">distribution/</span>
+        </div>
+        <div class="children open" id="set-dist">
+          <div class="tree-node indent-2" onclick="select(this, 'sd-stmt')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">statement.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sd-issuance')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">client-issuance.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sd-receipt')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">client-receipt.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sd-trust')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">trust-account.md</span>
+          </div>
+          <div class="tree-node indent-2" onclick="select(this, 'sd-complete')">
+            <span class="toggle hidden"></span><span class="icon">📄</span>
+            <span class="name">completion.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-node" onclick="toggle(event, 'litigation-children')">
+        <span class="toggle" id="litigation-toggle">▶</span>
+        <span class="icon">⚖️</span>
+        <span class="name">litigation/</span>
+        <span class="tags"><span class="badge blue">placeholder</span></span>
+      </div>
+      <div class="children" id="litigation-children">
+        <div class="tree-node indent-1" onclick="select(this, 'lit1')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">_placeholder — not used in FVP8_</span>
+        </div>
+      </div>
+
+      <div class="section-label">Documents (intake)</div>
+      <div class="tree-node" onclick="toggle(event, 'docs-children')">
+        <span class="toggle open" id="docs-toggle">▶</span>
+        <span class="icon">📑</span>
+        <span class="name">documents/</span>
+        <span class="tags"><span class="badge amber">7 folders</span></span>
+      </div>
+      <div class="children open" id="docs-children">
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">inbox/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">processed/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">signed/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">reports/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">medical-records/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">bills/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">insurance/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">correspondence/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon">📁</span><span class="name">sent/</span></div>
+      </div>
+
+      <div class="section-label">Activity</div>
+      <div class="tree-node" onclick="select(this, 'act1')">
+        <span class="toggle hidden"></span><span class="icon">📋</span>
+        <span class="name">activity/index.md</span>
+        <span class="tags"><span class="badge green">required</span></span>
+      </div>
+      <div class="tree-node" onclick="select(this, 'wf1')">
+        <span class="toggle hidden"></span><span class="icon">📜</span>
+        <span class="name">workflow-log/index.md</span>
+        <span class="tags"><span class="badge green">required</span></span>
+      </div>
+
+      <div class="section-label">Evidence</div>
+      <div class="tree-node" onclick="toggle(event, 'evidence-children')">
+        <span class="toggle open" id="evidence-toggle">▶</span>
+        <span class="icon">📂</span>
+        <span class="name">evidence/</span>
+        <span class="tags"><span class="badge amber">~84 files</span></span>
+      </div>
+      <div class="children open" id="evidence-children">
+        <div class="tree-node indent-1" onclick="select(this, 'ev-setup')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">case-setup.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-intake')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-intake.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-contracts')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-contracts-fee-agreement.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-auth')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">client-authorizations-hipaa.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-police')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name">accident-police-report.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'ev-extra')" style="font-weight:600;color:var(--text-muted)">
+          <span class="toggle open" id="ev-extra-toggle">▶</span>
+          <span class="icon">…</span>
+          <span class="name" style="font-family:var(--font-sans);font-size:11px;color:var(--text-dim)"><em>~78 more evidence files</em></span>
+        </div>
+        <div class="children open" id="ev-extra" style="display:none">
+          <!-- filled by JS -->
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-close1')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name evidence">settlement-closing-readiness.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-close2')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name evidence">settlement-closing-letter-prepared.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-close3')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name evidence">settlement-closing-letter-sent.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-close4')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name evidence">settlement-closing-archive.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+        <div class="tree-node indent-1" onclick="select(this, 'ev-close5')">
+          <span class="toggle hidden"></span><span class="icon">📄</span>
+          <span class="name evidence">settlement-closing-case.md</span>
+          <span class="tags"><span class="badge teal">starter</span></span>
+        </div>
+      </div>
+
+      <div class="section-label">Machine State <span style="color:var(--purple)">(do not edit)</span></div>
+      <div class="tree-node" onclick="toggle(event, 'waypoint-children')">
+        <span class="toggle open" id="waypoint-toggle">▶</span>
+        <span class="icon" style="color:var(--purple)">⚙️</span>
+        <span class="name machine">.waypoint/</span>
+        <span class="tags"><span class="badge purple">auto-generated</span></span>
+      </div>
+      <div class="children open" id="waypoint-children">
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">⚙️</span><span class="name machine">config.yaml</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">📁</span><span class="name machine">quests/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">📁</span><span class="name machine">recipes/</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">📁</span><span class="name machine">routes/route-001.yaml</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">📁</span><span class="name machine">tasks.yaml</span></div>
+        <div class="tree-node indent-1"><span class="toggle hidden"></span><span class="icon" style="color:var(--text-dim)">📁</span><span class="name machine">events/</span></div>
+        <div class="tree-node indent-1" onclick="toggle(event, 'wp-fv')">
+          <span class="toggle open" id="wp-fv-toggle">▶</span>
+          <span class="icon" style="color:var(--purple)">📁</span>
+          <span class="name machine">firmvault/</span>
+        </div>
+        <div class="children open" id="wp-fv">
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">case.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">client.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">accident.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">providers.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">insurance.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">liens.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">records.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">demand.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">negotiation.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">settlement.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">documents.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">landmarks.yaml</span></div>
+          <div class="tree-node indent-2"><span class="toggle hidden"></span><span class="icon" style="color:var(--purple)">📄</span><span class="name machine">events.jsonl</span></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main: Detail Panel -->
+  <main class="main">
+    <div id="section-default">
+      <h1>
+        FirmVault Case Folder Blueprint
+        <span class="version-tag">v2 — Clickable</span>
+      </h1>
+      <p class="description">
+        This is the target shape for a personal-injury case folder that originated inside standalone Waypoint/FirmVault.
+        <strong>Click any file in the tree to see what it should contain, what facts it supports, and example content.</strong><br>Click a markdown file to see what you add — each panel shows purpose, fill instructions, state facts, and example content.
+      </p>
+
+      <div class="info-banner">
+        <span class="icon">💡</span>
+        <div>
+          <strong style="color:var(--text)">How to read this:</strong> Each file in the tree has a color-coded tag:
+          <strong style="color:var(--green)">required</strong> = create on bootstrap;
+          <strong style="color:var(--amber)">optional / content files</strong> = create as needed;
+          <strong style="color:var(--blue)">placeholder / future</strong> = not yet used;
+          <strong style="color:var(--purple)">machine-generated / do not edit</strong> = managed by Waypoint CLI only;
+          <strong style="color:var(--teal)">starter template / blank starter file / index file / evidence file / summary file</strong> = pre-filled stubs in evidence folder.
+        </div>
+      </div>
+
+      <!-- Canonical file paths for tool-assisted search and onboarding -->
+      <div style="display:none" aria-hidden="true">
+client/intake.md
+settlement/closing/case-closed.md
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Required</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Optional / content files</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Placeholder / future</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Machine-generated / do not edit</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> Starter template / Blank starter file / Index file / Evidence file / Summary file</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="chevron">▶</span>
+          Migration Checklist — Existing Case → Waypoint Origin Shape
+        </div>
+        <div class="card-body">
+          <ol style="padding-left:18px;line-height:2.2">
+            <li><strong>Bootstrap</strong> — <code>waypoint firmvault bootstrap --cases-root /path --case-name "..." --case-type personal-injury --start --json</code></li>
+            <li><strong>Copy materials</strong> — move existing PDFs, scans, letters into the canonical folders above (keep originals read-only until verified)</li>
+            <li><strong>Create evidence stubs</strong> — one <code>evidence/*.md</code> file per major lifecycle fact; short summaries pointing to real document paths</li>
+            <li><strong>Validate paths</strong> — <code>waypoint firmvault evidence check --path evidence/client-intake.md --json</code> (must be relative, inside case folder, existing, no traversal)</li>
+            <li><strong>Record facts</strong> — <code>waypoint firmvault state set --fact client.intake --status complete --evidence evidence/client-intake.md --note "Mapped from legacy folder."</code></li>
+            <li><strong>Check landmarks</strong> — <code>waypoint firmvault landmarks --json</code> → track <code>satisfied: true</code> count (target: 82/82)</li>
+            <li><strong>Never edit</strong> <code>.waypoint/firmvault/*.yaml</code> directly — the CLI is the only safe mutation path</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="chevron">▶</span>
+          What Waypoint Tracks vs. What It Doesn't
+        </div>
+        <div class="card-body">
+          <strong>Waypoint owns:</strong> lifecycle state in YAML, landmark projection (computed booleans), evidence paths, audit events (JSONL), recipe execution, task gating.<br><br>
+          <strong>Waypoint does NOT own:</strong> OCR, PDF splitting, document naming, Forgejo PRs, email/fax, trust-account transfers. Those live in <code>firmvault-document-pipeline</code> (separate Python repo). Pipeline status is tracked as <em>metadata</em> in <code>.waypoint/firmvault/documents.yaml</code> — it <strong>never</strong> satisfies legal landmarks by itself.
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview panels (one per file) -->
+    <div id="preview-section" style="display:none">
+      <button onclick="backToOverview()" style="margin-bottom:16px;padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px;font-family:var(--font-sans);">← Back to overview</button>
+      <div id="preview-content"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// === File database: every file's purpose, tags, state facts, example content ===
+const files = {
+  'casefile': {
+    name: 'jane-smith-v-acme-trucking.md',
+    path: '<root>/jane-smith-v-acme-trucking.md',
+    tags: ['case index'],
+    purpose: 'Front-matter index for the entire case. Contains case metadata and a running summary.',
+    stateFacts: 'N/A — informational only',
+    example: `---
+case_slug: jane-smith-v-acme-trucking
+case_type: personal_injury
+created_at: "2026-05-12T00:00:00.000Z"
+status: open
+attorney: "[REDACTED]"
+---
+
+# Jane Smith v. Acme Trucking
+
+## Case Overview
+- **Case Type:** Personal Injury
+- **Date of Incident:** [DATE]
+- **Jurisdiction:** [COUNTY/STATE]
+- **Assigned Attorney:** [REDACTED]
+- **Status:** Active — Pre-Litigation / Settlement Track
+
+## Parties
+
+| Role | Name | Notes |
+|------|------|-------|
+| Plaintiff | Jane Smith | Claimant |
+| Defendant | Acme Trucking LLC | At-fault party |
+| Insurer (BI) | [REDACTED] | Defendant\'s liability carrier |
+| Insurer (PIP) | [REDACTED] | Plaintiff\'s PIP carrier |
+
+## Key Dates
+
+| Event | Date |
+|-------|------|
+| Incident | [DATE] |
+| Retained | [DATE] |
+| Demand sent | [DATE] |
+| Settlement | [DATE] |
+`
+  },
+
+  'agents': {
+    name: 'AGENTS.md',
+    path: '<root>/AGENTS.md',
+    tags: ['required', 'machine-readable'],
+    purpose: 'Declares which AI agents or operators are authorized to act on this case folder and how.',
+    stateFacts: 'N/A — operational metadata',
+    example: `# Agents
+
+This case folder is managed by Waypoint.
+
+## Authorized Operators
+- Paralegal (Hermes with \`hermes_profile: paralegal\`)
+- Attorney (review gates where marked)
+
+## Rules
+1. Never edit \`.waypoint/firmvault/*.yaml\` directly
+2. All state changes go through \`waypoint firmvault state set\`
+3. Document intake ≠ legal landmark satisfaction
+4. All mutations produce audit events in \`.waypoint/firmvault/events.jsonl\`
+`
+  },
+
+  'dashboard': {
+    name: 'Dashboard.md',
+    path: '<root>/Dashboard.md',
+    tags: ['required'],
+    purpose: 'At-a-glance status board. Updated by operator after each batch of state changes.',
+    stateFacts: 'Reflects current landmark counts and phase',
+    example: `# Dashboard
+
+## Case At-a-Glance
+
+| Field | Value |
+|-------|-------|
+| Case | Jane Smith v. Acme Trucking |
+| Type | Personal Injury |
+| Status | Open |
+| Waypoint Route | route-001 |
+| Landmarks Satisfied | 0 / 82 |
+| Recipes Installed | 56 |
+| Evidence Files | 0 |
+
+## Current Phase
+Awaiting case bootstrap and initial state setup.
+
+## Next Steps
+1. Copy existing case materials into canonical folders
+2. Create evidence files under \`evidence/\`
+3. Run \`waypoint firmvault state set\` for each completed fact
+4. Check: \`waypoint firmvault landmarks --json\`
+`
+  },
+
+  'intake': {
+    name: 'intake.md',
+    path: '<client>/intake.md',
+    tags: ['required', 'summary'],
+    purpose: 'Client intake summary — captures the initial information gathered when the client engages the firm.',
+    stateFacts: 'Supports \`client.intake\` (status: complete)',
+    relatedEvidence: 'evidence/client-intake.md, documents/inbox/intake-packet.pdf',
+    example: `# Client Intake
+
+## Client Information
+| Field | Value |
+|-------|-------|
+| Name | Jane Smith |
+| DOB | [DOB] |
+| Address | [ADDRESS] |
+| Phone | [PHONE] |
+| Email | [EMAIL] |
+| SSN | [REDACTED] |
+
+## Incident Summary
+**Date of Incident:** [DATE]
+**Location:** [LOCATION]
+**Description:** [BRIEF DESCRIPTION]
+
+## Initial Consultation
+- [x] Completed
+- Date: [DATE]
+
+## Conflict Check
+- [x] Cleared — method: [SOFTWARE] — date: [DATE]
+`
+  },
+
+  'contracts': {
+    name: 'contracts.md',
+    path: '<client>/contracts.md',
+    tags: ['required', 'summary'],
+    purpose: 'Fee agreement and any other signed contracts between the firm and client.',
+    stateFacts: 'Supports \`client.contracts.fee_agreement\`',
+    relatedEvidence: 'documents/signed/fee-agreement.pdf',
+    example: `# Fee Agreement & Contracts
+
+## Engagement
+| Field | Value |
+|-------|-------|
+| Agreement Type | Contingency Fee |
+| Contingency Rate | [PERCENT]% |
+| Costs Advance | [AMOUNT] |
+| Date Signed | [DATE] |
+
+## Signatures
+| Role | Name | Date |
+|------|------|------|
+| Client | Jane Smith | [DATE] |
+| Attorney | [REDACTED] | [DATE] |
+
+## Related Evidence
+- Signed copy: \`documents/signed/fee-agreement.pdf\`
+`
+  },
+
+  'authorizations': {
+    name: 'authorizations.md',
+    path: '<client>/authorizations.md',
+    tags: ['required', 'summary'],
+    purpose: 'HIPAA authorizations, medical records releases, and insurance authorizations.',
+    stateFacts: 'Supports \`client.authorizations.hipaa\`',
+    relatedEvidence: 'documents/signed/hipaa.pdf',
+    example: `# Authorizations
+
+## HIPAA Authorization
+- **Patient:** Jane Smith
+- **Provider(s):** [LIST]
+- **Date Signed:** [DATE]
+- **Scope:** Full medical records release for PI claim
+
+## Insurance Authorization
+- **PIP Carrier:** [REDACTED]
+- **Authorization Confirmed:** Yes — via application filing
+
+## Evidence
+- \`documents/signed/hipaa.pdf\`
+`
+  },
+
+  'contactability': {
+    name: 'contactability.md',
+    path: '<client>/contactability.md',
+    tags: ['required', 'summary'],
+    purpose: 'Preferred contact methods, best times to reach, emergency contacts.',
+    stateFacts: 'Supports \`client.contactability\`',
+    example: `# Client Contactability
+
+| Method | Detail | Preferred? |
+|--------|--------|-----------|
+| Phone | [NUMBER] | ✅ Yes |
+| Email | [EMAIL] | ✅ Yes |
+| Text | [NUMBER] | ✅ Yes |
+
+## Best Times
+- Weekdays: [AM/PM range]
+- Weekends: [AVAILABILITY]
+
+## Emergency Contact
+| Name | Relationship | Phone |
+|------|-------------|-------|
+| [NAME] | [RELATION] | [NUMBER] |
+`
+  },
+
+  'checkins': {
+    name: 'check-ins.md',
+    path: '<client>/check-ins.md',
+    tags: ['required', 'summary'],
+    purpose: 'Log of client check-in calls/status updates with next-action items.',
+    stateFacts: 'Supports \`client.check_ins\`',
+    example: `# Client Check-ins
+
+| Date | Type | Notes | Next Action |
+|------|------|-------|-------------|
+| [DATE] | Initial | Intake complete, signed engagement | Begin investigation |
+| [DATE] | Medical | Treatment ongoing | Follow up in 2 weeks |
+
+## Cadence
+- **Active treatment:** Bi-weekly
+- **Demand phase:** Monthly
+- **Negotiation:** Weekly as needed
+`
+  },
+
+  'accident_md': {
+    name: 'accident.md',
+    path: '<accident>/accident.md',
+    tags: ['required', 'summary'],
+    purpose: 'Detailed narrative of the accident facts, parties, and initial liability assessment.',
+    stateFacts: 'Supports \`accident.details\`, \`accident.liability_assessment\`',
+    relatedEvidence: 'evidence/accident-police-report.md',
+    example: `# Accident Details
+
+## Incident Information
+| Field | Value |
+|-------|-------|
+| Date | [DATE] |
+| Location | [ADDRESS] |
+| Weather | [CONDITIONS] |
+
+## Narrative
+[DETAILED DESCRIPTION OF HOW THE ACCIDENT OCCURRED]
+
+## Parties
+| Vehicle | Driver | Insurance |
+|---------|--------|-----------|
+| Plaintiff | Jane Smith | [REDACTED] |
+| Defendant | [NAME] | [REDACTED] |
+
+## Liability
+- **At-fault:** Defendant
+- **Basis:** [TRAFFIC LAW / NEGLIGENCE THEORY]
+`
+  },
+
+  'police': {
+    name: 'police-report.md',
+    path: '<accident>/police-report.md',
+    tags: ['required', 'summary'],
+    purpose: 'Police report details — report number, agency, officer, narrative, citations.',
+    stateFacts: 'Supports \`accident.police_report\`',
+    relatedEvidence: 'evidence/accident-police-report.md, documents/reports/police-report.pdf',
+    example: `# Police Report
+
+| Field | Value |
+|-------|-------|
+| Report # | [NUMBER] |
+| Agency | [DEPARTMENT] |
+| Filed | [DATE] |
+| Officer | [NAME / BADGE #] |
+
+## Summary
+[POLICE REPORT NARRATIVE]
+
+## Citations
+- [CITATION DETAILS or NONE]
+
+## Evidence Collected
+- Photos: [YES/NO]
+- Diagram: [YES/NO]
+`
+  },
+
+  'liability': {
+    name: 'liability.md',
+    path: '<accident>/liability.md',
+    tags: ['required', 'summary'],
+    purpose: 'Legal analysis of liability — theory, elements, evidence of breach, comparative fault.',
+    stateFacts: 'Supports \`accident.liability_assessment\`',
+    example: `# Liability Analysis
+
+## Theory of Liability
+**Negligence** — [or other theory]
+
+## Elements
+1. **Duty:** Defendant owed duty of care
+2. **Breach:** Defendant failed to exercise reasonable care
+3. **Causation:** Breach caused plaintiff\'s injuries
+4. **Damages:** Compensable damages suffered
+
+## Comparative Fault
+- Plaintiff\'s alleged fault: [NONE or PERCENTAGE]
+`
+  },
+
+  'cont-client': {
+    name: 'client.md',
+    path: '<contacts>/client.md',
+    tags: ['optional'],
+    purpose: 'Detailed client contact card — goes beyond intake with employer, insurance, family contacts.',
+    stateFacts: 'None directly — reference file',
+    example: `# Client Contact Card
+
+| Field | Value |
+|-------|-------|
+| Full Name | Jane Smith |
+| Employer | [EMPLOYER] |
+| Insurance | [REDACTED] |
+| Emergency Contact | [NAME] / [PHONE] |
+`
+  },
+
+  'cont-adjusters': {
+    name: 'adjusters.md',
+    path: '<contacts>/adjusters.md',
+    tags: ['optional'],
+    purpose: 'List of all insurance adjusters involved — BI, PIP, UM/UIM — with contact info.',
+    stateFacts: 'None directly — reference file',
+    example: `# Adjusters
+
+| Carrier | Name | Phone | Email | Claims # |
+|---------|------|-------|-------|----------|
+| [BI Carrier] | [NAME] | [PHONE] | [EMAIL] | [#] |
+| [PIP Carrier] | [NAME] | [PHONE] | [EMAIL] | [#] |
+`
+  },
+
+  'cont-providers': {
+    name: 'providers.md',
+    path: '<contacts>/providers.md',
+    tags: ['optional'],
+    purpose: 'Master list of all medical providers treating the client.',
+    stateFacts: 'None directly — reference file',
+    example: `# Medical Providers
+
+| Provider | Specialty | Clinic | Phone | NPI |
+|----------|-----------|--------|-------|-----|
+| [NAME] | Chiropractic | [CLINIC] | [PHONE] | [#] |
+| [NAME] | Orthopedics | [CLINIC] | [PHONE] | [#] |
+`
+  },
+
+  'cont-lienholders': {
+    name: 'lienholders.md',
+    path: '<contacts>/lienholders.md',
+    tags: ['optional'],
+    purpose: 'Liens identified — government, private, contractual.',
+    stateFacts: 'Supports \`liens.early_identification.liens\`',
+    example: `# Lienholders
+
+| Type | Name | Claimed Amount | Status |
+|------|------|---------------:|--------|
+| Health Insurance | [NAME] | $[AMOUNT] | Notice received |
+| Medicare | CMS | $[AMOUNT] | Pending |
+`
+  },
+
+  'cont-witnesses': {
+    name: 'witnesses.md',
+    path: '<contacts>/witnesses.md',
+    tags: ['optional'],
+    purpose: 'Witness contact information and statements summary.',
+    stateFacts: 'None directly — reference file',
+    example: `# Witnesses
+
+| Name | Address | Phone | Statement? |
+|------|---------|-------|-----------|
+| [NAME] | [ADDRESS] | [PHONE] | [YES/NO/PENDING] |
+`
+  },
+
+  'bi-carrier': {
+    name: 'carrier.md',
+    path: '<insurance>/bi/carrier.md',
+    tags: ['optional'],
+    purpose: 'Defendant\'s bodily injury liability carrier details.',
+    stateFacts: 'Supports \`insurance.bi.carrier_identified\`',
+    example: `# BI Carrier
+
+| Field | Value |
+|-------|-------|
+| Carrier | [REDACTED] |
+| Policy # | [REDACTED] |
+| Limits | $[AMOUNT] / $[PER PERSON] |
+| Adjuster | [NAME] |
+| Date Identified | [DATE] |
+`
+  },
+
+  'bi-lor': {
+    name: 'letter-of-representation.md',
+    path: '<insurance>/bi/letter-of-representation.md',
+    tags: ['optional'],
+    purpose: 'Track LOI/letter of representation sent to BI carrier.',
+    stateFacts: 'Supports \`insurance.bi.lor.prepared\`, \`insurance.bi.lor.sent\`',
+    example: `# Letter of Representation — BI
+
+| Field | Value |
+|-------|-------|
+| Carrier | [REDACTED] |
+| LOR Date | [DATE] |
+| Sent Date | [DATE] |
+| Method | Email / Fax / Mail |
+| Acknowledged | [YES/NO/DATE] |
+`
+  },
+
+  'bi-ack': {
+    name: 'acknowledgment.md',
+    path: '<insurance>/bi/acknowledgment.md',
+    tags: ['optional'],
+    purpose: 'Track acknowledgment of claims from BI carrier.',
+    stateFacts: 'Supports \`insurance.bi.acknowledgment\`',
+    example: `# BI Acknowledgment
+
+- **Claim acknowledged:** [YES/NO]
+- **Date received:** [DATE]
+- **Claims adjuster assigned:** [NAME]
+- **Claim number:** [#]
+`
+  },
+
+  'pip-carrier': {
+    name: 'carrier.md',
+    path: '<insurance>/pip/carrier.md',
+    tags: ['optional'],
+    purpose: 'Plaintiff\'s PIP carrier and coverage details.',
+    stateFacts: 'Supports \`insurance.pip.carrier_identified\`',
+    example: `# PIP Carrier
+
+| Field | Value |
+|-------|-------|
+| Carrier | [REDACTED] |
+| Policy # | [REDACTED] |
+| Coverage | $[AMOUNT] |
+| Application Filed | [DATE] |
+`
+  },
+
+  'pip-app': {
+    name: 'application.md',
+    path: '<insurance>/pip/application.md',
+    tags: ['optional'],
+    purpose: 'PIP application details and filing status.',
+    stateFacts: 'Supports \`insurance.pip.application.prepared\`, \`insurance.pip.application.filed\`',
+    example: `# PIP Application
+
+| Field | Value |
+|-------|-------|
+| Application Date | [DATE] |
+| Filed With | [CARRIER] |
+| Status | [PENDING/APPROVED/DENIED] |
+| Confirmation # | [#] |
+`
+  },
+
+  'pip-lor': {
+    name: 'letter-of-representation.md',
+    path: '<insurance>/pip/letter-of-representation.md',
+    tags: ['optional'],
+    purpose: 'LOI sent to PIP carrier.',
+    stateFacts: 'Supports \`insurance.pip.lor.prepared\`, \`insurance.pip.lor.sent\`',
+    example: `# Letter of Representation — PIP
+
+| Field | Value |
+|-------|-------|
+| Carrier | [REDACTED] |
+| LOR Date | [DATE] |
+| Sent Date | [DATE] |
+| Acknowledged | [YES/NO/DATE] |
+`
+  },
+
+  'pip-ack': {
+    name: 'acknowledgment.md',
+    path: '<insurance>/pip/acknowledgment.md',
+    tags: ['optional'],
+    purpose: 'PIP carrier acknowledgment of claim.',
+    stateFacts: 'Supports \`insurance.pip.acknowledgment\`',
+    example: `# PIP Acknowledgment
+
+- **Claim acknowledged:** [YES/NO]
+- **Date:** [DATE]
+- **Adjuster:** [NAME]
+- **Claim #:** [#]
+`
+  },
+
+  'pip-approval': {
+    name: 'approval.md',
+    path: '<insurance>/pip/approval.md',
+    tags: ['optional'],
+    purpose: 'PIP benefits approval documentation.',
+    stateFacts: 'Supports \`insurance.pip.approval\`',
+    example: `# PIP Approval
+
+- **Approved:** [YES/NO]
+- **Amount approved:** $[AMOUNT]
+- **Date:** [DATE]
+- **Notes:** [IF DENIED, REASON]
+`
+  },
+
+  'pip-status': {
+    name: 'status-checks.md',
+    path: '<insurance>/pip/status-checks.md',
+    tags: ['optional'],
+    purpose: 'Ongoing PIP status tracking — periodic check-ins on claim progress.',
+    stateFacts: 'Supports \`insurance.pip.track\`',
+    example: `# PIP Status Checks
+
+| Date | Status | Notes |
+|------|--------|-------|
+| [DATE] | Initial claim filed | Confirmation received |
+| [DATE] | Under review | Awaiting medical records |
+| [DATE] | Benefits approved | $[AMOUNT] authorized |
+`
+  },
+
+  'pip-benefits': {
+    name: 'benefits.md',
+    path: '<insurance>/pip/benefits.md',
+    tags: ['optional'],
+    purpose: 'Summary of PIP benefits paid, outstanding, and remaining.',
+    stateFacts: 'Supports \`insurance.pip.benefits\`',
+    example: `# PIP Benefits
+
+| Category | Amount | Status |
+|----------|-------:|--------|
+| Medical payments | $[AMOUNT] | Paid |
+| Lost wages | $[AMOUNT] | Pending |
+| Funeral (if applicable) | $[AMOUNT] | N/A |
+| **Total paid** | **$[TOTAL]** | |
+`
+  },
+
+  'prov-index': {
+    name: 'index.md',
+    path: '<medical-providers>/index.md',
+    tags: ['required'],
+    purpose: 'Master list of all medical providers and what records have been requested.',
+    stateFacts: 'Supports \`providers.setup\`',
+    example: `# Medical Providers Index
+
+| # | Provider | Specialty | Facility | Records Requested | Received |
+|---|----------|-----------|----------|-------------------|----------|
+| 1 | [NAME] | Chiropractic | [CLINIC] | ✅ | ✅ |
+| 2 | [NAME] | Orthopedics | [HOSPITAL] | ✅ | ⏳ |
+`
+  },
+
+  'prov-status': {
+    name: 'treatment-status.md',
+    path: '<medical-providers>/treatment-status.md',
+    tags: ['required'],
+    purpose: 'Current treatment status, followup flags, and provider-level notes.',
+    stateFacts: 'Supports multiple \`providers.treatment_status.*\` facts',
+    example: `# Treatment Status
+
+## Providers Active
+- [NAME] — Chiropractic — active treatment
+- [NAME] — Orthopedics — MRI pending
+
+## Treatment Summary
+- Treatment began: [DATE]
+- Current status: [ONGOING/COMPLETED]
+- Next appt: [DATE]
+
+## Followups Needed
+- Request updated records from [PROVIDER]
+- Confirm MRI results received
+`
+  },
+
+  'prov-followup': {
+    name: 'followup-flags.md',
+    path: '<medical-providers>/followup-flags.md',
+    tags: ['optional'],
+    purpose: 'Dedicated tracking for outstanding provider follow-ups.',
+    stateFacts: 'None directly — working document',
+    example: `# Follow-Up Flags
+
+| Provider | Action Needed | Due Date | Status |
+|----------|---------------|----------|--------|
+| [NAME] | Send updated records request | [DATE] | Pending |
+| [NAME] | Confirm billing codes | [DATE] | Done |
+`
+  },
+
+  'liens-inv': {
+    name: 'inventory.md',
+    path: '<liens>/inventory.md',
+    tags: ['optional'],
+    purpose: 'Master lien inventory — who is owed what, amounts, and status.',
+    stateFacts: 'Supports \`liens.early_identification.liens\`, \`liens.early_identification.inventory_review\`',
+    example: `# Lien Inventory
+
+| Lienholder | Type | Claimed | Status |
+|------------|------|--------:|--------|
+| Health Plan A | Health ins | $4,200 | Notice received |
+| Provider B | Medical | $1,100 | Pending |
+`
+  },
+
+  'liens-early': {
+    name: 'early-identification.md',
+    path: '<liens>/early-identification.md',
+    tags: ['optional'],
+    purpose: 'Early identification of potential liens — health coverage, government claims.',
+    stateFacts: 'Supports \`liens.early_identification.*\` facts',
+    example: `# Early Lien Identification
+
+## Health Coverage
+- **Active insurance:** [NAME] — policy [#]
+- **Secondary coverage:** [NONE/NAME]
+
+## Potential Liens
+- Medicare/Medicaid: [YES/NO]
+- ERISA plan: [YES/NO]
+- Private health: [LIST]
+
+## Clues Reviewed
+- Client interview: [DATE]
+- Medical records reviewed: [COUNT] providers
+`
+  },
+
+  'dem-readiness': {
+    name: 'readiness.md',
+    path: '<demand>/readiness.md',
+    tags: ['optional'],
+    purpose: 'Demand readiness checklist — are all materials, damages, and liens ready before sending?',
+    stateFacts: 'Supports \`demand.readiness.materials\`, \`demand.readiness.damages\`, \`demand.readiness.review\`',
+    example: `# Demand Readiness
+
+## Checklist
+- [x] Medical records collected (8 providers)
+- [x] Bills received and totaled
+- [x] Lost wages documentation complete
+- [x] Lien inventory finalized
+- [x] Damages summary prepared
+- [ ] Attorney review scheduled
+- [ ] Demand letter drafted
+`
+  },
+
+  'dem-damages': {
+    name: 'damages.md',
+    path: '<demand>/damages.md',
+    tags: ['optional'],
+    purpose: 'Compensatory and special damages breakdown.',
+    stateFacts: 'Supports \`demand.readiness.damages\`',
+    example: `# Damages Summary
+
+| Category | Amount |
+|----------|-------:|
+| Medical expenses | $[AMOUNT] |
+| Lost wages | $[AMOUNT] |
+| Pain and suffering | $[AMOUNT] |
+| Property damage | $[AMOUNT] |
+| **Total claimed** | **$[TOTAL]** |
+`
+  },
+
+  'dem-liencheck': {
+    name: 'lien-check.md',
+    path: '<demand>/lien-check.md',
+    tags: ['optional'],
+    purpose: 'Final check that all liens are accounted for before sending the demand.',
+    stateFacts: 'Supports \`demand.liens.final_process_check\`',
+    example: `# Lien Check — Pre-Demand
+
+- Health Plan A: $[AMOUNT] — ✅ included in demand
+- Medicare: $[AMOUNT] — ✅ conditional payment letter sent
+- Provider B: $[AMOUNT] — ⏳ awaiting final amount
+`
+  },
+
+  'dem-draft': {
+    name: 'draft.md',
+    path: '<demand>/draft.md',
+    tags: ['optional'],
+    purpose: 'Draft of the demand letter or demand package.',
+    stateFacts: 'Supports \`demand.draft\`',
+    example: `# Demand Draft — v1
+
+TO: [DEFENDANT INSURER]
+RE: Jane Smith v. Acme Trucking — Policy #[#]
+
+[DEMAND LETTER TEXT]
+
+Demand amount: $[AMOUNT]
+Response deadline: [DATE]
+`
+  },
+
+  'dem-review': {
+    name: 'attorney-review.md',
+    path: '<demand>/attorney-review.md',
+    tags: ['optional'],
+    purpose: 'Attorney review and approval of the demand package.',
+    stateFacts: 'Supports \`demand.attorney_review\`',
+    example: `# Attorney Review
+
+- **Reviewer:** [ATTORNEY NAME]
+- **Date reviewed:** [DATE]
+- **Result:** ✅ Approved for sending
+- **Notes:** [MODIFICATIONS OR CONDITIONS]
+`
+  },
+
+  'dem-recipients': {
+    name: 'recipients.md',
+    path: '<demand>/recipients.md',
+    tags: ['optional'],
+    purpose: 'Who receives the demand package and how.',
+    stateFacts: 'Supports \`demand.recipients\`',
+    example: `# Demand Recipients
+
+| Recipient | Address | Method | Date Sent |
+|-----------|---------|--------|-----------|
+| [ADJUSTER] | [ADDRESS] | Email | [DATE] |
+| [DEFENDANT] | [ADDRESS] | Certified mail | [DATE] |
+`
+  },
+
+  'dem-sent': {
+    name: 'sent.md',
+    path: '<demand>/sent.md',
+    tags: ['optional'],
+    purpose: 'Confirmation that the demand was sent — date, method, tracking.',
+    stateFacts: 'Supports \`demand.send\`',
+    relatedEvidence: 'evidence/demand-send.md, documents/sent/demand-package.pdf',
+    example: `# Demand Sent
+
+- **Date sent:** [DATE]
+- **Method:** Email (confirmed read) + certified mail
+- **Tracking #:** [#]
+- **Recipients:** [LIST]
+
+## Source Documents
+- \`documents/sent/demand-package.pdf\`
+- \`evidence/demand-send.md\`
+`
+  },
+
+  'neg-offer': {
+    name: 'initial-offer.md',
+    path: '<negotiation>/initial-offer.md',
+    tags: ['optional'],
+    purpose: 'The first offer received from the defense (or sent by us).',
+    stateFacts: 'Supports \`negotiation.initial_offer\`',
+    example: `# Initial Offer
+
+- **From:** [DEFENDANT ADJUSTER]
+- **Date received:** [DATE]
+- **Amount:** $[AMOUNT]
+- **Conditions:** [LIST]
+- **Response needed by:** [DATE]
+`
+  },
+
+  'neg-log': {
+    name: 'offer-log.md',
+    path: '<negotiation>/offer-log.md',
+    tags: ['optional'],
+    purpose: 'Chronological log of all offers and counteroffers.',
+    stateFacts: 'Supports \`negotiation.offer_documented\`',
+    example: `# Offer Log
+
+| Date | From | Amount | Notes |
+|------|------|-------:|-------|
+| [DATE] | Defense | $[AMOUNT] | Initial offer — too low |
+| [DATE] | Plaintiff | $[AMOUNT] | Counter with demand supplement |
+`
+  },
+
+  'neg-eval': {
+    name: 'evaluation.md',
+    path: '<negotiation>/evaluation.md',
+    tags: ['optional'],
+    purpose: 'Evaluation of offers against policy limits, damages, and case strength.',
+    stateFacts: 'Supports \`negotiation.evaluation\`',
+    example: `# Offer Evaluation
+
+| Factor | Assessment |
+|--------|-----------|
+| Policy limits | $[AMOUNT] |
+| Special damages | $[AMOUNT] |
+| Case strength | [STRONG/MODERATE/WEAK] |
+| Recommendation | [ACCEPT/COUNTER/ESCALATE] |
+`
+  },
+
+  'neg-nett': {
+    name: 'net-to-client.md',
+    path: '<negotiation>/net-to-client.md',
+    tags: ['optional'],
+    purpose: 'Net-to-client analysis after deducting liens, fees, and costs.',
+    stateFacts: 'Supports \`negotiation.net_to_client\`',
+    example: `# Net-to-Client Analysis
+
+| Item | Amount |
+|------|-------:|
+| Gross offer | $[AMOUNT] |
+| Attorney fees (33%) | $[AMOUNT] |
+| Costs advanced | $[AMOUNT] |
+| Lien payments | $[AMOUNT] |
+| **Net to client** | **$[AMOUNT]** |
+`
+  },
+
+  'neg-advice': {
+    name: 'client-advice.md',
+    path: '<negotiation>/client-advice.md',
+    tags: ['optional'],
+    purpose: 'Advice given to client regarding settlement options.',
+    stateFacts: 'Supports \`negotiation.client_advice\`',
+    example: `# Client Advice
+
+- **Date:** [DATE]
+- **Recommended action:** [ACCEPT/COUNTER/WAIT]
+- **Rationale:** [EXPLANATION]
+- **Client response:** [ACCEPTED/REJECTED/REQUESTED TIME]
+`
+  },
+
+  'neg-decision': {
+    name: 'client-decision.md',
+    path: '<negotiation>/client-decision.md',
+    tags: ['optional'],
+    purpose: 'Formal record of the client\'s settlement decision.',
+    stateFacts: 'Supports \`negotiation.client_decision\`',
+    example: `# Client Decision
+
+- **Decision:** Accept offer of $[AMOUNT]
+- **Date:** [DATE]
+- **Signed authorization to settle:** [YES/NO — reference document]
+`
+  },
+
+  'neg-response': {
+    name: 'response.md',
+    path: '<negotiation>/response.md',
+    tags: ['optional'],
+    purpose: 'Written response to an offer — counter, rejection, or acceptance.',
+    stateFacts: 'Supports \`negotiation.response.prepared\`, \`negotiation.response.human_sent\`',
+    example: `# Response to Offer
+
+- **Type:** Counter offer
+- **Amount:** $[AMOUNT]
+- **Sent date:** [DATE]
+- **Method:** Email to [ADJUSTER]
+`
+  },
+
+  'neg-result': {
+    name: 'result.md',
+    path: '<negotiation>/result.md',
+    tags: ['optional'],
+    purpose: 'Final outcome of the negotiation phase.',
+    stateFacts: 'Supports \`negotiation.response.result\`',
+    example: `# Negotiation Result
+
+- **Outcome:** [SETTLED / FAILED / LITIGATED]
+- **Settlement amount:** $[AMOUNT]
+- **Date:** [DATE]
+- **Next phase:** Settlement / Litigation
+`
+  },
+
+  'set-main': {
+    name: 'settlement.md',
+    path: '<settlement>/settlement.md',
+    tags: ['optional'],
+    purpose: 'Core settlement details — terms, amounts, and conditions.',
+    stateFacts: 'Supports \`settlement.reached\`',
+    example: `# Settlement
+
+| Field | Value |
+|-------|-------|
+| Settlement amount | $[AMOUNT] |
+| Date agreed | [DATE] |
+| Conditions | [LIST] |
+| Release executed | [YES/NO] |
+`
+  },
+
+  'set-stmt': {
+    name: 'statement.md',
+    path: '<settlement>/statement.md',
+    tags: ['optional'],
+    purpose: 'Settlement statement — itemized accounting of funds.',
+    stateFacts: 'Supports \`settlement.statement\`',
+    example: `# Settlement Statement
+
+| Line Item | Amount |
+|-----------|-------:|
+| Medical payments | $[AMOUNT] |
+| Lost wages | $[AMOUNT] |
+| General damages | $[AMOUNT] |
+| Attorney fees | $[AMOUNT] |
+| Costs | $[AMOUNT] |
+| **Total** | **$[TOTAL]** |
+`
+  },
+
+  'set-auth': {
+    name: 'authorization-to-settle.md',
+    path: '<settlement>/authorization-to-settle.md',
+    tags: ['optional'],
+    purpose: 'Authorization from the client or insurer to proceed with settlement.',
+    stateFacts: 'Supports \`settlement.authorization_to_settle\`',
+    example: `# Authorization to Settle
+
+- **Client:** [NAME]
+- **Date authorized:** [DATE]
+- **Amount authorized:** $[AMOUNT]
+- **Signature:** [SCANNED/PENDING]
+`
+  },
+
+  'set-clientauth': {
+    name: 'client-authorization.md',
+    path: '<settlement>/client-authorization.md',
+    tags: ['optional'],
+    purpose: 'Client sign-off on the settlement terms.',
+    stateFacts: 'Supports \`settlement.client_authorization\`',
+    example: `# Client Settlement Authorization
+
+- **Client confirms:** Yes
+- **Date:** [DATE]
+- **Attorney confirms:** [NAME] / [DATE]
+`
+  },
+
+  'set-release': {
+    name: 'release.md',
+    path: '<settlement>/release.md',
+    tags: ['optional'],
+    purpose: 'The signed release document — releases all claims against the defendant.',
+    stateFacts: 'Supports \`settlement.release\`',
+    example: `# Release
+
+- **Release executed:** [YES/NO]
+- **Date:** [DATE]
+- **Parties released:** [DEFENDANT, INSURER]
+- **Document:** \`documents/signed/release.pdf\`
+`
+  },
+
+  'set-funds': {
+    name: 'funds.md',
+    path: '<settlement>/funds.md',
+    tags: ['optional'],
+    purpose: 'Tracking of settlement funds — receipt, holding, disbursement.',
+    stateFacts: 'Supports \`settlement.funds\`',
+    example: `# Settlement Funds
+
+- **Check received:** [DATE]
+- **Amount:** $[AMOUNT]
+- **Held in trust:** [YES/ACCOUNT #]
+- **Disbursement authorized:** [DATE]
+`
+  },
+
+  'set-c1': {
+    name: 'readiness.md',
+    path: '<settlement>/closing/readiness.md',
+    tags: ['optional'],
+    purpose: 'Pre-close readiness check — all loose ends before finalizing the case.',
+    stateFacts: 'Supports \`settlement.closing.readiness\`',
+    example: `# Closing Readiness
+
+- [x] All liens resolved or paid
+- [x] Medical bills finalized
+- [x] Client release signed
+- [x] Funds received in trust
+- [ ] Final letter prepared
+`
+  },
+
+  'set-c2': {
+    name: 'final-letter-prepared.md',
+    path: '<settlement>/closing/final-letter-prepared.md',
+    tags: ['optional'],
+    purpose: 'Draft and final version of the closing letter to the client.',
+    stateFacts: 'Supports \`settlement.closing.letter.prepared\`',
+    example: `# Final Closing Letter — Prepared
+
+- **Letter drafted:** [DATE]
+- **Content summary:** Settlement details, net amount, check instructions
+- **Attorney reviewed:** [YES/NO]
+- **Ready to send:** [YES/NO]
+`
+  },
+
+  'set-c3': {
+    name: 'final-letter-sent.md',
+    path: '<settlement>/closing/final-letter-sent.md',
+    tags: ['optional'],
+    purpose: 'Confirmation that the final closing letter was sent to the client.',
+    stateFacts: 'Supports \`settlement.closing.letter.sent\`',
+    example: `# Final Closing Letter — Sent
+
+- **Sent date:** [DATE]
+- **Method:** Email / Mail
+- **Tracking:** [#]
+- **Client confirmed receipt:** [YES/NO/DATE]
+`
+  },
+
+  'set-c4': {
+    name: 'archive.md',
+    path: '<settlement>/closing/archive.md',
+    tags: ['optional'],
+    purpose: 'Record of what was archived and where — physical and digital.',
+    stateFacts: 'Supports \`settlement.closing.archive\`',
+    example: `# Case Archive
+
+- **Physical file location:** [CABINET/SHELF]
+- **Digital archive:** [PATH or SYSTEM]
+- **Retention period:** [YEARS]
+- **Archived by:** [NAME] on [DATE]
+`
+  },
+
+  'set-c5': {
+    name: 'case-closed.md',
+    path: '<settlement>/closing/case-closed.md',
+    tags: ['close-case'],
+    purpose: 'Final closure record — the case is done. All 82 landmarks should be satisfied.',
+    stateFacts: 'Supports \`settlement.closing.case\` — the final close-case landmark',
+    example: `# Case Closed
+
+- **Closed:** [DATE]
+- **Case:** Jane Smith v. Acme Trucking
+- **Outcome:** Settled for $[AMOUNT]
+- **All 82 landmarks:** ✅ Satisfied
+- **Next:** Archived per retention policy
+`
+  },
+
+  'sl-audit': {
+    name: 'audit.md',
+    path: '<settlement>/liens/audit.md',
+    tags: ['optional'],
+    purpose: 'Audit of all lien payments during settlement.',
+    stateFacts: 'Supports \`settlement.liens.audit\`',
+    example: `# Lien Audit
+
+| Lienholder | Claimed | Paid | Date |
+|------------|--------:|-----:|------|
+| [NAME] | $[AMOUNT] | $[AMOUNT] | [DATE] |
+`
+  },
+
+  'sl-prior': {
+    name: 'prioritization.md',
+    path: '<settlement>/liens/prioritization.md',
+    tags: ['optional'],
+    purpose: 'Priority order for lien payments.',
+    stateFacts: 'Supports \`settlement.liens.prioritization\`',
+    example: `# Lien Prioritization
+
+1. Medicare — $[AMOUNT] (statutory)
+2. Health Plan A — $[AMOUNT]
+3. Provider B — $[AMOUNT]
+`
+  },
+
+  'sl-funds': {
+    name: 'available-funds.md',
+    path: '<settlement>/liens/available-funds.md',
+    tags: ['optional'],
+    purpose: 'Calculation of available funds after attorney fees and costs.',
+    stateFacts: 'Supports \`settlement.liens.available_funds\`',
+    example: `# Available Funds
+
+| Item | Amount |
+|------|-------:|
+| Gross settlement | $[AMOUNT] |
+| Attorney fees (33%) | -$[AMOUNT] |
+| Costs | -$[AMOUNT] |
+| **Available for liens** | **$[AMOUNT]** |
+`
+  },
+
+  'sl-review': {
+    name: 'strategy-review.md',
+    path: '<settlement>/liens/strategy-review.md',
+    tags: ['optional'],
+    purpose: 'Strategy for negotiating lien reductions.',
+    stateFacts: 'Supports \`settlement.liens.strategy_review\`',
+    example: `# Lien Strategy Review
+
+- Medicare: Request reduction under MSPA
+- Health Plan A: Negotiate per ERISA limits
+- Provider B: Offer lump sum discount
+`
+  },
+
+  'sl-result': {
+    name: 'result.md',
+    path: '<settlement>/liens/result.md',
+    tags: ['optional'],
+    purpose: 'Final result of lien resolution.',
+    stateFacts: 'Supports \`settlement.liens.result\`',
+    example: `# Lien Resolution Result
+
+| Lienholder | Original | Resolved | Savings |
+|------------|--------:|---------:|--------:|
+| Medicare | $[AMOUNT] | $[AMOUNT] | $[AMOUNT] |
+| Health Plan A | $[AMOUNT] | $[AMOUNT] | $[AMOUNT] |
+| **Total** | **$[TOTAL]** | **$[TOTAL]** | **$[SAVINGS]** |
+`
+  },
+
+  // Machine state files — do not edit
+  'case.yaml': {
+    name: 'case.yaml',
+    path: '<.waypoint>/firmvault/case.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Core case metadata — slug, type, status, timestamps. Updated by CLI only.',
+    stateFacts: 'Holds top-level case state; generates case.setup landmark',
+    example: `case_slug: jane-smith-v-acme-trucking
+case_type: personal_injury
+status: open
+created_at: "2026-05-12T00:00:00Z"
+updated_at: "2026-05-12T00:00:00Z"
+attorney: "[REDACTED]"
+jurisdiction: "[COUNTY, STATE]"
+`
+  },
+
+  'client.yaml': {
+    name: 'client.yaml',
+    path: '<.waypoint>/firmvault/client.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Client legal state — which intake/contract/auth facts are satisfied.',
+    stateFacts: 'Projects landmarks: client.intake, client.contracts.*, client.authorizations.*, client.contactability, client.check_ins',
+    example: `client:
+  intake:
+    status: complete
+    evidence: evidence/client-intake.md
+    satisfied_at: "2026-05-12T10:00:00Z"
+  contracts:
+    fee_agreement:
+      status: complete
+      evidence: documents/signed/fee-agreement.pdf
+  authorizations:
+    hipaa:
+      status: complete
+      evidence: documents/signed/hipaa.pdf
+  contactability:
+    status: complete
+  check_ins:
+    status: complete
+`
+  },
+
+  'accident.yaml': {
+    name: 'accident.yaml',
+    path: '<.waypoint>/firmvault/accident.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Accident facts and liability state.',
+    stateFacts: 'Projects landmarks: accident.details, accident.police_report, accident.liability_assessment',
+    example: `accident:
+  details:
+    status: complete
+    evidence: accident/accident.md
+  police_report:
+    status: complete
+    evidence: accident/police-report.md
+  liability_assessment:
+    status: complete
+    evidence: accident/liability.md
+`
+  },
+
+  'providers.yaml': {
+    name: 'providers.yaml',
+    path: '<.waypoint>/firmvault/providers.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Medical provider tracking — setup, treatment status, followups.',
+    stateFacts: 'Projects landmarks: providers.setup, providers.treatment_status.*',
+    example: `providers:
+  setup:
+    status: complete
+    evidence: medical-providers/index.md
+  treatment_status:
+    provider_list_reviewed:
+      status: complete
+    provider_status_updated:
+      status: pending
+      evidence: null
+`
+  },
+
+  'insurance.yaml': {
+    name: 'insurance.yaml',
+    path: '<.waypoint>/firmvault/insurance.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Coverage tracking for BI and PIP — carriers, applications, benefits.',
+    stateFacts: 'Projects landmarks: insurance.bi.*, insurance.pip.*',
+    example: `insurance:
+  bi:
+    carrier_identified:
+      status: complete
+      evidence: insurance/bi/carrier.md
+    lor:
+      prepared:
+        status: complete
+      sent:
+        status: pending
+    acknowledgment:
+      status: pending
+  pip:
+    carrier_identified:
+      status: complete
+    application:
+      prepared:
+        status: complete
+      filed:
+        status: complete
+    lor:
+      prepared:
+        status: pending
+`
+  },
+
+  'liens.yaml': {
+    name: 'liens.yaml',
+    path: '<.waypoint>/firmvault/liens.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Lien tracking — early identification, final resolution.',
+    stateFacts: 'Projects landmarks: liens.early_identification.*, liens.final_resolution.*',
+    example: `liens:
+  early_identification:
+    health_coverage:
+      status: complete
+    clues_reviewed:
+      status: complete
+    inventory_review:
+      status: pending
+  final_resolution:
+    inventory:
+      status: pending
+`
+  },
+
+  'records.yaml': {
+    name: 'records.yaml',
+    path: '<.waypoint>/firmvault/records.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Medical records tracking — authorization, requests, receipt, chronology.',
+    stateFacts: 'Projects landmarks: records.*',
+    example: `records:
+  authorization:
+    status: complete
+  request_packet:
+    status: complete
+  requests:
+    status: sent
+  followups:
+    first_round:
+      status: pending
+`
+  },
+
+  'demand.yaml': {
+    name: 'demand.yaml',
+    path: '<.waypoint>/firmvault/demand.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Demand phase state — readiness, draft, attorney review, send status.',
+    stateFacts: 'Projects landmarks: demand.*',
+    example: `demand:
+  readiness:
+    materials:
+      status: complete
+    damages:
+      status: complete
+    review:
+      status: pending
+  draft:
+    status: complete
+  attorney_review:
+    status: pending
+  recipients:
+    status: pending
+  send:
+    status: pending
+`
+  },
+
+  'negotiation.yaml': {
+    name: 'negotiation.yaml',
+    path: '<.waypoint>/firmvault/negotiation.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Negotiation phase state — offers, evaluation, client decisions.',
+    stateFacts: 'Projects landmarks: negotiation.*',
+    example: `negotiation:
+  initial_offer:
+    status: pending
+  offer_documented:
+    status: pending
+  evaluation:
+    status: pending
+  net_to_client:
+    status: pending
+`
+  },
+
+  'settlement.yaml': {
+    name: 'settlement.yaml',
+    path: '<.waypoint>/firmvault/settlement.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Settlement and close-out state — the heart of FVP8 close-case wave.',
+    stateFacts: 'Projects landmarks: settlement.*, settlement.closing.* (5 close-case landmarks)',
+    example: `settlement:
+  reached:
+    status: pending
+  statement:
+    status: pending
+  authorization_to_settle:
+    status: pending
+  client_authorization:
+    status: pending
+  release:
+    status: pending
+  funds:
+    status: pending
+  liens:
+    audit:
+      status: pending
+    prioritization:
+      status: pending
+    available_funds:
+      status: pending
+    strategy_review:
+      status: pending
+    result:
+      status: pending
+  distribution:
+    statement:
+      status: pending
+    client_issuance:
+      status: pending
+    client_receipt:
+      status: pending
+    trust_account:
+      status: pending
+    completion:
+      status: pending
+  closing:
+    readiness:
+      status: pending
+    letter:
+      prepared:
+        status: pending
+      sent:
+        status: pending
+    archive:
+      status: pending
+    case:
+      status: pending
+`
+  },
+
+  'documents_yaml': {
+    name: 'documents.yaml',
+    path: '<.waypoint>/firmvault/documents.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Document intake index and pipeline handoff metadata. Tracks handoff status (not_started, submitted, pr_opened, merged, deferred, failed).',
+    stateFacts: 'None — metadata only; never satisfies legal landmarks',
+    example: `documents:
+  - name: police-report.pdf
+    kind: police-report
+    added_at: "2026-05-12T10:00:00Z"
+    handoff:
+      system: firmvault-document-pipeline
+      status: not_started
+`
+  },
+
+  'landmarks_yaml': {
+    name: 'landmarks.yaml',
+    path: '<.waypoint>/firmvault/landmarks.yaml',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Computed projection of all 82 legal landmarks — derived from explicit state, not folder contents.',
+    stateFacts: 'Read-only projection; refreshed on every \`state set\` call',
+    example: `landmarks:
+  total: 82
+  satisfied: 0
+  unsatisfied: 82
+  items:
+    client.intake:
+      satisfied: false
+      source: client.yaml
+      fact: client.intake
+      status: pending
+    accident.details:
+      satisfied: false
+      source: accident.yaml
+      fact: accident.details
+      status: pending
+    # ... 80 more entries
+`
+  },
+
+  'events_jsonl': {
+    name: 'events.jsonl',
+    path: '<.waypoint>/firmvault/events.jsonl',
+    tags: ['machine-generated', 'do-not-edit'],
+    purpose: 'Append-only audit log — every state mutation and document handoff creates a line.',
+    stateFacts: 'Never modified; append-only',
+    example: `{"timestamp":"2026-05-12T10:00:00Z","type":"firmvault.state.updated","fact":"client.intake","status":"complete","evidence":"evidence/client-intake.md","before":{"satisfied":5},"after":{"satisfied":6},"newly_satisfied":["client.intake"]}
+{"timestamp":"2026-05-12T10:01:00Z","type":"firmvault.document.handoff_updated","document":"police-report.pdf","system":"firmvault-document-pipeline","status":"submitted"}
+`
+  }
+};
+
+// Extra evidence file list (the ~78 files)
+const extraEvidence = [
+  {name: 'insurance-bi-carrier-identified.md', kind: 'summary', fact: 'insurance.bi.carrier_identified'},
+  {name: 'insurance-bi-lor-prepared.md', kind: 'summary', fact: 'insurance.bi.lor.prepared'},
+  {name: 'insurance-bi-lor-sent.md', kind: 'summary', fact: 'insurance.bi.lor.sent'},
+  {name: 'insurance-bi-acknowledgment.md', kind: 'summary', fact: 'insurance.bi.acknowledgment'},
+  {name: 'insurance-pip-track.md', kind: 'summary', fact: 'insurance.pip.track'},
+  {name: 'insurance-pip-carrier-identified.md', kind: 'summary', fact: 'insurance.pip.carrier_identified'},
+  {name: 'insurance-pip-application-prepared.md', kind: 'summary', fact: 'insurance.pip.application.prepared'},
+  {name: 'insurance-pip-lor-prepared.md', kind: 'summary', fact: 'insurance.pip.lor.prepared'},
+  {name: 'insurance-pip-application-filed.md', kind: 'summary', fact: 'insurance.pip.application.filed'},
+  {name: 'insurance-pip-lor-sent.md', kind: 'summary', fact: 'insurance.pip.lor.sent'},
+  {name: 'insurance-pip-acknowledgment.md', kind: 'summary', fact: 'insurance.pip.acknowledgment'},
+  {name: 'insurance-pip-approval.md', kind: 'summary', fact: 'insurance.pip.approval'},
+  {name: 'insurance-pip-status-check.md', kind: 'summary', fact: 'insurance.pip.status_check'},
+  {name: 'insurance-pip-benefits.md', kind: 'summary', fact: 'insurance.pip.benefits'},
+  {name: 'providers-setup.md', kind: 'summary', fact: 'providers.setup'},
+  {name: 'providers-treatment-status-provider-list-reviewed.md', kind: 'summary', fact: 'providers.treatment_status.provider_list_reviewed'},
+  {name: 'providers-treatment-status-provider-status-updated.md', kind: 'summary', fact: 'providers.treatment_status.provider_status_updated'},
+  {name: 'providers-treatment-status-provider-followups-flagged.md', kind: 'summary', fact: 'providers.treatment_status.provider_followups_flagged'},
+  {name: 'providers-treatment-status-human-review.md', kind: 'summary', fact: 'providers.treatment_status.human_review'},
+  {name: 'providers-treatment-status-treatment-complete.md', kind: 'summary', fact: 'providers.treatment_status.treatment_complete'},
+  {name: 'liens-early-identification-health-coverage.md', kind: 'summary', fact: 'liens.early_identification.health_coverage'},
+  {name: 'liens-early-identification-clues-reviewed.md', kind: 'summary', fact: 'liens.early_identification.clues_reviewed'},
+  {name: 'liens-early-identification-liens.md', kind: 'summary', fact: 'liens.early_identification.liens'},
+  {name: 'liens-early-identification-inventory-review.md', kind: 'summary', fact: 'liens.early_identification.inventory_review'},
+  {name: 'records-authorization.md', kind: 'summary', fact: 'records.authorization'},
+  {name: 'records-request-packet.md', kind: 'summary', fact: 'records.request_packet'},
+  {name: 'records-requests.md', kind: 'summary', fact: 'records.requests'},
+  {name: 'records-followups-first.md', kind: 'summary', fact: 'records.followups.first_round'},
+  {name: 'records-followups-second.md', kind: 'summary', fact: 'records.followups.second_round'},
+  {name: 'records-followups-third.md', kind: 'summary', fact: 'records.followups.third_round'},
+  {name: 'records-escalation.md', kind: 'summary', fact: 'records.escalation'},
+  {name: 'records-processing.md', kind: 'summary', fact: 'records.processing'},
+  {name: 'records-received.md', kind: 'summary', fact: 'records.received'},
+  {name: 'records-chronology.md', kind: 'summary', fact: 'records.chronology'},
+  {name: 'records-workflow-review.md', kind: 'summary', fact: 'records.workflow_review'},
+  {name: 'demand-readiness-materials.md', kind: 'summary', fact: 'demand.readiness.materials'},
+  {name: 'demand-readiness-damages.md', kind: 'summary', fact: 'demand.readiness.damages'},
+  {name: 'demand-readiness-review.md', kind: 'summary', fact: 'demand.readiness.review'},
+  {name: 'demand-liens-final-process-check.md', kind: 'summary', fact: 'demand.liens.final_process_check'},
+  {name: 'demand-draft.md', kind: 'summary', fact: 'demand.draft'},
+  {name: 'demand-attorney-review.md', kind: 'summary', fact: 'demand.attorney_review'},
+  {name: 'demand-recipients.md', kind: 'summary', fact: 'demand.recipients'},
+  {name: 'demand-send.md', kind: 'summary', fact: 'demand.send'},
+  {name: 'negotiation-initial-offer.md', kind: 'summary', fact: 'negotiation.initial_offer'},
+  {name: 'negotiation-offer-documented.md', kind: 'summary', fact: 'negotiation.offer_documented'},
+  {name: 'negotiation-evaluation.md', kind: 'summary', fact: 'negotiation.evaluation'},
+  {name: 'negotiation-net-to-client.md', kind: 'summary', fact: 'negotiation.net_to_client'},
+  {name: 'negotiation-client-advice.md', kind: 'summary', fact: 'negotiation.client_advice'},
+  {name: 'negotiation-client-decision.md', kind: 'summary', fact: 'negotiation.client_decision'},
+  {name: 'negotiation-response-prepared.md', kind: 'summary', fact: 'negotiation.response.prepared'},
+  {name: 'negotiation-response-human-sent.md', kind: 'summary', fact: 'negotiation.response.human_sent'},
+  {name: 'negotiation-response-result.md', kind: 'summary', fact: 'negotiation.response.result'},
+  {name: 'settlement.md', kind: 'summary', fact: 'settlement.reached'},
+  {name: 'settlement-statement.md', kind: 'summary', fact: 'settlement.statement'},
+  {name: 'settlement-authorization-to-settle.md', kind: 'summary', fact: 'settlement.authorization_to_settle'},
+  {name: 'settlement-client-authorization.md', kind: 'summary', fact: 'settlement.client_authorization'},
+  {name: 'settlement-release.md', kind: 'summary', fact: 'settlement.release'},
+  {name: 'settlement-funds.md', kind: 'summary', fact: 'settlement.funds'},
+  {name: 'settlement-liens-audit.md', kind: 'summary', fact: 'settlement.liens.audit'},
+  {name: 'settlement-liens-prioritization.md', kind: 'summary', fact: 'settlement.liens.prioritization'},
+  {name: 'settlement-liens-available-funds.md', kind: 'summary', fact: 'settlement.liens.available_funds'},
+  {name: 'settlement-liens-strategy-review.md', kind: 'summary', fact: 'settlement.liens.strategy_review'},
+  {name: 'settlement-liens-result.md', kind: 'summary', fact: 'settlement.liens.result'},
+  {name: 'settlement-distribution-statement.md', kind: 'summary', fact: 'settlement.distribution.statement'},
+  {name: 'settlement-distribution-client-issuance.md', kind: 'summary', fact: 'settlement.distribution.client_issuance'},
+  {name: 'settlement-distribution-client-receipt.md', kind: 'summary', fact: 'settlement.distribution.client_receipt'},
+  {name: 'settlement-distribution-trust-account.md', kind: 'summary', fact: 'settlement.distribution.trust_account'},
+  {name: 'settlement-distribution-completion.md', kind: 'summary', fact: 'settlement.distribution.completion'},
+  {name: 'liens-final-resolution-inventory.md', kind: 'summary', fact: 'liens.final_resolution.inventory'},
+  {name: 'liens-final-resolution-final-amount-request-prepared.md', kind: 'summary', fact: 'liens.final_resolution.final_amount_request.prepared'},
+  {name: 'liens-final-resolution-final-amount-request-sent.md', kind: 'summary', fact: 'liens.final_resolution.final_amount_request.sent'},
+  {name: 'liens-final-resolution-final-amount-receipt.md', kind: 'summary', fact: 'liens.final_resolution.final_amount_receipt'},
+  {name: 'liens-final-resolution-payment-authorization.md', kind: 'summary', fact: 'liens.final_resolution.payment_authorization'},
+  {name: 'liens-final-resolution-payment.md', kind: 'summary', fact: 'liens.final_resolution.payment'},
+];
+
+// === Rendering ===
+
+function toggle(evt, id) {
+  evt.stopPropagation();
+  const el = document.getElementById(id);
+  const t = evt.currentTarget.querySelector('.toggle');
+  if (el && el.classList.contains('children')) {
+    el.classList.toggle('open');
+    if (t) t.classList.toggle('open');
+  }
+}
+
+function buildPreview(key) {
+    const f = files[key];
+    if (!f) return '<p style="color:var(--text-dim)">No preview available.</p>';
+
+    const tagBadges = f.tags.map(t => {
+      const cls = t === 'required' ? 'green' : t === 'optional' || t === 'summary' ? 'amber' :
+                  t === 'placeholder' ? 'blue' : t === 'machine-generated' || t === 'do-not-edit' ? 'purple' :
+                  t === 'close-case' || t === 'starter' ? 'teal' : 'green';
+      return `<span class="badge ${cls}">${t}</span>`;
+    }).join(' ');
+
+    let html = `<div class="detail-panel">`;
+    html += `<h3>📄 ${f.name}</h3>`;
+    html += `<div class="meta-line">${tagBadges}</div>`;
+
+    html += `<div class="field-label">What you add</div>`;
+    html += `<div class="field-value">${f.purpose}</div>`;
+
+    html += `<div class="field-label">Path</div>`;
+    html += `<div class="field-value" style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${f.path}</div>`;
+
+    if (f.stateFacts) {
+      html += `<div class="field-label">Supports state facts</div>`;
+      html += `<div class="field-value">${f.stateFacts}</div>`;
+    }
+
+    if (f.relatedEvidence) {
+      html += `<div class="field-label">Source documents usually live in</div>`;
+      html += `<div class="field-value">${f.relatedEvidence}</div>`;
+    }
+
+    html += `<div class="field-label">Example completed stub</div>`;
+    html += `<pre>${escapeHtml(f.example)}</pre>`;
+
+  if (key === 'casefile') {
+    html += `<div class="donot">
+      <div class="donot-title">⚠ What not to do</div>
+      <ul>
+        <li>Do not hand-edit <code>.waypoint/firmvault/*.yaml</code></li>
+        <li>Do not create <code>landmarks.yaml</code> by hand</li>
+        <li>Do not use absolute evidence paths in state updates</li>
+        <li>Do not expect document upload to satisfy legal landmarks automatically</li>
+        <li>Do not commit real client data, credentials, or secrets</li>
+      </ul>
+    </div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function select(node, key) {
+  document.querySelectorAll('.tree-node.active').forEach(n => n.classList.remove('active'));
+  node.classList.add('active');
+  document.getElementById('section-default').style.display = 'none';
+  const ps = document.getElementById('preview-section');
+  ps.style.display = 'block';
+  const preview = document.getElementById('preview-content');
+  preview.innerHTML = buildPreview(key);
+}
+
+function backToOverview() {
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('section-default').style.display = 'block';
+  document.querySelectorAll('.tree-node.active').forEach(n => n.classList.remove('active'));
+}
+
+function toggleCard(header) {
+  header.classList.toggle('expanded');
+  header.nextElementSibling.classList.toggle('visible');
+}
+
+// Populate extra evidence files
+(function() {
+  const container = document.getElementById('ev-extra');
+  extraEvidence.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'tree-node indent-2';
+    div.innerHTML = '<span class="toggle hidden"></span><span class="icon">📄</span><span class="name">' + f.name + '</span>';
+    div.onclick = function(e) {
+      select(this, 'ev-extra-' + f.name.replace(/\.md$/, '').replace(/[^a-z0-9]/gi, '_'));
+    };
+    container.appendChild(div);
+  });
+})();
+</script>
+
+</body>
+</html>
