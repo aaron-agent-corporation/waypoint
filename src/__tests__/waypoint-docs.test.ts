@@ -182,4 +182,23 @@ describe('Waypoint Quest operator documentation', () => {
     expect(smoke).toContain('Waypoint FirmVault lifecycle simulation smoke passed')
     expect(smoke).toContain('firmvault.state.updated')
   })
+
+  it('publishes the FirmVault completed-case replay plan with sandbox and redaction guardrails', () => {
+    const plan = readRepoFile('docs/plans/firmvault-completed-case-replay-plan.md')
+
+    for (const phrase of [
+      'FVL5 — Completed-Case Replay',
+      'read-only source case',
+      'temporary sandbox case',
+      'No external sends, faxes, API calls, Forgejo writes, or trust-account actions',
+      'Never commit copied case documents',
+      '[REDACTED]',
+      'mapping manifest',
+      'waypoint firmvault state set',
+      'does not edit `.waypoint/firmvault/*.yaml` directly',
+      'pnpm smoke:firmvault-completed-case-replay',
+    ]) {
+      expect(plan).toContain(phrase)
+    }
+  })
 })
