@@ -115,6 +115,8 @@ export type {
   FirmVaultOperatorDoctorCheckStatus,
   FirmVaultOperatorDoctorOptions,
   FirmVaultOperatorDoctorResult,
+  FirmVaultOperatorDoctorUpgradePlan,
+  FirmVaultOperatorDoctorUpgradeStep,
 } from './firmvault/doctor.ts'
 export {
   checkFirmVaultEvidencePath,

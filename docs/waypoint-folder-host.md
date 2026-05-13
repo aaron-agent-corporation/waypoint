@@ -44,7 +44,7 @@ waypoint --help
 waypoint --version
 waypoint init [--quest <slug>]
 waypoint status
-waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--json]
+waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--upgrade-plan] [--json]
 waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
 waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
 waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
@@ -239,7 +239,7 @@ waypoint doctor firmvault --json
 The paralegal profile mode checks local operator readiness without network calls or external sends:
 
 ```bash
-waypoint doctor firmvault --profile paralegal --json
+waypoint doctor firmvault --profile paralegal --json --upgrade-plan
 ```
 
 It verifies the configured `waypoint_cases` root, optional source `cases` root, paralegal skill path, bundled `firmvault-paralegal` operator manifest, case export script, and local smoke scripts. Use the doctor to inspect whether a folder resembles the starter FirmVault shape or whether the paralegal operator workspace is ready. Use `.waypoint/firmvault/` as the runtime source of truth for workflow progress.

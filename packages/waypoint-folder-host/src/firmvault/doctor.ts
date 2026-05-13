@@ -12,10 +12,22 @@ export interface FirmVaultOperatorDoctorCheck {
   readonly next_action?: string
 }
 
+export interface FirmVaultOperatorDoctorUpgradeStep {
+  readonly slug: string
+  readonly command: string
+  readonly reason: string
+}
+
+export interface FirmVaultOperatorDoctorUpgradePlan {
+  readonly mutates: false
+  readonly steps: readonly FirmVaultOperatorDoctorUpgradeStep[]
+}
+
 export interface FirmVaultOperatorDoctorResult {
   readonly profile: string
   readonly ready: boolean
   readonly checks: readonly FirmVaultOperatorDoctorCheck[]
+  readonly upgrade_plan?: FirmVaultOperatorDoctorUpgradePlan
 }
 
 export interface FirmVaultOperatorDoctorOptions {
@@ -25,6 +37,7 @@ export interface FirmVaultOperatorDoctorOptions {
   readonly sourceCasesRoot?: string
   readonly paralegalSkillPath?: string
   readonly repoRoot?: string
+  readonly includeUpgradePlan?: boolean
 }
 
 const DEFAULT_PROFILE = 'paralegal'
@@ -44,17 +57,19 @@ export async function inspectFirmVaultOperatorReadiness(
 ): Promise<FirmVaultOperatorDoctorResult> {
   const profile = options.profile ?? DEFAULT_PROFILE
   if (profile !== DEFAULT_PROFILE) {
+    const checks: FirmVaultOperatorDoctorCheck[] = [
+      {
+        slug: 'profile',
+        status: 'fail',
+        message: `Unsupported FirmVault doctor profile: ${profile}`,
+        next_action: 'Use --profile paralegal for the FirmVault paralegal readiness doctor.',
+      },
+    ]
     return {
       profile,
       ready: false,
-      checks: [
-        {
-          slug: 'profile',
-          status: 'fail',
-          message: `Unsupported FirmVault doctor profile: ${profile}`,
-          next_action: 'Use --profile paralegal for the FirmVault paralegal readiness doctor.',
-        },
-      ],
+      checks,
+      ...(options.includeUpgradePlan ? { upgrade_plan: buildFirmVaultOperatorUpgradePlan(checks) } : {}),
     }
   }
 
@@ -133,7 +148,89 @@ export async function inspectFirmVaultOperatorReadiness(
     profile,
     ready: checks.every((check) => check.status !== 'fail'),
     checks,
+    ...(options.includeUpgradePlan ? { upgrade_plan: buildFirmVaultOperatorUpgradePlan(checks) } : {}),
   }
+}
+
+function buildFirmVaultOperatorUpgradePlan(checks: readonly FirmVaultOperatorDoctorCheck[]): FirmVaultOperatorDoctorUpgradePlan {
+  const steps = checks.flatMap((check): readonly FirmVaultOperatorDoctorUpgradeStep[] => {
+    if (check.status === 'pass') return []
+
+    switch (check.slug) {
+      case 'profile':
+        return [
+          {
+            slug: 'use_supported_profile',
+            command: 'waypoint doctor firmvault --profile paralegal --json --upgrade-plan',
+            reason: 'Only the paralegal readiness profile is currently supported.',
+          },
+        ]
+      case 'waypoint_cases_root':
+        return check.path
+          ? [
+              {
+                slug: 'create_waypoint_cases_root',
+                command: `mkdir -p ${JSON.stringify(check.path)}`,
+                reason: 'Required before exporting or bootstrapping FirmVault cases.',
+              },
+            ]
+          : []
+      case 'source_cases_root':
+        return check.path
+          ? [
+              {
+                slug: 'create_source_cases_root',
+                command: `mkdir -p ${JSON.stringify(check.path)}`,
+                reason: 'Optional legacy/source case imports can use this root by default.',
+              },
+            ]
+          : []
+      case 'paralegal_skill':
+        return [
+          {
+            slug: 'install_paralegal_skill',
+            command: 'hermes skills install firmvault-waypoint-case-operations --profile paralegal',
+            reason: 'The paralegal operator instructions should be available before autonomous case work.',
+          },
+        ]
+      case 'operator_manifest':
+        return [
+          {
+            slug: 'restore_operator_manifest',
+            command: 'git checkout -- operators/firmvault/paralegal.yaml',
+            reason: 'The bundled firmvault-paralegal operator manifest is required for operator/tool discovery.',
+          },
+        ]
+      case 'case_export_script':
+        return [
+          {
+            slug: 'restore_case_export_script',
+            command: 'git checkout -- scripts/firmvault-waypoint-case-export.mjs',
+            reason: 'The case export script is required for local FirmVault migration handoff checks.',
+          },
+        ]
+      case 'smoke_scripts':
+        return [
+          {
+            slug: 'restore_smoke_scripts',
+            command: 'git checkout -- scripts/firmvault-folder-smoke.mjs scripts/firmvault-staged-case-guidance-smoke.mjs scripts/firmvault-completed-case-replay.mjs',
+            reason: 'Required local smoke scripts should be present before release verification.',
+          },
+        ]
+      default:
+        return check.next_action
+          ? [
+              {
+                slug: `review_${check.slug}`,
+                command: check.next_action,
+                reason: check.message,
+              },
+            ]
+          : []
+    }
+  })
+
+  return { mutates: false, steps }
 }
 
 async function pathCheck(input: {

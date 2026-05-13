@@ -20,6 +20,14 @@ interface FirmVaultOperatorDoctorResult {
     readonly path?: string
     readonly next_action?: string
   }[]
+  readonly upgrade_plan?: {
+    readonly mutates: false
+    readonly steps: readonly {
+      readonly slug: string
+      readonly command: string
+      readonly reason: string
+    }[]
+  }
 }
 
 type FirmVaultCaseFolderModule = {
@@ -28,6 +36,7 @@ type FirmVaultCaseFolderModule = {
     readonly profile?: string
     readonly workspaceRoot?: string
     readonly repoRoot?: string
+    readonly includeUpgradePlan?: boolean
   }) => Promise<FirmVaultOperatorDoctorResult>
 }
 
@@ -46,6 +55,7 @@ export async function runDoctorCommand(args: readonly string[], io: WaypointCliI
       profile,
       workspaceRoot: valueAfter(rest, '--workspace-root'),
       repoRoot: io.cwd ?? process.cwd(),
+      includeUpgradePlan: rest.includes('--upgrade-plan'),
     })
     if (json) {
       io.stdout(JSON.stringify(readiness, null, 2))
@@ -93,6 +103,7 @@ async function inspectCurrentFirmVaultOperatorReadiness(options: {
   readonly profile?: string
   readonly workspaceRoot?: string
   readonly repoRoot?: string
+  readonly includeUpgradePlan?: boolean
 }): Promise<FirmVaultOperatorDoctorResult> {
   const module = await import('@waypoint/folder-host') as unknown as FirmVaultCaseFolderModule
   return module.inspectFirmVaultOperatorReadiness(options)

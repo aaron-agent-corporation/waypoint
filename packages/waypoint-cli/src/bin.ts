@@ -36,7 +36,7 @@ Usage:
   waypoint --version
   waypoint init [--quest <slug>]
   waypoint status
-  waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--json]
+  waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--upgrade-plan] [--json]
   waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
   waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
   waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]

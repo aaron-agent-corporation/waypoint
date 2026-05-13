@@ -101,11 +101,38 @@ describe('waypoint doctor command', () => {
     const parsed = JSON.parse(stdout.join('\n')) as { profile: string; ready: boolean; checks: Array<{ slug: string; status: string }> }
     expect(parsed.profile).toBe('paralegal')
     expect(parsed.ready).toBe(true)
+    expect(parsed).not.toHaveProperty('upgrade_plan')
     expect(parsed.checks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ slug: 'waypoint_cases_root', status: 'pass' }),
         expect.objectContaining({ slug: 'operator_manifest', status: 'pass' }),
         expect.objectContaining({ slug: 'case_export_script', status: 'pass' }),
+      ]),
+    )
+  })
+
+  it('emits a non-mutating paralegal upgrade plan only when requested', async () => {
+    const workspaceRoot = await tempCaseFolder()
+    const repoRoot = join(__dirname, '../../../..')
+    const { io, stdout, stderr } = makeIo(repoRoot)
+
+    expect(
+      await runWaypointCli(['doctor', 'firmvault', '--profile', 'paralegal', '--workspace-root', workspaceRoot, '--json', '--upgrade-plan'], io),
+    ).toBe(1)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as {
+      profile: string
+      ready: boolean
+      upgrade_plan: { mutates: boolean; steps: Array<{ slug: string; command: string }> }
+    }
+    expect(parsed.profile).toBe('paralegal')
+    expect(parsed.ready).toBe(false)
+    expect(parsed.upgrade_plan.mutates).toBe(false)
+    expect(parsed.upgrade_plan.steps).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: 'create_waypoint_cases_root', command: `mkdir -p ${JSON.stringify(join(workspaceRoot, 'waypoint_cases'))}` }),
+        expect.objectContaining({ slug: 'create_source_cases_root' }),
       ]),
     )
   })
