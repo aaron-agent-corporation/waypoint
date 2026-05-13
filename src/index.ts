@@ -165,3 +165,18 @@ export type {
   AuthoringDesignReview,
   AuthoringLifecycleMap,
 } from './authoring/design-spec-generator'
+
+export { generateAuthoringRecipeDraft } from './authoring/recipe-generator'
+export type {
+  GenerateAuthoringRecipeDraftInput,
+  GenerateAuthoringRecipeDraftResult,
+  AuthoringManifestDraftValidation,
+} from './authoring/recipe-generator'
+
+export { generateAuthoringQuestDraft } from './authoring/quest-generator'
+export type {
+  GenerateAuthoringQuestDraftInput,
+  GenerateAuthoringQuestDraftResult,
+  AuthoringQuestPhaseDraft,
+  AuthoringQuestTaskDraft,
+} from './authoring/quest-generator'
