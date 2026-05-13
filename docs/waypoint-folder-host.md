@@ -75,6 +75,9 @@ waypoint tools list --operator <slug> [--json]
 waypoint tools explain <tool-slug> [--json]
 waypoint author brainstorm --kind quest|recipe|operator|handoff_graph [--domain <domain>] [--json]
 waypoint author design --answers <path> --write-spec docs/plans/<file>.md [--json]
+waypoint author plan --design docs/plans/<file>.md [--allow-unapproved-draft] [--json]
+waypoint author recipe --answers <path> [--allow-unapproved-draft] [--json]
+waypoint author quest --answers <path> [--allow-unapproved-draft] [--json]
 ```
 
 ## Operator journey

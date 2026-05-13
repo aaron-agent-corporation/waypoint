@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -85,5 +85,124 @@ describe('waypoint author command', () => {
 
     expect(stdout).toEqual([])
     expect(stderr.join('\n')).toContain('Refusing to write outside a safe relative authoring path')
+  })
+
+  it('prints a recipe manifest draft as JSON without writing files when explicitly allowed', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'recipe.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'firmvault-client-followup',
+        name: 'FirmVault Client Follow-up',
+        domain: 'firmvault',
+        description: 'Prepare a local client follow-up checklist from case evidence.',
+        prompt: 'Review case-local evidence and prepare a client follow-up handoff. Do not contact the client.',
+        tools: ['file_read', 'search_files'],
+        source: {
+          design_spec_path: 'docs/plans/generated-firmvault-followup-design.md',
+          inspected_paths: ['quests/firmvault.yaml'],
+        },
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(await runWaypointCli(['author', 'recipe', '--answers', answersPath, '--allow-unapproved-draft', '--json'], io)).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { kind: string; path: string; yaml: string; write_default: boolean; validation: { ok: boolean } }
+    expect(parsed.kind).toBe('recipe')
+    expect(parsed.path).toBe('recipes/firmvault-client-followup.yaml')
+    expect(parsed.write_default).toBe(false)
+    expect(parsed.validation.ok).toBe(true)
+    expect(parsed.yaml).toContain('slug: firmvault-client-followup')
+    await expect(readFile(join(temp, 'recipes/firmvault-client-followup.yaml'), 'utf8')).rejects.toThrow()
+  })
+
+  it('prints a quest manifest draft as JSON without writing files when explicitly allowed', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'quest.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'firmvault-followup',
+        name: 'FirmVault Follow-up Quest',
+        domain: 'firmvault',
+        workflow: 'workflows/firmvault-followup.yaml',
+        recipes: ['firmvault-client-followup'],
+        source: {
+          design_spec_path: 'docs/plans/generated-firmvault-followup-design.md',
+          inspected_paths: ['quests/firmvault.yaml'],
+        },
+        phases: [
+          {
+            key: 'followup',
+            title: 'Follow-up',
+            tasks: [
+              { ref: 'client-followup-task', title: 'Prepare client follow-up', type: 'recipe', recipe: 'firmvault-client-followup' },
+              { ref: 'human-review-gate', title: 'Human review before contact', type: 'gate', gate_kind: 'human_review' },
+            ],
+          },
+        ],
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(await runWaypointCli(['author', 'quest', '--answers', answersPath, '--allow-unapproved-draft', '--json'], io)).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { kind: string; path: string; yaml: string; write_default: boolean; validation: { ok: boolean } }
+    expect(parsed.kind).toBe('quest')
+    expect(parsed.path).toBe('quests/firmvault-followup.yaml')
+    expect(parsed.write_default).toBe(false)
+    expect(parsed.validation.ok).toBe(true)
+    expect(parsed.yaml).toContain('workflow: workflows/firmvault-followup.yaml')
+    await expect(readFile(join(temp, 'quests/firmvault-followup.yaml'), 'utf8')).rejects.toThrow()
+  })
+
+  it('blocks recipe and quest draft generation without approved design or explicit escape hatch', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'recipe.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'firmvault-client-followup',
+        name: 'FirmVault Client Follow-up',
+        prompt: 'Review case-local evidence.',
+        source: { inspected_paths: ['quests/firmvault.yaml'] },
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(await runWaypointCli(['author', 'recipe', '--answers', answersPath, '--json'], io)).toBe(1)
+
+    expect(stdout).toEqual([])
+    expect(stderr.join('\n')).toContain('Draft generation requires an approved design spec or --allow-unapproved-draft')
+  })
+
+  it('prints an implementation plan draft from a design spec when explicitly allowed', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const designPath = join(temp, 'docs/plans/generated-firmvault-followup-design.md')
+    await mkdir(join(temp, 'docs/plans'), { recursive: true })
+    await writeFile(
+      designPath,
+      '# FirmVault Followup Workflow\n\n## Approval\n\nstatus: pending\n\n## Verification Strategy\n\n- pnpm test\n',
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(
+      await runWaypointCli(
+        ['author', 'plan', '--design', 'docs/plans/generated-firmvault-followup-design.md', '--allow-unapproved-draft', '--json'],
+        io,
+      ),
+    ).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { kind: string; write_default: boolean; markdown: string; warnings: string[] }
+    expect(parsed.kind).toBe('implementation_plan')
+    expect(parsed.write_default).toBe(false)
+    expect(parsed.markdown).toContain('# Implementation Plan Draft')
+    expect(parsed.markdown).toContain('docs/plans/generated-firmvault-followup-design.md')
+    expect(parsed.warnings).toContain('draft only: not written or installed')
   })
 })
