@@ -109,6 +109,13 @@ export type {
   UpdateFirmVaultDocumentHandoffInput,
   UpdateFirmVaultDocumentHandoffResult,
 } from './firmvault/documents.ts'
+export { inspectFirmVaultOperatorReadiness } from './firmvault/doctor.ts'
+export type {
+  FirmVaultOperatorDoctorCheck,
+  FirmVaultOperatorDoctorCheckStatus,
+  FirmVaultOperatorDoctorOptions,
+  FirmVaultOperatorDoctorResult,
+} from './firmvault/doctor.ts'
 export {
   checkFirmVaultEvidencePath,
   FIRMVAULT_CASE_STATE_FILES,

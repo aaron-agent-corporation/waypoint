@@ -10,17 +10,56 @@ interface FirmVaultCaseFolderInspection {
   readonly warnings: readonly string[]
 }
 
+interface FirmVaultOperatorDoctorResult {
+  readonly profile: string
+  readonly ready: boolean
+  readonly checks: readonly {
+    readonly slug: string
+    readonly status: 'pass' | 'warn' | 'fail'
+    readonly message: string
+    readonly path?: string
+    readonly next_action?: string
+  }[]
+}
+
 type FirmVaultCaseFolderModule = {
   readonly inspectFirmVaultCaseFolder: (root: string) => Promise<FirmVaultCaseFolderInspection>
+  readonly inspectFirmVaultOperatorReadiness: (options: {
+    readonly profile?: string
+    readonly workspaceRoot?: string
+    readonly repoRoot?: string
+  }) => Promise<FirmVaultOperatorDoctorResult>
 }
 
 export async function runDoctorCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const [target, ...rest] = args
   const json = rest.includes('--json')
+  const profile = valueAfter(rest, '--profile')
 
   if (target !== 'firmvault') {
-    io.stderr('Usage: waypoint doctor firmvault [--json]')
+    io.stderr('Usage: waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--json]')
     return 1
+  }
+
+  if (profile !== undefined) {
+    const readiness = await inspectCurrentFirmVaultOperatorReadiness({
+      profile,
+      workspaceRoot: valueAfter(rest, '--workspace-root'),
+      repoRoot: io.cwd ?? process.cwd(),
+    })
+    if (json) {
+      io.stdout(JSON.stringify(readiness, null, 2))
+      return readiness.ready ? 0 : 1
+    }
+
+    io.stdout('Waypoint FirmVault operator doctor')
+    io.stdout(`profile: ${readiness.profile}`)
+    io.stdout(`ready: ${readiness.ready}`)
+    for (const check of readiness.checks) {
+      io.stdout(`- ${check.status} ${check.slug}: ${check.message}${check.path ? ` (${check.path})` : ''}`)
+      if (check.next_action) io.stdout(`  next: ${check.next_action}`)
+    }
+    return readiness.ready ? 0 : 1
   }
 
   const inspection = await inspectCurrentFirmVaultCaseFolder(io.cwd ?? process.cwd())
@@ -48,4 +87,18 @@ export async function runDoctorCommand(args: readonly string[], io: WaypointCliI
 async function inspectCurrentFirmVaultCaseFolder(root: string): Promise<FirmVaultCaseFolderInspection> {
   const module = await import('@waypoint/folder-host') as unknown as FirmVaultCaseFolderModule
   return module.inspectFirmVaultCaseFolder(root)
+}
+
+async function inspectCurrentFirmVaultOperatorReadiness(options: {
+  readonly profile?: string
+  readonly workspaceRoot?: string
+  readonly repoRoot?: string
+}): Promise<FirmVaultOperatorDoctorResult> {
+  const module = await import('@waypoint/folder-host') as unknown as FirmVaultCaseFolderModule
+  return module.inspectFirmVaultOperatorReadiness(options)
+}
+
+function valueAfter(args: readonly string[], option: string): string | undefined {
+  const index = args.indexOf(option)
+  return index === -1 ? undefined : args[index + 1]
 }

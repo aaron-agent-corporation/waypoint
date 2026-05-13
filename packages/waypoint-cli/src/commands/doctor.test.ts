@@ -85,4 +85,28 @@ describe('waypoint doctor command', () => {
 
     expect(await readdir(cwd)).toEqual(before)
   })
+
+  it('emits paralegal operator readiness diagnostics with an explicit profile', async () => {
+    const workspaceRoot = await tempCaseFolder()
+    await mkdir(join(workspaceRoot, 'waypoint_cases'), { recursive: true })
+    await mkdir(join(workspaceRoot, 'cases'), { recursive: true })
+    const repoRoot = join(__dirname, '../../../..')
+    const { io, stdout, stderr } = makeIo(repoRoot)
+
+    expect(
+      await runWaypointCli(['doctor', 'firmvault', '--profile', 'paralegal', '--workspace-root', workspaceRoot, '--json'], io),
+    ).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { profile: string; ready: boolean; checks: Array<{ slug: string; status: string }> }
+    expect(parsed.profile).toBe('paralegal')
+    expect(parsed.ready).toBe(true)
+    expect(parsed.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: 'waypoint_cases_root', status: 'pass' }),
+        expect.objectContaining({ slug: 'operator_manifest', status: 'pass' }),
+        expect.objectContaining({ slug: 'case_export_script', status: 'pass' }),
+      ]),
+    )
+  })
 })

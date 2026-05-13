@@ -44,7 +44,7 @@ waypoint --help
 waypoint --version
 waypoint init [--quest <slug>]
 waypoint status
-waypoint doctor firmvault [--json]
+waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--json]
 waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
 waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
 waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
@@ -230,13 +230,19 @@ final_distribution_complete
 
 Each landmark is derived from YAML status fields and relative evidence paths that exist inside the case folder. If a status is complete but its evidence path is missing or unsafe, the landmark remains unsatisfied and `landmarks --json` returns a warning.
 
-The Part Three doctor remains a read-only legacy/template inspection helper:
+The Part Three doctor remains a read-only legacy/template inspection helper when no profile is supplied:
 
 ```bash
 waypoint doctor firmvault --json
 ```
 
-Use the doctor to inspect whether a folder resembles the starter FirmVault shape. Use `.waypoint/firmvault/` as the runtime source of truth for workflow progress.
+The paralegal profile mode checks local operator readiness without network calls or external sends:
+
+```bash
+waypoint doctor firmvault --profile paralegal --json
+```
+
+It verifies the configured `waypoint_cases` root, optional source `cases` root, paralegal skill path, bundled `firmvault-paralegal` operator manifest, case export script, and local smoke scripts. Use the doctor to inspect whether a folder resembles the starter FirmVault shape or whether the paralegal operator workspace is ready. Use `.waypoint/firmvault/` as the runtime source of truth for workflow progress.
 
 ## `.waypoint/` folder layout
 
