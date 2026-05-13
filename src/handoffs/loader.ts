@@ -8,12 +8,14 @@ import {
   type HandoffManifestParseResult,
   type HandoffManifestParseError,
 } from './manifest.js'
+import { createHandoffManifestRegistry, type HandoffManifestRegistry } from './registry.js'
 
 export type LoadHandoffManifestsResult =
   | {
       readonly ok: true
       readonly manifests: readonly HandoffManifest[]
       readonly entries: readonly HandoffManifestEntry[]
+      readonly registry: HandoffManifestRegistry
     }
   | { readonly ok: false; readonly errors: readonly LoadHandoffError[] }
 
@@ -54,6 +56,7 @@ export async function loadHandoffManifestsFromDirectory(
       ok: true,
       manifests: [],
       entries: [],
+      registry: createHandoffManifestRegistry(),
     }
   }
 
@@ -120,10 +123,15 @@ export async function loadHandoffManifestsFromDirectory(
 
   if (errors.length > 0) return { ok: false, errors }
   entries.sort((a, b) => a.slug.localeCompare(b.slug))
+  const registry = createHandoffManifestRegistry()
+  for (const entry of entries) {
+    registry.add(entry.manifest)
+  }
   return {
     ok: true,
     manifests: entries.map((entry) => entry.manifest),
     entries,
+    registry,
   }
 }
 

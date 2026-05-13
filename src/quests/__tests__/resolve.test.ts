@@ -1,26 +1,46 @@
 import { describe, it, expect } from 'vitest'
 import {
   resolveQuestRecipes,
+  resolveQuestHandoffManifests,
   createQuestRegistry,
   createRecipeRegistry,
+  createHandoffManifestRegistry,
   parseQuestManifest,
   parseRecipeManifest,
   type QuestManifest,
   type RecipeManifest,
+  type HandoffManifest,
 } from '../../index.js'
 
-function quest(slug: string, recipes?: string[]): QuestManifest {
+function quest(slug: string, recipes?: string[], handoffManifests?: string[]): QuestManifest {
   return {
     schema_version: 1,
     slug,
     name: slug,
     workflow: `${slug}.yaml`,
     ...(recipes ? { recipes } : {}),
+    ...(handoffManifests ? { handoff_manifests: handoffManifests } : {}),
   }
 }
 
 function recipe(slug: string): RecipeManifest {
   return { schema_version: 1, slug, name: slug, prompt: `p-${slug}` }
+}
+
+function handoffManifest(slug: string): HandoffManifest {
+  return {
+    schema_version: 1,
+    slug,
+    name: slug,
+    handoffs: [
+      {
+        slug: `${slug}-step`,
+        from: 'source-operator',
+        to: 'target-operator',
+        trigger: `${slug}-ready`,
+      },
+    ],
+  }
 }
 
 describe('resolveQuestRecipes', () => {
@@ -71,6 +91,61 @@ describe('resolveQuestRecipes', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) throw new Error('expected success')
     expect(result.resolved.map((r) => r.slug)).toEqual(['c', 'a', 'b'])
+  })
+})
+
+describe('resolveQuestHandoffManifests', () => {
+  it('returns ok with resolved handoff manifests when all references exist', () => {
+    const handoffs = createHandoffManifestRegistry()
+    handoffs.add(handoffManifest('firmvault-paralegal-handoffs'))
+    handoffs.add(handoffManifest('firmvault-archive-handoffs'))
+
+    const q = quest('firmvault', [], ['firmvault-paralegal-handoffs', 'firmvault-archive-handoffs'])
+    const result = resolveQuestHandoffManifests(q, handoffs)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('expected success')
+    expect(result.resolved.map((manifest) => manifest.slug)).toEqual([
+      'firmvault-paralegal-handoffs',
+      'firmvault-archive-handoffs',
+    ])
+  })
+
+  it('returns ok with empty list when quest has no handoff manifests', () => {
+    const handoffs = createHandoffManifestRegistry()
+    const q = quest('minimal')
+    const result = resolveQuestHandoffManifests(q, handoffs)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('expected success')
+    expect(result.resolved).toEqual([])
+  })
+
+  it('returns unresolved_handoff_manifest error listing all missing slugs', () => {
+    const handoffs = createHandoffManifestRegistry()
+    handoffs.add(handoffManifest('firmvault-paralegal-handoffs'))
+
+    const q = quest('firmvault', [], ['firmvault-paralegal-handoffs', 'missing-a', 'missing-b'])
+    const result = resolveQuestHandoffManifests(q, handoffs)
+
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('expected failure')
+    expect(result.error.code).toBe('unresolved_handoff_manifest')
+    expect(result.error.unresolved).toEqual(['missing-a', 'missing-b'])
+  })
+
+  it('preserves handoff manifest order from the quest manifest', () => {
+    const handoffs = createHandoffManifestRegistry()
+    handoffs.add(handoffManifest('c'))
+    handoffs.add(handoffManifest('a'))
+    handoffs.add(handoffManifest('b'))
+
+    const q = quest('ordered', [], ['c', 'a', 'b'])
+    const result = resolveQuestHandoffManifests(q, handoffs)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('expected success')
+    expect(result.resolved.map((manifest) => manifest.slug)).toEqual(['c', 'a', 'b'])
   })
 })
 

@@ -50,6 +50,8 @@ describe('loadHandoffManifestsFromDirectory', () => {
     expect(result.manifests[0].slug).toBe('firmvault-paralegal-handoffs')
     expect(result.manifests[0].handoffs).toHaveLength(1)
     expect(result.manifests[0].handoffs[0].slug).toBe('paralegal-to-attorney')
+    expect(result.registry.has('firmvault-paralegal-handoffs')).toBe(true)
+    expect(result.registry.get('firmvault-paralegal-handoffs')?.handoffs[0]?.slug).toBe('paralegal-to-attorney')
 
     await cleanup(root)
   })

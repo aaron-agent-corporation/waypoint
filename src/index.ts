@@ -98,8 +98,20 @@ export type {
   RecipeRegistryAddErrorCode,
 } from './recipes/registry'
 
-export { resolveQuestRecipes } from './quests/resolve'
-export type { ResolveQuestRecipesResult, ResolveQuestRecipesError } from './quests/resolve'
+export { createHandoffManifestRegistry } from './handoffs/registry'
+export type {
+  HandoffManifestRegistry,
+  HandoffManifestRegistryAddResult,
+  HandoffManifestRegistryAddErrorCode,
+} from './handoffs/registry'
+
+export { resolveQuestRecipes, resolveQuestHandoffManifests } from './quests/resolve'
+export type {
+  ResolveQuestRecipesResult,
+  ResolveQuestRecipesError,
+  ResolveQuestHandoffManifestsResult,
+  ResolveQuestHandoffManifestsError,
+} from './quests/resolve'
 
 export { loadQuestsFromDirectory } from './quests/loader'
 export type { LoadQuestsResult, LoadQuestError, LoadQuestErrorCode } from './quests/loader'
