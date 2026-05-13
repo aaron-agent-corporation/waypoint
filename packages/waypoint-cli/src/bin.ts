@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import cliPackage from '../package.json' with { type: 'json' }
+import { runAuthorCommand } from './commands/author.ts'
 import { runAutoCommand } from './commands/auto.ts'
 import { runDiscussCommand } from './commands/discuss.ts'
 import { runDoctorCommand } from './commands/doctor.ts'
@@ -64,6 +65,8 @@ Usage:
   waypoint operators instructions <slug> [--json]
   waypoint tools list --operator <slug> [--json]
   waypoint tools explain <tool-slug> [--json]
+  waypoint author brainstorm --kind quest|recipe|operator|handoff_graph [--domain <domain>] [--json]
+  waypoint author design --answers <path> --write-spec docs/plans/<file>.md [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -109,6 +112,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'tools') {
     return runToolsCommand(args.slice(1), io)
+  }
+
+  if (command === 'author') {
+    return runAuthorCommand(args.slice(1), io)
   }
 
   if (command === 'lifecycle') {

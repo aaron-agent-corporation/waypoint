@@ -141,3 +141,27 @@ export type {
   ResolvedOperatorInstructionLayer,
   ResolveOperatorInstructionsOptions,
 } from './operators/instructions'
+
+export { createAuthoringDraft, validateAuthoringDraft } from './authoring/draft'
+export type {
+  WaypointAuthoringDraft,
+  AuthoringKind,
+  AuthoringSource,
+  AuthoringApprovalStatus,
+  AuthoringGeneratedFile,
+  AuthoringQuestionAnswer,
+  AuthoringApproach,
+  CreateAuthoringDraftInput,
+  ValidateAuthoringDraftResult,
+} from './authoring/draft'
+
+export { getAuthoringQuestionnaire } from './authoring/questionnaires'
+export type { AuthoringQuestionnaire, AuthoringQuestionGroup, AuthoringQuestion } from './authoring/questionnaires'
+
+export { generateAuthoringDesignSpec, reviewAuthoringDesignSpec } from './authoring/design-spec-generator'
+export type {
+  GenerateAuthoringDesignSpecInput,
+  GenerateAuthoringDesignSpecResult,
+  AuthoringDesignReview,
+  AuthoringLifecycleMap,
+} from './authoring/design-spec-generator'

@@ -73,6 +73,8 @@ waypoint operators show <slug> [--json]
 waypoint operators instructions <slug> [--json]
 waypoint tools list --operator <slug> [--json]
 waypoint tools explain <tool-slug> [--json]
+waypoint author brainstorm --kind quest|recipe|operator|handoff_graph [--domain <domain>] [--json]
+waypoint author design --answers <path> --write-spec docs/plans/<file>.md [--json]
 ```
 
 ## Operator journey
