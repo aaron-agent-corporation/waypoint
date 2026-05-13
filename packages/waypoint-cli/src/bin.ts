@@ -18,6 +18,7 @@ import { runRoutesCommand } from './commands/routes.ts'
 import { runStartCommand } from './commands/start.ts'
 import { runStatusCommand } from './commands/status.ts'
 import { runTasksCommand } from './commands/tasks.ts'
+import { runToolsCommand } from './commands/tools.ts'
 
 const rootPackageVersion = cliPackage.version
 
@@ -61,6 +62,8 @@ Usage:
   waypoint operators list [--json]
   waypoint operators show <slug> [--json]
   waypoint operators instructions <slug> [--json]
+  waypoint tools list --operator <slug> [--json]
+  waypoint tools explain <tool-slug> [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -102,6 +105,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'operators') {
     return runOperatorsCommand(args.slice(1), io)
+  }
+
+  if (command === 'tools') {
+    return runToolsCommand(args.slice(1), io)
   }
 
   if (command === 'lifecycle') {

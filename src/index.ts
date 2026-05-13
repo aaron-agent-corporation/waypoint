@@ -126,6 +126,15 @@ export type {
   LoadOperatorErrorCode,
 } from './operators/loader'
 
+export { listWaypointToolsForOperator, explainWaypointTool, getWaypointToolRegistry } from './tools/registry'
+export type {
+  WaypointToolDefinition,
+  WaypointToolInput,
+  WaypointToolSideEffectClass,
+  ListWaypointToolsResult,
+  ExplainWaypointToolResult,
+} from './tools/registry'
+
 export { resolveOperatorInstructions } from './operators/instructions'
 export type {
   OperatorInstructionResolution,

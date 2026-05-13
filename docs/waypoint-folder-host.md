@@ -71,6 +71,8 @@ waypoint lifecycle list
 waypoint operators list [--json]
 waypoint operators show <slug> [--json]
 waypoint operators instructions <slug> [--json]
+waypoint tools list --operator <slug> [--json]
+waypoint tools explain <tool-slug> [--json]
 ```
 
 ## Operator journey
