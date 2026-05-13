@@ -106,3 +106,22 @@ export type { LoadQuestsResult, LoadQuestError, LoadQuestErrorCode } from './que
 
 export { loadRecipesFromDirectory } from './recipes/loader'
 export type { LoadRecipesResult, LoadRecipeError, LoadRecipeErrorCode } from './recipes/loader'
+
+export { parseOperatorManifest, isOperatorManifest } from './operators/manifest'
+export type {
+  OperatorManifest,
+  OperatorInstructionLayer,
+  OperatorToolRef,
+  OperatorHandoffRef,
+  OperatorManifestParseResult,
+  OperatorManifestParseError,
+  OperatorManifestParseErrorCode,
+} from './operators/manifest'
+
+export { loadOperatorsFromDirectory, loadBundledOperators } from './operators/loader'
+export type {
+  LoadOperatorsResult,
+  OperatorManifestEntry,
+  LoadOperatorError,
+  LoadOperatorErrorCode,
+} from './operators/loader'

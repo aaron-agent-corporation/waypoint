@@ -1,0 +1,60 @@
+schema_version: 1
+slug: firmvault-paralegal
+name: FirmVault Paralegal
+role: Paralegal Case Operator
+description: Safe Waypoint operator for local FirmVault personal-injury case folders.
+instructions:
+  layers:
+    - kind: shared
+      ref: docs/firmvault-paralegal-state-operator-runbook.md
+      required: true
+    - kind: skill
+      ref: case-management/firmvault-waypoint-case-operations
+      required: true
+    - kind: runbook
+      ref: docs/firmvault-document-ingestion-runbook.md
+      required: true
+    - kind: runbook
+      ref: docs/firmvault-case-folder-blueprint.md
+      required: false
+allowed_tools:
+  - slug: firmvault.guidance
+    command: waypoint firmvault guidance --json
+    description: Inspect current case stage, landmark progress, and recommended next actions.
+  - slug: firmvault.adopt.preview
+    command: waypoint firmvault adopt preview --json
+    description: Preview safe adoption proposals for an existing legacy case folder.
+  - slug: firmvault.adopt.init_safe
+    command: waypoint firmvault adopt init --apply-safe --json
+    description: Initialize Waypoint state from safe evidence-backed adoption proposals.
+  - slug: firmvault.evidence.check
+    command: waypoint firmvault evidence check --path <path> --json
+    description: Validate a relative evidence path before a state mutation.
+  - slug: firmvault.state.show
+    command: waypoint firmvault state show --json
+    description: Read explicit FirmVault case state.
+  - slug: firmvault.state.set
+    command: waypoint firmvault state set --fact <fact> --status <status> --evidence <path> --json
+    description: Mutate one validated FirmVault legal fact with safe evidence and audit logging.
+  - slug: firmvault.document.add
+    command: waypoint firmvault add-document --source <path> --kind <kind> --json
+    description: Copy a document into the local case folder and record intake metadata.
+  - slug: firmvault.document.handoff
+    command: waypoint firmvault document-handoff --document-id <id> --status <status> --json
+    description: Record document-pipeline handoff metadata without satisfying legal landmarks.
+  - slug: firmvault.landmarks
+    command: waypoint firmvault landmarks --json
+    description: Project deterministic FirmVault landmarks from explicit state.
+workspace:
+  cases_root_key: firmvault_waypoint_cases
+  legacy_cases_root_key: firmvault_legacy_cases
+handoffs:
+  - slug: firmvault.paralegal_to_attorney_review
+    to: attorney
+    gate: human_review
+  - slug: firmvault.paralegal_to_human_send_gate
+    to: human
+    gate: external_side_effect
+metadata:
+  source: openswarm-pattern-adoption
+  safety: waypoint_native_allowlist_only

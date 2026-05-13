@@ -68,6 +68,8 @@ waypoint lifecycle add milestone --workstream <key> --key <key> --title <title>
 waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
 waypoint lifecycle add plan --phase <key> --ref <ref> --title <title>
 waypoint lifecycle list
+waypoint operators list [--json]
+waypoint operators show <slug> [--json]
 ```
 
 ## Operator journey

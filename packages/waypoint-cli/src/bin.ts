@@ -7,6 +7,7 @@ import { runFirmVaultCommand } from './commands/firmvault.ts'
 import { runGateCommand } from './commands/gate.ts'
 import { runInitCommand } from './commands/init.ts'
 import { runLifecycleCommand } from './commands/lifecycle.ts'
+import { runOperatorsCommand } from './commands/operators.ts'
 import { runPauseCommand } from './commands/pause.ts'
 import { runQuestsCommand } from './commands/quests.ts'
 import { runRouteCommand } from './commands/route.ts'
@@ -57,6 +58,8 @@ Usage:
   waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
   waypoint lifecycle add plan --phase <key> --ref <ref> --title <title>
   waypoint lifecycle list
+  waypoint operators list [--json]
+  waypoint operators show <slug> [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -94,6 +97,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'recipes') {
     return runRecipesCommand(args.slice(1), io)
+  }
+
+  if (command === 'operators') {
+    return runOperatorsCommand(args.slice(1), io)
   }
 
   if (command === 'lifecycle') {

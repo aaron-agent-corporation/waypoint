@@ -46,6 +46,7 @@
     "docs",
     "quests",
     "recipes",
+    "operators",
     "third_party/gsd",
     "README.md",
     "LICENSE",
