@@ -50,6 +50,26 @@ interface ReadFirmVaultCaseStateResult {
   readonly warnings: readonly string[]
 }
 
+interface FirmVaultCaseGuidanceAction {
+  readonly fact: string
+  readonly description: string
+  readonly allowed_statuses: readonly string[]
+  readonly projected_landmarks: readonly string[]
+  readonly command_hint: string
+}
+
+interface FirmVaultCaseGuidanceResult {
+  readonly schema_version: 1
+  readonly mutates_state: false
+  readonly stage: string
+  readonly landmarks: { readonly satisfied: number; readonly total: number }
+  readonly next_actions: {
+    readonly required: readonly FirmVaultCaseGuidanceAction[]
+    readonly blocked_by_evidence: readonly FirmVaultCaseGuidanceAction[]
+  }
+  readonly warnings: readonly string[]
+}
+
 type FirmVaultStateModule = {
   readonly bootstrapFirmVaultCase: (
     input: {
@@ -66,6 +86,7 @@ type FirmVaultStateModule = {
   ) => Promise<InitFirmVaultCaseStateResult>
   readonly readFirmVaultLandmarkProjection: (root: string) => Promise<FirmVaultLandmarkProjection>
   readonly readFirmVaultCaseState: (root: string, options?: { readonly section?: string }) => Promise<ReadFirmVaultCaseStateResult>
+  readonly getFirmVaultCaseGuidance: (root: string) => Promise<FirmVaultCaseGuidanceResult>
   readonly checkFirmVaultEvidencePath: (root: string, path: string) => Promise<FirmVaultEvidencePathCheck>
   readonly setFirmVaultCaseFact: (
     root: string,
@@ -114,6 +135,7 @@ const usageLines = [
   'Usage: waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]',
   'Usage: waypoint firmvault state show [--section <section>] [--json]',
   'Usage: waypoint firmvault state set --fact <fact> --status <status> [--evidence <path>]... [--note <note>] [--json]',
+  'Usage: waypoint firmvault guidance [--json]',
   'Usage: waypoint firmvault evidence check --path <path> [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
   '       waypoint firmvault landmarks [--json]',
@@ -148,6 +170,10 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
 
   if (subcommand === 'landmarks') {
     return runLandmarks(rest, io)
+  }
+
+  if (subcommand === 'guidance') {
+    return runGuidance(rest, io)
   }
 
   usageLines.forEach((line) => io.stderr(line))
@@ -425,6 +451,40 @@ async function runLandmarks(args: readonly string[], io: WaypointCliIo): Promise
   }
   if (projection.warnings.length > 0) {
     io.stdout(`warnings:\n${projection.warnings.map((warning) => `  - ${warning}`).join('\n')}`)
+  }
+  return 0
+}
+
+async function runGuidance(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const json = args.includes('--json')
+  const unknown = args.filter((arg) => arg !== '--json')
+  if (unknown.length > 0) {
+    io.stderr(`Unknown firmvault guidance option: ${unknown[0]}`)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+
+  const module = await importFirmVaultStateModule()
+  const guidance = await module.getFirmVaultCaseGuidance(io.cwd ?? process.cwd())
+  if (json) {
+    io.stdout(JSON.stringify(guidance, null, 2))
+    return 0
+  }
+
+  io.stdout('Waypoint FirmVault guidance')
+  io.stdout(`stage: ${guidance.stage}`)
+  io.stdout(`landmarks satisfied: ${guidance.landmarks.satisfied}/${guidance.landmarks.total}`)
+  if (guidance.next_actions.required.length === 0) {
+    io.stdout('next required actions: none')
+  } else {
+    io.stdout('next required actions:')
+    for (const action of guidance.next_actions.required.slice(0, 10)) {
+      io.stdout(`- ${action.fact}: ${action.description}`)
+      io.stdout(`  command: ${action.command_hint}`)
+    }
+  }
+  if (guidance.warnings.length > 0) {
+    io.stdout(`warnings:\n${guidance.warnings.map((warning) => `  - ${warning}`).join('\n')}`)
   }
   return 0
 }

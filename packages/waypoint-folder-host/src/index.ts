@@ -113,6 +113,7 @@ export {
   checkFirmVaultEvidencePath,
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
+  getFirmVaultCaseGuidance,
   initFirmVaultCaseState,
   readFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
@@ -121,6 +122,8 @@ export {
 export { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './firmvault/facts.ts'
 export type { FirmVaultFactDefinition, FirmVaultStateSection } from './firmvault/facts.ts'
 export type {
+  FirmVaultCaseGuidanceAction,
+  FirmVaultCaseGuidanceResult,
   FirmVaultCaseStateSectionName,
   FirmVaultCaseType,
   FirmVaultEvidencePathCheck,

@@ -2,7 +2,7 @@ import { appendFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, normalize, relative } from 'node:path'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
-import { getFirmVaultFactDefinition, type FirmVaultStateSection } from './facts.ts'
+import { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition, type FirmVaultFactDefinition, type FirmVaultStateSection } from './facts.ts'
 
 export const FIRMVAULT_LANDMARK_SLUGS = [
   'case_setup_complete',
@@ -212,6 +212,26 @@ export interface ReadFirmVaultCaseStateResult {
   readonly warnings: readonly string[]
 }
 
+export interface FirmVaultCaseGuidanceAction {
+  readonly fact: string
+  readonly description: string
+  readonly allowed_statuses: readonly string[]
+  readonly projected_landmarks: readonly FirmVaultLandmarkSlug[]
+  readonly command_hint: string
+}
+
+export interface FirmVaultCaseGuidanceResult {
+  readonly schema_version: 1
+  readonly mutates_state: false
+  readonly stage: string
+  readonly landmarks: FirmVaultLandmarkCounts
+  readonly next_actions: {
+    readonly required: readonly FirmVaultCaseGuidanceAction[]
+    readonly blocked_by_evidence: readonly FirmVaultCaseGuidanceAction[]
+  }
+  readonly warnings: readonly string[]
+}
+
 interface FactInput {
   readonly status?: unknown
   readonly acceptedStatuses: readonly string[]
@@ -299,6 +319,26 @@ export async function readFirmVaultCaseState(
     section: null,
     state,
     landmarks: countLandmarks(projection),
+    warnings: projection.warnings,
+  }
+}
+
+export async function getFirmVaultCaseGuidance(projectRoot: string): Promise<FirmVaultCaseGuidanceResult> {
+  const projection = await readFirmVaultLandmarkProjection(projectRoot)
+  const landmarks = countLandmarks(projection)
+  const required = FIRMVAULT_FACT_DEFINITIONS
+    .filter((definition) => definition.projectedLandmarks.some((slug) => !projection.landmarks[slug]?.satisfied))
+    .map(firmVaultGuidanceAction)
+
+  return {
+    schema_version: 1,
+    mutates_state: false,
+    stage: classifyFirmVaultGuidanceStage(projection),
+    landmarks,
+    next_actions: {
+      required,
+      blocked_by_evidence: [],
+    },
     warnings: projection.warnings,
   }
 }
@@ -1148,6 +1188,30 @@ function normalizeEvidenceRefs(evidence: readonly FirmVaultEvidenceRef[]): reado
     ...(item.kind ? { kind: item.kind } : {}),
     ...(item.note ? { note: item.note } : {}),
   }))
+}
+
+function firmVaultGuidanceAction(definition: FirmVaultFactDefinition): FirmVaultCaseGuidanceAction {
+  const statusHint = definition.allowedStatuses[0] ?? '<status>'
+  return {
+    fact: definition.fact,
+    description: definition.description,
+    allowed_statuses: definition.allowedStatuses,
+    projected_landmarks: definition.projectedLandmarks,
+    command_hint: `waypoint firmvault state set --fact ${definition.fact} --status ${statusHint} --evidence <relative-path> --note <note>`,
+  }
+}
+
+function classifyFirmVaultGuidanceStage(projection: FirmVaultLandmarkProjection): string {
+  const counts = countLandmarks(projection)
+  if (counts.satisfied === counts.total) return 'closed'
+  if (!projection.landmarks.case_setup_complete.satisfied) return 'intake_not_started'
+  if (!projection.landmarks.full_intake_complete.satisfied || !projection.landmarks.accident_report_obtained.satisfied) return 'intake_incomplete'
+  if (!projection.landmarks.providers_setup.satisfied) return 'intake_complete'
+  if (!projection.landmarks.demand_sent.satisfied) return 'pre_demand'
+  if (!projection.landmarks.settlement_reached.satisfied) return 'negotiation'
+  if (!projection.landmarks.final_distribution_complete.satisfied) return 'settlement_distribution'
+  if (!projection.landmarks.case_closed.satisfied) return 'close_case'
+  return 'in_progress'
 }
 
 function countLandmarks(projection: FirmVaultLandmarkProjection): FirmVaultLandmarkCounts {

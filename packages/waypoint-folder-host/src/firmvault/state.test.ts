@@ -9,6 +9,7 @@ import {
   checkFirmVaultEvidencePath,
   FIRMVAULT_CASE_STATE_FILES,
   FIRMVAULT_LANDMARK_SLUGS,
+  getFirmVaultCaseGuidance,
   initFirmVaultCaseState,
   readFirmVaultLandmarkProjection,
   setFirmVaultCaseFact,
@@ -25,7 +26,80 @@ async function patchYaml(path: string, patcher: (value: any) => void): Promise<v
   await writeFile(path, yamlStringify(parsed), 'utf8')
 }
 
+async function setFactWithFixtureEvidence(root: string, fact: string, status: string): Promise<void> {
+  const evidencePath = `evidence/${fact.replaceAll('.', '-')}.md`
+  await mkdir(join(root, 'evidence'), { recursive: true })
+  await writeFile(join(root, evidencePath), `# ${fact}\n`, 'utf8')
+  await setFirmVaultCaseFact(root, {
+    fact,
+    status,
+    evidence: [{ path: evidencePath }],
+    note: `Fixture evidence for ${fact}`,
+  })
+}
+
 describe('FirmVault case state contract', () => {
+  describe('FirmVault case guidance', () => {
+    it('returns intake-start guidance for an initialized empty case without mutating state', async () => {
+      const root = await tempCaseRoot()
+      await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+      const beforeEvents = await readFile(join(root, '.waypoint', 'firmvault', 'events.jsonl'), 'utf8')
+
+      const guidance = await getFirmVaultCaseGuidance(root)
+
+      expect(guidance.schema_version).toBe(1)
+      expect(guidance.mutates_state).toBe(false)
+      expect(guidance.stage).toBe('intake_not_started')
+      expect(guidance.landmarks).toEqual({ satisfied: 0, total: 82 })
+      expect(guidance.next_actions.required.map((action) => action.fact).slice(0, 6)).toEqual([
+        'case.setup',
+        'client.intake',
+        'client.contracts.fee_agreement',
+        'client.authorizations.hipaa',
+        'accident.police_report',
+        'providers.setup',
+      ])
+      expect(guidance.next_actions.required[0]?.command_hint).toContain('waypoint firmvault state set --fact case.setup')
+      expect(await readFile(join(root, '.waypoint', 'firmvault', 'events.jsonl'), 'utf8')).toBe(beforeEvents)
+    })
+
+    it('moves guidance past intake facts after explicit state updates', async () => {
+      const root = await tempCaseRoot()
+      await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+      await setFactWithFixtureEvidence(root, 'case.setup', 'complete')
+      await setFactWithFixtureEvidence(root, 'client.intake', 'complete')
+      await setFactWithFixtureEvidence(root, 'client.contracts.fee_agreement', 'signed')
+      await setFactWithFixtureEvidence(root, 'client.authorizations.hipaa', 'signed')
+      await setFactWithFixtureEvidence(root, 'accident.police_report', 'received')
+
+      const guidance = await getFirmVaultCaseGuidance(root)
+
+      expect(guidance.stage).toBe('intake_complete')
+      expect(guidance.landmarks.satisfied).toBe(3)
+      expect(guidance.next_actions.required.map((action) => action.fact).slice(0, 4)).toEqual([
+        'providers.setup',
+        'insurance.bi.carrier_identified',
+        'insurance.bi.lor.prepared',
+        'insurance.bi.lor.sent',
+      ])
+      expect(guidance.next_actions.required.map((action) => action.fact)).not.toContain('client.intake')
+    })
+
+    it('returns closed guidance with no required next actions after all facts are satisfied', async () => {
+      const root = await tempCaseRoot()
+      await initFirmVaultCaseState(root, { caseType: 'personal_injury', caseSlug: 'smith-v-acme' })
+      for (const definition of FIRMVAULT_FACT_DEFINITIONS) {
+        await setFactWithFixtureEvidence(root, definition.fact, definition.allowedStatuses[0] ?? 'complete')
+      }
+
+      const guidance = await getFirmVaultCaseGuidance(root)
+
+      expect(guidance.stage).toBe('closed')
+      expect(guidance.landmarks).toEqual({ satisfied: 82, total: 82 })
+      expect(guidance.next_actions.required).toEqual([])
+    })
+  })
+
   it('exposes an allowlisted fact registry for core start-to-close legal state inputs', () => {
     const expectedFacts = [
       'case.setup',

@@ -232,6 +232,30 @@ describe('waypoint firmvault commands', () => {
     expect(body.landmarks).toEqual({ satisfied: 0, total: 82 })
   })
 
+  it('prints FirmVault next-action guidance from the CLI', async () => {
+    const root = await tempProjectRoot()
+    const init = captureIo(root)
+    await runWaypointCli(['firmvault', 'init-case', '--case-slug', 'smith-v-acme'], init.io)
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'guidance', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.schema_version).toBe(1)
+    expect(body.mutates_state).toBe(false)
+    expect(body.stage).toBe('intake_not_started')
+    expect(body.landmarks).toEqual({ satisfied: 0, total: 82 })
+    expect(body.next_actions.required.map((action: any) => action.fact).slice(0, 4)).toEqual([
+      'case.setup',
+      'client.intake',
+      'client.contracts.fee_agreement',
+      'client.authorizations.hipaa',
+    ])
+    expect(body.next_actions.required[0].command_hint).toContain('waypoint firmvault state set --fact case.setup')
+  })
+
   it('checks FirmVault evidence paths from the CLI', async () => {
     const root = await tempProjectRoot()
     const init = captureIo(root)
