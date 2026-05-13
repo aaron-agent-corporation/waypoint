@@ -6,6 +6,7 @@ import { runDiscussCommand } from './commands/discuss.ts'
 import { runDoctorCommand } from './commands/doctor.ts'
 import { runFirmVaultCommand } from './commands/firmvault.ts'
 import { runGateCommand } from './commands/gate.ts'
+import { runHandoffsCommand } from './commands/handoffs.ts'
 import { runInitCommand } from './commands/init.ts'
 import { runLifecycleCommand } from './commands/lifecycle.ts'
 import { runOperatorsCommand } from './commands/operators.ts'
@@ -63,6 +64,8 @@ Usage:
   waypoint operators list [--json]
   waypoint operators show <slug> [--json]
   waypoint operators instructions <slug> [--json]
+  waypoint handoffs list [--quest <slug>] [--json]
+  waypoint handoffs show <slug> [--json]
   waypoint tools list --operator <slug> [--json]
   waypoint tools explain <tool-slug> [--json]
   waypoint author brainstorm --kind quest|recipe|operator|handoff_graph [--domain <domain>] [--json]
@@ -111,6 +114,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'operators') {
     return runOperatorsCommand(args.slice(1), io)
+  }
+
+  if (command === 'handoffs') {
+    return runHandoffsCommand(args.slice(1), io)
   }
 
   if (command === 'tools') {

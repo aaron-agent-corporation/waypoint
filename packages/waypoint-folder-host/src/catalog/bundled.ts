@@ -11,6 +11,7 @@ export interface CatalogQuestManifest {
   readonly description?: string
   readonly workflow: string
   readonly recipes?: readonly string[]
+  readonly handoff_manifests?: readonly string[]
   readonly scaffolds?: unknown
   readonly metadata?: unknown
 }
@@ -195,6 +196,9 @@ function parseCatalogQuestManifest(text: string, path: string): CatalogQuestMani
     throw new Error(`invalid Quest manifest: ${path}`)
   }
   const recipes = Array.isArray(value.recipes) ? value.recipes.filter((item): item is string => typeof item === 'string') : undefined
+  const handoffManifests = Array.isArray(value.handoff_manifests)
+    ? value.handoff_manifests.filter((item): item is string => typeof item === 'string')
+    : undefined
   return {
     schema_version: 1,
     slug,
@@ -202,6 +206,7 @@ function parseCatalogQuestManifest(text: string, path: string): CatalogQuestMani
     workflow,
     ...(typeof value.description === 'string' ? { description: value.description } : {}),
     ...(recipes ? { recipes } : {}),
+    ...(handoffManifests ? { handoff_manifests: handoffManifests } : {}),
     ...(value.scaffolds !== undefined ? { scaffolds: value.scaffolds } : {}),
     ...(value.metadata !== undefined ? { metadata: value.metadata } : {}),
   }

@@ -139,7 +139,7 @@ async function findBundledHandoffsRoot(): Promise<string> {
   let current = dirname(fileURLToPath(import.meta.url))
   for (let depth = 0; depth < 10; depth += 1) {
     if (
-      (await isDirectory(join(current, 'handoffs'))) &&
+      (await isDirectory(join(current, 'handoffs', 'firmvault'))) &&
       (await isDirectory(join(current, 'quests'))) &&
       (await isDirectory(join(current, 'recipes')))
     ) {
