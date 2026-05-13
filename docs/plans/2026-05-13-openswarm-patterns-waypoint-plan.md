@@ -39,7 +39,8 @@
   - `packages/waypoint-cli/src/bin.ts`
   - `packages/waypoint-cli/src/commands/doctor.ts`
   - existing `recipes/waypoint/*.yaml` and `recipes/firmvault/*.yaml` inventory
-- Skill note: the requested “brainstorm”/`ideation` skill was not available in the active Gary skill registry when checked. This plan still incorporates the brainstorm pattern manually: divergent idea capture first, convergent schema/CLI slices second.
+- Superpowers brainstorming source inspected from GitHub: `https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md` (10,634 bytes fetched on 2026-05-13). Core pattern to borrow: explore context → ask one question at a time → propose 2-3 approaches → present design → write/commit design spec → self-review → user approval → only then write the implementation plan.
+- GSD/Waypoint lifecycle pattern inspected in committed Waypoint docs: `docs/waypoint-core-integration.md` shows the recursive intent hierarchy `workstreams → milestones → phases → plans`, with Quests/Recipes as reusable manifests and host adapters kept thin. The authoring wizard must preserve that intent-first structure instead of generating route tasks first.
 
 ---
 
@@ -91,14 +92,26 @@ waypoint tools explain firmvault.state.set --json
 
 Shows schemas and examples for safe Waypoint-native operations only.
 
-### 4. Authoring wizard: the important borrowed PRD pattern
+### 4. Authoring wizard: the important borrowed brainstorming/PRD/GSD pattern
 
 ```bash
-waypoint author quest --domain firmvault --from questionnaire --output docs/plans/generated-firmvault-followup-plan.md --json
+waypoint author brainstorm --kind quest --domain firmvault --json
+waypoint author design --answers examples/authoring/firmvault-followup.answers.json --write-spec docs/plans/generated-firmvault-followup-design.md --json
+waypoint author plan --design docs/plans/generated-firmvault-followup-design.md --write-draft docs/plans/generated-firmvault-followup-plan.md --json
 waypoint author recipe --role paralegal --task "Prepare demand package review" --json
 ```
 
-The wizard asks/accepts structured answers, then generates a reviewable draft plan or manifest. It does not silently install generated workflows. The first output is a draft artifact plus validation report.
+The wizard is not just a YAML generator. It should enforce the Superpowers brainstorming gate and the GSD/Waypoint lifecycle hierarchy:
+
+1. inspect current project/Quest/Recipe context;
+2. capture or ask one question at a time;
+3. propose 2-3 approaches with trade-offs;
+4. produce a design spec for review;
+5. self-review the spec for placeholders/contradictions/scope ambiguity;
+6. require explicit approval before producing the implementation plan or installable manifests;
+7. keep generated workflows as drafts until a separate explicit install/apply command exists.
+
+This keeps authoring aligned with Aaron’s road-building preference: choose the destination and lifecycle map before generating route tasks.
 
 ### 5. Handoff graph
 
@@ -410,9 +423,9 @@ pnpm exec vitest run packages/waypoint-cli/src/commands/tools.test.ts src/tools/
 
 ## Milestone WPO4 — Authoring wizard, borrowed from OpenSwarm PRD/GSD patterns
 
-**Objective:** Build a Waypoint-native authoring wizard that helps create Quest/Recipe/operator drafts from structured questions, modeled after OpenSwarm’s PRD command and GSD’s plan/recipe pattern.
+**Objective:** Build a Waypoint-native authoring wizard that helps create Quest/Recipe/operator drafts from structured questions, modeled after OpenSwarm’s PRD command, Superpowers’ brainstorming gate, and GSD’s intent hierarchy.
 
-This is the most important “steal.” It turns “I need a workflow” into a reviewable draft without requiring Aaron to hand-write YAML.
+This is the most important “steal.” It turns “I need a workflow” into a reviewable design spec and draft plan without requiring Aaron to hand-write YAML. It must not jump directly from a vague request to generated Quest/Recipe files; the wizard’s first-class outputs are: brainstorm capture, approach comparison, approved design spec, implementation plan, then draft manifests.
 
 ### Task WPO4.1: Define authoring draft schema tests
 
@@ -444,6 +457,16 @@ export type AuthoringGeneratedFile = {
 
 **Key rule:** generated files are drafts and have `install_default: false`.
 
+**Brainstorming gate fields:** add tests that require the draft to preserve:
+
+- `brainstorm_context.inspected_paths[]`
+- `questions[]` with one-question-at-a-time ordering
+- `approaches[]` with at least two alternatives before a recommendation
+- `design_spec_path` when a spec has been written
+- `approval.required: true` before plan/manifest generation
+- `approval.status: 'pending' | 'approved' | 'changes_requested'`
+
+
 **Run RED:**
 
 ```bash
@@ -458,9 +481,17 @@ pnpm exec vitest run src/authoring/draft.test.ts
 
 **Questionnaire groups:**
 
+0. Brainstorming/context:
+   - Which existing Quest/Recipe/docs should be inspected first?
+   - Is this one workflow or multiple independent subsystems that need decomposition?
+   - What is the user trying to accomplish in plain language?
+   - What constraints are non-negotiable?
 1. Quest/lifecycle:
    - What is the workflow goal?
-   - What are the lifecycle phases?
+   - What workstreams are involved?
+   - Which milestones prove meaningful product/user progress?
+   - What phases sit under each milestone?
+   - Which plans/tasks belong under each phase?
    - What counts as done?
    - What human gates are required?
 2. Roles/operators:
@@ -482,7 +513,64 @@ pnpm exec vitest run src/authoring/draft.test.ts
 
 **GSD pattern to preserve:** lifecycle intent first, execution substrate second. The wizard should ask about workstreams/milestones/phases/plans before generating route tasks.
 
-### Task WPO4.3: Implement recipe draft generator
+**Superpowers brainstorming pattern to preserve:** after context exploration, the wizard should store questions as discrete answer records, support one-at-a-time interactive questioning later, produce 2-3 approaches with trade-offs, and write a design spec before writing an implementation plan.
+
+### Task WPO4.3: Implement brainstorm/design spec generator
+
+**Files:**
+- Create: `src/authoring/design-spec-generator.ts`
+- Create: `src/authoring/design-spec-generator.test.ts`
+
+**Behavior:**
+
+- Takes structured brainstorming answers and inspected context summaries.
+- Emits a markdown design spec with sections:
+  - current context inspected;
+  - user goal;
+  - constraints/non-goals;
+  - 2-3 approaches and trade-offs;
+  - recommendation;
+  - lifecycle map using workstreams/milestones/phases/plans;
+  - roles/operators;
+  - tool/safety boundaries;
+  - verification strategy;
+  - approval status.
+- Performs self-review checks for `TBD`, `TODO`, empty approach list, missing recommendation, missing verification, and contradictory install/apply language.
+- Does not generate installable Quest/Recipe YAML.
+
+**Verification:**
+
+```bash
+pnpm exec vitest run src/authoring/design-spec-generator.test.ts
+```
+
+### Task WPO4.4: CLI `waypoint author brainstorm` and `waypoint author design`
+
+**Files:**
+- Create/modify: `packages/waypoint-cli/src/commands/author.ts`
+- Create/modify: `packages/waypoint-cli/src/commands/author.test.ts`
+
+**Commands:**
+
+```bash
+waypoint author brainstorm --kind quest --domain firmvault --json
+waypoint author design --answers examples/authoring/firmvault-followup.answers.json --write-spec docs/plans/generated-firmvault-followup-design.md --json
+```
+
+**Rules:**
+
+- `brainstorm` prints the required question groups and approach-comparison shape; no file writes.
+- `design` may write a spec only under safe relative paths such as `docs/plans/`.
+- `design` returns `approval.status: pending`.
+- `design` output must state that implementation planning and manifest generation are blocked until approval.
+
+**Verification:**
+
+```bash
+pnpm exec vitest run packages/waypoint-cli/src/commands/author.test.ts src/authoring/design-spec-generator.test.ts
+```
+
+### Task WPO4.5: Implement recipe draft generator
 
 **Files:**
 - Create: `src/authoring/recipe-generator.ts`
@@ -501,7 +589,7 @@ pnpm exec vitest run src/authoring/draft.test.ts
 pnpm exec vitest run src/authoring/recipe-generator.test.ts src/recipes/__tests__/manifest.test.ts
 ```
 
-### Task WPO4.4: Implement quest draft generator
+### Task WPO4.6: Implement quest draft generator
 
 **Files:**
 - Create: `src/authoring/quest-generator.ts`
@@ -519,7 +607,7 @@ pnpm exec vitest run src/authoring/recipe-generator.test.ts src/recipes/__tests_
 pnpm exec vitest run src/authoring/quest-generator.test.ts src/quests/__tests__/manifest.test.ts
 ```
 
-### Task WPO4.5: CLI `waypoint author` dry-run output
+### Task WPO4.7: CLI `waypoint author` dry-run output
 
 **Files:**
 - Create: `packages/waypoint-cli/src/commands/author.ts`
@@ -529,7 +617,9 @@ pnpm exec vitest run src/authoring/quest-generator.test.ts src/quests/__tests__/
 **Commands:**
 
 ```bash
-waypoint author questionnaire --kind quest --domain firmvault --json
+waypoint author brainstorm --kind quest --domain firmvault --json
+waypoint author design --answers <path> --write-spec docs/plans/generated-design.md --json
+waypoint author plan --design docs/plans/generated-design.md --json
 waypoint author recipe --answers <path> --json
 waypoint author quest --answers <path> --json
 ```
@@ -537,8 +627,9 @@ waypoint author quest --answers <path> --json
 **Design:**
 
 - First slice uses JSON answer files, not an interactive prompt. This keeps tests deterministic.
-- Later slice can add interactive prompts.
-- Command writes nothing unless `--write-draft` is supplied.
+- Later slice can add interactive prompts that ask one question at a time.
+- Command writes nothing unless `--write-spec` or `--write-draft` is supplied.
+- `plan`, `recipe`, and `quest` generation require an approved design spec or an explicit `--allow-unapproved-draft` escape hatch for tests/examples only.
 
 **Verification:**
 
@@ -546,7 +637,7 @@ waypoint author quest --answers <path> --json
 pnpm exec vitest run packages/waypoint-cli/src/commands/author.test.ts src/authoring/*.test.ts
 ```
 
-### Task WPO4.6: Optional write-draft mode
+### Task WPO4.8: Optional write-draft mode
 
 **Files:**
 - Modify: `packages/waypoint-cli/src/commands/author.ts`
@@ -564,7 +655,7 @@ waypoint author quest --answers examples/authoring/firmvault-followup.answers.js
 - Must refuse absolute output paths unless a later explicit trusted-root system is built.
 - Must include validation report.
 
-### Task WPO4.7: Example authoring fixture
+### Task WPO4.9: Example authoring fixture
 
 **Files:**
 - Create: `examples/authoring/firmvault-followup.answers.json`
