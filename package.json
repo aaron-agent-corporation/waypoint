@@ -24,6 +24,7 @@
     "smoke:firmvault-lifecycle-simulation": "node scripts/firmvault-lifecycle-simulation-smoke.mjs",
     "smoke:firmvault-staged-guidance": "node scripts/firmvault-staged-case-guidance-smoke.mjs",
     "smoke:firmvault-existing-case-adoption": "node scripts/firmvault-existing-case-adoption-smoke.mjs",
+    "smoke:firmvault-waypoint-case-export": "node scripts/firmvault-waypoint-case-export.mjs",
     "smoke:firmvault-completed-case-replay": "node scripts/firmvault-completed-case-replay.mjs",
     "build": "tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs",
     "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
