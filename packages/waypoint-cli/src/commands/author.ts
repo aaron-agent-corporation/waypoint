@@ -16,8 +16,8 @@ Usage:
   waypoint author brainstorm --kind quest|recipe|operator|handoff_graph [--domain <domain>] [--json]
   waypoint author design --answers <path> --write-spec docs/plans/<file>.md [--json]
   waypoint author plan --design docs/plans/<file>.md [--allow-unapproved-draft] [--json]
-  waypoint author recipe --answers <path> [--allow-unapproved-draft] [--json]
-  waypoint author quest --answers <path> [--allow-unapproved-draft] [--json]
+  waypoint author recipe --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
+  waypoint author quest --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
 `
 
 export async function runAuthorCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
@@ -192,11 +192,34 @@ async function runQuestDraft(args: readonly string[], io: WaypointCliIo): Promis
   return printDraftResult(draft, args, io)
 }
 
-function printDraftResult(
-  draft: { readonly yaml: string; readonly validation: { readonly ok: boolean }; readonly path: string },
+async function printDraftResult(
+  draft: { readonly kind: string; readonly yaml: string; readonly validation: { readonly ok: boolean }; readonly path: string; readonly write_default: boolean },
   args: readonly string[],
   io: WaypointCliIo,
-): number {
+): Promise<number> {
+  const writeDraft = valueAfter(args, '--write-draft')
+  if (writeDraft !== undefined) {
+    if (!isSafeDraftOutputPath(writeDraft)) {
+      io.stderr('Refusing to write outside a safe relative authoring path')
+      return 1
+    }
+    if (!draft.validation.ok) {
+      io.stderr(`Draft validation failed for ${draft.path}`)
+      return 1
+    }
+    const cwd = io.cwd ?? process.cwd()
+    const targetPath = resolve(cwd, writeDraft)
+    await mkdir(dirname(targetPath), { recursive: true })
+    await writeFile(targetPath, draft.yaml)
+    const response = { ...draft, written_path: normalize(writeDraft) }
+    if (args.includes('--json')) {
+      io.stdout(JSON.stringify(response, null, 2))
+      return 0
+    }
+    io.stdout(`Wrote authoring draft: ${normalize(writeDraft)}`)
+    return 0
+  }
+
   if (args.includes('--json')) {
     io.stdout(JSON.stringify(draft, null, 2))
     return draft.validation.ok ? 0 : 1
@@ -249,6 +272,12 @@ function isSafeAuthoringOutputPath(path: string): boolean {
   const normalized = normalize(path)
   if (normalized.startsWith('..')) return false
   return normalized.startsWith('docs/plans/') || normalized.startsWith('examples/authoring/')
+}
+
+function isSafeDraftOutputPath(path: string): boolean {
+  if (isAbsolute(path)) return false
+  const normalized = normalize(path)
+  return normalized !== '.' && !normalized.startsWith('..')
 }
 
 function findUnknownOptions(args: readonly string[], optionsWithValues: ReadonlySet<string>, flags: ReadonlySet<string>): readonly string[] {

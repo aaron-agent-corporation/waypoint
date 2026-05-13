@@ -205,4 +205,73 @@ describe('waypoint author command', () => {
     expect(parsed.markdown).toContain('docs/plans/generated-firmvault-followup-design.md')
     expect(parsed.warnings).toContain('draft only: not written or installed')
   })
+
+  it('writes a quest manifest draft only when --write-draft names a safe relative path', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'quest.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'firmvault-followup',
+        name: 'FirmVault Follow-up Quest',
+        domain: 'firmvault',
+        workflow: 'workflows/firmvault-followup.yaml',
+        recipes: ['firmvault-client-followup'],
+        source: { inspected_paths: ['quests/firmvault.yaml'] },
+        phases: [{ key: 'followup', title: 'Follow-up', tasks: [{ ref: 'human-review-gate', title: 'Human review before contact', type: 'gate' }] }],
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(
+      await runWaypointCli(
+        [
+          'author',
+          'quest',
+          '--answers',
+          answersPath,
+          '--allow-unapproved-draft',
+          '--write-draft',
+          'docs/plans/generated-firmvault-followup-draft.md',
+          '--json',
+        ],
+        io,
+      ),
+    ).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { kind: string; written_path: string; validation: { ok: boolean }; write_default: boolean }
+    expect(parsed.kind).toBe('quest')
+    expect(parsed.written_path).toBe('docs/plans/generated-firmvault-followup-draft.md')
+    expect(parsed.write_default).toBe(false)
+    expect(parsed.validation.ok).toBe(true)
+    const written = await readFile(join(temp, 'docs/plans/generated-firmvault-followup-draft.md'), 'utf8')
+    expect(written).toContain('schema_version: 1')
+    expect(written).toContain('slug: firmvault-followup')
+  })
+
+  it('refuses unsafe draft output paths', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'recipe.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'firmvault-client-followup',
+        name: 'FirmVault Client Follow-up',
+        prompt: 'Review case-local evidence.',
+        source: { inspected_paths: ['quests/firmvault.yaml'] },
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(
+      await runWaypointCli(
+        ['author', 'recipe', '--answers', answersPath, '--allow-unapproved-draft', '--write-draft', '/tmp/unsafe.yaml', '--json'],
+        io,
+      ),
+    ).toBe(1)
+
+    expect(stdout).toEqual([])
+    expect(stderr.join('\n')).toContain('Refusing to write outside a safe relative authoring path')
+  })
 })
