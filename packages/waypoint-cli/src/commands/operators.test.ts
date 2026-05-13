@@ -49,6 +49,31 @@ describe('waypoint operators command', () => {
     expect(stdout.join('\n')).toContain('- firmvault-paralegal: FirmVault Paralegal')
   })
 
+  it('prints bundled operator instruction resolution as JSON', async () => {
+    const { io, stdout, stderr } = makeIo()
+
+    expect(await runWaypointCli(['operators', 'instructions', 'firmvault-paralegal', '--json'], io)).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as {
+      operator_slug: string
+      layers: Array<{ kind: string; ref: string; exists: boolean; required: boolean }>
+      errors: string[]
+    }
+    expect(parsed.operator_slug).toBe('firmvault-paralegal')
+    expect(parsed.layers.map((layer) => layer.ref)).toEqual(
+      expect.arrayContaining([
+        'docs/firmvault-paralegal-state-operator-runbook.md',
+        'docs/firmvault-document-ingestion-runbook.md',
+        'case-management/firmvault-waypoint-case-operations',
+      ]),
+    )
+    expect(parsed.layers.find((layer) => layer.ref === 'docs/firmvault-document-ingestion-runbook.md')).toMatchObject({
+      exists: true,
+      required: true,
+    })
+  })
+
   it('rejects unknown operators', async () => {
     const { io, stdout, stderr } = makeIo()
 

@@ -70,6 +70,7 @@ waypoint lifecycle add plan --phase <key> --ref <ref> --title <title>
 waypoint lifecycle list
 waypoint operators list [--json]
 waypoint operators show <slug> [--json]
+waypoint operators instructions <slug> [--json]
 ```
 
 ## Operator journey

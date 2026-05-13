@@ -125,3 +125,10 @@ export type {
   LoadOperatorError,
   LoadOperatorErrorCode,
 } from './operators/loader'
+
+export { resolveOperatorInstructions } from './operators/instructions'
+export type {
+  OperatorInstructionResolution,
+  ResolvedOperatorInstructionLayer,
+  ResolveOperatorInstructionsOptions,
+} from './operators/instructions'

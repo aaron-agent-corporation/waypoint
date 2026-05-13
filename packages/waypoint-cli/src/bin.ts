@@ -60,6 +60,7 @@ Usage:
   waypoint lifecycle list
   waypoint operators list [--json]
   waypoint operators show <slug> [--json]
+  waypoint operators instructions <slug> [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
