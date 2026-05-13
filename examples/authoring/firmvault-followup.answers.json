@@ -1,0 +1,46 @@
+{
+  "slug": "firmvault-followup",
+  "name": "FirmVault Follow-up Quest",
+  "domain": "firmvault",
+  "description": "Draft follow-up route for a FirmVault case after review-ready evidence is gathered.",
+  "workflow": "workflows/firmvault-followup.yaml",
+  "recipes": ["firmvault-client-followup"],
+  "prompt": "Review case-local FirmVault evidence and prepare a client follow-up handoff. Do not contact the client, send messages, update legal landmarks, or use external systems.",
+  "tools": ["file_read", "search_files", "file_write"],
+  "source": {
+    "design_spec_path": "docs/plans/generated-firmvault-followup-design.md",
+    "inspected_paths": [
+      "quests/firmvault.yaml",
+      "recipes/firmvault/close-case-verify-readiness.yaml",
+      "docs/plans/2026-05-13-openswarm-patterns-waypoint-plan.md"
+    ]
+  },
+  "phases": [
+    {
+      "key": "followup",
+      "title": "Follow-up",
+      "tasks": [
+        {
+          "ref": "client-followup-task",
+          "title": "Prepare local client follow-up handoff",
+          "type": "recipe",
+          "recipe": "firmvault-client-followup",
+          "wave": 10
+        },
+        {
+          "ref": "human-review-gate",
+          "title": "Human review before any client contact",
+          "type": "gate",
+          "gate_kind": "human_review",
+          "wave": 20
+        },
+        {
+          "ref": "followup-evidence-checkpoint",
+          "title": "Confirm no legal landmarks were updated by the draft",
+          "type": "checkpoint",
+          "wave": 30
+        }
+      ]
+    }
+  ]
+}

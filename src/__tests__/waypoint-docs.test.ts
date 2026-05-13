@@ -222,6 +222,22 @@ describe('Waypoint Quest operator documentation', () => {
     expect(smoke).toContain('firmvault.state.updated')
   })
 
+  it('publishes the authoring fixture for FirmVault dry-run draft generation', () => {
+    const readme = readRepoFile('examples/authoring/README.md')
+    const answers = JSON.parse(readRepoFile('examples/authoring/firmvault-followup.answers.json')) as {
+      slug: string
+      source: { inspected_paths: string[] }
+      phases: Array<{ tasks: Array<{ type: string }> }>
+    }
+
+    expect(readme).toContain('waypoint author quest --answers examples/authoring/firmvault-followup.answers.json --allow-unapproved-draft --json')
+    expect(readme).toContain('valid Quest YAML draft')
+    expect(readme).toContain('draft only: not written or installed')
+    expect(answers.slug).toBe('firmvault-followup')
+    expect(answers.source.inspected_paths).toContain('quests/firmvault.yaml')
+    expect(answers.phases.flatMap((phase) => phase.tasks).some((task) => task.type === 'gate')).toBe(true)
+  })
+
   it('publishes a clickable FirmVault case-folder blueprint with per-file fill guidance', () => {
     const blueprint = readRepoFile('docs/firmvault-case-folder-blueprint.html')
 

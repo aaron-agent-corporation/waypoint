@@ -1,5 +1,5 @@
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 
 import { describe, expect, it } from 'vitest'
@@ -273,5 +273,21 @@ describe('waypoint author command', () => {
 
     expect(stdout).toEqual([])
     expect(stderr.join('\n')).toContain('Refusing to write outside a safe relative authoring path')
+  })
+
+  it('runs the bundled FirmVault authoring fixture as a dry-run Quest draft', async () => {
+    const repoRoot = resolve(__dirname, '../../../..')
+    const answersPath = 'examples/authoring/firmvault-followup.answers.json'
+    const questIo = makeIo(repoRoot)
+
+    expect(await runWaypointCli(['author', 'quest', '--answers', answersPath, '--allow-unapproved-draft', '--json'], questIo.io)).toBe(0)
+    expect(questIo.stderr).toEqual([])
+    const quest = JSON.parse(questIo.stdout.join('\n')) as { kind: string; path: string; validation: { ok: boolean }; yaml: string; warnings: string[] }
+    expect(quest.kind).toBe('quest')
+    expect(quest.path).toBe('quests/firmvault-followup.yaml')
+    expect(quest.validation.ok).toBe(true)
+    expect(quest.yaml).toContain('firmvault-client-followup')
+    expect(quest.yaml).toContain('legal_landmarks_updated_by_default: false')
+    expect(quest.warnings).toContain('draft only: not written or installed')
   })
 })
