@@ -1,0 +1,52 @@
+schema_version: 1
+slug: firmvault-paralegal-handoffs
+name: FirmVault Paralegal Handoffs
+description: Handoff graph for the FirmVault paralegal workflow — local, no side effects.
+handoffs:
+  - slug: paralegal-to-attorney-demand-review
+    from: firmvault-paralegal
+    to: attorney-review
+    trigger: demand_package_ready
+    required_artifacts:
+      - docs/demand-summary.md
+      - .waypoint/firmvault/case.yaml
+      - .waypoint/firmvault/settlement.yaml
+    gate: human_attorney_review
+
+  - slug: paralegal-to-attorney-final-letter
+    from: firmvault-paralegal
+    to: attorney-review
+    trigger: final_letter_prepared
+    required_artifacts:
+      - docs/final-letter.md
+      - .waypoint/firmvault/settlement.yaml
+    gate: human_attorney_review
+
+  - slug: document-pipeline-to-paralegal-pr-review
+    from: document-pipeline
+    to: firmvault-paralegal
+    trigger: documents_ingested
+    required_artifacts:
+      - .waypoint/firmvault/documents.yaml
+
+  - slug: paralegal-to-attorney-settlement-approval
+    from: firmvault-paralegal
+    to: attorney-review
+    trigger: settlement_reached
+    required_artifacts:
+      - .waypoint/firmvault/settlement.yaml
+      - docs/settlement-summary.md
+    gate: human_settlement_approval
+
+  - slug: paralegal-to-human-final-archive
+    from: firmvault-paralegal
+    to: archive-handler
+    trigger: case_closed
+    required_artifacts:
+      - .waypoint/firmvault/case.yaml
+      - docs/final-letter.md
+      - docs/settlement-summary.md
+    gate: human_archive_approval
+metadata:
+  source: firmvault-port-part-six
+  domain: firmvault-paralegal

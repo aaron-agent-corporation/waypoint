@@ -118,6 +118,23 @@ export type {
   OperatorManifestParseErrorCode,
 } from './operators/manifest'
 
+export { parseHandoffManifest, isHandoffManifest } from './handoffs/manifest'
+export type {
+  HandoffManifest,
+  HandoffStep,
+  HandoffManifestParseResult,
+  HandoffManifestParseError,
+  HandoffManifestParseErrorCode,
+} from './handoffs/manifest'
+
+export { loadHandoffManifestsFromDirectory, loadBundledHandoffManifests } from './handoffs/loader'
+export type {
+  LoadHandoffManifestsResult,
+  LoadHandoffError,
+  LoadHandoffErrorCode,
+  HandoffManifestEntry,
+} from './handoffs/loader'
+
 export { loadOperatorsFromDirectory, loadBundledOperators } from './operators/loader'
 export type {
   LoadOperatorsResult,

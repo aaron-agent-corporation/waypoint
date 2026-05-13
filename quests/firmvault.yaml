@@ -60,6 +60,8 @@ recipes:
 - firmvault-document-pipeline-submit-for-review
 - firmvault-document-pipeline-review-pr
 - firmvault-document-pipeline-record-merge
+handoff_manifests:
+- firmvault-paralegal-handoffs
 scaffolds:
   workstreams:
   - key: case

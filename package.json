@@ -47,6 +47,7 @@
     "quests",
     "recipes",
     "operators",
+    "handoffs",
     "third_party/gsd",
     "README.md",
     "LICENSE",

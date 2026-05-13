@@ -14,6 +14,7 @@ export type QuestManifest = {
   readonly workflow: string
   readonly description?: string
   readonly recipes?: readonly string[]
+  readonly handoff_manifests?: readonly string[]
   readonly scaffolds?: QuestScaffolds
   readonly metadata?: Readonly<Record<string, unknown>>
 }
@@ -147,6 +148,29 @@ export function parseQuestManifest(yamlText: unknown): QuestManifestParseResult 
     recipes = raw.recipes as readonly string[]
   }
 
+  let handoff_manifests: readonly string[] | undefined
+  if ('handoff_manifests' in raw && raw.handoff_manifests !== undefined) {
+    if (!Array.isArray(raw.handoff_manifests)) {
+      return {
+        ok: false,
+        error: { code: 'invalid_field_type', message: 'handoff_manifests must be an array', path: 'handoff_manifests' },
+      }
+    }
+    for (let i = 0; i < raw.handoff_manifests.length; i++) {
+      if (typeof raw.handoff_manifests[i] !== 'string') {
+        return {
+          ok: false,
+          error: {
+            code: 'invalid_field_type',
+            message: 'handoff_manifests entries must be strings',
+            path: `handoff_manifests[${i}]`,
+          },
+        }
+      }
+    }
+    handoff_manifests = raw.handoff_manifests as readonly string[]
+  }
+
   let metadata: Record<string, unknown> | undefined
   if ('metadata' in raw && raw.metadata !== undefined) {
     if (typeof raw.metadata !== 'object' || raw.metadata === null || Array.isArray(raw.metadata)) {
@@ -176,6 +200,7 @@ export function parseQuestManifest(yamlText: unknown): QuestManifestParseResult 
     workflow: raw.workflow as string,
     ...(typeof raw.description === 'string' ? { description: raw.description } : {}),
     ...(recipes ? { recipes } : {}),
+    ...(handoff_manifests ? { handoff_manifests } : {}),
     ...(scaffolds ? { scaffolds } : {}),
     ...(metadata ? { metadata } : {}),
   }
