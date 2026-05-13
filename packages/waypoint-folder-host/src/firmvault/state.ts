@@ -324,6 +324,26 @@ export async function readFirmVaultCaseState(
 }
 
 export async function getFirmVaultCaseGuidance(projectRoot: string): Promise<FirmVaultCaseGuidanceResult> {
+  if (!await firmVaultStatePresent(projectRoot)) {
+    return {
+      schema_version: 1,
+      mutates_state: false,
+      stage: 'needs_adoption',
+      landmarks: { satisfied: 0, total: FIRMVAULT_LANDMARK_SLUGS.length },
+      next_actions: {
+        required: [{
+          fact: 'firmvault.adopt.preview',
+          description: 'Inspect this existing FirmVault case folder and preview safe Waypoint state adoption before normal guidance.',
+          allowed_statuses: ['preview'],
+          projected_landmarks: [],
+          command_hint: 'waypoint firmvault adopt preview --json',
+        }],
+        blocked_by_evidence: [],
+      },
+      warnings: ['Waypoint FirmVault state is missing; run adoption preview before normal guidance.'],
+    }
+  }
+
   const projection = await readFirmVaultLandmarkProjection(projectRoot)
   const landmarks = countLandmarks(projection)
   const required = FIRMVAULT_FACT_DEFINITIONS
@@ -1149,6 +1169,15 @@ function stateSectionFile(section: FirmVaultCaseStateSectionName): Exclude<FirmV
 async function readYamlRecord(path: string): Promise<Record<string, unknown>> {
   const parsed = yamlParse(await readFile(path, 'utf8'))
   return isRecord(parsed) ? parsed : {}
+}
+
+async function firmVaultStatePresent(projectRoot: string): Promise<boolean> {
+  try {
+    await stat(join(firmVaultStateDir(projectRoot), 'case.yaml'))
+    return true
+  } catch {
+    return false
+  }
 }
 
 function firmVaultStateDir(projectRoot: string): string {

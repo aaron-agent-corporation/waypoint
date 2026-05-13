@@ -120,6 +120,11 @@ export {
   setFirmVaultCaseFact,
 } from './firmvault/state.ts'
 export { FIRMVAULT_FACT_DEFINITIONS, getFirmVaultFactDefinition } from './firmvault/facts.ts'
+export {
+  adoptFirmVaultLegacyCase,
+  inspectFirmVaultLegacyCase,
+  previewFirmVaultCaseAdoption,
+} from './firmvault/adoption.ts'
 export type { FirmVaultFactDefinition, FirmVaultStateSection } from './firmvault/facts.ts'
 export type {
   FirmVaultCaseGuidanceAction,

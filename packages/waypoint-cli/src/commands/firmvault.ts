@@ -87,6 +87,11 @@ type FirmVaultStateModule = {
   readonly readFirmVaultLandmarkProjection: (root: string) => Promise<FirmVaultLandmarkProjection>
   readonly readFirmVaultCaseState: (root: string, options?: { readonly section?: string }) => Promise<ReadFirmVaultCaseStateResult>
   readonly getFirmVaultCaseGuidance: (root: string) => Promise<FirmVaultCaseGuidanceResult>
+  readonly previewFirmVaultCaseAdoption: (root: string) => Promise<Record<string, unknown>>
+  readonly adoptFirmVaultLegacyCase: (
+    root: string,
+    options: { readonly caseType: 'personal_injury'; readonly applySafe?: boolean },
+  ) => Promise<Record<string, unknown>>
   readonly checkFirmVaultEvidencePath: (root: string, path: string) => Promise<FirmVaultEvidencePathCheck>
   readonly setFirmVaultCaseFact: (
     root: string,
@@ -135,6 +140,8 @@ const usageLines = [
   'Usage: waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]',
   'Usage: waypoint firmvault state show [--section <section>] [--json]',
   'Usage: waypoint firmvault state set --fact <fact> --status <status> [--evidence <path>]... [--note <note>] [--json]',
+  'Usage: waypoint firmvault adopt preview [--json]',
+  'Usage: waypoint firmvault adopt init [--case-type personal-injury] [--apply-safe] [--json]',
   'Usage: waypoint firmvault guidance [--json]',
   'Usage: waypoint firmvault evidence check --path <path> [--json]',
   'Usage: waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]',
@@ -174,6 +181,10 @@ export async function runFirmVaultCommand(args: readonly string[], io: WaypointC
 
   if (subcommand === 'guidance') {
     return runGuidance(rest, io)
+  }
+
+  if (subcommand === 'adopt') {
+    return runAdopt(rest, io)
   }
 
   usageLines.forEach((line) => io.stderr(line))
@@ -487,6 +498,90 @@ async function runGuidance(args: readonly string[], io: WaypointCliIo): Promise<
     io.stdout(`warnings:\n${guidance.warnings.map((warning) => `  - ${warning}`).join('\n')}`)
   }
   return 0
+}
+
+async function runAdopt(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const [action, ...rest] = args
+  if (action === 'preview') return runAdoptPreview(rest, io)
+  if (action === 'init') return runAdoptInit(rest, io)
+  io.stderr(`Unknown firmvault adopt action: ${action ?? '<missing>'}`)
+  usageLines.forEach((line) => io.stderr(line))
+  return 1
+}
+
+async function runAdoptPreview(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const json = args.includes('--json')
+  const unknown = args.filter((arg) => arg !== '--json')
+  if (unknown.length > 0) {
+    io.stderr(`Unknown firmvault adopt preview option: ${unknown[0]}`)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const module = await importFirmVaultStateModule()
+  const preview = await module.previewFirmVaultCaseAdoption(io.cwd ?? process.cwd())
+  if (json) {
+    io.stdout(JSON.stringify(preview, null, 2))
+    return 0
+  }
+  io.stdout('Waypoint FirmVault adoption preview')
+  io.stdout(`case_slug: ${String(preview.case_slug ?? '')}`)
+  io.stdout(`legacy_phase: ${String(preview.legacy_phase ?? 'null')}`)
+  const proposed = Array.isArray(preview.proposed_facts) ? preview.proposed_facts as Array<Record<string, unknown>> : []
+  io.stdout(`proposed facts: ${proposed.length}`)
+  for (const item of proposed.slice(0, 10)) io.stdout(`- ${String(item.fact)}: ${String(item.suggested_status)}`)
+  return 0
+}
+
+async function runAdoptInit(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const parsed = parseAdoptInitArgs(args)
+  if (!parsed.ok) {
+    io.stderr(parsed.error)
+    usageLines.forEach((line) => io.stderr(line))
+    return 1
+  }
+  const module = await importFirmVaultStateModule()
+  const result = await module.adoptFirmVaultLegacyCase(io.cwd ?? process.cwd(), {
+    caseType: parsed.caseType,
+    ...(parsed.applySafe ? { applySafe: true } : {}),
+  })
+  if (parsed.json) {
+    io.stdout(JSON.stringify(result, null, 2))
+    return 0
+  }
+  io.stdout('Waypoint FirmVault legacy case adopted')
+  io.stdout(`case_slug: ${String(result.case_slug ?? '')}`)
+  const applied = Array.isArray(result.applied_facts) ? result.applied_facts as unknown[] : []
+  io.stdout(`applied facts: ${applied.length}`)
+  return 0
+}
+
+function parseAdoptInitArgs(args: readonly string[]):
+  | { readonly ok: true; readonly caseType: 'personal_injury'; readonly applySafe: boolean; readonly json: boolean }
+  | { readonly ok: false; readonly error: string } {
+  let caseType: 'personal_injury' = 'personal_injury'
+  let applySafe = false
+  let json = false
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--case-type') {
+      const value = args[index + 1]
+      if (!value) return { ok: false, error: 'Missing value for --case-type' }
+      if (value !== 'personal-injury' && value !== 'personal_injury') return { ok: false, error: `Unsupported FirmVault case type: ${value}` }
+      caseType = 'personal_injury'
+      index += 1
+      continue
+    }
+    if (arg === '--apply-safe') {
+      applySafe = true
+      continue
+    }
+    if (arg === '--json') {
+      json = true
+      continue
+    }
+    return { ok: false, error: `Unknown firmvault adopt init option: ${arg}` }
+  }
+  return { ok: true, caseType, applySafe, json }
 }
 
 function parseStateShowArgs(args: readonly string[]):

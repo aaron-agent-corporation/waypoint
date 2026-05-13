@@ -256,6 +256,48 @@ describe('waypoint firmvault commands', () => {
     expect(body.next_actions.required[0].command_hint).toContain('waypoint firmvault state set --fact case.setup')
   })
 
+  it('previews existing FirmVault case adoption from the CLI', async () => {
+    const root = await tempProjectRoot()
+    await writeFile(join(root, 'Dashboard.md'), '# Legacy Case\n')
+    await mkdir(join(root, 'documents', 'police-reports'), { recursive: true })
+    await writeFile(join(root, 'documents', 'police-reports', 'report.md'), '---\ndocument_category: police-reports\n---\n')
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'adopt', 'preview', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.schema_version).toBe(1)
+    expect(body.mutates_state).toBe(false)
+    expect(body.case_slug).toMatch(/^waypoint-cli-firmvault-/)
+    expect(body.proposed_facts.map((proposal: any) => proposal.fact)).toEqual(expect.arrayContaining([
+      'case.setup',
+      'accident.police_report',
+    ]))
+  })
+
+  it('initializes adopted FirmVault case state from the CLI and applies safe proposals', async () => {
+    const root = await tempProjectRoot()
+    await writeFile(join(root, 'Dashboard.md'), '# Legacy Case\n')
+    await mkdir(join(root, 'documents', 'police-reports'), { recursive: true })
+    await writeFile(join(root, 'documents', 'police-reports', 'report.md'), '---\ndocument_category: police-reports\n---\n')
+    const { io, stdout, stderr } = captureIo(root)
+
+    const exitCode = await runWaypointCli(['firmvault', 'adopt', 'init', '--apply-safe', '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.schema_version).toBe(1)
+    expect(body.mutates_state).toBe(true)
+    expect(body.applied_facts.map((item: any) => item.fact)).toEqual(expect.arrayContaining([
+      'case.setup',
+      'accident.police_report',
+    ]))
+    expect(existsSync(join(root, '.waypoint', 'firmvault', 'case.yaml'))).toBe(true)
+  })
+
   it('checks FirmVault evidence paths from the CLI', async () => {
     const root = await tempProjectRoot()
     const init = captureIo(root)
