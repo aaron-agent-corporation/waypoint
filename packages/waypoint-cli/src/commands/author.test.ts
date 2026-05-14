@@ -180,6 +180,67 @@ describe('waypoint author command', () => {
     expect(stderr.join('\n')).toContain('Draft generation requires an approved design spec or --allow-unapproved-draft')
   })
 
+  it('prints a handoff manifest draft as JSON without writing files when explicitly allowed', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'handoff.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'followup-handoffs',
+        name: 'FirmVault Follow-up Handoffs',
+        domain: 'firmvault',
+        description: 'Draft handoff graph for follow-up review routing.',
+        source: {
+          design_spec_path: 'docs/plans/generated-firmvault-followup-design.md',
+          inspected_paths: ['handoffs/firmvault/paralegal.yaml', 'quests/firmvault.yaml'],
+        },
+        handoffs: [
+          {
+            slug: 'paralegal-to-attorney-followup-review',
+            from: 'firmvault-paralegal',
+            to: 'attorney-review',
+            trigger: 'followup_summary_ready',
+            gate: 'human_attorney_review',
+            required_artifacts: ['docs/followup-summary.md'],
+          },
+        ],
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(await runWaypointCli(['author', 'handoff', '--answers', answersPath, '--allow-unapproved-draft', '--json'], io)).toBe(0)
+
+    expect(stderr).toEqual([])
+    const parsed = JSON.parse(stdout.join('\n')) as { kind: string; path: string; yaml: string; write_default: boolean; validation: { ok: boolean } }
+    expect(parsed.kind).toBe('handoff')
+    expect(parsed.path).toBe('handoffs/firmvault/followup-handoffs.yaml')
+    expect(parsed.write_default).toBe(false)
+    expect(parsed.validation.ok).toBe(true)
+    expect(parsed.yaml).toContain('slug: followup-handoffs')
+    expect(parsed.yaml).toContain('paralegal-to-attorney-followup-review')
+    await expect(readFile(join(temp, 'handoffs/firmvault/followup-handoffs.yaml'), 'utf8')).rejects.toThrow()
+  })
+
+  it('blocks handoff draft generation without approved design or explicit escape hatch', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
+    const answersPath = join(temp, 'handoff.answers.json')
+    await writeFile(
+      answersPath,
+      JSON.stringify({
+        slug: 'followup-handoffs',
+        name: 'FirmVault Follow-up Handoffs',
+        source: { inspected_paths: ['handoffs/firmvault/paralegal.yaml'] },
+        handoffs: [{ slug: 'step-one', from: 'operator-a', to: 'operator-b', trigger: 'ready' }],
+      }),
+    )
+    const { io, stdout, stderr } = makeIo(temp)
+
+    expect(await runWaypointCli(['author', 'handoff', '--answers', answersPath, '--json'], io)).toBe(1)
+
+    expect(stdout).toEqual([])
+    expect(stderr.join('\n')).toContain('Draft generation requires an approved design spec or --allow-unapproved-draft')
+  })
+
   it('prints an implementation plan draft from a design spec when explicitly allowed', async () => {
     const temp = await mkdtemp(join(tmpdir(), 'waypoint-author-'))
     const designPath = join(temp, 'docs/plans/generated-firmvault-followup-design.md')

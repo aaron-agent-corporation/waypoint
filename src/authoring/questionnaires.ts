@@ -38,7 +38,7 @@ export function getAuthoringQuestionnaire(input: { readonly kind: AuthoringKind;
       required_fields: ['slug', 'title', 'tradeoffs', 'recommended'],
     },
     approval: {
-      required_before: ['implementation_plan', 'quest_manifest', 'recipe_manifest', 'operator_manifest'],
+      required_before: ['implementation_plan', 'quest_manifest', 'recipe_manifest', 'operator_manifest', 'handoff_manifest'],
     },
   }
 }
@@ -90,9 +90,20 @@ const QUESTION_GROUPS: readonly AuthoringQuestionGroup[] = [
     ],
   },
   {
+    slug: 'handoff-graph',
+    title: 'Handoff graph',
+    order: 4,
+    questions: [
+      q('handoff_routes', 'Which operators or human roles hand work to each other?'),
+      q('handoff_triggers', 'Which triggers start each handoff?'),
+      q('handoff_required_artifacts', 'Which artifacts must exist before each handoff?'),
+      q('handoff_gates', 'Which handoffs require human gates?'),
+    ],
+  },
+  {
     slug: 'integrations',
     title: 'Integrations and side effects',
-    order: 4,
+    order: 5,
     questions: [
       q('local_only', 'Local-only?'),
       q('external_services', 'External services?'),
@@ -103,7 +114,7 @@ const QUESTION_GROUPS: readonly AuthoringQuestionGroup[] = [
   {
     slug: 'verification',
     title: 'Verification',
-    order: 5,
+    order: 6,
     questions: [
       q('tests', 'Which tests/smokes prove success?'),
       q('source_of_truth', 'Which source-of-truth files should be checked?'),

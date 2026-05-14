@@ -4,6 +4,7 @@ import { dirname, isAbsolute, normalize, resolve } from 'node:path'
 import type {
   AuthoringKind,
   GenerateAuthoringDesignSpecInput,
+  GenerateAuthoringHandoffDraftInput,
   GenerateAuthoringQuestDraftInput,
   GenerateAuthoringRecipeDraftInput,
 } from '@waypoint/core'
@@ -18,6 +19,7 @@ Usage:
   waypoint author plan --design docs/plans/<file>.md [--allow-unapproved-draft] [--json]
   waypoint author recipe --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint author quest --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
+  waypoint author handoff --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
 `
 
 export async function runAuthorCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
@@ -32,6 +34,7 @@ export async function runAuthorCommand(args: readonly string[], io: WaypointCliI
   if (subcommand === 'plan') return runPlan(args.slice(1), io)
   if (subcommand === 'recipe') return runRecipeDraft(args.slice(1), io)
   if (subcommand === 'quest') return runQuestDraft(args.slice(1), io)
+  if (subcommand === 'handoff') return runHandoffDraft(args.slice(1), io)
 
   io.stderr(`Unknown author command: ${subcommand}`)
   io.stderr(usage.trimEnd())
@@ -189,6 +192,25 @@ async function runQuestDraft(args: readonly string[], io: WaypointCliIo): Promis
 
   const { generateAuthoringQuestDraft } = await import('@waypoint/core')
   const draft = generateAuthoringQuestDraft(input)
+  return printDraftResult(draft, args, io)
+}
+
+async function runHandoffDraft(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  const answersPath = valueAfter(args, '--answers')
+  if (!answersPath) {
+    io.stderr('Missing required option: --answers <path>')
+    return 1
+  }
+
+  const cwd = io.cwd ?? process.cwd()
+  const input = JSON.parse(await readFile(resolve(cwd, answersPath), 'utf8')) as GenerateAuthoringHandoffDraftInput
+  if (!(await isManifestDraftGenerationAllowed(args, input.source?.design_spec_path, cwd))) {
+    io.stderr('Draft generation requires an approved design spec or --allow-unapproved-draft')
+    return 1
+  }
+
+  const { generateAuthoringHandoffDraft } = await import('@waypoint/core')
+  const draft = generateAuthoringHandoffDraft(input)
   return printDraftResult(draft, args, io)
 }
 

@@ -209,3 +209,10 @@ export type {
   AuthoringQuestPhaseDraft,
   AuthoringQuestTaskDraft,
 } from './authoring/quest-generator'
+
+export { generateAuthoringHandoffDraft } from './authoring/handoff-generator'
+export type {
+  GenerateAuthoringHandoffDraftInput,
+  GenerateAuthoringHandoffDraftResult,
+  AuthoringHandoffStepDraft,
+} from './authoring/handoff-generator'

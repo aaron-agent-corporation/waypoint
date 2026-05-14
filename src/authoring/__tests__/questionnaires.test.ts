@@ -31,7 +31,21 @@ describe('Waypoint authoring questionnaires', () => {
       expect.arrayContaining(['slug', 'title', 'tradeoffs', 'recommended']),
     )
     expect(questionnaire.approval.required_before).toEqual(
-      expect.arrayContaining(['implementation_plan', 'quest_manifest', 'recipe_manifest', 'operator_manifest']),
+      expect.arrayContaining(['implementation_plan', 'quest_manifest', 'recipe_manifest', 'operator_manifest', 'handoff_manifest']),
+    )
+  })
+
+  it('adds handoff graph questions when brainstorming handoff manifests', () => {
+    const questionnaire = getAuthoringQuestionnaire({ kind: 'handoff_graph', domain: 'firmvault' })
+
+    const slugs = questionnaire.groups.map((group) => group.slug)
+    expect(slugs).toContain('handoff-graph')
+    expect(questionnaire.groups.flatMap((group) => group.questions)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ prompt: 'Which operators or human roles hand work to each other?', one_at_a_time: true }),
+        expect.objectContaining({ prompt: 'Which triggers start each handoff?', one_at_a_time: true }),
+        expect.objectContaining({ prompt: 'Which artifacts must exist before each handoff?', one_at_a_time: true }),
+      ]),
     )
   })
 })
