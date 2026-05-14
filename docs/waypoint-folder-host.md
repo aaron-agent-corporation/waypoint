@@ -50,12 +50,12 @@ waypoint firmvault add-document --source <path> --kind medical-records|bill|insu
 waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
 waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
 waypoint firmvault landmarks [--json]
-waypoint wizard scan --source <source> --domain firmvault --json
-waypoint wizard shadow --source <source> --target <case-root> --domain firmvault --json
-waypoint wizard questions --case <case-root> --json
-waypoint wizard answer --case <case-root> --question <id> --answer <text> --json
-waypoint wizard plan --case <case-root> --write-plan .waypoint/wizard/adoption-plan.yaml --json
-waypoint wizard apply --case <case-root> --plan .waypoint/wizard/adoption-plan.yaml --json
+waypoint wizard scan --source <path> --domain <domain> [--json]
+waypoint wizard shadow --source <path> --target <case-root> --domain <domain> [--json]
+waypoint wizard questions --case <case-root> [--json]
+waypoint wizard answer --case <case-root> --question <id> --answer <text> [--json]
+waypoint wizard plan --case <case-root> [--write-plan .waypoint/wizard/adoption-plan.yaml] [--json]
+waypoint wizard apply --case <case-root> [--plan .waypoint/wizard/adoption-plan.yaml] [--json]
 waypoint quests
 waypoint recipes [--quest <slug>]
 waypoint start [--quest <slug>]
@@ -260,6 +260,17 @@ Waypoint Wizard is the safe bridge for messy source folders that do not already 
 For FirmVault, shadows and filenames do not satisfy legal facts. Only approved proposed facts are applied, and apply uses the existing FirmVault safe state APIs rather than hand-editing `.waypoint/firmvault/*.yaml`.
 
 Typical command flow:
+
+```bash
+waypoint wizard scan --source <path> --domain <domain> [--json]
+waypoint wizard shadow --source <path> --target <case-root> --domain <domain> [--json]
+waypoint wizard questions --case <case-root> [--json]
+waypoint wizard answer --case <case-root> --question <id> --answer <text> [--json]
+waypoint wizard plan --case <case-root> [--write-plan .waypoint/wizard/adoption-plan.yaml] [--json]
+waypoint wizard apply --case <case-root> [--plan .waypoint/wizard/adoption-plan.yaml] [--json]
+```
+
+Concrete FirmVault shorthand:
 
 ```bash
 waypoint wizard scan --source <source> --domain firmvault --json

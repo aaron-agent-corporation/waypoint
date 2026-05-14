@@ -66,7 +66,7 @@ projects:
     const config = readFileSync(join(fixture.project.path, '.waypoint/config.yaml'), 'utf8')
     expect(config).toContain('recipe: local')
     expect(config).toContain(hermesRuntimeAdapter)
-  }, 20000)
+  }, 30000)
 
   it('leaves registered project paths explicit and fails closed for unknown registry project names', async () => {
     const fixture = makeProject()

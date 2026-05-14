@@ -131,9 +131,12 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW9 — Final verification and push
 
-- [ ] WW9.1 — Run final smoke and full verification gates
-- [ ] WW9.2 — Push clean synced main
-- [ ] WW9.3 — Pause heartbeat with final report
+- [x] WW9.1 — Run final smoke and full verification gates
+  - Completed: final smoke, Wizard/FirmVault targeted Vitest, full `pnpm test`, `pnpm build`, and `pnpm verify:built-imports` passed on 2026-05-14. Final cleanup aligned folder-host Wizard docs with the CLI help registry and raised the Hermes end-to-end smoke per-test timeout to match observed full-suite timing.
+- [x] WW9.2 — Push clean synced main
+  - Completed: final verification commit was pushed to `origin/main`; local `HEAD` matched remote `refs/heads/main` on 2026-05-14.
+- [x] WW9.3 — Pause heartbeat with final report
+  - Completed: heartbeat paused after final report on 2026-05-14.
 
 ## Next heartbeat instruction
 
