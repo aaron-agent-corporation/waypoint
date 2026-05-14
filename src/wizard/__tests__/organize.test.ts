@@ -1,11 +1,21 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
-import { createWizardOrganizedDocumentEntry } from '../organize'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { parse as yamlParse } from 'yaml'
+
+import {
+  buildWizardOrganizationPlan,
+  createWizardOrganizedDocumentEntry,
+  writeWizardOrganizationPlan,
+} from '../organize'
 import type {
   WizardOrganizeCopyDecision,
   WizardOrganizedDocumentEntry,
   WizardOrganizeLegalBoundary,
   WizardOrganizationPlan,
+  WizardShadowRecord,
 } from '../types'
 
 describe('Waypoint Wizard organize mode contracts', () => {
@@ -99,4 +109,110 @@ describe('Waypoint Wizard organize mode contracts', () => {
       documents: WizardOrganizedDocumentEntry[]
     }>()
   })
+
+  it('builds and writes a deterministic shadow-only organization plan without copying source files', async () => {
+    const shadows: WizardShadowRecord[] = [
+      shadowRecord({
+        id: 'shadow-002',
+        filename: 'Mystery Upload.pdf',
+        kind: 'unknown',
+        confidence: 'low',
+        reviewRequired: true,
+        shadowPath: '.waypoint/shadows/firmvault/unknown/mystery-upload.md',
+      }),
+      shadowRecord({
+        id: 'shadow-001',
+        filename: 'Insurance Policy.pdf',
+        kind: 'insurance',
+        confidence: 'high',
+        reviewRequired: false,
+        shadowPath: '.waypoint/shadows/firmvault/insurance/insurance-policy.md',
+      }),
+    ]
+
+    const plan = buildWizardOrganizationPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/messy-case',
+      targetCaseRoot: '/tmp/organized-case',
+      shadows,
+      generatedAt: '2026-05-14T12:00:00.000Z',
+    })
+
+    expect(plan).toMatchObject({
+      schema_version: 1,
+      domain: 'firmvault',
+      source_root: '/tmp/messy-case',
+      target_case_root: '/tmp/organized-case',
+      generated_at: '2026-05-14T12:00:00.000Z',
+      source_files_read_only: true,
+      legal_facts_from_organization: 'forbidden',
+      questions: [
+        {
+          id: 'organize-q-001',
+          status: 'pending',
+          prompt: 'What canonical FirmVault document category should Mystery Upload.pdf use?',
+          related_shadow_paths: ['.waypoint/shadows/firmvault/unknown/mystery-upload.md'],
+        },
+      ],
+    })
+    expect(plan.documents.map((document) => document.id)).toEqual(['doc-001', 'doc-002'])
+    expect(plan.documents.map((document) => document.canonical_document_path)).toEqual([
+      'documents/insurance/insurance-policy.pdf',
+      'documents/unknown/mystery-upload.pdf',
+    ])
+    expect(plan.documents.every((document) => document.copy_decision.mode === 'shadow_only')).toBe(true)
+    expect(plan.documents.every((document) => document.copy_decision.status === 'skipped')).toBe(true)
+    expect(plan.documents.every((document) => document.legal_boundary.legal_facts_from_copied_files === 'forbidden')).toBe(true)
+    expect(plan.warnings).toContain('Unknown or ambiguous source files were assigned to documents/unknown/ and require Wizard review.')
+
+    const caseRoot = await mkdtemp(join(tmpdir(), 'waypoint-organize-plan-'))
+    try {
+      const result = await writeWizardOrganizationPlan({ caseRoot, plan })
+      expect(result).toEqual({
+        path: join(caseRoot, '.waypoint/wizard/organization-plan.yaml'),
+        relative_path: '.waypoint/wizard/organization-plan.yaml',
+        documents_planned: 2,
+        source_files_copied: 0,
+      })
+      const parsed = yamlParse(await readFile(result.path, 'utf8')) as WizardOrganizationPlan
+      expect(parsed.documents.map((document) => document.canonical_document_path)).toEqual([
+        'documents/insurance/insurance-policy.pdf',
+        'documents/unknown/mystery-upload.pdf',
+      ])
+      expect(parsed.source_files_read_only).toBe(true)
+      expect(parsed.legal_facts_from_organization).toBe('forbidden')
+    } finally {
+      await rm(caseRoot, { recursive: true, force: true })
+    }
+  })
 })
+
+function shadowRecord(input: {
+  id: string
+  filename: string
+  kind: string
+  confidence: 'low' | 'medium' | 'high'
+  reviewRequired: boolean
+  shadowPath: string
+}): WizardShadowRecord {
+  return {
+    id: input.id,
+    domain: 'firmvault',
+    shadow_path: input.shadowPath,
+    source: {
+      path: `/tmp/messy-case/${input.filename}`,
+      root_relative_path: input.filename,
+      sha256: input.id.padEnd(64, '0'),
+      size_bytes: 1024,
+      media_type: 'application/pdf',
+      discovered_at: '2026-05-14T00:00:00.000Z',
+    },
+    classification: {
+      kind: input.kind,
+      confidence: input.confidence,
+      rationale: `${input.kind} fixture`,
+      review_required: input.reviewRequired,
+    },
+    review_status: 'pending',
+  }
+}

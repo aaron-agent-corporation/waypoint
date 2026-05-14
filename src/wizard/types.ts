@@ -195,6 +195,7 @@ export interface WizardOrganizationPlan {
   source_files_read_only: true
   legal_facts_from_organization: 'forbidden'
   documents: WizardOrganizedDocumentEntry[]
+  questions: WizardQuestion[]
   warnings: string[]
 }
 
