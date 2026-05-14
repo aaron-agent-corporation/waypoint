@@ -73,6 +73,7 @@ Usage:
   waypoint author plan --design docs/plans/<file>.md [--allow-unapproved-draft] [--json]
   waypoint author recipe --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint author quest --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
+  waypoint author handoff --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
