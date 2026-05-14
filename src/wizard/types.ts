@@ -29,6 +29,15 @@ export interface WizardClassification {
 export interface WizardPiiMetadata {
   masked: boolean
   strategy: string
+  raw_text_included?: boolean
+  source_content_policy?: 'not_copied' | 'masked_excerpt' | 'summary_only'
+  notes?: string[]
+}
+
+export interface WizardExtractionMetadata {
+  status: 'stub' | 'extracted' | 'failed'
+  method: string
+  raw_text_included: boolean
   notes?: string[]
 }
 
@@ -38,6 +47,7 @@ export interface WizardShadowDocumentFrontmatter {
   domain: WizardDomain
   source: WizardSourcePointer
   pii: WizardPiiMetadata
+  extraction?: WizardExtractionMetadata
   classification: WizardClassification
   waypoint: {
     canonical_path: string

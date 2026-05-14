@@ -55,6 +55,16 @@ describe('createWizardShadows', () => {
       expect(parsed.frontmatter.source.size_bytes).toBe(shadow.source.size_bytes)
       expect(parsed.frontmatter.pii.masked).toBe(true)
       expect(parsed.frontmatter.pii.strategy).toBeTruthy()
+      expect(parsed.frontmatter.pii.raw_text_included).toBe(false)
+      expect(parsed.frontmatter.pii.source_content_policy).toBe('not_copied')
+      expect(parsed.frontmatter.pii.notes).toEqual(
+        expect.arrayContaining(['Source contents are not copied into this shadow by default.']),
+      )
+      expect(parsed.frontmatter.extraction).toMatchObject({
+        status: 'stub',
+        method: 'deterministic-stub-v1',
+        raw_text_included: false,
+      })
       expect(parsed.frontmatter.classification.kind).toBe(shadow.classification.kind)
       expect(parsed.frontmatter.classification.confidence).toBe(shadow.classification.confidence)
       expect(parsed.frontmatter.review.status).toBe('pending')

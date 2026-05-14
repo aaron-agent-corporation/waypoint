@@ -111,6 +111,15 @@ export async function createWizardShadows(input: CreateWizardShadowsInput): Prom
       pii: {
         masked: true,
         strategy: piiStrategy,
+        raw_text_included: false,
+        source_content_policy: 'not_copied' as const,
+        notes: ['Source contents are not copied into this shadow by default.'],
+      },
+      extraction: {
+        status: 'stub' as const,
+        method: 'deterministic-stub-v1',
+        raw_text_included: false,
+        notes: ['OCR/extraction is intentionally deferred; this shadow contains a deterministic safe stub.'],
       },
       classification: {
         kind: classification.kind,
@@ -125,7 +134,7 @@ export async function createWizardShadows(input: CreateWizardShadowsInput): Prom
       },
     } satisfies import('./types').WizardShadowDocumentFrontmatter
 
-    const body = `# Shadow for ${baseName}\n\nThis is a Waypoint Wizard shadow for the source file recorded in frontmatter.\n`
+    const body = `# Shadow for ${baseName}\n\nThis is a Waypoint Wizard shadow for the source file recorded in frontmatter.\n\nSource contents were not copied into this shadow. Extraction is currently a safe deterministic stub; legal facts remain unsatisfied until explicitly reviewed and applied through safe state APIs.\n`
 
     // Import serializeWizardShadowMarkdown dynamically to avoid circular dep
     const { serializeWizardShadowMarkdown } = await import('./shadow-frontmatter')

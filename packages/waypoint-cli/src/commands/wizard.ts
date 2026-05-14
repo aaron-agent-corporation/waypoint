@@ -1,4 +1,4 @@
-import { scanWizardSource } from '@waypoint/core'
+import { isWizardDomain, scanWizardSource } from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
 
@@ -40,6 +40,11 @@ export async function runWizardScan(args: readonly string[], io: WaypointCliIo):
 
   if (!domain) {
     io.stderr('Missing required option: --domain <domain>')
+    return 1
+  }
+
+  if (!isWizardDomain(domain)) {
+    io.stderr(`Unsupported Wizard domain: ${domain}`)
     return 1
   }
 

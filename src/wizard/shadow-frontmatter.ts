@@ -59,6 +59,17 @@ function assertWizardShadowDocumentFrontmatter(
     throw new Error('Wizard frontmatter PII metadata is invalid')
   }
 
+  if (
+    'extraction' in value &&
+    value.extraction !== undefined &&
+    (!isRecord(value.extraction) ||
+      typeof value.extraction.status !== 'string' ||
+      typeof value.extraction.method !== 'string' ||
+      typeof value.extraction.raw_text_included !== 'boolean')
+  ) {
+    throw new Error('Wizard frontmatter extraction metadata is invalid')
+  }
+
   if (!isRecord(value.classification) || typeof value.classification.kind !== 'string') {
     throw new Error('Wizard frontmatter classification is invalid')
   }

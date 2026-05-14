@@ -70,7 +70,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Completed: read-only recursive inventory with deterministic ordering, sha256, size, extension, and media hints on 2026-05-14.
 - [x] WW2.2 — Add file hashing and media-ish metadata
   - Completed: `src/wizard/scan.ts` records sha256, size, extension, `media_type`, and `media_hint`; `pnpm exec vitest run src/wizard/__tests__/scan.test.ts` passed with 1 test on 2026-05-14.
-- [ ] WW2.3 — Add `waypoint wizard scan --source <path> --domain <domain> --json`
+- [x] WW2.3 — Add `waypoint wizard scan --source <path> --domain <domain> --json`
+  - Completed: repo already contained `packages/waypoint-cli/src/commands/wizard.ts` plus `bin.ts` dispatch/help; `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts` passed with 4 tests on 2026-05-14.
 
 ### WW3 — Markdown shadow generation
 
@@ -78,7 +79,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Files: `src/wizard/shadows.ts`, `src/wizard/__tests__/shadows.test.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts`
   - Completed: 4/4 tests passing on 2026-05-14. Deterministic markdown shadows with frontmatter, safe paths, PII metadata, domain-aware rejection.
-- [ ] WW3.2 — Add basic PII metadata and safe extracted-text/stub body behavior
+- [x] WW3.2 — Add basic PII metadata and safe extracted-text/stub body behavior
+  - Completed: shadows now record raw-text exclusion, source-content policy, extraction stub metadata, and safe stub body text; `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts src/wizard/__tests__/shadow-frontmatter.test.ts packages/waypoint-cli/src/commands/wizard.test.ts` passed with 11 tests on 2026-05-14.
 - [ ] WW3.3 — Add `waypoint wizard shadow --source <path> --target <case-root> --domain <domain> --json`
 
 ### WW4 — FirmVault classifier and proposed fact mappings
