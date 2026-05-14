@@ -57,9 +57,10 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 - [x] WW1.2 — Add source path and target path safety helpers
   - Files: `src/wizard/paths.ts`, `src/wizard/__tests__/paths.test.ts`, `src/index.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/paths.test.ts`
-- [ ] WW1.3 — Add Wizard frontmatter serialization contract
+- [x] WW1.3 — Add Wizard frontmatter serialization contract
   - Files: `src/wizard/shadow-frontmatter.ts`, `src/wizard/__tests__/shadow-frontmatter.test.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/shadow-frontmatter.test.ts`
+  - Completed: `pnpm exec vitest run src/wizard/__tests__/types.test.ts src/wizard/__tests__/paths.test.ts src/wizard/__tests__/shadow-frontmatter.test.ts` passed with 13 tests on 2026-05-14.
 
 ### WW2 — Read-only Wizard scan
 

@@ -224,6 +224,14 @@ export {
   safeWizardArtifactPath,
   slugifyWizardPathSegment,
 } from './wizard/paths'
+export {
+  parseWizardShadowMarkdown,
+  serializeWizardShadowMarkdown,
+} from './wizard/shadow-frontmatter'
+export type {
+  ParsedWizardShadowMarkdown,
+  SerializeWizardShadowMarkdownInput,
+} from './wizard/shadow-frontmatter'
 export type {
   WizardAdoptionPlan,
   WizardAnswer,
