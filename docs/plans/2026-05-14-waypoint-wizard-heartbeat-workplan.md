@@ -64,7 +64,10 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW2 — Read-only Wizard scan
 
-- [ ] WW2.1 — Implement recursive source inventory
+- [x] WW2.1 — Implement recursive source inventory
+  - Files: `src/wizard/scan.ts`, `src/wizard/__tests__/scan.test.ts`, `src/index.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/scan.test.ts`
+  - Completed: read-only recursive inventory with deterministic ordering, sha256, size, extension, and media hints on 2026-05-14.
 - [ ] WW2.2 — Add file hashing and media-ish metadata
 - [ ] WW2.3 — Add `waypoint wizard scan --source <path> --domain <domain> --json`
 

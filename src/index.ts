@@ -224,6 +224,8 @@ export {
   safeWizardArtifactPath,
   slugifyWizardPathSegment,
 } from './wizard/paths'
+export { scanWizardSource } from './wizard/scan'
+export type { ScanWizardSourceInput } from './wizard/scan'
 export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,
