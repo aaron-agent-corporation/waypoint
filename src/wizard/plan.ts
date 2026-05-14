@@ -38,20 +38,60 @@ export interface WriteWizardAdoptionPlanResult {
 const ADOPTION_PLAN_RELATIVE_PATH = safeWizardArtifactPath('adoption-plan.yaml')
 
 export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): WizardAdoptionPlan {
+  const proposedFacts = input.proposedFacts.map((fact) => ({
+    ...fact,
+    approved: false,
+  }))
+  const classifications = Array.from(
+    input.shadows.reduce((summaries, shadow) => {
+      const existing = summaries.get(shadow.classification.kind) ?? {
+        kind: shadow.classification.kind,
+        count: 0,
+        review_required: 0,
+      }
+      existing.count += 1
+      if (shadow.classification.review_required) {
+        existing.review_required += 1
+      }
+      summaries.set(shadow.classification.kind, existing)
+      return summaries
+    }, new Map<string, { kind: string; count: number; review_required: number }>()),
+  )
+    .map(([, summary]) => summary)
+    .sort((a, b) => a.kind.localeCompare(b.kind))
+
   return {
     schema_version: 1,
     domain: input.domain,
     source_root: input.sourceRoot,
     target_case_root: input.targetCaseRoot,
-    shadows: [...input.shadows],
-    proposed_facts: input.proposedFacts.map((fact) => ({
-      ...fact,
-      approved: false,
+    source_inventory: {
+      files_found: input.shadows.length,
+      files: input.shadows.map((shadow) => ({ ...shadow.source })),
+    },
+    shadow_map: input.shadows.map((shadow) => ({
+      shadow_path: shadow.shadow_path,
+      source_path: shadow.source.path,
+      source_sha256: shadow.source.sha256,
+      classification_kind: shadow.classification.kind,
+      review_status: shadow.review_status,
     })),
+    classifications,
+    shadows: [...input.shadows],
+    proposed_facts: proposedFacts,
     questions: [...input.questions],
     answers: [...input.answers],
+    q_and_a: {
+      questions_total: input.questions.length,
+      questions_pending: input.questions.filter((question) => question.status === 'pending').length,
+      answers_total: input.answers.length,
+    },
     missing_expected_documents: [...input.missingExpectedDocuments].sort(),
     warnings: [...input.warnings],
+    approvals: {
+      approved_facts: proposedFacts.filter((fact) => fact.approved).length,
+      unapproved_facts: proposedFacts.filter((fact) => !fact.approved).length,
+    },
     safety: {
       external_side_effects: 'forbidden',
       source_mutation: 'forbidden',

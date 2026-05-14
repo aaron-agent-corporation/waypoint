@@ -106,7 +106,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 - [x] WW6.1 — Generate `.waypoint/wizard/adoption-plan.yaml`
   - Completed: added Wizard adoption plan builder and YAML writer under `.waypoint/wizard/adoption-plan.yaml`; proposed facts are forced to `approved: false` in generated plans and safety boundaries are recorded. `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 9 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
-- [ ] WW6.2 — Include source inventory, shadow map, classifications, Q&A, proposed facts, missing docs, warnings, and approvals
+- [x] WW6.2 — Include source inventory, shadow map, classifications, Q&A, proposed facts, missing docs, warnings, and approvals
+  - Completed: adoption plans now include source inventory, shadow map, classification summary, Q&A summary, approval summary, proposed facts, missing-doc checklist, and warnings; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 10 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
 - [ ] WW6.3 — Add `waypoint wizard plan --case <case-root> --json`
 
 ### WW7 — Approved apply through FirmVault state APIs

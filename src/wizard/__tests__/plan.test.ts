@@ -99,6 +99,60 @@ describe('Wizard adoption plans', () => {
     })
   })
 
+  it('includes source inventory, shadow map, classifications, Q&A, approvals, and review summaries', () => {
+    const plan = buildWizardAdoptionPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/source',
+      targetCaseRoot: '/tmp/case',
+      shadows: [shadow('contracts', 'Fee Agreement'), shadow('unknown', 'scan-001')],
+      proposedFacts: [proposedFact({ approved: true })],
+      questions: [
+        {
+          id: 'question-unknown-001',
+          prompt: 'What is scan-001?',
+          status: 'pending',
+          domain: 'firmvault',
+          related_shadow_paths: ['.waypoint/shadows/firmvault/unknown/scan-001.md'],
+        },
+      ],
+      answers: [
+        {
+          question_id: 'question-duplicate-001',
+          answer: 'Use the executed fee agreement.',
+          answered_at: '2026-05-14T01:00:00.000Z',
+        },
+      ],
+      missingExpectedDocuments: ['client.authorizations.hipaa'],
+      warnings: ['Review unknown classifications before apply.'],
+    }) as any
+
+    expect(plan.source_inventory).toEqual({
+      files_found: 2,
+      files: [
+        expect.objectContaining({ root_relative_path: 'Fee Agreement.pdf', sha256: 'hash-Fee Agreement' }),
+        expect.objectContaining({ root_relative_path: 'scan-001.pdf', sha256: 'hash-scan-001' }),
+      ],
+    })
+    expect(plan.shadow_map).toEqual([
+      expect.objectContaining({
+        shadow_path: '.waypoint/shadows/firmvault/contracts/Fee Agreement.md',
+        source_path: '/tmp/source/Fee Agreement.pdf',
+        source_sha256: 'hash-Fee Agreement',
+      }),
+      expect.objectContaining({
+        shadow_path: '.waypoint/shadows/firmvault/unknown/scan-001.md',
+        source_path: '/tmp/source/scan-001.pdf',
+        source_sha256: 'hash-scan-001',
+      }),
+    ])
+    expect(plan.classifications).toEqual([
+      { kind: 'contracts', count: 1, review_required: 0 },
+      { kind: 'unknown', count: 1, review_required: 1 },
+    ])
+    expect(plan.q_and_a).toEqual({ questions_total: 1, questions_pending: 1, answers_total: 1 })
+    expect(plan.approvals).toEqual({ approved_facts: 0, unapproved_facts: 1 })
+  })
+
   it('writes adoption-plan.yaml under the case .waypoint/wizard directory', async () => {
     const caseRoot = await mkdtemp(join(tmpdir(), 'waypoint-wizard-plan-'))
     const plan = buildWizardAdoptionPlan({

@@ -105,17 +105,52 @@ export interface WizardScanResult {
   warnings: string[]
 }
 
+export interface WizardPlanSourceInventory {
+  files_found: number
+  files: WizardSourcePointer[]
+}
+
+export interface WizardPlanShadowMapEntry {
+  shadow_path: string
+  source_path: string
+  source_sha256: string
+  classification_kind: string
+  review_status: WizardReviewStatus
+}
+
+export interface WizardPlanClassificationSummary {
+  kind: string
+  count: number
+  review_required: number
+}
+
+export interface WizardPlanQuestionAnswerSummary {
+  questions_total: number
+  questions_pending: number
+  answers_total: number
+}
+
+export interface WizardPlanApprovalSummary {
+  approved_facts: number
+  unapproved_facts: number
+}
+
 export interface WizardAdoptionPlan {
   schema_version: 1
   domain: WizardDomain
   source_root: string
   target_case_root: string
+  source_inventory: WizardPlanSourceInventory
+  shadow_map: WizardPlanShadowMapEntry[]
+  classifications: WizardPlanClassificationSummary[]
   shadows: WizardShadowRecord[]
   proposed_facts: WizardProposedFact[]
   questions: WizardQuestion[]
   answers: WizardAnswer[]
+  q_and_a: WizardPlanQuestionAnswerSummary
   missing_expected_documents: string[]
   warnings: string[]
+  approvals: WizardPlanApprovalSummary
   safety: {
     external_side_effects: 'forbidden'
     source_mutation: 'forbidden'
