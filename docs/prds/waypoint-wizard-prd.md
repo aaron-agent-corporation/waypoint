@@ -24,7 +24,9 @@ Waypoint-owned structured workflow state
 
 The bridge is not copying all real files into a canonical case folder. The bridge is a **markdown shadow layer**: Waypoint creates organized markdown representations of user files, masks or summarizes sensitive material, preserves pointers to the real source files in frontmatter, and asks clarifying questions before applying workflow/legal state.
 
-## North-star user story
+## North-star user stories
+
+### Shadow/adoption story
 
 A user says:
 
@@ -54,6 +56,33 @@ real user files anywhere on disk
   -> approved state mutations only
   -> post-adoption guidance
 ```
+
+### Organize/fix-my-files story
+
+A user says:
+
+> Here are my messy files. I want to use your system. Make them look like a good Waypoint case.
+
+Waypoint Wizard should let an agent or CLI run:
+
+```bash
+waypoint wizard organize --source /path/to/messy/files --target /path/to/new-waypoint-case --domain firmvault --copy-files --json
+```
+
+And produce a clean Waypoint-owned case package:
+
+```text
+messy user files, read-only by default
+  -> canonical Waypoint/FirmVault folder skeleton
+  -> optional copied documents with safe deterministic names
+  -> markdown shadows and source manifest for every source/copy
+  -> human-readable README/indexes/checklists
+  -> unresolved files in unknown/review buckets
+  -> one-question-at-a-time clarification only where needed
+  -> adoption plan for approved state changes
+```
+
+This is a concierge onboarding mode. It should feel like "fix my folder" rather than "interview me first," while still preserving legal/workflow truth boundaries.
 
 ## Goals
 
@@ -90,6 +119,11 @@ real user files anywhere on disk
 7. **Integrate with existing Waypoint primitives**
    - FirmVault facts, evidence validation, guidance, operator manifests, tool registry, handoffs, and authoring should all remain usable.
    - Wizard output should feed existing `firmvault state set` and `firmvault guidance` behavior instead of bypassing it.
+
+8. **Offer a clean organized package on request**
+   - A user can ask Waypoint to turn messy files into a clean Waypoint-owned case workspace.
+   - The Wizard can create canonical folders, indexes, checklists, shadows, manifests, and optionally copied documents.
+   - Organization makes the case usable and nice to work in, but does not itself prove legal progress.
 
 ## Non-goals
 
