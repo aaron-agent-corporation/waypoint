@@ -92,7 +92,7 @@ describe('createWizardShadows', () => {
       s.source.root_relative_path?.includes('unknown-folder'),
     )
     expect(unknownShadow).toBeTruthy()
-    expect(unknownShadow!.shadow_path).toContain('unknown-folder/')
+    expect(unknownShadow!.shadow_path).toContain('unknown/')
   })
 
   it('generates deterministic shadow paths using slugified category and filename', async () => {

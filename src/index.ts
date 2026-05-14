@@ -226,8 +226,14 @@ export {
 } from './wizard/paths'
 export { scanWizardSource } from './wizard/scan'
 export type { ScanWizardSourceInput } from './wizard/scan'
-export { createWizardShadows, classifyFirmVaultSourceFile } from './wizard/shadows'
+export { createWizardShadows } from './wizard/shadows'
 export type { CreateWizardShadowsInput, CreateWizardShadowsResult } from './wizard/shadows'
+export {
+  FIRMVAULT_SHADOW_CATEGORIES,
+  classifyFirmVaultSourceFile,
+  isFirmVaultShadowCategory,
+} from './wizard/firmvault-classifier'
+export type { FirmVaultShadowCategory } from './wizard/firmvault-classifier'
 export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,

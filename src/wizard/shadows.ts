@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 
-import { assertWithinRoot, safeShadowRelativePath, slugifyWizardPathSegment } from './paths'
+import { classifyFirmVaultSourceFile } from './firmvault-classifier'
+import { safeShadowRelativePath, slugifyWizardPathSegment } from './paths'
 import { isWizardDomain, type WizardDomain, type WizardScanResult, type WizardShadowRecord } from './types'
 
 export interface CreateWizardShadowsInput {
@@ -13,47 +14,6 @@ export interface CreateWizardShadowsInput {
 export interface CreateWizardShadowsResult {
   target_root: string
   shadows: WizardShadowRecord[]
-}
-
-const FIRMVAULT_CATEGORY_KEYWORDS: Record<string, { keywords: string[]; rationale: string }> = {
-  contracts: {
-    keywords: ['fee agreement', 'engagement', 'retainer', 'contract', 'agreement'],
-    rationale: 'Filename contains contract-related keywords',
-  },
-  authorizations: {
-    keywords: ['hipaa', 'authorization', 'consent'],
-    rationale: 'Filename contains authorization-related keywords',
-  },
-  accident: {
-    keywords: ['police report', 'accident', 'crash', 'incident'],
-    rationale: 'Filename contains accident-related keywords',
-  },
-  bills: {
-    keywords: ['bill', 'invoice', 'statement'],
-    rationale: 'Filename contains billing-related keywords',
-  },
-  medical: {
-    keywords: ['medical', 'records', 'treatment', 'doctor', 'clinic', 'hospital'],
-    rationale: 'Filename contains medical-related keywords',
-  },
-  settlement: {
-    keywords: ['settlement', 'check', 'payment', 'disbursement', 'release'],
-    rationale: 'Filename contains settlement-related keywords',
-  },
-  correspondence: {
-    keywords: ['letter', 'email', 'memo', 'correspondence', 'notice'],
-    rationale: 'Filename contains correspondence-related keywords',
-  },
-}
-
-export function classifyFirmVaultSourceFile(name: string): { kind: string; confidence: 'low' | 'medium' | 'high'; rationale: string } {
-  const lower = name.toLowerCase()
-  for (const [category, info] of Object.entries(FIRMVAULT_CATEGORY_KEYWORDS)) {
-    if (info.keywords.some((kw) => lower.includes(kw))) {
-      return { kind: category, confidence: 'high', rationale: info.rationale }
-    }
-  }
-  return { kind: 'unknown', confidence: 'low', rationale: 'No matching classification keywords found' }
 }
 
 function mediaHintToPiiStrategy(mediaHint: string): string {
@@ -75,16 +35,9 @@ export async function createWizardShadows(input: CreateWizardShadowsInput): Prom
   const shadows: WizardShadowRecord[] = []
 
   for (const file of scan.files) {
-    const classification = classifyFirmVaultSourceFile(file.root_relative_path ?? file.path)
+    const classification = classifyFirmVaultSourceFile(file)
 
-    // Determine category: prefer directory name, fall back to classifier
-    let category = classification.kind
-    if (file.root_relative_path) {
-      const dir = path.dirname(file.root_relative_path)
-      if (dir && dir !== '.') {
-        category = dir.split('/')[0]
-      }
-    }
+    const category = classification.kind
 
     const slugifiedCategory = slugifyWizardPathSegment(category) || 'unknown'
     const baseName = path.basename(file.root_relative_path ?? file.path)

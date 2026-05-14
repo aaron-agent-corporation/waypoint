@@ -86,7 +86,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW4 — FirmVault classifier and proposed fact mappings
 
-- [ ] WW4.1 — Add FirmVault shadow categories and filename/path classifier
+- [x] WW4.1 — Add FirmVault shadow categories and filename/path classifier
+  - Completed: added canonical PRD category registry, deterministic filename/path classifier, and wired shadow generation to use classifier categories; `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 25 tests on 2026-05-14.
 - [ ] WW4.2 — Add proposed fact mapping generator
 - [ ] WW4.3 — Add missing-doc checklist and ambiguity detection
 
