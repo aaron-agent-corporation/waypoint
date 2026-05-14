@@ -126,7 +126,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Completed: added synthetic no-PII messy FirmVault source fixture under `examples/waypoint-wizard/firmvault-messy-source/` plus docs smoke coverage; `pnpm exec vitest run src/__tests__/waypoint-docs.test.ts --testNamePattern "synthetic no-PII"` passed on 2026-05-14.
 - [x] WW8.2 — Add `pnpm smoke:waypoint-wizard-firmvault`
   - Completed: added `scripts/waypoint-wizard-firmvault-smoke.mjs` plus package script covering Wizard scan → shadow → questions → answer → plan → approved apply → FirmVault guidance, with read-only fixture guard and unapproved-fact skip assertion; `pnpm smoke:waypoint-wizard-firmvault` passed on 2026-05-14. Adjacent gate `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts src/wizard/__tests__ packages/waypoint-folder-host/src/firmvault/state.test.ts` passed with 73 tests.
-- [ ] WW8.3 — Update docs and paralegal skill with Wizard usage
+- [x] WW8.3 — Update docs and paralegal skill with Wizard usage
+  - Completed: added `docs/waypoint-wizard.md`, updated folder-host command/docs coverage, and patched the paralegal FirmVault Waypoint skill with the Wizard command rail and safety boundaries; `pnpm exec vitest run src/__tests__/waypoint-docs.test.ts packages/waypoint-cli/src/commands/wizard.test.ts` and `pnpm smoke:waypoint-wizard-firmvault` passed on 2026-05-14.
 
 ### WW9 — Final verification and push
 

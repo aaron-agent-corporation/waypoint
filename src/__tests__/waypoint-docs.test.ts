@@ -270,6 +270,45 @@ describe('Waypoint Quest operator documentation', () => {
     }
   })
 
+  it('publishes the Waypoint Wizard usage guide and paralegal skill command rail', () => {
+    const guide = readRepoFile('docs/waypoint-wizard.md')
+    const folderHostGuide = readRepoFile('docs/waypoint-folder-host.md')
+    const paralegalSkill = readFileSync(
+      '/Users/aaronwhaley/.hermes/profiles/paralegal/skills/case-management/firmvault-waypoint-case-operations/SKILL.md',
+      'utf8',
+    )
+
+    for (const phrase of [
+      'Waypoint Wizard',
+      'source files remain wherever they are',
+      'read-only inputs',
+      'markdown shadows',
+      '.waypoint/shadows',
+      'frontmatter points back to the real source file',
+      'PII masking metadata',
+      'one-question-at-a-time',
+      'approval before apply',
+      'FirmVault state remains explicit',
+      'Shadows do not satisfy FirmVault legal facts',
+      'No external side effects',
+      'pnpm smoke:waypoint-wizard-firmvault',
+    ]) {
+      expect(guide).toContain(phrase)
+    }
+
+    for (const phrase of [
+      'waypoint wizard scan --source <source> --domain firmvault --json',
+      'waypoint wizard shadow --source <source> --target <case-root> --domain firmvault --json',
+      'waypoint wizard questions --case <case-root> --json',
+      'waypoint wizard answer --case <case-root> --question <id> --answer <text> --json',
+      'waypoint wizard plan --case <case-root> --write-plan .waypoint/wizard/adoption-plan.yaml --json',
+      'waypoint wizard apply --case <case-root> --plan .waypoint/wizard/adoption-plan.yaml --json',
+    ]) {
+      expect(folderHostGuide).toContain(phrase)
+      expect(paralegalSkill).toContain(phrase)
+    }
+  })
+
   it('publishes the authoring fixture for FirmVault dry-run draft generation', () => {
     const readme = readRepoFile('examples/authoring/README.md')
     const answers = JSON.parse(readRepoFile('examples/authoring/firmvault-followup.answers.json')) as {
