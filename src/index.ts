@@ -216,3 +216,22 @@ export type {
   GenerateAuthoringHandoffDraftResult,
   AuthoringHandoffStepDraft,
 } from './authoring/handoff-generator'
+
+export { WIZARD_DOMAINS, createWizardSourcePointer, isSafeWizardRelativePath, isWizardDomain } from './wizard/types'
+export type {
+  WizardAdoptionPlan,
+  WizardAnswer,
+  WizardClassification,
+  WizardConfidence,
+  WizardDomain,
+  WizardPiiMetadata,
+  WizardProposedFact,
+  WizardQuestion,
+  WizardQuestionStatus,
+  WizardReviewStatus,
+  WizardScanResult,
+  WizardShadowDocumentFrontmatter,
+  WizardShadowRecord,
+  WizardSourceFile,
+  WizardSourcePointer,
+} from './wizard/types'

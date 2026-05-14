@@ -51,7 +51,7 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW1 — Wizard core schemas and path safety
 
-- [ ] WW1.1 — Add Wizard shadow and scan types
+- [x] WW1.1 — Add Wizard shadow and scan types
   - Files: `src/wizard/types.ts`, `src/wizard/__tests__/types.test.ts`, `src/index.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/types.test.ts`
 - [ ] WW1.2 — Add source path and target path safety helpers
