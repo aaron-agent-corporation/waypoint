@@ -79,6 +79,53 @@ describe('wizard CLI', () => {
     expect(Array.isArray(json.files)).toBe(true)
   })
 
+  it('returns the next pending Wizard question for a case', async () => {
+    const { mkdir, mkdtemp, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+
+    const caseRoot = await mkdtemp(join(tmpdir(), 'wizard-questions-case-'))
+    await mkdir(join(caseRoot, '.waypoint', 'wizard'), { recursive: true })
+    await writeFile(
+      join(caseRoot, '.waypoint', 'wizard', 'questions.yaml'),
+      `schema_version: 1
+questions:
+  - id: question-b
+    prompt: Second question?
+    status: pending
+    domain: firmvault
+    related_shadow_paths: []
+  - id: question-a
+    prompt: First question?
+    status: pending
+    domain: firmvault
+    related_shadow_paths: []
+`,
+      'utf8',
+    )
+
+    const outputs: string[] = []
+    const errors: string[] = []
+    const io = {
+      stdout: (line: string) => outputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    }
+
+    const exitCode = await runWizardCommand(['questions', '--case', caseRoot, '--json'], io)
+
+    expect(exitCode).toBe(0)
+    expect(errors).toEqual([])
+    const json = JSON.parse(outputs.join('\n'))
+    expect(json.case_root).toBe(caseRoot)
+    expect(json.questions_found).toBe(2)
+    expect(json.next_question).toMatchObject({
+      id: 'question-a',
+      prompt: 'First question?',
+      status: 'pending',
+      domain: 'firmvault',
+    })
+  })
+
   it('rejects unknown domains', async () => {
     const outputs: string[] = []
     const errors: string[] = []

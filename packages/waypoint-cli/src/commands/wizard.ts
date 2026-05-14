@@ -1,4 +1,10 @@
-import { createWizardShadows, isWizardDomain, scanWizardSource } from '@waypoint/core'
+import {
+  createWizardShadows,
+  isWizardDomain,
+  nextWizardQuestion,
+  readWizardQuestions,
+  scanWizardSource,
+} from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
 
@@ -11,6 +17,10 @@ export async function runWizardCommand(args: readonly string[], io: WaypointCliI
 
   if (subcommand === 'shadow') {
     return runWizardShadow(args.slice(1), io)
+  }
+
+  if (subcommand === 'questions') {
+    return runWizardQuestions(args.slice(1), io)
   }
 
   io.stderr(`Unknown Wizard subcommand: ${subcommand ?? '(none)'}`)
@@ -143,6 +153,61 @@ export async function runWizardShadow(args: readonly string[], io: WaypointCliIo
       io.stdout(`Target: ${shadowResult.target_root}`)
       io.stdout(`Domain: ${domain}`)
       io.stdout(`Shadows created: ${shadowResult.shadows.length}`)
+    }
+
+    return 0
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    io.stderr(message)
+    return 1
+  }
+}
+
+export async function runWizardQuestions(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  let casePath: string | undefined
+  let jsonOutput = false
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--case' || arg === '-c') {
+      casePath = args[++i]
+    } else if (arg === '--json' || arg === '-j') {
+      jsonOutput = true
+    } else {
+      io.stderr(`Unknown option: ${arg}`)
+      return 1
+    }
+  }
+
+  if (!casePath) {
+    io.stderr('Missing required option: --case <case-root>')
+    return 1
+  }
+
+  try {
+    const questions = await readWizardQuestions({ caseRoot: casePath })
+    const nextQuestion = nextWizardQuestion(questions, []) ?? null
+    const response = {
+      case_root: casePath,
+      questions_found: questions.length,
+      pending_count: questions.filter((question) => question.status === 'pending').length,
+      next_question: nextQuestion,
+      questions,
+    }
+
+    if (jsonOutput) {
+      io.stdout(JSON.stringify(response, null, 2))
+    } else {
+      io.stdout(`Waypoint Wizard Questions`)
+      io.stdout(`=========================`)
+      io.stdout(`Case: ${casePath}`)
+      io.stdout(`Questions found: ${questions.length}`)
+      if (nextQuestion) {
+        io.stdout(`Next question: ${nextQuestion.id}`)
+        io.stdout(nextQuestion.prompt)
+      } else {
+        io.stdout('Next question: none')
+      }
     }
 
     return 0

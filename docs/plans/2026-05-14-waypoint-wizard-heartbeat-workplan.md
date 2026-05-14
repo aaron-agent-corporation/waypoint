@@ -97,7 +97,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 - [x] WW5.1 — Add question model persistence under `.waypoint/wizard/questions.yaml`
   - Completed: added deterministic ambiguity-to-question generation, one-at-a-time next-question selection with answer suppression, YAML persistence under `.waypoint/wizard/questions.yaml`, and core exports; `pnpm exec vitest run src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 7 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
-- [ ] WW5.2 — Add `waypoint wizard questions --case <case-root> --json`
+- [x] WW5.2 — Add `waypoint wizard questions --case <case-root> --json`
+  - Completed: added CLI question retrieval from `.waypoint/wizard/questions.yaml`, JSON/human output, and top-level help entry; `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts src/wizard/__tests__/questions.test.ts` passed with 9 tests on 2026-05-14.
 - [ ] WW5.3 — Add `waypoint wizard answer --case <case-root> --question <id> --answer <text> --json`
 
 ### WW6 — Adoption plan generation
