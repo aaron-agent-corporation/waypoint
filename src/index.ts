@@ -226,6 +226,8 @@ export {
 } from './wizard/paths'
 export { scanWizardSource } from './wizard/scan'
 export type { ScanWizardSourceInput } from './wizard/scan'
+export { createWizardShadows, classifyFirmVaultSourceFile } from './wizard/shadows'
+export type { CreateWizardShadowsInput, CreateWizardShadowsResult } from './wizard/shadows'
 export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,

@@ -81,7 +81,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Completed: 4/4 tests passing on 2026-05-14. Deterministic markdown shadows with frontmatter, safe paths, PII metadata, domain-aware rejection.
 - [x] WW3.2 — Add basic PII metadata and safe extracted-text/stub body behavior
   - Completed: shadows now record raw-text exclusion, source-content policy, extraction stub metadata, and safe stub body text; `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts src/wizard/__tests__/shadow-frontmatter.test.ts packages/waypoint-cli/src/commands/wizard.test.ts` passed with 11 tests on 2026-05-14.
-- [ ] WW3.3 — Add `waypoint wizard shadow --source <path> --target <case-root> --domain <domain> --json`
+- [x] WW3.3 — Add `waypoint wizard shadow --source <path> --target <case-root> --domain <domain> --json`
+  - Completed: CLI `wizard shadow` now scans read-only input, writes markdown shadows under the target case `.waypoint/shadows`, returns JSON paths/records, and appears in help; `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts src/wizard/__tests__/shadows.test.ts` passed with 9 tests on 2026-05-14.
 
 ### WW4 — FirmVault classifier and proposed fact mappings
 

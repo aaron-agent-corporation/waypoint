@@ -76,6 +76,7 @@ Usage:
   waypoint author quest --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint author handoff --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint wizard scan --source <path> --domain <domain> [--json]
+  waypoint wizard shadow --source <path> --target <case-root> --domain <domain> [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
