@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { stringify as yamlStringify } from 'yaml'
 
@@ -38,6 +39,7 @@ export interface WriteWizardOrganizationPlanResult {
 export interface WriteWizardOrganizedCasePackageInput {
   caseRoot: string
   plan: WizardOrganizationPlan
+  copyFiles?: boolean
 }
 
 export interface WriteWizardOrganizedCasePackageResult {
@@ -46,6 +48,7 @@ export interface WriteWizardOrganizedCasePackageResult {
   artifacts: string[]
   documents_planned: number
   source_files_copied: number
+  documents_copied: string[]
 }
 
 const ORGANIZATION_PLAN_RELATIVE_PATH = safeWizardArtifactPath('organization-plan.yaml')
@@ -168,36 +171,39 @@ export async function writeWizardOrganizedCasePackage(
   input: WriteWizardOrganizedCasePackageInput,
 ): Promise<WriteWizardOrganizedCasePackageResult> {
   const caseRoot = path.resolve(input.caseRoot)
-  const directories = buildOrganizedCaseDirectories(input.plan)
+  const workingPlan = cloneOrganizationPlan(input.plan)
+  const directories = buildOrganizedCaseDirectories(workingPlan)
   const artifacts: string[] = []
 
   for (const directory of directories) {
     await mkdir(safeCasePackagePath(caseRoot, directory), { recursive: true })
   }
 
-  artifacts.push(await writeCasePackageArtifact(caseRoot, 'README.md', renderCaseReadme(input.plan)))
+  const documentsCopied = input.copyFiles ? await copyOrganizedDocuments(caseRoot, workingPlan) : []
 
-  for (const category of organizationCategories(input.plan)) {
+  artifacts.push(await writeCasePackageArtifact(caseRoot, 'README.md', renderCaseReadme(workingPlan)))
+
+  for (const category of organizationCategories(workingPlan)) {
     artifacts.push(
       await writeCasePackageArtifact(
         caseRoot,
         `documents/${category}/README.md`,
-        renderCategoryReadme(category, input.plan.documents.filter((document) => documentCategory(document) === category)),
+        renderCategoryReadme(category, workingPlan.documents.filter((document) => documentCategory(document) === category)),
       ),
     )
   }
 
   artifacts.push(
-    await writeCasePackageArtifact(caseRoot, SOURCE_MANIFEST_RELATIVE_PATH, yamlStringify(buildSourceManifest(input.plan))),
+    await writeCasePackageArtifact(caseRoot, SOURCE_MANIFEST_RELATIVE_PATH, yamlStringify(buildSourceManifest(workingPlan))),
   )
-  const organizationPlanResult = await writeWizardOrganizationPlan({ caseRoot, plan: input.plan })
+  const organizationPlanResult = await writeWizardOrganizationPlan({ caseRoot, plan: workingPlan })
   artifacts.push(organizationPlanResult.relative_path)
-  artifacts.push(await writeCasePackageArtifact(caseRoot, ORGANIZE_REPORT_RELATIVE_PATH, renderOrganizeReport(input.plan)))
+  artifacts.push(await writeCasePackageArtifact(caseRoot, ORGANIZE_REPORT_RELATIVE_PATH, renderOrganizeReport(workingPlan)))
   artifacts.push(
     await writeCasePackageArtifact(
       caseRoot,
       MISSING_DOCUMENTS_CHECKLIST_RELATIVE_PATH,
-      renderMissingDocumentsChecklist(input.plan),
+      renderMissingDocumentsChecklist(workingPlan),
     ),
   )
 
@@ -205,13 +211,88 @@ export async function writeWizardOrganizedCasePackage(
     case_root: caseRoot,
     directories_created: directories,
     artifacts,
-    documents_planned: input.plan.documents.length,
-    source_files_copied: input.plan.documents.filter((document) => document.copy_decision.status === 'copied').length,
+    documents_planned: workingPlan.documents.length,
+    source_files_copied: documentsCopied.length,
+    documents_copied: documentsCopied,
   }
 }
 
 function sourceDisplayName(shadow: WizardShadowRecord): string {
   return path.basename(shadow.source.root_relative_path ?? shadow.source.path)
+}
+
+function cloneOrganizationPlan(plan: WizardOrganizationPlan): WizardOrganizationPlan {
+  return {
+    ...plan,
+    documents: plan.documents.map((document) => ({
+      ...document,
+      source: { ...document.source },
+      classification: { ...document.classification },
+      copy_decision: { ...document.copy_decision },
+      legal_boundary: { ...document.legal_boundary },
+    })),
+    questions: plan.questions.map((question) => ({
+      ...question,
+      related_shadow_paths: [...(question.related_shadow_paths ?? [])],
+    })),
+    warnings: [...plan.warnings],
+  }
+}
+
+async function copyOrganizedDocuments(caseRoot: string, plan: WizardOrganizationPlan): Promise<string[]> {
+  const copied: string[] = []
+  const usedDestinations = new Set<string>()
+
+  for (const document of plan.documents) {
+    const destinationPath = nextAvailableDestination(document.canonical_document_path, usedDestinations)
+    assertSafeOrganizeRelativePath(destinationPath, 'copy destination path')
+
+    const sourceBytes = await readFile(document.source.path)
+    const sourceHash = createHash('sha256').update(sourceBytes).digest('hex')
+    if (sourceHash !== document.source.sha256) {
+      throw new Error(`Source hash mismatch for ${document.source.path}`)
+    }
+
+    const outputPath = safeCasePackagePath(caseRoot, destinationPath)
+    await mkdir(path.dirname(outputPath), { recursive: true })
+    await writeFile(outputPath, sourceBytes)
+
+    const copiedBytes = await readFile(outputPath)
+    const copiedHash = createHash('sha256').update(copiedBytes).digest('hex')
+    if (copiedHash !== sourceHash) {
+      throw new Error(`Copied hash mismatch for ${destinationPath}`)
+    }
+
+    document.canonical_document_path = destinationPath
+    document.copy_decision = {
+      mode: 'copy_requested',
+      status: 'copied',
+      destination_path: destinationPath,
+      source_sha256_verified: sourceHash,
+    }
+    copied.push(destinationPath)
+  }
+
+  return copied
+}
+
+function nextAvailableDestination(requestedPath: string, usedDestinations: Set<string>): string {
+  assertSafeOrganizeRelativePath(requestedPath, 'copy destination path')
+  if (!usedDestinations.has(requestedPath)) {
+    usedDestinations.add(requestedPath)
+    return requestedPath
+  }
+
+  const parsed = path.posix.parse(requestedPath)
+  let counter = 2
+  while (true) {
+    const candidate = path.posix.join(parsed.dir, `${parsed.name}-${String(counter).padStart(3, '0')}${parsed.ext}`)
+    if (!usedDestinations.has(candidate)) {
+      usedDestinations.add(candidate)
+      return candidate
+    }
+    counter += 1
+  }
 }
 
 function canonicalOrganizationCategory(kind: string): string {
@@ -272,6 +353,7 @@ function buildSourceManifest(plan: WizardOrganizationPlan): Record<string, unkno
       classification_kind: document.classification.kind,
       review_status: document.review_status,
       copy_status: document.copy_decision.status,
+      copied_sha256: document.copy_decision.source_sha256_verified,
     })),
   }
 }

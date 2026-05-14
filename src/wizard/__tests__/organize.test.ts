@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parse as yamlParse } from 'yaml'
@@ -159,6 +160,7 @@ describe('Waypoint Wizard organize mode contracts', () => {
         ]),
         documents_planned: 2,
         source_files_copied: 0,
+        documents_copied: [],
       })
 
       expect(await readFile(join(caseRoot, 'README.md'), 'utf8')).toContain('Waypoint Wizard organized case package')
@@ -187,6 +189,92 @@ describe('Waypoint Wizard organize mode contracts', () => {
 
       expect(await readdir(join(caseRoot, 'documents'))).toEqual(['insurance', 'unknown'])
     } finally {
+      await rm(caseRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('copies source files into deterministic canonical destinations only when explicitly requested', async () => {
+    const sourceRoot = await mkdtemp(join(tmpdir(), 'waypoint-messy-source-'))
+    const caseRoot = await mkdtemp(join(tmpdir(), 'waypoint-organized-copy-'))
+
+    try {
+      const insuranceSource = join(sourceRoot, 'Insurance Policy.pdf')
+      const billSource = join(sourceRoot, 'Insurance Policy (copy).pdf')
+      await writeFile(insuranceSource, 'policy bytes', 'utf8')
+      await writeFile(billSource, 'bill bytes', 'utf8')
+      const beforeSourceHashes = await sourceTreeHashes(sourceRoot)
+
+      const plan = buildWizardOrganizationPlan({
+        domain: 'firmvault',
+        sourceRoot,
+        targetCaseRoot: caseRoot,
+        shadows: [
+          shadowRecord({
+            id: 'shadow-001',
+            filename: 'Insurance Policy.pdf',
+            kind: 'insurance',
+            confidence: 'high',
+            reviewRequired: false,
+            shadowPath: '.waypoint/shadows/firmvault/insurance/insurance-policy.md',
+          }),
+          shadowRecord({
+            id: 'shadow-002',
+            filename: 'Insurance Policy (copy).pdf',
+            kind: 'insurance',
+            confidence: 'high',
+            reviewRequired: false,
+            shadowPath: '.waypoint/shadows/firmvault/insurance/insurance-policy-copy.md',
+          }),
+        ],
+        generatedAt: '2026-05-14T12:00:00.000Z',
+      })
+      plan.documents[0]!.source.path = billSource
+      plan.documents[0]!.source.root_relative_path = 'Insurance Policy (copy).pdf'
+      plan.documents[0]!.source.sha256 = beforeSourceHashes['Insurance Policy (copy).pdf']!
+      plan.documents[0]!.canonical_document_path = 'documents/insurance/insurance-policy.pdf'
+      plan.documents[0]!.copy_decision.destination_path = 'documents/insurance/insurance-policy.pdf'
+      plan.documents[1]!.source.path = insuranceSource
+      plan.documents[1]!.source.root_relative_path = 'Insurance Policy.pdf'
+      plan.documents[1]!.source.sha256 = beforeSourceHashes['Insurance Policy.pdf']!
+      plan.documents[1]!.canonical_document_path = 'documents/insurance/insurance-policy.pdf'
+      plan.documents[1]!.copy_decision.destination_path = 'documents/insurance/insurance-policy.pdf'
+
+      const result = await writeWizardOrganizedCasePackage({ caseRoot, plan, copyFiles: true })
+
+      expect(result.source_files_copied).toBe(2)
+      expect(result.documents_copied).toEqual([
+        'documents/insurance/insurance-policy.pdf',
+        'documents/insurance/insurance-policy-002.pdf',
+      ])
+      expect(await readFile(join(caseRoot, 'documents/insurance/insurance-policy.pdf'), 'utf8')).toBe('bill bytes')
+      expect(await readFile(join(caseRoot, 'documents/insurance/insurance-policy-002.pdf'), 'utf8')).toBe('policy bytes')
+      expect(await sourceTreeHashes(sourceRoot)).toEqual(beforeSourceHashes)
+
+      const copiedPlan = yamlParse(await readFile(join(caseRoot, '.waypoint/wizard/organization-plan.yaml'), 'utf8')) as WizardOrganizationPlan
+      expect(copiedPlan.documents.map((document) => document.copy_decision)).toEqual([
+        {
+          mode: 'copy_requested',
+          status: 'copied',
+          destination_path: 'documents/insurance/insurance-policy.pdf',
+          source_sha256_verified: beforeSourceHashes['Insurance Policy (copy).pdf'],
+        },
+        {
+          mode: 'copy_requested',
+          status: 'copied',
+          destination_path: 'documents/insurance/insurance-policy-002.pdf',
+          source_sha256_verified: beforeSourceHashes['Insurance Policy.pdf'],
+        },
+      ])
+
+      const sourceManifest = yamlParse(await readFile(join(caseRoot, '.waypoint/wizard/source-manifest.yaml'), 'utf8')) as {
+        files: Array<{ copied_sha256?: string; canonical_document_path: string }>
+      }
+      expect(sourceManifest.files.map((file) => file.copied_sha256)).toEqual([
+        beforeSourceHashes['Insurance Policy (copy).pdf'],
+        beforeSourceHashes['Insurance Policy.pdf'],
+      ])
+    } finally {
+      await rm(sourceRoot, { recursive: true, force: true })
       await rm(caseRoot, { recursive: true, force: true })
     }
   })
@@ -267,6 +355,19 @@ describe('Waypoint Wizard organize mode contracts', () => {
     }
   })
 })
+
+async function sourceTreeHashes(root: string): Promise<Record<string, string>> {
+  const entries = await readdir(root, { withFileTypes: true })
+  const hashes: Record<string, string> = {}
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue
+    const content = await readFile(join(root, entry.name))
+    hashes[entry.name] = createHash('sha256').update(content).digest('hex')
+  }
+
+  return hashes
+}
 
 function shadowRecord(input: {
   id: string

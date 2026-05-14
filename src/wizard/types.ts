@@ -166,6 +166,7 @@ export interface WizardOrganizeCopyDecision {
   status: WizardOrganizeCopyStatus
   destination_path?: string
   reason?: string
+  source_sha256_verified?: string
 }
 
 export interface WizardOrganizeLegalBoundary {
