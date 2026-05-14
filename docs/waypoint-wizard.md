@@ -21,6 +21,7 @@ From this repository, use the private development CLI by direct Node path or an 
 ```bash
 waypoint wizard scan --source <source> --domain firmvault --json
 waypoint wizard shadow --source <source> --target <case-root> --domain firmvault --json
+waypoint wizard organize --source <source> --target <case-root> --domain firmvault --copy-files --json
 waypoint wizard questions --case <case-root> --json
 waypoint wizard answer --case <case-root> --question <id> --answer <text> --json
 waypoint wizard plan --case <case-root> --write-plan .waypoint/wizard/adoption-plan.yaml --json
@@ -33,6 +34,7 @@ Direct source-run form:
 repo=/Users/aaronwhaley/Github/waypoint
 node "$repo/packages/waypoint-cli/src/bin.ts" wizard scan --source <source> --domain firmvault --json
 node "$repo/packages/waypoint-cli/src/bin.ts" wizard shadow --source <source> --target <case-root> --domain firmvault --json
+node "$repo/packages/waypoint-cli/src/bin.ts" wizard organize --source <source> --target <case-root> --domain firmvault --copy-files --json
 node "$repo/packages/waypoint-cli/src/bin.ts" wizard questions --case <case-root> --json
 node "$repo/packages/waypoint-cli/src/bin.ts" wizard answer --case <case-root> --question <id> --answer <text> --json
 node "$repo/packages/waypoint-cli/src/bin.ts" wizard plan --case <case-root> --write-plan .waypoint/wizard/adoption-plan.yaml --json
@@ -55,17 +57,23 @@ node "$repo/packages/waypoint-cli/src/bin.ts" wizard apply --case <case-root> --
 
 The Wizard chooses a canonical shadow category from deterministic FirmVault filename/path classification. The source files are not reorganized.
 
-### 3. Questions and answers
+### 3. Organize
+
+`waypoint wizard organize` creates a clean Waypoint-owned case package from a messy source folder. It runs scan and shadow creation, writes a canonical document tree, source manifest, organization plan, organize report, and missing-document checklist. By default it does not copy source files; with `--copy-files`, files are copied into deterministic `documents/<category>/...` paths under the target case root.
+
+Organization is not legal truth. Clean folders, copied files, and shadows do not satisfy FirmVault facts by existing; approved apply remains required for state changes.
+
+### 4. Questions and answers
 
 When classification or fact mapping is ambiguous, the Wizard creates one-question-at-a-time review prompts under `.waypoint/wizard/questions.yaml`. Use `wizard questions` to fetch the next pending question and `wizard answer` to persist the operator answer.
 
-### 4. Plan
+### 5. Plan
 
 `waypoint wizard plan` writes a durable adoption plan under `.waypoint/wizard/adoption-plan.yaml`. The plan links source inventory, shadows, classifications, questions, answers, proposed FirmVault facts, missing documents, warnings, and approval state.
 
 Proposed facts are review-only until explicitly approved in the plan. The Wizard does not treat shadows, filenames, folder names, or extracted text as legal truth by themselves.
 
-### 5. Apply
+### 6. Apply
 
 `waypoint wizard apply` reads the adoption plan and applies only approved proposed facts through the existing FirmVault safe state APIs. This is an approval before apply workflow: unapproved proposed facts are skipped. After apply, run guidance to see the next legal/workflow action:
 

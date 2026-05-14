@@ -46,6 +46,56 @@ describe('wizard CLI', () => {
     expect(shadowMarkdown).toContain('Source contents were not copied')
   })
 
+  it('organizes messy source files into a clean case package only copying files when requested', async () => {
+    const { mkdtemp, mkdir, readFile, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+
+    const sourceRoot = await mkdtemp(join(tmpdir(), 'wizard-organize-source-'))
+    const shadowOnlyTarget = await mkdtemp(join(tmpdir(), 'wizard-organize-shadow-only-'))
+    const copyTarget = await mkdtemp(join(tmpdir(), 'wizard-organize-copy-'))
+    await mkdir(join(sourceRoot, 'Insurance'), { recursive: true })
+    await writeFile(join(sourceRoot, 'Insurance', 'Policy.pdf'), 'insurance policy')
+    await writeFile(join(sourceRoot, 'Mystery Scan.pdf'), 'unknown document')
+
+    const shadowOnlyOutputs: string[] = []
+    const shadowOnlyErrors: string[] = []
+    const shadowOnlyExit = await runWizardCommand(
+      ['organize', '--source', sourceRoot, '--target', shadowOnlyTarget, '--domain', 'firmvault', '--json'],
+      {
+        stdout: (line: string) => shadowOnlyOutputs.push(line),
+        stderr: (line: string) => shadowOnlyErrors.push(line),
+      },
+    )
+
+    expect(shadowOnlyExit, shadowOnlyErrors.join('\n')).toBe(0)
+    expect(shadowOnlyErrors).toEqual([])
+    const shadowOnlyJson = JSON.parse(shadowOnlyOutputs.join('\n'))
+    expect(shadowOnlyJson.source_files_copied).toBe(0)
+    expect(shadowOnlyJson.documents_copied).toEqual([])
+    expect(shadowOnlyJson.artifacts).toContain('.waypoint/wizard/organization-plan.yaml')
+    expect(await readFile(join(shadowOnlyTarget, 'README.md'), 'utf8')).toContain('Waypoint Wizard organized case package')
+    await expect(readFile(join(shadowOnlyTarget, 'documents', 'insurance', 'policy.pdf'))).rejects.toThrow()
+
+    const copyOutputs: string[] = []
+    const copyErrors: string[] = []
+    const copyExit = await runWizardCommand(
+      ['organize', '--source', sourceRoot, '--target', copyTarget, '--domain', 'firmvault', '--copy-files', '--json'],
+      {
+        stdout: (line: string) => copyOutputs.push(line),
+        stderr: (line: string) => copyErrors.push(line),
+      },
+    )
+
+    expect(copyExit).toBe(0)
+    expect(copyErrors).toEqual([])
+    const copyJson = JSON.parse(copyOutputs.join('\n'))
+    expect(copyJson.source_files_copied).toBe(2)
+    expect(copyJson.documents_copied).toContain('documents/insurance/policy.pdf')
+    expect(await readFile(join(copyTarget, 'documents', 'insurance', 'policy.pdf'), 'utf8')).toBe('insurance policy')
+    expect(copyJson.legal_facts_from_organization).toBe('forbidden')
+  })
+
   it('scans a source folder and returns JSON output', async () => {
     const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises')
     const { tmpdir } = await import('node:os')

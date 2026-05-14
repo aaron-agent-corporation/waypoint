@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { stringify as yamlStringify } from 'yaml'
 
-import { assertWithinRoot, safeWizardArtifactPath, slugifyWizardPathSegment } from './paths'
+import { assertWithinRoot, safeWizardArtifactPath, slugifyWizardPathSegment } from './paths.ts'
 import {
   isSafeWizardRelativePath,
   isWizardDomain,
@@ -12,7 +12,7 @@ import {
   type WizardOrganizationPlan,
   type WizardQuestion,
   type WizardShadowRecord,
-} from './types'
+} from './types.ts'
 
 export type CreateWizardOrganizedDocumentEntryInput = WizardOrganizedDocumentEntry
 

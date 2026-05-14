@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import { isWizardDomain, type WizardDomain } from './types'
+import { isWizardDomain, type WizardDomain } from './types.ts'
 
 const WIZARD_SHADOW_ROOT = '.waypoint/shadows'
 const WIZARD_ARTIFACT_ROOT = '.waypoint/wizard'

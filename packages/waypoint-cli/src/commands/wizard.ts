@@ -22,6 +22,7 @@ import {
 } from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
+import { buildWizardOrganizationPlan, writeWizardOrganizedCasePackage } from '../../../../src/wizard/organize.ts'
 import type {
   WizardAdoptionPlan,
   WizardDomain,
@@ -52,6 +53,10 @@ export async function runWizardCommand(args: readonly string[], io: WaypointCliI
 
   if (subcommand === 'shadow') {
     return runWizardShadow(args.slice(1), io)
+  }
+
+  if (subcommand === 'organize') {
+    return runWizardOrganize(args.slice(1), io)
   }
 
   if (subcommand === 'questions') {
@@ -200,6 +205,109 @@ export async function runWizardShadow(args: readonly string[], io: WaypointCliIo
       io.stdout(`Target: ${shadowResult.target_root}`)
       io.stdout(`Domain: ${domain}`)
       io.stdout(`Shadows created: ${shadowResult.shadows.length}`)
+    }
+
+    return 0
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    io.stderr(message)
+    return 1
+  }
+}
+
+export async function runWizardOrganize(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  let sourcePath: string | undefined
+  let targetPath: string | undefined
+  let domain: string | undefined
+  let copyFiles = false
+  let jsonOutput = false
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--source' || arg === '-s') {
+      sourcePath = args[++i]
+    } else if (arg === '--target' || arg === '-t') {
+      targetPath = args[++i]
+    } else if (arg === '--domain' || arg === '-d') {
+      domain = args[++i]
+    } else if (arg === '--copy-files') {
+      copyFiles = true
+    } else if (arg === '--json' || arg === '-j') {
+      jsonOutput = true
+    } else {
+      io.stderr(`Unknown option: ${arg}`)
+      return 1
+    }
+  }
+
+  if (!sourcePath) {
+    io.stderr('Missing required option: --source <path>')
+    return 1
+  }
+
+  if (!targetPath) {
+    io.stderr('Missing required option: --target <case-root>')
+    return 1
+  }
+
+  if (!domain) {
+    io.stderr('Missing required option: --domain <domain>')
+    return 1
+  }
+
+  if (!isWizardDomain(domain)) {
+    io.stderr(`Unsupported Wizard domain: ${domain}`)
+    return 1
+  }
+
+  try {
+    const scan = await scanWizardSource({ sourceRoot: sourcePath, domain })
+    const shadowResult = await createWizardShadows({ scan, targetRoot: targetPath, domain })
+    const shadows = shadowResult.shadows.map((shadow) => ({
+      id: shadow.id,
+      domain: shadow.domain,
+      shadow_path: path.relative(shadowResult.target_root, shadow.shadow_path),
+      source: shadow.source,
+      classification: shadow.classification,
+      review_status: shadow.review_status,
+    }))
+    const plan = buildWizardOrganizationPlan({
+      domain,
+      sourceRoot: scan.source_root,
+      targetCaseRoot: shadowResult.target_root,
+      shadows,
+    })
+    const result = await writeWizardOrganizedCasePackage({
+      caseRoot: shadowResult.target_root,
+      plan,
+      copyFiles,
+    })
+    const response = {
+      domain,
+      source_root: scan.source_root,
+      target_root: result.case_root,
+      copy_files: copyFiles,
+      shadows_created: shadowResult.shadows.length,
+      documents_planned: result.documents_planned,
+      source_files_copied: result.source_files_copied,
+      documents_copied: result.documents_copied,
+      artifacts: result.artifacts,
+      warnings: [...scan.warnings, ...plan.warnings],
+      legal_facts_from_organization: plan.legal_facts_from_organization,
+      source_files_read_only: plan.source_files_read_only,
+    }
+
+    if (jsonOutput) {
+      io.stdout(JSON.stringify(response, null, 2))
+    } else {
+      io.stdout(`Waypoint Wizard Organize`)
+      io.stdout(`========================`)
+      io.stdout(`Source: ${scan.source_root}`)
+      io.stdout(`Target: ${result.case_root}`)
+      io.stdout(`Domain: ${domain}`)
+      io.stdout(`Shadows created: ${shadowResult.shadows.length}`)
+      io.stdout(`Documents planned: ${result.documents_planned}`)
+      io.stdout(`Source files copied: ${result.source_files_copied}`)
     }
 
     return 0

@@ -77,6 +77,7 @@ Usage:
   waypoint author handoff --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint wizard scan --source <path> --domain <domain> [--json]
   waypoint wizard shadow --source <path> --target <case-root> --domain <domain> [--json]
+  waypoint wizard organize --source <path> --target <case-root> --domain <domain> [--copy-files] [--json]
   waypoint wizard questions --case <case-root> [--json]
   waypoint wizard answer --case <case-root> --question <id> --answer <text> [--json]
   waypoint wizard plan --case <case-root> [--write-plan .waypoint/wizard/adoption-plan.yaml] [--json]
