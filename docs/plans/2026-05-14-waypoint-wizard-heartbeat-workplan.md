@@ -95,7 +95,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW5 — Wizard Q&A loop
 
-- [ ] WW5.1 — Add question model persistence under `.waypoint/wizard/questions.yaml`
+- [x] WW5.1 — Add question model persistence under `.waypoint/wizard/questions.yaml`
+  - Completed: added deterministic ambiguity-to-question generation, one-at-a-time next-question selection with answer suppression, YAML persistence under `.waypoint/wizard/questions.yaml`, and core exports; `pnpm exec vitest run src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 7 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
 - [ ] WW5.2 — Add `waypoint wizard questions --case <case-root> --json`
 - [ ] WW5.3 — Add `waypoint wizard answer --case <case-root> --question <id> --answer <text> --json`
 

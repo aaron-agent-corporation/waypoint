@@ -241,6 +241,18 @@ export {
 } from './wizard/firmvault-review'
 export type { FirmVaultWizardAmbiguity, FirmVaultWizardReviewInput } from './wizard/firmvault-review'
 export {
+  generateWizardQuestions,
+  nextWizardQuestion,
+  readWizardQuestions,
+  writeWizardQuestions,
+} from './wizard/questions'
+export type {
+  GenerateWizardQuestionsInput,
+  ReadWizardQuestionsInput,
+  WriteWizardQuestionsInput,
+  WriteWizardQuestionsResult,
+} from './wizard/questions'
+export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,
 } from './wizard/shadow-frontmatter'
