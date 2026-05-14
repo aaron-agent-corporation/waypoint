@@ -122,7 +122,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW8 — Smoke, docs, and skill updates
 
-- [ ] WW8.1 — Add messy fixture corpus generator
+- [x] WW8.1 — Add messy fixture corpus generator
+  - Completed: added synthetic no-PII messy FirmVault source fixture under `examples/waypoint-wizard/firmvault-messy-source/` plus docs smoke coverage; `pnpm exec vitest run src/__tests__/waypoint-docs.test.ts --testNamePattern "synthetic no-PII"` passed on 2026-05-14.
 - [ ] WW8.2 — Add `pnpm smoke:waypoint-wizard-firmvault`
 - [ ] WW8.3 — Update docs and paralegal skill with Wizard usage
 

@@ -1,0 +1,7 @@
+Synthetic signed fee agreement
+
+Document source: synthetic DocuSign completion export
+Agreement status: signed
+Purpose: supports Wizard proposed fact mapping for client.contracts.fee_agreement in tests.
+
+No real PII is present.

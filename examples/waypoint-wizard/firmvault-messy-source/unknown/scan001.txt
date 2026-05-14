@@ -1,0 +1,6 @@
+Synthetic ambiguous unknown scan
+
+This intentionally vague fixture should remain ambiguous enough for Wizard review/question flows.
+It may look like a loose scan, but it should not satisfy any FirmVault legal fact by existing.
+
+No real PII is present.

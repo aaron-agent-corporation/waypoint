@@ -222,6 +222,31 @@ describe('Waypoint Quest operator documentation', () => {
     expect(smoke).toContain('firmvault.state.updated')
   })
 
+  it('publishes a synthetic no-PII Waypoint Wizard FirmVault fixture corpus', () => {
+    const readme = readRepoFile('examples/waypoint-wizard/README.md')
+    const intake = readRepoFile('examples/waypoint-wizard/firmvault-messy-source/Intake Docs.pdf.txt')
+    const feeAgreement = readRepoFile('examples/waypoint-wizard/firmvault-messy-source/random/DocuSign Complete.pdf.txt')
+    const medicalRecords = readRepoFile('examples/waypoint-wizard/firmvault-messy-source/medical/Smith Records.pdf.txt')
+    const unknownScan = readRepoFile('examples/waypoint-wizard/firmvault-messy-source/unknown/scan001.txt')
+
+    for (const phrase of [
+      'Waypoint Wizard',
+      'synthetic',
+      'no real PII',
+      'messy source corpus',
+      'read-only input fixture',
+      '.waypoint/shadows',
+      'pnpm smoke:waypoint-wizard-firmvault',
+    ]) {
+      expect(readme).toContain(phrase)
+    }
+
+    expect(intake).toContain('Synthetic intake packet')
+    expect(feeAgreement).toContain('Synthetic signed fee agreement')
+    expect(medicalRecords).toContain('Synthetic medical records')
+    expect(unknownScan).toContain('ambiguous unknown scan')
+  })
+
   it('publishes the authoring fixture for FirmVault dry-run draft generation', () => {
     const readme = readRepoFile('examples/authoring/README.md')
     const answers = JSON.parse(readRepoFile('examples/authoring/firmvault-followup.answers.json')) as {

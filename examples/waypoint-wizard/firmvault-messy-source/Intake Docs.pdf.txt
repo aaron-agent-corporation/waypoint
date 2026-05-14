@@ -1,0 +1,7 @@
+Synthetic intake packet
+
+Client name: Synthetic Client
+Matter type: personal injury
+Incident summary: Synthetic rear-end collision narrative for fixture testing only.
+
+This file is intentionally plain text and contains no real PII.

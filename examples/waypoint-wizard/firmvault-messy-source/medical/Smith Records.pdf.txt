@@ -1,0 +1,7 @@
+Synthetic medical records
+
+Provider: Dr. Smith Clinic (synthetic)
+Visit type: evaluation and follow-up
+Records status: received copy for fixture-only Wizard shadow generation.
+
+No real patient information is present.
