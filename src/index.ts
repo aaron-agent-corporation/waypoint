@@ -258,6 +258,15 @@ export type {
   WriteWizardQuestionsResult,
 } from './wizard/questions'
 export {
+  buildWizardAdoptionPlan,
+  writeWizardAdoptionPlan,
+} from './wizard/plan'
+export type {
+  BuildWizardAdoptionPlanInput,
+  WriteWizardAdoptionPlanInput,
+  WriteWizardAdoptionPlanResult,
+} from './wizard/plan'
+export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,
 } from './wizard/shadow-frontmatter'
