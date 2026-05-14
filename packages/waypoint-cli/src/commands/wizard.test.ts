@@ -235,6 +235,68 @@ questions:
     expect(questionsJson.next_question).toMatchObject({ id: 'question-b' })
   })
 
+  it('applies only approved Wizard facts from a persisted adoption plan', async () => {
+    const { mkdir, mkdtemp, readFile, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { stringify: stringifyYaml } = await import('yaml')
+    const { approveWizardProposedFacts } = await import('@waypoint/core')
+    const { initFirmVaultCaseState, readFirmVaultCaseState } = await import('@waypoint/folder-host')
+
+    const sourceRoot = await mkdtemp(join(tmpdir(), 'wizard-apply-source-'))
+    const caseRoot = await mkdtemp(join(tmpdir(), 'wizard-apply-cli-case-'))
+    await initFirmVaultCaseState(caseRoot, { caseType: 'personal_injury', caseSlug: 'wizard-apply-cli-case' })
+    await mkdir(sourceRoot, { recursive: true })
+    await writeFile(join(sourceRoot, 'Fee Agreement.pdf'), 'signed fee agreement')
+    await writeFile(join(sourceRoot, 'HIPAA Authorization.pdf'), 'signed hipaa')
+
+    const shadowErrors: string[] = []
+    expect(await runWizardCommand(
+      ['shadow', '--source', sourceRoot, '--target', caseRoot, '--domain', 'firmvault', '--json'],
+      { stdout: () => undefined, stderr: (line: string) => shadowErrors.push(line) },
+    )).toBe(0)
+    expect(shadowErrors).toEqual([])
+
+    const planOutputs: string[] = []
+    const planErrors: string[] = []
+    expect(await runWizardCommand(['plan', '--case', caseRoot, '--json'], {
+      stdout: (line: string) => planOutputs.push(line),
+      stderr: (line: string) => planErrors.push(line),
+    })).toBe(0)
+    expect(planErrors).toEqual([])
+
+    const planJson = JSON.parse(planOutputs.join('\n'))
+    const approvedPlan = approveWizardProposedFacts(planJson.plan, ['client.contracts.fee_agreement'])
+    const planPath = join(caseRoot, '.waypoint', 'wizard', 'adoption-plan.yaml')
+    await writeFile(planPath, stringifyYaml(approvedPlan), 'utf8')
+
+    const outputs: string[] = []
+    const errors: string[] = []
+    const exitCode = await runWizardCommand(['apply', '--case', caseRoot, '--plan', '.waypoint/wizard/adoption-plan.yaml', '--json'], {
+      stdout: (line: string) => outputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    })
+
+    expect(exitCode).toBe(0)
+    expect(errors).toEqual([])
+    const json = JSON.parse(outputs.join('\n'))
+    expect(json.applied_facts).toEqual([
+      expect.objectContaining({ fact: 'client.contracts.fee_agreement', status: 'signed' }),
+    ])
+    expect(json.skipped_facts).toEqual([
+      expect.objectContaining({ fact: 'client.authorizations.hipaa', reason: 'unapproved' }),
+    ])
+    expect(json.guidance.stage).toBeTruthy()
+
+    const clientState = await readFirmVaultCaseState(caseRoot, { section: 'client' })
+    const client = clientState.state.client as {
+      contracts?: { fee_agreement?: { status?: string } }
+      authorizations?: { hipaa?: { status?: string } }
+    }
+    expect(client.contracts?.fee_agreement?.status).toBe('signed')
+    expect(client.authorizations?.hipaa?.status).not.toBe('signed')
+  })
+
   it('rejects unknown domains', async () => {
     const outputs: string[] = []
     const errors: string[] = []

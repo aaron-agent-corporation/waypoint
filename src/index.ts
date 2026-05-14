@@ -267,6 +267,16 @@ export type {
   WriteWizardAdoptionPlanInput,
   WriteWizardAdoptionPlanResult,
 } from './wizard/plan'
+export { applyFirmVaultWizardPlan } from './wizard/firmvault-apply'
+export type {
+  ApplyFirmVaultWizardPlanInput,
+  WizardApplyAppliedFact,
+  WizardApplyEvidenceRef,
+  WizardApplyGuidanceResult,
+  WizardApplyResult,
+  WizardApplySkippedFact,
+  WizardApplyStateResult,
+} from './wizard/firmvault-apply'
 export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,

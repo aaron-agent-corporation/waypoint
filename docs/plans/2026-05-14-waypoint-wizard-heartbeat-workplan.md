@@ -115,8 +115,10 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 - [x] WW7.1 — Add plan approval/approved_fact handling
   - Completed: added immutable `approveWizardProposedFacts(plan, factRefs)` helper that marks selected proposed facts approved by id/fact slug, preserves unselected facts as unapproved, refreshes approval counts, and exports it from core; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts packages/waypoint-cli/src/commands/wizard.test.ts` passed with 15 tests on 2026-05-14.
-- [ ] WW7.2 — Add `waypoint wizard apply --case <case-root> --json`
-- [ ] WW7.3 — Confirm unapproved proposed facts remain unapplied
+- [x] WW7.2 — Add `waypoint wizard apply --case <case-root> --json`
+  - Completed: added FirmVault apply engine plus CLI `wizard apply` reading `.waypoint/wizard/adoption-plan.yaml`, applying approved facts through safe FirmVault state APIs, and returning post-apply guidance; `pnpm exec vitest run src/wizard/__tests__ packages/waypoint-cli/src/commands/wizard.test.ts packages/waypoint-folder-host/src/firmvault/state.test.ts` passed with 73 tests on 2026-05-14.
+- [x] WW7.3 — Confirm unapproved proposed facts remain unapplied
+  - Completed: core and CLI tests assert unapproved proposed facts are reported as skipped with `reason: unapproved` and are not written to FirmVault state; same 73-test Wizard/FirmVault gate passed on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
 
 ### WW8 — Smoke, docs, and skill updates
 

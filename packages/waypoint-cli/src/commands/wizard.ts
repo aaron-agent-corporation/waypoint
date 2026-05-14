@@ -1,8 +1,9 @@
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
 import * as path from 'node:path'
-import { stringify as yamlStringify } from 'yaml'
+import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
 import {
+  applyFirmVaultWizardPlan,
   buildWizardAdoptionPlan,
   createWizardShadows,
   detectFirmVaultWizardAmbiguities,
@@ -21,7 +22,26 @@ import {
 } from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
-import type { WizardDomain, WizardShadowRecord } from '@waypoint/core'
+import type {
+  WizardAdoptionPlan,
+  WizardDomain,
+  WizardShadowRecord,
+  WizardApplyGuidanceResult,
+  WizardApplyStateResult,
+} from '@waypoint/core'
+
+type WizardFirmVaultStateModule = {
+  readonly setFirmVaultCaseFact: (
+    caseRoot: string,
+    input: {
+      readonly fact: string
+      readonly status: string
+      readonly evidence: readonly { readonly path: string; readonly kind?: string; readonly note?: string }[]
+      readonly note?: string
+    },
+  ) => Promise<WizardApplyStateResult>
+  readonly getFirmVaultCaseGuidance: (caseRoot: string) => Promise<WizardApplyGuidanceResult>
+}
 
 export async function runWizardCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const [subcommand] = args
@@ -44,6 +64,10 @@ export async function runWizardCommand(args: readonly string[], io: WaypointCliI
 
   if (subcommand === 'plan') {
     return runWizardPlan(args.slice(1), io)
+  }
+
+  if (subcommand === 'apply') {
+    return runWizardApply(args.slice(1), io)
   }
 
   io.stderr(`Unknown Wizard subcommand: ${subcommand ?? '(none)'}`)
@@ -335,6 +359,80 @@ export async function runWizardPlan(args: readonly string[], io: WaypointCliIo):
   }
 }
 
+export async function runWizardApply(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  let casePath: string | undefined
+  let planPath = '.waypoint/wizard/adoption-plan.yaml'
+  let jsonOutput = false
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--case' || arg === '-c') {
+      casePath = args[++i]
+    } else if (arg === '--plan') {
+      planPath = args[++i] ?? ''
+    } else if (arg === '--json' || arg === '-j') {
+      jsonOutput = true
+    } else {
+      io.stderr(`Unknown option: ${arg}`)
+      return 1
+    }
+  }
+
+  if (!casePath) {
+    io.stderr('Missing required option: --case <case-root>')
+    return 1
+  }
+
+  if (!isSafeWizardPlanPath(planPath)) {
+    io.stderr('--plan must be a safe relative path under .waypoint/wizard/')
+    return 1
+  }
+
+  try {
+    const caseRoot = path.resolve(casePath)
+    const resolvedPlanPath = path.resolve(caseRoot, planPath)
+    if (!resolvedPlanPath.startsWith(`${caseRoot}${path.sep}`)) {
+      throw new Error('--plan must stay inside the case root')
+    }
+
+    const rawPlan = await readFile(resolvedPlanPath, 'utf8')
+    const plan = yamlParse(rawPlan) as WizardAdoptionPlan
+    const firmVault = await importFirmVaultStateModule()
+    const result = await applyFirmVaultWizardPlan({
+      caseRoot,
+      plan,
+      setFirmVaultCaseFact: firmVault.setFirmVaultCaseFact,
+      getFirmVaultCaseGuidance: firmVault.getFirmVaultCaseGuidance,
+    })
+
+    const response = {
+      ...result,
+      plan_path: resolvedPlanPath,
+      plan_relative_path: planPath,
+    }
+
+    if (jsonOutput) {
+      io.stdout(JSON.stringify(response, null, 2))
+    } else {
+      io.stdout(`Waypoint Wizard Apply`)
+      io.stdout(`=====================`)
+      io.stdout(`Case: ${caseRoot}`)
+      io.stdout(`Plan: ${resolvedPlanPath}`)
+      io.stdout(`Applied facts: ${result.applied_facts.length}`)
+      io.stdout(`Skipped facts: ${result.skipped_facts.length}`)
+      if (result.guidance) {
+        io.stdout(`Guidance stage: ${result.guidance.stage}`)
+      }
+    }
+
+    return 0
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    io.stderr(message)
+    return 1
+  }
+}
+
 export async function runWizardAnswer(args: readonly string[], io: WaypointCliIo): Promise<number> {
   let casePath: string | undefined
   let questionId: string | undefined
@@ -519,6 +617,18 @@ async function writeWizardAdoptionPlanAtRelativePath(
     relative_path: requestedPath,
     proposed_facts_written: plan.proposed_facts.length,
   }
+}
+
+function isSafeWizardPlanPath(planPath: string): boolean {
+  if (!planPath) return false
+  if (path.isAbsolute(planPath)) return false
+  const normalized = path.posix.normalize(planPath.split(path.sep).join('/'))
+  if (normalized === '.' || normalized.startsWith('../') || normalized.includes('/../')) return false
+  return normalized === '.waypoint/wizard/adoption-plan.yaml' || normalized.startsWith('.waypoint/wizard/')
+}
+
+async function importFirmVaultStateModule(): Promise<WizardFirmVaultStateModule> {
+  return await import('@waypoint/folder-host') as unknown as WizardFirmVaultStateModule
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {

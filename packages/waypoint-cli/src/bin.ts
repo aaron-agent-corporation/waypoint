@@ -80,6 +80,7 @@ Usage:
   waypoint wizard questions --case <case-root> [--json]
   waypoint wizard answer --case <case-root> --question <id> --answer <text> [--json]
   waypoint wizard plan --case <case-root> [--write-plan .waypoint/wizard/adoption-plan.yaml] [--json]
+  waypoint wizard apply --case <case-root> [--plan .waypoint/wizard/adoption-plan.yaml] [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
