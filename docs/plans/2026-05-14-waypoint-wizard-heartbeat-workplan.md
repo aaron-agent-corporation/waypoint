@@ -68,7 +68,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Files: `src/wizard/scan.ts`, `src/wizard/__tests__/scan.test.ts`, `src/index.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/scan.test.ts`
   - Completed: read-only recursive inventory with deterministic ordering, sha256, size, extension, and media hints on 2026-05-14.
-- [ ] WW2.2 — Add file hashing and media-ish metadata
+- [x] WW2.2 — Add file hashing and media-ish metadata
+  - Completed: `src/wizard/scan.ts` records sha256, size, extension, `media_type`, and `media_hint`; `pnpm exec vitest run src/wizard/__tests__/scan.test.ts` passed with 1 test on 2026-05-14.
 - [ ] WW2.3 — Add `waypoint wizard scan --source <path> --domain <domain> --json`
 
 ### WW3 — Markdown shadow generation
