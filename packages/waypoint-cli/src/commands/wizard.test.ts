@@ -126,6 +126,51 @@ questions:
     })
   })
 
+  it('generates and writes a Wizard adoption plan for existing shadows', async () => {
+    const { mkdtemp, readFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { parse: parseYaml } = await import('yaml')
+
+    const sourceRoot = await mkdtemp(join(tmpdir(), 'wizard-plan-source-'))
+    const caseRoot = await mkdtemp(join(tmpdir(), 'wizard-plan-case-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(sourceRoot, 'Fee Agreement.pdf'), 'signed fee agreement')
+    await writeFile(join(sourceRoot, 'Mystery Scan.pdf'), 'unknown scan')
+
+    const shadowErrors: string[] = []
+    const shadowExitCode = await runWizardCommand(
+      ['shadow', '--source', sourceRoot, '--target', caseRoot, '--domain', 'firmvault', '--json'],
+      { stdout: () => undefined, stderr: (line: string) => shadowErrors.push(line) },
+    )
+    expect(shadowExitCode).toBe(0)
+    expect(shadowErrors).toEqual([])
+
+    const outputs: string[] = []
+    const errors: string[] = []
+    const exitCode = await runWizardCommand(['plan', '--case', caseRoot, '--json'], {
+      stdout: (line: string) => outputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    })
+
+    expect(exitCode).toBe(0)
+    expect(errors).toEqual([])
+    const json = JSON.parse(outputs.join('\n'))
+    expect(json.case_root).toBe(caseRoot)
+    expect(json.plan_path).toBe(join(caseRoot, '.waypoint', 'wizard', 'adoption-plan.yaml'))
+    expect(json.proposed_facts_count).toBe(1)
+    expect(json.missing_expected_documents).toContain('client.authorizations.hipaa')
+    expect(json.plan.proposed_facts[0]).toMatchObject({
+      fact: 'client.contracts.fee_agreement',
+      approved: false,
+      evidence_shadow: expect.stringContaining('.waypoint/shadows/firmvault/contracts/fee-agreement.md'),
+    })
+
+    const rawPlan = await readFile(join(caseRoot, '.waypoint', 'wizard', 'adoption-plan.yaml'), 'utf8')
+    const parsedPlan = parseYaml(rawPlan) as { proposed_facts: Array<{ approved: boolean }> }
+    expect(parsedPlan.proposed_facts[0]?.approved).toBe(false)
+  })
+
   it('records a Wizard answer and suppresses the answered question', async () => {
     const { mkdir, mkdtemp, readFile, writeFile } = await import('node:fs/promises')
     const { tmpdir } = await import('node:os')

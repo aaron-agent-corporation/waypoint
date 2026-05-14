@@ -1,14 +1,27 @@
+import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
+import * as path from 'node:path'
+import { stringify as yamlStringify } from 'yaml'
+
 import {
+  buildWizardAdoptionPlan,
   createWizardShadows,
+  detectFirmVaultWizardAmbiguities,
+  generateFirmVaultMissingDocumentChecklist,
+  generateWizardQuestions,
   isWizardDomain,
   nextWizardQuestion,
+  parseWizardShadowMarkdown,
+  proposeFirmVaultFactsFromShadows,
   readWizardAnswers,
   readWizardQuestions,
   recordWizardAnswer,
   scanWizardSource,
+  writeWizardAdoptionPlan,
+  writeWizardQuestions,
 } from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
+import type { WizardDomain, WizardShadowRecord } from '@waypoint/core'
 
 export async function runWizardCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const [subcommand] = args
@@ -27,6 +40,10 @@ export async function runWizardCommand(args: readonly string[], io: WaypointCliI
 
   if (subcommand === 'answer') {
     return runWizardAnswer(args.slice(1), io)
+  }
+
+  if (subcommand === 'plan') {
+    return runWizardPlan(args.slice(1), io)
   }
 
   io.stderr(`Unknown Wizard subcommand: ${subcommand ?? '(none)'}`)
@@ -227,6 +244,97 @@ export async function runWizardQuestions(args: readonly string[], io: WaypointCl
   }
 }
 
+export async function runWizardPlan(args: readonly string[], io: WaypointCliIo): Promise<number> {
+  let casePath: string | undefined
+  let writePlanPath: string | undefined
+  let jsonOutput = false
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--case' || arg === '-c') {
+      casePath = args[++i]
+    } else if (arg === '--write-plan') {
+      writePlanPath = args[++i]
+    } else if (arg === '--json' || arg === '-j') {
+      jsonOutput = true
+    } else {
+      io.stderr(`Unknown option: ${arg}`)
+      return 1
+    }
+  }
+
+  if (!casePath) {
+    io.stderr('Missing required option: --case <case-root>')
+    return 1
+  }
+
+  try {
+    const caseRoot = path.resolve(casePath)
+    const shadows = await readWizardShadowRecords(caseRoot)
+    const domain = inferWizardPlanDomain(shadows)
+    const proposedFacts = domain === 'firmvault' ? proposeFirmVaultFactsFromShadows(shadows) : []
+    const ambiguities = domain === 'firmvault'
+      ? detectFirmVaultWizardAmbiguities({ shadows, proposedFacts })
+      : []
+    const existingAnswers = await readWizardAnswers({ caseRoot })
+    const existingQuestions = await readWizardQuestions({ caseRoot })
+    const generatedQuestions = generateWizardQuestions({ domain, ambiguities, answers: existingAnswers })
+    const questions = mergeWizardQuestions(existingQuestions, generatedQuestions)
+    if (questions.length > 0) {
+      await writeWizardQuestions({ caseRoot, questions })
+    }
+    const missingExpectedDocuments = domain === 'firmvault'
+      ? generateFirmVaultMissingDocumentChecklist({ shadows, proposedFacts })
+      : []
+    const plan = buildWizardAdoptionPlan({
+      domain,
+      sourceRoot: inferWizardSourceRoot(shadows),
+      targetCaseRoot: caseRoot,
+      shadows,
+      proposedFacts,
+      questions,
+      answers: existingAnswers,
+      missingExpectedDocuments,
+      warnings: ambiguities.map((ambiguity) => ambiguity.message),
+    })
+
+    const writeResult = writePlanPath
+      ? await writeWizardAdoptionPlanAtRelativePath(caseRoot, writePlanPath, plan)
+      : await writeWizardAdoptionPlan({ caseRoot, plan })
+    const response = {
+      case_root: caseRoot,
+      domain,
+      plan_path: writeResult.path,
+      plan_relative_path: writeResult.relative_path,
+      shadows_count: shadows.length,
+      proposed_facts_count: plan.proposed_facts.length,
+      questions_count: plan.questions.length,
+      answers_count: plan.answers.length,
+      missing_expected_documents: plan.missing_expected_documents,
+      warnings: plan.warnings,
+      plan,
+    }
+
+    if (jsonOutput) {
+      io.stdout(JSON.stringify(response, null, 2))
+    } else {
+      io.stdout(`Waypoint Wizard Adoption Plan`)
+      io.stdout(`==============================`)
+      io.stdout(`Case: ${caseRoot}`)
+      io.stdout(`Plan: ${writeResult.path}`)
+      io.stdout(`Shadows: ${shadows.length}`)
+      io.stdout(`Proposed facts: ${plan.proposed_facts.length}`)
+      io.stdout(`Questions: ${plan.questions.length}`)
+    }
+
+    return 0
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    io.stderr(message)
+    return 1
+  }
+}
+
 export async function runWizardAnswer(args: readonly string[], io: WaypointCliIo): Promise<number> {
   let casePath: string | undefined
   let questionId: string | undefined
@@ -306,4 +414,113 @@ export async function runWizardAnswer(args: readonly string[], io: WaypointCliIo
     io.stderr(message)
     return 1
   }
+}
+
+
+async function readWizardShadowRecords(caseRoot: string): Promise<WizardShadowRecord[]> {
+  const shadowsRoot = path.resolve(caseRoot, '.waypoint', 'shadows')
+  const markdownPaths = await listMarkdownFiles(shadowsRoot)
+  const records: WizardShadowRecord[] = []
+
+  for (const markdownPath of markdownPaths) {
+    const markdown = await readFile(markdownPath, 'utf8')
+    const parsed = parseWizardShadowMarkdown(markdown)
+    records.push({
+      id: `shadow-${parsed.frontmatter.source.sha256.slice(0, 12)}`,
+      domain: parsed.frontmatter.domain,
+      shadow_path: parsed.frontmatter.waypoint.canonical_path,
+      source: parsed.frontmatter.source,
+      classification: parsed.frontmatter.classification,
+      review_status: parsed.frontmatter.review.status,
+    })
+  }
+
+  return records.sort((left, right) => left.shadow_path.localeCompare(right.shadow_path))
+}
+
+async function listMarkdownFiles(root: string): Promise<string[]> {
+  let entries: Array<{ name: string; isDirectory(): boolean; isFile(): boolean }>
+  try {
+    entries = await readdir(root, { withFileTypes: true })
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return []
+    }
+    throw error
+  }
+
+  const files: string[] = []
+  for (const entry of entries) {
+    const entryPath = path.join(root, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...await listMarkdownFiles(entryPath))
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(entryPath)
+    }
+  }
+
+  return files.sort((left, right) => left.localeCompare(right))
+}
+
+function inferWizardPlanDomain(shadows: WizardShadowRecord[]): WizardDomain {
+  const [first] = shadows
+  return first?.domain ?? 'firmvault'
+}
+
+function inferWizardSourceRoot(shadows: WizardShadowRecord[]): string {
+  const [first] = shadows
+  if (!first) {
+    return ''
+  }
+
+  const sourcePath = path.resolve(first.source.path)
+  const relativePath = first.source.root_relative_path
+  if (relativePath && sourcePath.endsWith(relativePath)) {
+    const root = sourcePath.slice(0, sourcePath.length - relativePath.length)
+    return root.endsWith(path.sep) ? root.slice(0, -1) : root
+  }
+
+  return path.dirname(sourcePath)
+}
+
+function mergeWizardQuestions(
+  existingQuestions: Awaited<ReturnType<typeof readWizardQuestions>>,
+  generatedQuestions: Awaited<ReturnType<typeof generateWizardQuestions>>,
+): Awaited<ReturnType<typeof readWizardQuestions>> {
+  const questionsById = new Map(existingQuestions.map((question) => [question.id, question]))
+  for (const question of generatedQuestions) {
+    if (!questionsById.has(question.id)) {
+      questionsById.set(question.id, question)
+    }
+  }
+
+  return Array.from(questionsById.values()).sort((left, right) => left.id.localeCompare(right.id))
+}
+
+async function writeWizardAdoptionPlanAtRelativePath(
+  caseRoot: string,
+  requestedPath: string,
+  plan: Parameters<typeof writeWizardAdoptionPlan>[0]['plan'],
+): Promise<{ path: string; relative_path: string; proposed_facts_written: number }> {
+  if (path.isAbsolute(requestedPath) || requestedPath.includes('..') || !requestedPath.startsWith('.waypoint/wizard/')) {
+    throw new Error('--write-plan must be a safe relative path under .waypoint/wizard/')
+  }
+
+  const outputPath = path.resolve(caseRoot, requestedPath)
+  const resolvedCaseRoot = path.resolve(caseRoot)
+  if (!outputPath.startsWith(`${resolvedCaseRoot}${path.sep}`)) {
+    throw new Error('--write-plan must stay inside the case root')
+  }
+
+  await mkdir(path.dirname(outputPath), { recursive: true })
+  await writeFile(outputPath, yamlStringify(plan), 'utf8')
+  return {
+    path: outputPath,
+    relative_path: requestedPath,
+    proposed_facts_written: plan.proposed_facts.length,
+  }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error
 }
