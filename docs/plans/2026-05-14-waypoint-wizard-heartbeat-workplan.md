@@ -90,7 +90,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
   - Completed: added canonical PRD category registry, deterministic filename/path classifier, and wired shadow generation to use classifier categories; `pnpm exec vitest run packages/waypoint-cli/src/commands/wizard.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 25 tests on 2026-05-14.
 - [x] WW4.2 — Add proposed fact mapping generator
   - Completed: added deterministic review-only FirmVault proposed fact mapper for fee agreements, HIPAA authorizations, and police reports; unknown/unsupported categories propose no facts; `pnpm exec vitest run src/wizard/__tests__/firmvault-facts.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 22 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
-- [ ] WW4.3 — Add missing-doc checklist and ambiguity detection
+- [x] WW4.3 — Add missing-doc checklist and ambiguity detection
+  - Completed: added deterministic FirmVault missing-document checklist and ambiguity detector for unknown classifications/duplicate proposed facts; `pnpm exec vitest run src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 24 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
 
 ### WW5 — Wizard Q&A loop
 

@@ -236,6 +236,11 @@ export {
 export type { FirmVaultShadowCategory } from './wizard/firmvault-classifier'
 export { proposeFirmVaultFactsFromShadows } from './wizard/firmvault-facts'
 export {
+  detectFirmVaultWizardAmbiguities,
+  generateFirmVaultMissingDocumentChecklist,
+} from './wizard/firmvault-review'
+export type { FirmVaultWizardAmbiguity, FirmVaultWizardReviewInput } from './wizard/firmvault-review'
+export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,
 } from './wizard/shadow-frontmatter'
