@@ -15,7 +15,7 @@ async function makeRepo(): Promise<string> {
   return root
 }
 
-function operatorWithLayers(layers: OperatorManifest['instructions']['layers']): OperatorManifest {
+function operatorWithLayers(layers: NonNullable<OperatorManifest['instructions']>['layers']): OperatorManifest {
   return {
     schema_version: 1,
     slug: 'firmvault-paralegal',

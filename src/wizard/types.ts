@@ -158,6 +158,46 @@ export interface WizardAdoptionPlan {
   }
 }
 
+export type WizardOrganizeCopyMode = 'shadow_only' | 'copy_requested'
+export type WizardOrganizeCopyStatus = 'planned' | 'copied' | 'skipped'
+
+export interface WizardOrganizeCopyDecision {
+  mode: WizardOrganizeCopyMode
+  status: WizardOrganizeCopyStatus
+  destination_path?: string
+  reason?: string
+}
+
+export interface WizardOrganizeLegalBoundary {
+  legal_facts_from_organization: 'forbidden'
+  legal_facts_from_copied_files: 'forbidden'
+  requires_approved_apply: boolean
+}
+
+export interface WizardOrganizedDocumentEntry {
+  id: string
+  domain: WizardDomain
+  source: WizardSourcePointer
+  canonical_document_path: string
+  shadow_path: string
+  classification: WizardClassification
+  review_status: WizardReviewStatus
+  copy_decision: WizardOrganizeCopyDecision
+  legal_boundary: WizardOrganizeLegalBoundary
+}
+
+export interface WizardOrganizationPlan {
+  schema_version: 1
+  domain: WizardDomain
+  source_root: string
+  target_case_root: string
+  generated_at: string
+  source_files_read_only: true
+  legal_facts_from_organization: 'forbidden'
+  documents: WizardOrganizedDocumentEntry[]
+  warnings: string[]
+}
+
 export function isWizardDomain(value: unknown): value is WizardDomain {
   return typeof value === 'string' && WIZARD_DOMAINS.includes(value as WizardDomain)
 }

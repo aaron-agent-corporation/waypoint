@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 import { runWaypointCli } from '../../packages/waypoint-cli/src/bin.ts'
-import { loadBundledHandoffManifests, resolveQuestHandoffManifests } from '../index.js'
+import { loadBundledHandoffManifests, resolveQuestHandoffManifests, type QuestManifest } from '../index.js'
 
 type ScaffoldPlan = {
   readonly plan_ref?: string
@@ -66,7 +66,7 @@ describe('FirmVault Quest skeleton', () => {
     const handoffLoad = await loadBundledHandoffManifests()
     expect(handoffLoad.ok).toBe(true)
     if (!handoffLoad.ok) throw new Error(handoffLoad.errors.map((error) => error.message).join('\n'))
-    const resolvedHandoffs = resolveQuestHandoffManifests(resolved.quest, handoffLoad.registry)
+    const resolvedHandoffs = resolveQuestHandoffManifests(resolved.quest as QuestManifest, handoffLoad.registry)
     expect(resolvedHandoffs.ok, resolvedHandoffs.ok ? undefined : resolvedHandoffs.error.message).toBe(true)
     if (!resolvedHandoffs.ok) throw new Error(resolvedHandoffs.error.message)
     expect(resolvedHandoffs.resolved.map((manifest) => manifest.slug)).toEqual(['firmvault-paralegal-handoffs'])
