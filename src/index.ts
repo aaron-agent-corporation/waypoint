@@ -218,6 +218,12 @@ export type {
 } from './authoring/handoff-generator'
 
 export { WIZARD_DOMAINS, createWizardSourcePointer, isSafeWizardRelativePath, isWizardDomain } from './wizard/types'
+export {
+  assertWithinRoot,
+  safeShadowRelativePath,
+  safeWizardArtifactPath,
+  slugifyWizardPathSegment,
+} from './wizard/paths'
 export type {
   WizardAdoptionPlan,
   WizardAnswer,

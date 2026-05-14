@@ -54,8 +54,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 - [x] WW1.1 — Add Wizard shadow and scan types
   - Files: `src/wizard/types.ts`, `src/wizard/__tests__/types.test.ts`, `src/index.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/types.test.ts`
-- [ ] WW1.2 — Add source path and target path safety helpers
-  - Files: `src/wizard/paths.ts`, `src/wizard/__tests__/paths.test.ts`
+- [x] WW1.2 — Add source path and target path safety helpers
+  - Files: `src/wizard/paths.ts`, `src/wizard/__tests__/paths.test.ts`, `src/index.ts`
   - Focused gate: `pnpm exec vitest run src/wizard/__tests__/paths.test.ts`
 - [ ] WW1.3 — Add Wizard frontmatter serialization contract
   - Files: `src/wizard/shadow-frontmatter.ts`, `src/wizard/__tests__/shadow-frontmatter.test.ts`
