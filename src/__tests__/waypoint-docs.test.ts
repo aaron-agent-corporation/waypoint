@@ -247,6 +247,29 @@ describe('Waypoint Quest operator documentation', () => {
     expect(unknownScan).toContain('ambiguous unknown scan')
   })
 
+  it('publishes a Waypoint Wizard FirmVault smoke command covering scan through approved apply', () => {
+    const packageJson = JSON.parse(readRepoFile('package.json'))
+    const smoke = readRepoFile('scripts/waypoint-wizard-firmvault-smoke.mjs')
+
+    expect(packageJson.scripts['smoke:waypoint-wizard-firmvault']).toBe('node scripts/waypoint-wizard-firmvault-smoke.mjs')
+
+    for (const phrase of [
+      'waypoint wizard scan',
+      'waypoint wizard shadow',
+      'waypoint wizard questions',
+      'waypoint wizard answer',
+      'waypoint wizard plan',
+      'waypoint wizard apply',
+      'firmvault init-case',
+      'firmvault guidance',
+      'Waypoint Wizard FirmVault smoke passed',
+      'unapproved HIPAA remains unapplied',
+      'Wizard smoke mutated fixture source file',
+    ]) {
+      expect(smoke).toContain(phrase)
+    }
+  })
+
   it('publishes the authoring fixture for FirmVault dry-run draft generation', () => {
     const readme = readRepoFile('examples/authoring/README.md')
     const answers = JSON.parse(readRepoFile('examples/authoring/firmvault-followup.answers.json')) as {
