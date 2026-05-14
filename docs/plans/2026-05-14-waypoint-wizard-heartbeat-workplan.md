@@ -73,7 +73,10 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW3 — Markdown shadow generation
 
-- [ ] WW3.1 — Implement deterministic shadow markdown writer
+- [x] WW3.1 — Implement deterministic shadow markdown writer
+  - Files: `src/wizard/shadows.ts`, `src/wizard/__tests__/shadows.test.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts`
+  - Completed: 4/4 tests passing on 2026-05-14. Deterministic markdown shadows with frontmatter, safe paths, PII metadata, domain-aware rejection.
 - [ ] WW3.2 — Add basic PII metadata and safe extracted-text/stub body behavior
 - [ ] WW3.3 — Add `waypoint wizard shadow --source <path> --target <case-root> --domain <domain> --json`
 
