@@ -21,6 +21,7 @@ import { runStartCommand } from './commands/start.ts'
 import { runStatusCommand } from './commands/status.ts'
 import { runTasksCommand } from './commands/tasks.ts'
 import { runToolsCommand } from './commands/tools.ts'
+import { runWizardCommand } from './commands/wizard.ts'
 
 const rootPackageVersion = cliPackage.version
 
@@ -74,6 +75,7 @@ Usage:
   waypoint author recipe --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint author quest --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
   waypoint author handoff --answers <path> [--allow-unapproved-draft] [--write-draft <path>] [--json]
+  waypoint wizard scan --source <path> --domain <domain> [--json]
 `
 
 export async function runWaypointCli(args: readonly string[], io: WaypointCliIo = defaultIo()): Promise<number> {
@@ -171,6 +173,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'resume') {
     return runResumeCommand(args.slice(1), io)
+  }
+
+  if (command === 'wizard') {
+    return runWizardCommand(args.slice(1), io)
   }
 
   io.stderr(`Unknown Waypoint command: ${command}`)
