@@ -243,12 +243,17 @@ export type { FirmVaultWizardAmbiguity, FirmVaultWizardReviewInput } from './wiz
 export {
   generateWizardQuestions,
   nextWizardQuestion,
+  readWizardAnswers,
   readWizardQuestions,
+  recordWizardAnswer,
   writeWizardQuestions,
 } from './wizard/questions'
 export type {
   GenerateWizardQuestionsInput,
+  ReadWizardAnswersInput,
   ReadWizardQuestionsInput,
+  RecordWizardAnswerInput,
+  RecordWizardAnswerResult,
   WriteWizardQuestionsInput,
   WriteWizardQuestionsResult,
 } from './wizard/questions'

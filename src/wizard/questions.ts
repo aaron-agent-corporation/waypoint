@@ -27,7 +27,27 @@ export interface ReadWizardQuestionsInput {
   caseRoot: string
 }
 
+export interface ReadWizardAnswersInput {
+  caseRoot: string
+}
+
+export interface RecordWizardAnswerInput {
+  caseRoot: string
+  questionId: string
+  answer: string
+  answeredAt?: string
+  answeredBy?: string
+}
+
+export interface RecordWizardAnswerResult {
+  path: string
+  relative_path: string
+  answers_written: number
+  answer: WizardAnswer
+}
+
 const QUESTIONS_RELATIVE_PATH = safeWizardArtifactPath('questions.yaml')
+const ANSWERS_RELATIVE_PATH = safeWizardArtifactPath('answers.yaml')
 
 export function generateWizardQuestions(input: GenerateWizardQuestionsInput): WizardQuestion[] {
   const answeredIds = new Set((input.answers ?? []).map((answer) => answer.question_id))
@@ -106,6 +126,81 @@ export async function readWizardQuestions(input: ReadWizardQuestionsInput): Prom
   }
 
   return parsed.questions
+}
+
+export async function readWizardAnswers(input: ReadWizardAnswersInput): Promise<WizardAnswer[]> {
+  const caseRoot = path.resolve(input.caseRoot)
+  const answersPath = path.resolve(caseRoot, ANSWERS_RELATIVE_PATH)
+  assertWithinRoot(caseRoot, answersPath)
+
+  let raw: string
+  try {
+    raw = await readFile(answersPath, 'utf8')
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return []
+    }
+    throw error
+  }
+
+  const parsed = yamlParse(raw) as { answers?: WizardAnswer[] } | null
+  if (!parsed || !Array.isArray(parsed.answers)) {
+    return []
+  }
+
+  return parsed.answers
+}
+
+export async function recordWizardAnswer(input: RecordWizardAnswerInput): Promise<RecordWizardAnswerResult> {
+  const trimmedQuestionId = input.questionId.trim()
+  const trimmedAnswer = input.answer.trim()
+
+  if (!trimmedQuestionId) {
+    throw new Error('Question ID is required')
+  }
+
+  if (!trimmedAnswer) {
+    throw new Error('Answer text is required')
+  }
+
+  const caseRoot = path.resolve(input.caseRoot)
+  const answersPath = path.resolve(caseRoot, ANSWERS_RELATIVE_PATH)
+  assertWithinRoot(caseRoot, answersPath)
+
+  const answer: WizardAnswer = {
+    question_id: trimmedQuestionId,
+    answer: trimmedAnswer,
+    answered_at: input.answeredAt ?? new Date().toISOString(),
+  }
+
+  if (input.answeredBy) {
+    answer.answered_by = input.answeredBy
+  }
+
+  const existingAnswers = await readWizardAnswers({ caseRoot })
+  const answersByQuestionId = new Map<string, WizardAnswer>()
+  for (const existing of existingAnswers) {
+    answersByQuestionId.set(existing.question_id, existing)
+  }
+  answersByQuestionId.set(trimmedQuestionId, answer)
+  const answers = Array.from(answersByQuestionId.values()).sort((left, right) => left.question_id.localeCompare(right.question_id))
+
+  await mkdir(path.dirname(answersPath), { recursive: true })
+  await writeFile(
+    answersPath,
+    yamlStringify({
+      schema_version: 1,
+      answers,
+    }),
+    'utf8',
+  )
+
+  return {
+    path: answersPath,
+    relative_path: ANSWERS_RELATIVE_PATH,
+    answers_written: answers.length,
+    answer,
+  }
 }
 
 function questionIdForAmbiguity(ambiguityId: string): string {

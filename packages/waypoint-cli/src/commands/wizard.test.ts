@@ -126,6 +126,70 @@ questions:
     })
   })
 
+  it('records a Wizard answer and suppresses the answered question', async () => {
+    const { mkdir, mkdtemp, readFile, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { parse: parseYaml } = await import('yaml')
+
+    const caseRoot = await mkdtemp(join(tmpdir(), 'wizard-answer-case-'))
+    await mkdir(join(caseRoot, '.waypoint', 'wizard'), { recursive: true })
+    await writeFile(
+      join(caseRoot, '.waypoint', 'wizard', 'questions.yaml'),
+      `schema_version: 1
+questions:
+  - id: question-a
+    prompt: First question?
+    status: pending
+    domain: firmvault
+    related_shadow_paths: []
+  - id: question-b
+    prompt: Second question?
+    status: pending
+    domain: firmvault
+    related_shadow_paths: []
+`,
+      'utf8',
+    )
+
+    const answerOutputs: string[] = []
+    const errors: string[] = []
+    const io = {
+      stdout: (line: string) => answerOutputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    }
+
+    const answerExitCode = await runWizardCommand(
+      ['answer', '--case', caseRoot, '--question', 'question-a', '--answer', 'Use the signed fee agreement.', '--json'],
+      io,
+    )
+
+    expect(answerExitCode).toBe(0)
+    expect(errors).toEqual([])
+    const answerJson = JSON.parse(answerOutputs.join('\n'))
+    expect(answerJson.answers_written).toBe(1)
+    expect(answerJson.answer).toMatchObject({
+      question_id: 'question-a',
+      answer: 'Use the signed fee agreement.',
+    })
+
+    const answersRaw = await readFile(join(caseRoot, '.waypoint', 'wizard', 'answers.yaml'), 'utf8')
+    const answersYaml = parseYaml(answersRaw) as { answers: Array<{ question_id: string; answer: string }> }
+    expect(answersYaml.answers).toEqual([
+      expect.objectContaining({ question_id: 'question-a', answer: 'Use the signed fee agreement.' }),
+    ])
+
+    const questionOutputs: string[] = []
+    const questionExitCode = await runWizardCommand(['questions', '--case', caseRoot, '--json'], {
+      stdout: (line: string) => questionOutputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    })
+
+    expect(questionExitCode).toBe(0)
+    const questionsJson = JSON.parse(questionOutputs.join('\n'))
+    expect(questionsJson.next_question).toMatchObject({ id: 'question-b' })
+  })
+
   it('rejects unknown domains', async () => {
     const outputs: string[] = []
     const errors: string[] = []
