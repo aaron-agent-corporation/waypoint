@@ -113,7 +113,8 @@ Statuses: `pending`, `in_progress`, `completed`, `blocked`.
 
 ### WW7 — Approved apply through FirmVault state APIs
 
-- [ ] WW7.1 — Add plan approval/approved_fact handling
+- [x] WW7.1 — Add plan approval/approved_fact handling
+  - Completed: added immutable `approveWizardProposedFacts(plan, factRefs)` helper that marks selected proposed facts approved by id/fact slug, preserves unselected facts as unapproved, refreshes approval counts, and exports it from core; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts packages/waypoint-cli/src/commands/wizard.test.ts` passed with 15 tests on 2026-05-14.
 - [ ] WW7.2 — Add `waypoint wizard apply --case <case-root> --json`
 - [ ] WW7.3 — Confirm unapproved proposed facts remain unapplied
 

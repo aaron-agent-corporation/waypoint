@@ -37,6 +37,13 @@ export interface WriteWizardAdoptionPlanResult {
 
 const ADOPTION_PLAN_RELATIVE_PATH = safeWizardArtifactPath('adoption-plan.yaml')
 
+function summarizeApprovals(proposedFacts: WizardProposedFact[]) {
+  return {
+    approved_facts: proposedFacts.filter((fact) => fact.approved).length,
+    unapproved_facts: proposedFacts.filter((fact) => !fact.approved).length,
+  }
+}
+
 export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): WizardAdoptionPlan {
   const proposedFacts = input.proposedFacts.map((fact) => ({
     ...fact,
@@ -88,15 +95,29 @@ export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): Wi
     },
     missing_expected_documents: [...input.missingExpectedDocuments].sort(),
     warnings: [...input.warnings],
-    approvals: {
-      approved_facts: proposedFacts.filter((fact) => fact.approved).length,
-      unapproved_facts: proposedFacts.filter((fact) => !fact.approved).length,
-    },
+    approvals: summarizeApprovals(proposedFacts),
     safety: {
       external_side_effects: 'forbidden',
       source_mutation: 'forbidden',
       legal_facts_from_shadows: 'forbidden',
     },
+  }
+}
+
+export function approveWizardProposedFacts(
+  plan: WizardAdoptionPlan,
+  factRefs: string[],
+): WizardAdoptionPlan {
+  const approvedRefs = new Set(factRefs)
+  const proposedFacts = plan.proposed_facts.map((fact) => ({
+    ...fact,
+    approved: approvedRefs.has(fact.id) || approvedRefs.has(fact.fact),
+  }))
+
+  return {
+    ...plan,
+    proposed_facts: proposedFacts,
+    approvals: summarizeApprovals(proposedFacts),
   }
 }
 

@@ -258,6 +258,7 @@ export type {
   WriteWizardQuestionsResult,
 } from './wizard/questions'
 export {
+  approveWizardProposedFacts,
   buildWizardAdoptionPlan,
   writeWizardAdoptionPlan,
 } from './wizard/plan'

@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { parse as parseYaml } from 'yaml'
 import { describe, expect, it } from 'vitest'
 
-import { buildWizardAdoptionPlan, writeWizardAdoptionPlan } from '../plan'
+import { approveWizardProposedFacts, buildWizardAdoptionPlan, writeWizardAdoptionPlan } from '../plan'
 import type { WizardAnswer, WizardProposedFact, WizardQuestion, WizardShadowRecord } from '../types'
 
 function shadow(kind: string, filename: string): WizardShadowRecord {
@@ -151,6 +151,42 @@ describe('Wizard adoption plans', () => {
     ])
     expect(plan.q_and_a).toEqual({ questions_total: 1, questions_pending: 1, answers_total: 1 })
     expect(plan.approvals).toEqual({ approved_facts: 0, unapproved_facts: 1 })
+  })
+
+  it('marks only selected proposed facts approved without applying unselected facts', () => {
+    const plan = buildWizardAdoptionPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/source',
+      targetCaseRoot: '/tmp/case',
+      shadows: [shadow('contracts', 'Fee Agreement'), shadow('authorizations', 'HIPAA Authorization')],
+      proposedFacts: [
+        proposedFact({
+          id: 'fact-fee-agreement',
+          fact: 'client.contracts.fee_agreement',
+          evidence_shadow: '.waypoint/shadows/firmvault/contracts/Fee Agreement.md',
+          source_path: '/tmp/source/Fee Agreement.pdf',
+        }),
+        proposedFact({
+          id: 'fact-hipaa',
+          fact: 'client.authorizations.hipaa',
+          evidence_shadow: '.waypoint/shadows/firmvault/authorizations/HIPAA Authorization.md',
+          source_path: '/tmp/source/HIPAA Authorization.pdf',
+        }),
+      ],
+      questions: [],
+      answers: [],
+      missingExpectedDocuments: [],
+      warnings: [],
+    })
+
+    const approved = approveWizardProposedFacts(plan, ['fact-fee-agreement'])
+
+    expect(plan.proposed_facts.map((fact) => fact.approved)).toEqual([false, false])
+    expect(approved.proposed_facts).toEqual([
+      expect.objectContaining({ id: 'fact-fee-agreement', approved: true }),
+      expect.objectContaining({ id: 'fact-hipaa', approved: false }),
+    ])
+    expect(approved.approvals).toEqual({ approved_facts: 1, unapproved_facts: 1 })
   })
 
   it('writes adoption-plan.yaml under the case .waypoint/wizard directory', async () => {
