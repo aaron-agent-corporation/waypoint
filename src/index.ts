@@ -234,6 +234,7 @@ export {
   isFirmVaultShadowCategory,
 } from './wizard/firmvault-classifier'
 export type { FirmVaultShadowCategory } from './wizard/firmvault-classifier'
+export { proposeFirmVaultFactsFromShadows } from './wizard/firmvault-facts'
 export {
   parseWizardShadowMarkdown,
   serializeWizardShadowMarkdown,
