@@ -232,12 +232,15 @@ export {
   buildWizardOrganizationPlan,
   createWizardOrganizedDocumentEntry,
   writeWizardOrganizationPlan,
+  writeWizardOrganizedCasePackage,
 } from './wizard/organize'
 export type {
   BuildWizardOrganizationPlanInput,
   CreateWizardOrganizedDocumentEntryInput,
   WriteWizardOrganizationPlanInput,
   WriteWizardOrganizationPlanResult,
+  WriteWizardOrganizedCasePackageInput,
+  WriteWizardOrganizedCasePackageResult,
 } from './wizard/organize'
 export {
   FIRMVAULT_SHADOW_CATEGORIES,

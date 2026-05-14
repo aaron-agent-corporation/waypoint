@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parse as yamlParse } from 'yaml'
@@ -9,6 +9,7 @@ import {
   buildWizardOrganizationPlan,
   createWizardOrganizedDocumentEntry,
   writeWizardOrganizationPlan,
+  writeWizardOrganizedCasePackage,
 } from '../organize'
 import type {
   WizardOrganizeCopyDecision,
@@ -108,6 +109,86 @@ describe('Waypoint Wizard organize mode contracts', () => {
       legal_facts_from_organization: 'forbidden'
       documents: WizardOrganizedDocumentEntry[]
     }>()
+  })
+
+  it('writes the clean case skeleton, document indexes, source manifest, report, checklist, and organization plan', async () => {
+    const plan = buildWizardOrganizationPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/messy-case',
+      targetCaseRoot: '/tmp/organized-case',
+      shadows: [
+        shadowRecord({
+          id: 'shadow-001',
+          filename: 'Insurance Policy.pdf',
+          kind: 'insurance',
+          confidence: 'high',
+          reviewRequired: false,
+          shadowPath: '.waypoint/shadows/firmvault/insurance/insurance-policy.md',
+        }),
+        shadowRecord({
+          id: 'shadow-002',
+          filename: 'Mystery Upload.pdf',
+          kind: 'unknown',
+          confidence: 'low',
+          reviewRequired: true,
+          shadowPath: '.waypoint/shadows/firmvault/unknown/mystery-upload.md',
+        }),
+      ],
+      generatedAt: '2026-05-14T12:00:00.000Z',
+    })
+
+    const caseRoot = await mkdtemp(join(tmpdir(), 'waypoint-organized-case-'))
+    try {
+      const result = await writeWizardOrganizedCasePackage({ caseRoot, plan })
+
+      expect(result).toEqual({
+        case_root: caseRoot,
+        directories_created: expect.arrayContaining([
+          'documents/insurance',
+          'documents/unknown',
+          '.waypoint/wizard',
+        ]),
+        artifacts: expect.arrayContaining([
+          'README.md',
+          'documents/insurance/README.md',
+          'documents/unknown/README.md',
+          '.waypoint/wizard/source-manifest.yaml',
+          '.waypoint/wizard/organization-plan.yaml',
+          '.waypoint/wizard/organize-report.md',
+          '.waypoint/wizard/missing-documents-checklist.md',
+        ]),
+        documents_planned: 2,
+        source_files_copied: 0,
+      })
+
+      expect(await readFile(join(caseRoot, 'README.md'), 'utf8')).toContain('Waypoint Wizard organized case package')
+      expect(await readFile(join(caseRoot, 'documents/insurance/README.md'), 'utf8')).toContain('Insurance Policy.pdf')
+      expect(await readFile(join(caseRoot, 'documents/unknown/README.md'), 'utf8')).toContain('Mystery Upload.pdf')
+
+      const sourceManifest = yamlParse(await readFile(join(caseRoot, '.waypoint/wizard/source-manifest.yaml'), 'utf8')) as {
+        source_files_read_only: boolean
+        legal_facts_from_organization: string
+        files: Array<{ source_path: string; canonical_document_path: string }>
+      }
+      expect(sourceManifest.source_files_read_only).toBe(true)
+      expect(sourceManifest.legal_facts_from_organization).toBe('forbidden')
+      expect(sourceManifest.files.map((file) => file.canonical_document_path)).toEqual([
+        'documents/insurance/insurance-policy.pdf',
+        'documents/unknown/mystery-upload.pdf',
+      ])
+
+      const report = await readFile(join(caseRoot, '.waypoint/wizard/organize-report.md'), 'utf8')
+      expect(report).toContain('Source files copied: 0')
+      expect(report).toContain('Legal facts from organization: forbidden')
+
+      const checklist = await readFile(join(caseRoot, '.waypoint/wizard/missing-documents-checklist.md'), 'utf8')
+      expect(checklist).toContain('- [ ] Review unknown files in `documents/unknown/`')
+      expect(checklist).toContain('organize-q-001')
+
+      expect(await readdir(join(caseRoot, 'documents'))).toEqual(['insurance', 'unknown'])
+    } finally {
+      await rm(caseRoot, { recursive: true, force: true })
+    }
   })
 
   it('builds and writes a deterministic shadow-only organization plan without copying source files', async () => {
