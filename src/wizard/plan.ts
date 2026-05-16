@@ -10,6 +10,8 @@ import type {
   WizardProposedFact,
   WizardQuestion,
   WizardShadowRecord,
+  WizardOrganizedDocumentEntry,
+  WizardOrganizationPlan,
 } from './types'
 
 export interface BuildWizardAdoptionPlanInput {
@@ -22,6 +24,7 @@ export interface BuildWizardAdoptionPlanInput {
   answers: WizardAnswer[]
   missingExpectedDocuments: string[]
   warnings: string[]
+  organizationPlan?: WizardOrganizationPlan
 }
 
 export interface WriteWizardAdoptionPlanInput {
@@ -44,11 +47,37 @@ function summarizeApprovals(proposedFacts: WizardProposedFact[]) {
   }
 }
 
-export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): WizardAdoptionPlan {
-  const proposedFacts = input.proposedFacts.map((fact) => ({
+function organizationDocumentsByShadow(
+  organizationPlan: WizardOrganizationPlan | undefined,
+): Map<string, WizardOrganizedDocumentEntry> {
+  const documents = new Map<string, WizardOrganizedDocumentEntry>()
+  for (const document of organizationPlan?.documents ?? []) {
+    documents.set(document.shadow_path, document)
+  }
+  return documents
+}
+
+function copiedEvidencePath(document: WizardOrganizedDocumentEntry | undefined): string | undefined {
+  if (!document || document.copy_decision.status !== 'copied') return undefined
+  return document.copy_decision.destination_path ?? document.canonical_document_path
+}
+
+function enrichProposedFactWithOrganization(
+  fact: WizardProposedFact,
+  documents: Map<string, WizardOrganizedDocumentEntry>,
+): WizardProposedFact {
+  const document = documents.get(fact.evidence_shadow)
+  return {
     ...fact,
+    canonical_document_path: fact.canonical_document_path ?? document?.canonical_document_path,
+    copied_evidence_path: fact.copied_evidence_path ?? copiedEvidencePath(document),
     approved: false,
-  }))
+  }
+}
+
+export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): WizardAdoptionPlan {
+  const organizedDocuments = organizationDocumentsByShadow(input.organizationPlan)
+  const proposedFacts = input.proposedFacts.map((fact) => enrichProposedFactWithOrganization(fact, organizedDocuments))
   const classifications = Array.from(
     input.shadows.reduce((summaries, shadow) => {
       const existing = summaries.get(shadow.classification.kind) ?? {
@@ -76,13 +105,19 @@ export function buildWizardAdoptionPlan(input: BuildWizardAdoptionPlanInput): Wi
       files_found: input.shadows.length,
       files: input.shadows.map((shadow) => ({ ...shadow.source })),
     },
-    shadow_map: input.shadows.map((shadow) => ({
-      shadow_path: shadow.shadow_path,
-      source_path: shadow.source.path,
-      source_sha256: shadow.source.sha256,
-      classification_kind: shadow.classification.kind,
-      review_status: shadow.review_status,
-    })),
+    shadow_map: input.shadows.map((shadow) => {
+      const organizedDocument = organizedDocuments.get(shadow.shadow_path)
+      return {
+        shadow_path: shadow.shadow_path,
+        source_path: shadow.source.path,
+        source_sha256: shadow.source.sha256,
+        classification_kind: shadow.classification.kind,
+        review_status: shadow.review_status,
+        canonical_document_path: organizedDocument?.canonical_document_path,
+        copied_evidence_path: copiedEvidencePath(organizedDocument),
+        copy_status: organizedDocument?.copy_decision.status,
+      }
+    }),
     classifications,
     shadows: [...input.shadows],
     proposed_facts: proposedFacts,

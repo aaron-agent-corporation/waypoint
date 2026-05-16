@@ -73,9 +73,9 @@ When classification or fact mapping is ambiguous, the Wizard creates one-questio
 
 ### 5. Plan
 
-`waypoint wizard plan` writes a durable adoption plan under `.waypoint/wizard/adoption-plan.yaml`. The plan links source inventory, shadows, classifications, questions, answers, proposed FirmVault facts, missing documents, warnings, and approval state.
+`waypoint wizard plan` writes a durable adoption plan under `.waypoint/wizard/adoption-plan.yaml`. The plan links source inventory, shadows, classifications, questions, answers, proposed FirmVault facts, missing documents, warnings, and approval state. When an organized package exists, the plan also carries the canonical document path and copied evidence path from `.waypoint/wizard/organization-plan.yaml` so review/apply can see both the markdown shadow and the copied source document.
 
-Proposed facts are review-only until explicitly approved in the plan. The Wizard does not treat shadows, filenames, folder names, or extracted text as legal truth by themselves.
+Proposed facts are review-only until explicitly approved in the plan. The Wizard does not treat shadows, filenames, folder names, organized copied files, or extracted text as legal truth by themselves.
 
 ### 6. Apply
 

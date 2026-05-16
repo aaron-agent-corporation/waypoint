@@ -18,7 +18,9 @@ describe('applyFirmVaultWizardPlan', () => {
     const hipaaShadow = '.waypoint/shadows/firmvault/authorizations/hipaa-authorization.md'
     await mkdir(join(caseRoot, '.waypoint', 'shadows', 'firmvault', 'contracts'), { recursive: true })
     await mkdir(join(caseRoot, '.waypoint', 'shadows', 'firmvault', 'authorizations'), { recursive: true })
+    await mkdir(join(caseRoot, 'documents', 'contracts'), { recursive: true })
     await writeFile(join(caseRoot, feeAgreementShadow), 'fee agreement shadow', 'utf8')
+    await writeFile(join(caseRoot, 'documents', 'contracts', 'fee-agreement.pdf'), 'copied fee agreement', 'utf8')
     await writeFile(join(caseRoot, hipaaShadow), 'hipaa shadow', 'utf8')
 
     const before = await readFirmVaultLandmarkProjection(caseRoot)
@@ -39,6 +41,8 @@ describe('applyFirmVaultWizardPlan', () => {
           fact: 'client.contracts.fee_agreement',
           status: 'signed',
           evidence_shadow: feeAgreementShadow,
+          canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+          copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
           source_path: '/read-only/source/Fee Agreement.pdf',
           confidence: 'high',
           review_required: true,
@@ -85,6 +89,7 @@ describe('applyFirmVaultWizardPlan', () => {
     })
     expect(result.applied_facts[0]?.state_result.evidence).toEqual([
       expect.objectContaining({ path: feeAgreementShadow, kind: 'wizard_shadow' }),
+      expect.objectContaining({ path: 'documents/contracts/fee-agreement.pdf', kind: 'wizard_copied_document' }),
     ])
     expect(result.skipped_facts).toEqual([
       expect.objectContaining({ id: 'fact-hipaa', fact: 'client.authorizations.hipaa', reason: 'unapproved' }),

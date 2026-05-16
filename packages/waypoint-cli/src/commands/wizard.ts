@@ -31,6 +31,7 @@ import type {
   WizardShadowRecord,
   WizardApplyGuidanceResult,
   WizardApplyStateResult,
+  WizardOrganizationPlan,
 } from '@waypoint/core'
 
 type WizardFirmVaultStateModule = {
@@ -405,7 +406,8 @@ export async function runWizardPlan(args: readonly string[], io: WaypointCliIo):
   try {
     const caseRoot = path.resolve(casePath)
     const shadows = await readWizardShadowRecords(caseRoot)
-    const domain = inferWizardPlanDomain(shadows)
+    const organizationPlan = await readWizardOrganizationPlan(caseRoot)
+    const domain = inferWizardPlanDomain(shadows, organizationPlan)
     const proposedFacts = domain === 'firmvault' ? proposeFirmVaultFactsFromShadows(shadows) : []
     const ambiguities = domain === 'firmvault'
       ? detectFirmVaultWizardAmbiguities({ shadows, proposedFacts })
@@ -430,6 +432,7 @@ export async function runWizardPlan(args: readonly string[], io: WaypointCliIo):
       answers: existingAnswers,
       missingExpectedDocuments,
       warnings: ambiguities.map((ambiguity) => ambiguity.message),
+      organizationPlan: organizationPlan ?? undefined,
     })
 
     const writeResult = writePlanPath
@@ -670,9 +673,21 @@ async function listMarkdownFiles(root: string): Promise<string[]> {
   return files.sort((left, right) => left.localeCompare(right))
 }
 
-function inferWizardPlanDomain(shadows: WizardShadowRecord[]): WizardDomain {
+async function readWizardOrganizationPlan(caseRoot: string): Promise<WizardOrganizationPlan | null> {
+  try {
+    const rawPlan = await readFile(path.join(caseRoot, '.waypoint', 'wizard', 'organization-plan.yaml'), 'utf8')
+    return yamlParse(rawPlan) as WizardOrganizationPlan
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return null
+    }
+    throw error
+  }
+}
+
+function inferWizardPlanDomain(shadows: WizardShadowRecord[], organizationPlan?: WizardOrganizationPlan | null): WizardDomain {
   const [first] = shadows
-  return first?.domain ?? 'firmvault'
+  return organizationPlan?.domain ?? first?.domain ?? 'firmvault'
 }
 
 function inferWizardSourceRoot(shadows: WizardShadowRecord[]): string {

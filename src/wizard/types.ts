@@ -91,6 +91,8 @@ export interface WizardProposedFact {
   status: string
   evidence_shadow: string
   source_path: string
+  canonical_document_path?: string
+  copied_evidence_path?: string
   confidence: WizardConfidence
   review_required: boolean
   approved: boolean
@@ -116,6 +118,9 @@ export interface WizardPlanShadowMapEntry {
   source_sha256: string
   classification_kind: string
   review_status: WizardReviewStatus
+  canonical_document_path?: string
+  copied_evidence_path?: string
+  copy_status?: WizardOrganizeCopyStatus
 }
 
 export interface WizardPlanClassificationSummary {

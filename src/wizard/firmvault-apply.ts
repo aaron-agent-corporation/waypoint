@@ -85,11 +85,7 @@ export async function applyFirmVaultWizardPlan(input: ApplyFirmVaultWizardPlanIn
     const stateResult = await input.setFirmVaultCaseFact(input.caseRoot, {
       fact: proposedFact.fact,
       status,
-      evidence: [{
-        path: proposedFact.evidence_shadow,
-        kind: 'wizard_shadow',
-        note: `Waypoint Wizard shadow for source ${proposedFact.source_path}`,
-      }],
+      evidence: wizardFactEvidence(proposedFact),
       note: `Applied by Waypoint Wizard from ${proposedFact.evidence_shadow}`,
     })
 
@@ -115,6 +111,24 @@ export async function applyFirmVaultWizardPlan(input: ApplyFirmVaultWizardPlanIn
     skipped_facts: skippedFacts,
     guidance,
   }
+}
+
+function wizardFactEvidence(proposedFact: WizardProposedFact): WizardApplyEvidenceRef[] {
+  const evidence: WizardApplyEvidenceRef[] = [{
+    path: proposedFact.evidence_shadow,
+    kind: 'wizard_shadow',
+    note: `Waypoint Wizard shadow for source ${proposedFact.source_path}`,
+  }]
+
+  if (proposedFact.copied_evidence_path) {
+    evidence.push({
+      path: proposedFact.copied_evidence_path,
+      kind: 'wizard_copied_document',
+      note: 'Waypoint Wizard organized copied source document',
+    })
+  }
+
+  return evidence
 }
 
 function normalizeWizardFactStatus(proposedFact: WizardProposedFact): string {

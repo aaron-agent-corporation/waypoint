@@ -1,4 +1,4 @@
-import type { WizardProposedFact, WizardShadowRecord } from './types'
+import type { WizardOrganizedDocumentEntry, WizardProposedFact, WizardShadowRecord } from './types'
 
 interface FirmVaultFactMapping {
   fact: string
@@ -55,17 +55,69 @@ export function proposeFirmVaultFactsFromShadows(shadows: WizardShadowRecord[]):
     const fact = findFirmVaultFactForShadow(shadow)
     if (!fact) continue
 
-    proposedFacts.push({
-      id: `proposed-fact-${String(proposedFacts.length + 1).padStart(3, '0')}`,
+    proposedFacts.push(buildFirmVaultProposedFact({
+      index: proposedFacts.length,
       fact,
-      status: 'proposed',
-      evidence_shadow: shadow.shadow_path,
-      source_path: shadow.source.path,
+      evidenceShadow: shadow.shadow_path,
+      sourcePath: shadow.source.path,
       confidence: shadow.classification.confidence,
-      review_required: true,
-      approved: false,
-    })
+    }))
   }
 
   return proposedFacts
+}
+
+export function proposeFirmVaultFactsFromOrganizedDocuments(
+  documents: WizardOrganizedDocumentEntry[],
+): WizardProposedFact[] {
+  const proposedFacts: WizardProposedFact[] = []
+
+  for (const document of documents) {
+    const fact = findFirmVaultFactForShadow({
+      id: document.id,
+      domain: document.domain,
+      shadow_path: document.shadow_path,
+      source: document.source,
+      classification: document.classification,
+      review_status: document.review_status,
+    })
+    if (!fact) continue
+
+    proposedFacts.push(buildFirmVaultProposedFact({
+      index: proposedFacts.length,
+      fact,
+      evidenceShadow: document.shadow_path,
+      sourcePath: document.source.path,
+      confidence: document.classification.confidence,
+      canonicalDocumentPath: document.canonical_document_path,
+      copiedEvidencePath: document.copy_decision.status === 'copied'
+        ? document.copy_decision.destination_path ?? document.canonical_document_path
+        : undefined,
+    }))
+  }
+
+  return proposedFacts
+}
+
+function buildFirmVaultProposedFact(input: {
+  index: number
+  fact: string
+  evidenceShadow: string
+  sourcePath: string
+  confidence: WizardProposedFact['confidence']
+  canonicalDocumentPath?: string
+  copiedEvidencePath?: string
+}): WizardProposedFact {
+  return {
+    id: `proposed-fact-${String(input.index + 1).padStart(3, '0')}`,
+    fact: input.fact,
+    status: 'proposed',
+    evidence_shadow: input.evidenceShadow,
+    source_path: input.sourcePath,
+    canonical_document_path: input.canonicalDocumentPath,
+    copied_evidence_path: input.copiedEvidencePath,
+    confidence: input.confidence,
+    review_required: true,
+    approved: false,
+  }
 }

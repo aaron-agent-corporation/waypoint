@@ -5,7 +5,14 @@ import { parse as parseYaml } from 'yaml'
 import { describe, expect, it } from 'vitest'
 
 import { approveWizardProposedFacts, buildWizardAdoptionPlan, writeWizardAdoptionPlan } from '../plan'
-import type { WizardAnswer, WizardProposedFact, WizardQuestion, WizardShadowRecord } from '../types'
+import type {
+  WizardAnswer,
+  WizardOrganizedDocumentEntry,
+  WizardOrganizationPlan,
+  WizardProposedFact,
+  WizardQuestion,
+  WizardShadowRecord,
+} from '../types'
 
 function shadow(kind: string, filename: string): WizardShadowRecord {
   return {
@@ -41,6 +48,57 @@ function proposedFact(overrides: Partial<WizardProposedFact> = {}): WizardPropos
     review_required: true,
     approved: true,
     ...overrides,
+  }
+}
+
+function organizedDocument(overrides: Partial<WizardOrganizedDocumentEntry> = {}): WizardOrganizedDocumentEntry {
+  return {
+    id: 'doc-001',
+    domain: 'firmvault',
+    source: {
+      path: '/tmp/source/Fee Agreement.pdf',
+      root_relative_path: 'Fee Agreement.pdf',
+      sha256: 'hash-Fee Agreement',
+      size_bytes: 123,
+      media_type: 'application/pdf',
+      discovered_at: '2026-05-14T00:00:00.000Z',
+    },
+    canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+    shadow_path: '.waypoint/shadows/firmvault/contracts/Fee Agreement.md',
+    classification: {
+      kind: 'contracts',
+      confidence: 'high',
+      rationale: 'test contracts',
+      review_required: false,
+    },
+    review_status: 'pending',
+    copy_decision: {
+      mode: 'copy_requested',
+      status: 'copied',
+      destination_path: 'documents/contracts/fee-agreement.pdf',
+      source_sha256_verified: 'hash-Fee Agreement',
+    },
+    legal_boundary: {
+      legal_facts_from_organization: 'forbidden',
+      legal_facts_from_copied_files: 'forbidden',
+      requires_approved_apply: true,
+    },
+    ...overrides,
+  }
+}
+
+function organizationPlan(documents: WizardOrganizedDocumentEntry[]): WizardOrganizationPlan {
+  return {
+    schema_version: 1,
+    domain: 'firmvault',
+    source_root: '/tmp/source',
+    target_case_root: '/tmp/case',
+    generated_at: '2026-05-14T00:00:00.000Z',
+    source_files_read_only: true,
+    legal_facts_from_organization: 'forbidden',
+    documents,
+    questions: [],
+    warnings: [],
   }
 }
 
@@ -150,6 +208,36 @@ describe('Wizard adoption plans', () => {
       { kind: 'unknown', count: 1, review_required: 1 },
     ])
     expect(plan.q_and_a).toEqual({ questions_total: 1, questions_pending: 1, answers_total: 1 })
+    expect(plan.approvals).toEqual({ approved_facts: 0, unapproved_facts: 1 })
+  })
+
+  it('records organized copied evidence paths while leaving proposed facts pending review', () => {
+    const plan = buildWizardAdoptionPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/source',
+      targetCaseRoot: '/tmp/case',
+      shadows: [shadow('contracts', 'Fee Agreement')],
+      proposedFacts: [proposedFact({ approved: true })],
+      questions: [],
+      answers: [],
+      missingExpectedDocuments: [],
+      warnings: [],
+      organizationPlan: organizationPlan([organizedDocument()]),
+    })
+
+    expect(plan.shadow_map[0]).toMatchObject({
+      shadow_path: '.waypoint/shadows/firmvault/contracts/Fee Agreement.md',
+      source_path: '/tmp/source/Fee Agreement.pdf',
+      canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+      copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
+      copy_status: 'copied',
+    })
+    expect(plan.proposed_facts[0]).toMatchObject({
+      evidence_shadow: '.waypoint/shadows/firmvault/contracts/Fee Agreement.md',
+      canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+      copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
+      approved: false,
+    })
     expect(plan.approvals).toEqual({ approved_facts: 0, unapproved_facts: 1 })
   })
 

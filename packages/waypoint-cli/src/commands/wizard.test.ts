@@ -221,6 +221,52 @@ questions:
     expect(parsedPlan.proposed_facts[0]?.approved).toBe(false)
   })
 
+  it('writes adoption plans that reference organized copied evidence paths when an organization plan exists', async () => {
+    const { mkdtemp, readFile, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { parse: parseYaml } = await import('yaml')
+
+    const sourceRoot = await mkdtemp(join(tmpdir(), 'wizard-plan-organized-source-'))
+    const caseRoot = await mkdtemp(join(tmpdir(), 'wizard-plan-organized-case-'))
+    await writeFile(join(sourceRoot, 'Fee Agreement.pdf'), 'signed fee agreement')
+
+    const organizeErrors: string[] = []
+    expect(await runWizardCommand(
+      ['organize', '--source', sourceRoot, '--target', caseRoot, '--domain', 'firmvault', '--copy-files', '--json'],
+      { stdout: () => undefined, stderr: (line: string) => organizeErrors.push(line) },
+    )).toBe(0)
+    expect(organizeErrors).toEqual([])
+
+    const outputs: string[] = []
+    const errors: string[] = []
+    expect(await runWizardCommand(['plan', '--case', caseRoot, '--json'], {
+      stdout: (line: string) => outputs.push(line),
+      stderr: (line: string) => errors.push(line),
+    })).toBe(0)
+    expect(errors).toEqual([])
+
+    const json = JSON.parse(outputs.join('\n'))
+    expect(json.plan.proposed_facts[0]).toMatchObject({
+      fact: 'client.contracts.fee_agreement',
+      approved: false,
+      canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+      copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
+    })
+    expect(json.plan.shadow_map[0]).toMatchObject({
+      canonical_document_path: 'documents/contracts/fee-agreement.pdf',
+      copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
+      copy_status: 'copied',
+    })
+
+    const rawPlan = await readFile(join(caseRoot, '.waypoint', 'wizard', 'adoption-plan.yaml'), 'utf8')
+    const parsedPlan = parseYaml(rawPlan) as { proposed_facts: Array<{ approved: boolean; copied_evidence_path?: string }> }
+    expect(parsedPlan.proposed_facts[0]).toMatchObject({
+      approved: false,
+      copied_evidence_path: 'documents/contracts/fee-agreement.pdf',
+    })
+  })
+
   it('records a Wizard answer and suppresses the answered question', async () => {
     const { mkdir, mkdtemp, readFile, writeFile } = await import('node:fs/promises')
     const { tmpdir } = await import('node:os')

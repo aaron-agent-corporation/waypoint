@@ -223,6 +223,8 @@ waypoint wizard organize --source <path> --target <case-root> --domain <domain> 
 
 ### Task O4.2: Integrate with existing adoption plan
 
+**Status:** Complete in commit TBD this slice.
+
 **Objective:** Ensure organized packages feed the already-built Wizard adoption/apply flow.
 
 **Files:**
