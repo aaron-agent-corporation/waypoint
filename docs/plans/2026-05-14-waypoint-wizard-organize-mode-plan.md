@@ -204,6 +204,8 @@ waypoint wizard organize --source <path> --target <case-root> --domain <domain> 
 
 ### Task O4.1: Use FirmVault document categories and missing-doc checklist
 
+**Status:** Complete in commit TBD this slice.
+
 **Objective:** Make organized output useful for a personal-injury FirmVault case.
 
 **Files:**

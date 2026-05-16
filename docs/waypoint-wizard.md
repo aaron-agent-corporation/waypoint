@@ -61,6 +61,10 @@ The Wizard chooses a canonical shadow category from deterministic FirmVault file
 
 `waypoint wizard organize` creates a clean Waypoint-owned case package from a messy source folder. It runs scan and shadow creation, writes a canonical document tree, source manifest, organization plan, organize report, and missing-document checklist. By default it does not copy source files; with `--copy-files`, files are copied into deterministic `documents/<category>/...` paths under the target case root.
 
+For FirmVault personal-injury folders, organize mode uses the FirmVault document taxonomy (`intake`, `contracts`, `authorizations`, `accident`, `insurance`, `providers`, `medical-records`, `bills`, `liens`, `demand`, `negotiation`, `settlement`, `closing`, and `correspondence`) and writes a fact-derived checklist grouped by the same categories. That checklist is an operator review aid: it points at likely missing evidence for FirmVault facts such as `client.intake`, `insurance.bi.carrier_identified`, `records.received`, `demand.readiness.materials`, and `settlement.closing.case`. It does not mark those facts complete.
+
+Ambiguous or low-confidence files stay in `documents/unknown/` and produce one-question-at-a-time Wizard questions instead of being forced into a legal category.
+
 Organization is not legal truth. Clean folders, copied files, and shadows do not satisfy FirmVault facts by existing; approved apply remains required for state changes.
 
 ### 4. Questions and answers

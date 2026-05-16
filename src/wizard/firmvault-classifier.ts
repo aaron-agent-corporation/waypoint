@@ -49,23 +49,23 @@ const FIRMVAULT_CLASSIFIER_RULES: FirmVaultClassifierRule[] = [
   },
   {
     category: 'insurance',
-    keywords: ['insurance', 'policy', 'declaration', 'declarations', 'coverage', 'carrier'],
+    keywords: ['insurance', 'policy', 'declaration', 'declarations', 'coverage', 'carrier', 'bi carrier', 'pip carrier'],
     rationale: 'deterministic filename/path keyword match for insurance documents',
   },
   {
-    category: 'providers',
-    keywords: ['provider', 'doctor', 'clinic', 'hospital', 'chiropractor', 'therapist'],
-    rationale: 'deterministic filename/path keyword match for provider documents',
-  },
-  {
     category: 'bills',
-    keywords: ['bill', 'bills', 'invoice', 'statement', 'balance due'],
+    keywords: ['bill', 'bills', 'invoice', 'statement', 'balance due', 'ledger charges'],
     rationale: 'deterministic filename/path keyword match for bills',
   },
   {
     category: 'medical-records',
-    keywords: ['medical record', 'medical records', 'records', 'treatment', 'chart note', 'visit note'],
+    keywords: ['medical record', 'medical records', 'records', 'treatment', 'chart note', 'visit note', 'progress note'],
     rationale: 'deterministic filename/path keyword match for medical records',
+  },
+  {
+    category: 'providers',
+    keywords: ['provider', 'provider list', 'doctor', 'clinic', 'hospital', 'chiropractor', 'therapist'],
+    rationale: 'deterministic filename/path keyword match for provider documents',
   },
   {
     category: 'liens',
@@ -84,12 +84,12 @@ const FIRMVAULT_CLASSIFIER_RULES: FirmVaultClassifierRule[] = [
   },
   {
     category: 'settlement',
-    keywords: ['settlement', 'check', 'payment', 'disbursement', 'settlement release'],
+    keywords: ['settlement', 'settlement check', 'settlement statement', 'release executed', 'payment', 'disbursement', 'settlement release'],
     rationale: 'deterministic filename/path keyword match for settlement documents',
   },
   {
     category: 'closing',
-    keywords: ['closing', 'closing letter', 'archive', 'final letter'],
+    keywords: ['closing', 'closing letter', 'archive', 'final letter', 'case closed', 'final distribution', 'trust zero'],
     rationale: 'deterministic filename/path keyword match for closing documents',
   },
   {

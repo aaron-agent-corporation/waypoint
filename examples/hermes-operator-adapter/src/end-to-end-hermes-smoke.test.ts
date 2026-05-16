@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, rmSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
+import { parse as parseYaml } from 'yaml'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { runEndToEndHermesSmoke } from './end-to-end-hermes-smoke.ts'
@@ -63,9 +64,11 @@ projects:
       }),
     )
 
-    const config = readFileSync(join(fixture.project.path, '.waypoint/config.yaml'), 'utf8')
-    expect(config).toContain('recipe: local')
-    expect(config).toContain(hermesRuntimeAdapter)
+    const config = parseYaml(readFileSync(join(fixture.project.path, '.waypoint/config.yaml'), 'utf8')) as {
+      runtime?: { recipe?: string; command?: string; args?: string[] }
+    }
+    expect(config.runtime?.recipe).toBe('local')
+    expect(config.runtime?.args).toContain(hermesRuntimeAdapter)
   }, 30000)
 
   it('leaves registered project paths explicit and fails closed for unknown registry project names', async () => {

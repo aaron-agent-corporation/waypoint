@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'node:url'
 
 const KNOWN_ROUTES = new Map([
   ['waypoint-planner', 'planner-capable Hermes/Gary execution'],
@@ -84,6 +85,6 @@ export async function runHermesRecipeRuntime(stdin = process.stdin, stdout = pro
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   process.exitCode = await runHermesRecipeRuntime()
 }

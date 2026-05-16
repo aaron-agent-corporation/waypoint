@@ -5,6 +5,7 @@ import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import {
   applyFirmVaultWizardPlan,
   buildWizardAdoptionPlan,
+  buildWizardOrganizationPlan,
   createWizardShadows,
   detectFirmVaultWizardAmbiguities,
   generateFirmVaultMissingDocumentChecklist,
@@ -18,11 +19,12 @@ import {
   recordWizardAnswer,
   scanWizardSource,
   writeWizardAdoptionPlan,
+  writeWizardOrganizationPlan,
+  writeWizardOrganizedCasePackage,
   writeWizardQuestions,
 } from '@waypoint/core'
 
 import type { WaypointCliIo } from '../bin'
-import { buildWizardOrganizationPlan, writeWizardOrganizedCasePackage } from '../../../../src/wizard/organize.ts'
 import type {
   WizardAdoptionPlan,
   WizardDomain,

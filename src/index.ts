@@ -231,12 +231,15 @@ export type { CreateWizardShadowsInput, CreateWizardShadowsResult } from './wiza
 export {
   buildWizardOrganizationPlan,
   createWizardOrganizedDocumentEntry,
+  FIRMVAULT_ORGANIZATION_CATEGORIES,
+  firmVaultOrganizationCategoryForFact,
   writeWizardOrganizationPlan,
   writeWizardOrganizedCasePackage,
 } from './wizard/organize'
 export type {
   BuildWizardOrganizationPlanInput,
   CreateWizardOrganizedDocumentEntryInput,
+  FirmVaultOrganizationCategory,
   WriteWizardOrganizationPlanInput,
   WriteWizardOrganizationPlanResult,
   WriteWizardOrganizedCasePackageInput,

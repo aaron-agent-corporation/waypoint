@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'node:url'
 import cliPackage from '../package.json' with { type: 'json' }
 import { runAuthorCommand } from './commands/author.ts'
 import { runAutoCommand } from './commands/auto.ts'
@@ -197,7 +198,7 @@ function defaultIo(): WaypointCliIo {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const exitCode = await runWaypointCli(process.argv.slice(2))
   process.exitCode = exitCode
 }

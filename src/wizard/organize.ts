@@ -56,6 +56,51 @@ const SOURCE_MANIFEST_RELATIVE_PATH = safeWizardArtifactPath('source-manifest.ya
 const ORGANIZE_REPORT_RELATIVE_PATH = safeWizardArtifactPath('organize-report.md')
 const MISSING_DOCUMENTS_CHECKLIST_RELATIVE_PATH = safeWizardArtifactPath('missing-documents-checklist.md')
 
+export const FIRMVAULT_ORGANIZATION_CATEGORIES = [
+  'intake',
+  'contracts',
+  'authorizations',
+  'accident',
+  'insurance',
+  'providers',
+  'medical-records',
+  'bills',
+  'liens',
+  'demand',
+  'negotiation',
+  'settlement',
+  'closing',
+  'correspondence',
+  'unknown',
+] as const
+
+export type FirmVaultOrganizationCategory = (typeof FIRMVAULT_ORGANIZATION_CATEGORIES)[number]
+
+interface FirmVaultChecklistItem {
+  category: FirmVaultOrganizationCategory
+  fact: string
+  description: string
+}
+
+const FIRMVAULT_ORGANIZATION_CHECKLIST: FirmVaultChecklistItem[] = [
+  { category: 'intake', fact: 'client.intake', description: 'Client intake information is complete.' },
+  { category: 'contracts', fact: 'client.contracts.fee_agreement', description: 'Client fee agreement has been signed.' },
+  { category: 'authorizations', fact: 'client.authorizations.hipaa', description: 'Client HIPAA authorization has been signed.' },
+  { category: 'accident', fact: 'accident.police_report', description: 'Accident or police report has been obtained.' },
+  { category: 'providers', fact: 'providers.setup', description: 'Medical provider ledger setup is complete.' },
+  { category: 'insurance', fact: 'insurance.bi.carrier_identified', description: 'At-fault BI carrier has been identified.' },
+  { category: 'insurance', fact: 'insurance.pip.carrier_identified', description: 'PIP carrier has been identified.' },
+  { category: 'medical-records', fact: 'records.received', description: 'All requested records have been received.' },
+  { category: 'bills', fact: 'records.processing', description: 'Records and bills have been processed.' },
+  { category: 'liens', fact: 'liens.early_identification.liens', description: 'Potential liens have been identified or ruled out.' },
+  { category: 'demand', fact: 'demand.readiness.materials', description: 'Demand materials have been gathered.' },
+  { category: 'negotiation', fact: 'negotiation.initial_offer', description: 'Initial offer has been received.' },
+  { category: 'settlement', fact: 'settlement.release', description: 'Release has been executed.' },
+  { category: 'settlement', fact: 'settlement.funds', description: 'Settlement funds have been received or cleared.' },
+  { category: 'closing', fact: 'settlement.closing.letter.sent', description: 'Final client letter has been sent.' },
+  { category: 'closing', fact: 'settlement.closing.case', description: 'Case closure has been documented.' },
+]
+
 export function createWizardOrganizedDocumentEntry(
   input: CreateWizardOrganizedDocumentEntryInput,
 ): WizardOrganizedDocumentEntry {
@@ -298,7 +343,35 @@ function nextAvailableDestination(requestedPath: string, usedDestinations: Set<s
 function canonicalOrganizationCategory(kind: string): string {
   const slug = slugifyWizardPathSegment(kind)
   if (!slug || slug === 'unknown') return 'unknown'
-  return slug
+  if (FIRMVAULT_ORGANIZATION_CATEGORIES.includes(slug as FirmVaultOrganizationCategory)) {
+    return slug
+  }
+  return 'unknown'
+}
+
+export function firmVaultOrganizationCategoryForFact(factSlug: string): FirmVaultOrganizationCategory {
+  if (factSlug === 'case.setup') return 'intake'
+  if (factSlug.startsWith('client.contracts.')) return 'contracts'
+  if (factSlug.startsWith('client.authorizations.')) return 'authorizations'
+  if (factSlug.startsWith('client.')) return 'intake'
+  if (factSlug.startsWith('accident.')) return 'accident'
+  if (factSlug.startsWith('insurance.')) return 'insurance'
+  if (factSlug.startsWith('providers.')) return 'providers'
+  if (factSlug.startsWith('records.')) {
+    if (factSlug.includes('authorization')) return 'authorizations'
+    if (factSlug.includes('received') || factSlug.includes('chronology')) return 'medical-records'
+    if (factSlug.includes('processing')) return 'bills'
+    return 'providers'
+  }
+  if (factSlug.startsWith('liens.')) return 'liens'
+  if (factSlug.startsWith('demand.')) return 'demand'
+  if (factSlug.startsWith('negotiation.')) return 'negotiation'
+  if (factSlug === 'settlement') return 'settlement'
+  if (factSlug.startsWith('settlement.closing.')) return 'closing'
+  if (factSlug.startsWith('settlement.liens.')) return 'liens'
+  if (factSlug.startsWith('settlement.distribution.')) return 'settlement'
+  if (factSlug.startsWith('settlement.')) return 'settlement'
+  return 'unknown'
 }
 
 function buildCanonicalDocumentPath(category: string, sourceName: string): string {
@@ -420,8 +493,34 @@ function renderMissingDocumentsChecklist(plan: WizardOrganizationPlan): string {
     lines.push(`- [ ] Answer ${question.id}: ${question.prompt}`)
   }
 
+  if (plan.domain === 'firmvault') {
+    lines.push('', '## FirmVault fact-derived checklist', '')
+    const countsByCategory = countDocumentsByCategory(plan)
+    for (const category of FIRMVAULT_ORGANIZATION_CATEGORIES.filter((item) => item !== 'unknown')) {
+      const count = countsByCategory.get(category) ?? 0
+      const marker = count > 0 ? 'x' : ' '
+      const summary = count > 0
+        ? `current package includes ${count} document(s)`
+        : 'no organized documents yet'
+      lines.push(`- [${marker}] ${category} — ${summary}`)
+
+      for (const item of FIRMVAULT_ORGANIZATION_CHECKLIST.filter((entry) => entry.category === category)) {
+        lines.push(`  - \`${item.fact}\`: ${item.description}`)
+      }
+    }
+  }
+
   lines.push('', 'Legal note: completing this checklist does not apply legal facts; use approved Wizard apply.')
   return `${lines.join('\n')}\n`
+}
+
+function countDocumentsByCategory(plan: WizardOrganizationPlan): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const document of plan.documents) {
+    const category = documentCategory(document)
+    counts.set(category, (counts.get(category) ?? 0) + 1)
+  }
+  return counts
 }
 
 function assertSafeOrganizeRelativePath(value: string, label: string): void {

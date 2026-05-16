@@ -9,9 +9,12 @@ import { parse as yamlParse } from 'yaml'
 import {
   buildWizardOrganizationPlan,
   createWizardOrganizedDocumentEntry,
+  firmVaultOrganizationCategoryForFact,
   writeWizardOrganizationPlan,
   writeWizardOrganizedCasePackage,
 } from '../organize'
+import { classifyFirmVaultSourceFile } from '../firmvault-classifier'
+import { FIRMVAULT_FACT_DEFINITIONS } from '../../../packages/waypoint-folder-host/src/firmvault/facts'
 import type {
   WizardOrganizeCopyDecision,
   WizardOrganizedDocumentEntry,
@@ -279,6 +282,96 @@ describe('Waypoint Wizard organize mode contracts', () => {
     }
   })
 
+  it('organizes FirmVault personal-injury packets with fact-derived checklist sections and review questions', async () => {
+    const shadows: WizardShadowRecord[] = [
+      shadowRecord({
+        id: 'shadow-001',
+        filename: 'Signed Fee Agreement.pdf',
+        kind: classifyFirmVaultSourceFile(sourceFile('Signed Fee Agreement.pdf')).kind,
+        confidence: 'high',
+        reviewRequired: false,
+        shadowPath: '.waypoint/shadows/firmvault/contracts/signed-fee-agreement.md',
+      }),
+      shadowRecord({
+        id: 'shadow-002',
+        filename: 'Progressive BI Insurance Declarations.pdf',
+        kind: classifyFirmVaultSourceFile(sourceFile('Progressive BI Insurance Declarations.pdf')).kind,
+        confidence: 'high',
+        reviewRequired: false,
+        shadowPath: '.waypoint/shadows/firmvault/insurance/progressive-bi-insurance-declarations.md',
+      }),
+      shadowRecord({
+        id: 'shadow-003',
+        filename: 'Physical Therapy Bill.pdf',
+        kind: classifyFirmVaultSourceFile(sourceFile('Physical Therapy Bill.pdf')).kind,
+        confidence: 'high',
+        reviewRequired: false,
+        shadowPath: '.waypoint/shadows/firmvault/bills/physical-therapy-bill.md',
+      }),
+      shadowRecord({
+        id: 'shadow-004',
+        filename: 'Settlement Release Signed.pdf',
+        kind: classifyFirmVaultSourceFile(sourceFile('Settlement Release Signed.pdf')).kind,
+        confidence: 'high',
+        reviewRequired: false,
+        shadowPath: '.waypoint/shadows/firmvault/settlement/settlement-release-signed.md',
+      }),
+      shadowRecord({
+        id: 'shadow-005',
+        filename: 'Random Upload.pdf',
+        kind: classifyFirmVaultSourceFile(sourceFile('Random Upload.pdf')).kind,
+        confidence: 'low',
+        reviewRequired: true,
+        shadowPath: '.waypoint/shadows/firmvault/unknown/random-upload.md',
+      }),
+    ]
+
+    const plan = buildWizardOrganizationPlan({
+      domain: 'firmvault',
+      sourceRoot: '/tmp/messy-case',
+      targetCaseRoot: '/tmp/organized-case',
+      shadows,
+      generatedAt: '2026-05-14T12:00:00.000Z',
+    })
+
+    expect(plan.documents.map((document) => document.canonical_document_path)).toEqual([
+      'documents/bills/physical-therapy-bill.pdf',
+      'documents/contracts/signed-fee-agreement.pdf',
+      'documents/insurance/progressive-bi-insurance-declarations.pdf',
+      'documents/settlement/settlement-release-signed.pdf',
+      'documents/unknown/random-upload.pdf',
+    ])
+    expect(plan.questions).toEqual([
+      expect.objectContaining({
+        id: 'organize-q-001',
+        prompt: 'What canonical FirmVault document category should Random Upload.pdf use?',
+        related_shadow_paths: ['.waypoint/shadows/firmvault/unknown/random-upload.md'],
+      }),
+    ])
+
+    const caseRoot = await mkdtemp(join(tmpdir(), 'waypoint-firmvault-organize-'))
+    try {
+      await writeWizardOrganizedCasePackage({ caseRoot, plan })
+      const checklist = await readFile(join(caseRoot, '.waypoint/wizard/missing-documents-checklist.md'), 'utf8')
+      expect(checklist).toContain('## FirmVault fact-derived checklist')
+      expect(checklist).toContain('- [x] contracts — current package includes 1 document(s)')
+      expect(checklist).toContain('- [ ] intake — no organized documents yet')
+      expect(checklist).toContain('  - `client.intake`: Client intake information is complete.')
+      expect(checklist).toContain('- [x] insurance — current package includes 1 document(s)')
+      expect(checklist).toContain('- [x] bills — current package includes 1 document(s)')
+      expect(checklist).toContain('- [x] settlement — current package includes 1 document(s)')
+      expect(checklist).toContain('- [ ] closing — no organized documents yet')
+      expect(checklist).toContain('  - `settlement.closing.case`: Case closure has been documented.')
+    } finally {
+      await rm(caseRoot, { recursive: true, force: true })
+    }
+
+    const unmappedFacts = FIRMVAULT_FACT_DEFINITIONS
+      .map((definition) => definition.fact)
+      .filter((fact) => firmVaultOrganizationCategoryForFact(fact) === 'unknown')
+    expect(unmappedFacts).toEqual([])
+  })
+
   it('builds and writes a deterministic shadow-only organization plan without copying source files', async () => {
     const shadows: WizardShadowRecord[] = [
       shadowRecord({
@@ -367,6 +460,18 @@ async function sourceTreeHashes(root: string): Promise<Record<string, string>> {
   }
 
   return hashes
+}
+
+function sourceFile(filename: string) {
+  return {
+    path: `/tmp/messy-case/${filename}`,
+    root_relative_path: filename,
+    sha256: 'f'.repeat(64),
+    size_bytes: 1024,
+    media_type: 'application/pdf',
+    discovered_at: '2026-05-14T00:00:00.000Z',
+    extension: '.pdf',
+  }
 }
 
 function shadowRecord(input: {

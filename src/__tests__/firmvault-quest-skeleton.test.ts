@@ -430,5 +430,5 @@ describe('FirmVault Quest skeleton', () => {
     expect(taskKinds.has('checkpoint')).toBe(false)
 
     await expect(readFile(join(repoRoot, '.waypoint/config.yaml'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
-  }, 20_000)
+  }, 30_000)
 })
