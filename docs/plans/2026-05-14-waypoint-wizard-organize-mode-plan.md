@@ -244,6 +244,8 @@ waypoint wizard organize --source <path> --target <case-root> --domain <domain> 
 
 ### Task O5.1: Add messy-folder-to-organized-case smoke
 
+**Status:** Complete in commit TBD this slice.
+
 **Objective:** Prove the new user story end to end.
 
 **Files:**

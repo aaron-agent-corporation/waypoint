@@ -87,10 +87,13 @@ waypoint firmvault guidance --json
 
 ## Verification smoke
 
-Run the end-to-end synthetic no-PII FirmVault Wizard smoke:
+Run the end-to-end synthetic no-PII Wizard smokes:
 
 ```bash
+pnpm smoke:waypoint-wizard-organize
 pnpm smoke:waypoint-wizard-firmvault
 ```
 
-The smoke covers scan → shadow → questions → answer → plan → approved apply → FirmVault guidance and verifies the fixture source files were not mutated.
+`smoke:waypoint-wizard-organize` creates a temp messy corpus, runs `waypoint wizard organize --copy-files`, verifies the source tree hash manifest is unchanged, checks the organized package artifacts, builds an adoption plan, proves organization alone satisfies zero FirmVault landmarks, then approves one fact and verifies apply uses the safe FirmVault state API.
+
+`smoke:waypoint-wizard-firmvault` covers scan → shadow → questions → answer → plan → approved apply → FirmVault guidance and verifies the fixture source files were not mutated.

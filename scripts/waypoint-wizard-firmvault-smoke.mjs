@@ -4,12 +4,13 @@ import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
 // Smoke command surface: waypoint wizard scan, waypoint wizard shadow,
 // waypoint wizard questions, waypoint wizard answer, waypoint wizard plan,
 // waypoint wizard apply, waypoint firmvault init-case, waypoint firmvault guidance.
-const repoRoot = resolve(new URL('..', import.meta.url).pathname)
+const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const cli = join(repoRoot, 'packages/waypoint-cli/src/bin.ts')
 const fixtureSource = join(repoRoot, 'examples/waypoint-wizard/firmvault-messy-source')
 const repoRootWaypointDir = join(repoRoot, '.waypoint')
