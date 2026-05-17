@@ -24,8 +24,13 @@ describe('catalog commands', () => {
 
     expect(exitCode).toBe(0)
     expect(stderr).toEqual([])
-    expect(stdout.join('\n')).toContain('waypoint')
-    expect(stdout.join('\n')).toContain('Waypoint Quests')
+    const output = stdout.join('\n')
+    expect(output).toContain('waypoint')
+    expect(output).toContain('Waypoint Quests')
+    expect(output).toContain('Primary starter Quests')
+    expect(output).toContain('- firmvault: FirmVault')
+    expect(output).toContain('- waypoint: Project Delivery (GSD)')
+    expect(output).toContain('Additional bundled Quests')
   })
 
   it('lists Recipes referenced by a bundled Quest', async () => {

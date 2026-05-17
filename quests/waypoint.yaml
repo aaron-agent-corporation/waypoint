@@ -1,4 +1,4 @@
-# Waypoint Waypoint Quest — main lifecycle port from get-shit-done-cc.
+# Project Delivery Quest — main project-delivery port from get-shit-done-cc.
 #
 # This manifest intentionally uses only the current Quest schema fields.
 # Command/sub-Quest mappings that are not first-class schema yet live under
@@ -6,12 +6,13 @@
 
 schema_version: 1
 slug: waypoint
-name: Waypoint Quest
+name: Project Delivery (GSD)
 description: >
-  Waypoint Quest port of the get-shit-done-cc project flow. It models the
+  Project-delivery Quest port of the get-shit-done-cc project flow. It models the
   initialize → discuss → plan → execute → verify → ship journey as a reusable
-  Quest while preserving source command intent in metadata for later runtime
-  and catalog phases.
+  Quest while preserving GSD source command intent in metadata for later runtime
+  and catalog phases. Use this when a folder needs a general planning/execution
+  Quest rather than the FirmVault legal case Quest.
 workflow: workflows/waypoint.yaml
 
 recipes:
@@ -168,6 +169,13 @@ scaffolds:
                         kind: ship_approval
 
 metadata:
+  waypoint:
+    quest_family: primary_starter
+    user_prompt_names:
+      - Project Delivery
+      - GSD
+      - general project workflow
+      - planning and execution
   source:
     project: get-shit-done-cc
     local_reference: /Users/aaronwhaley/Downloads/get-shit-done-main

@@ -1,6 +1,6 @@
 # Waypoint Quest Catalog
 
-This catalog is generated from the Quest and Recipe manifests currently present on disk. It describes the bundled Waypoint Quest/Recipe library; it is not a claim that a standalone CLI or live recipe executor exists in this repo.
+This catalog is generated from the Quest and Recipe manifests currently present on disk. It describes the bundled Waypoint Quest/Recipe library; Waypoint is the system name, while `firmvault` and `waypoint` are primary starter Quests a user can choose when setting up a folder.
 
 ## Loader-backed counts
 
@@ -102,9 +102,9 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Description: Waypoint catalog Quest port of gsd:fast for trivial task execution path with minimal planning overhead.
 
   - Recipes: `waypoint-executor`
-- `firmvault` — FirmVault Case Workflow
+- `firmvault` — FirmVault
   - Path: `quests/firmvault.yaml`
-  - Description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
+  - Description: Standalone Waypoint Quest for a law-firm personal-injury case folder.
   - Recipes: `firmvault-case-setup-create-shell`, `firmvault-document-collection-review-intake`, `firmvault-document-collection-request-missing-documents`, `firmvault-document-collection-send-signature-packets`, `firmvault-accident-report-analyze`, `firmvault-medical-provider-setup-case`, `firmvault-client-check-in-start-cadence`, `firmvault-client-check-in-prepare-handoff`, `firmvault-insurance-bi-identify-carrier`, `firmvault-insurance-bi-prepare-lor`, `firmvault-insurance-bi-process-acknowledgment`, `firmvault-insurance-pip-open-claim`, `firmvault-pip-file-application`, `firmvault-pip-confirm-approval`, `firmvault-pip-track-exhaustion`, `firmvault-medical-provider-review-status`, `firmvault-lien-identify-potential`, `firmvault-medical-records-verify-authorization`, `firmvault-request-records-bills-prepare-request`, `firmvault-request-records-bills-send-request`, `firmvault-request-records-bills-follow-up`, `firmvault-medical-records-receive-and-process`, `firmvault-medical-chronology-update`, `firmvault-medical-records-prepare-request`, `firmvault-medical-records-send-request`, `firmvault-medical-records-first-follow-up`, `firmvault-medical-records-second-follow-up`, `firmvault-medical-records-escalate-delay`, `firmvault-demand-gather-materials`, `firmvault-demand-check-final-lien-process`, `firmvault-demand-draft-letter`, `firmvault-demand-identify-recipients`, `firmvault-demand-send-package`, `firmvault-negotiation-track-offer`, `firmvault-negotiation-offer-evaluation`, `firmvault-negotiation-document-client-decision`, `firmvault-negotiation-prepare-response`, `firmvault-negotiation-document-response`, `firmvault-settlement-prepare-statement`, `firmvault-settlement-prepare-authorization`, `firmvault-settlement-document-funds`, `firmvault-settlement-lien-audit`, `firmvault-settlement-lien-document-result`, `firmvault-lien-resolution-review-inventory`, `firmvault-lien-resolution-prepare-final-request`, `firmvault-lien-resolution-document-final-amount`, `firmvault-lien-resolution-document-payment`, `firmvault-final-distribution-prepare-statement`, `firmvault-final-distribution-zero-trust`, `firmvault-close-case-verify-readiness`, `firmvault-close-case-prepare-letter`, `firmvault-close-case-document-closure`, `firmvault-document-intake-record-source`, `firmvault-document-pipeline-submit-for-review`, `firmvault-document-pipeline-review-pr`, `firmvault-document-pipeline-record-merge`
  - `forensics` — Forensics Quest
   - Path: `quests/forensics.yaml`
@@ -211,9 +211,9 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Description: Waypoint sub-Quest port of gsd:validate-phase for auditing and filling Nyquist validation gaps after execution.
 
   - Recipes: `waypoint-nyquist-auditor`, `waypoint-verifier`, `waypoint-code-fixer`, `waypoint-eval-auditor`
-- `waypoint` — Waypoint Quest
+- `waypoint` — Project Delivery (GSD)
   - Path: `quests/waypoint.yaml`
-  - Description: Waypoint Quest port of the get-shit-done-cc project flow. It models the initialize → discuss → plan → execute → verify → ship journey as a reusable Quest while preserving source command intent in metadata for later runtime and catalog phases.
+  - Description: Project-delivery Quest port of the get-shit-done-cc project flow. It models the initialize → discuss → plan → execute → verify → ship journey as a reusable Quest while preserving GSD source command intent in metadata for later runtime and catalog phases. Use this when a folder needs a general planning/execution Quest rather than the FirmVault legal case Quest.
 
   - Recipes: `waypoint-doc-writer`, `waypoint-project-researcher`, `waypoint-roadmapper`, `waypoint-assumptions-analyzer`, `waypoint-codebase-mapper`, `waypoint-phase-researcher`, `waypoint-planner`, `waypoint-plan-checker`, `waypoint-executor`, `waypoint-verifier`, `waypoint-doc-synthesizer`, `waypoint-code-reviewer`
 

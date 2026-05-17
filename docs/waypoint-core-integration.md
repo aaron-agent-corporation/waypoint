@@ -55,7 +55,7 @@ Mission Control-specific types**. It is deliberately portable.
 ## Quests and Recipes
 
 A **Quest** is a reusable, named journey template — the roadmap a
-project follows (e.g. "GSD full lifecycle", "bugfix", "research
+project follows (e.g. "FirmVault", "Project Delivery (GSD)", "bugfix", "research
 spike"). A **Recipe** is a reusable, named agent definition — the
 prompt plus runtime orchestration hints for one specialist agent.
 Quests compose Recipes.
@@ -86,7 +86,7 @@ recipes/
 ```yaml
 schema_version: 1
 slug: waypoint
-name: GSD full lifecycle
+name: Project Delivery (GSD)
 description: Discover, plan, execute, verify, ship.
 
 runtime:

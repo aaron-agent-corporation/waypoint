@@ -1,7 +1,7 @@
 schema_version: 1
 slug: firmvault
-name: FirmVault Case Workflow
-description: Standalone Waypoint Quest for a FirmVault personal-injury case folder.
+name: FirmVault
+description: Standalone Waypoint Quest for a law-firm personal-injury case folder.
 workflow: workflows/firmvault.yaml
 recipes:
 - firmvault-case-setup-create-shell
@@ -1485,6 +1485,12 @@ scaffolds:
               output_landmarks:
               - case_closed
 metadata:
+  waypoint:
+    quest_family: primary_starter
+    user_prompt_names:
+      - FirmVault
+      - law firm personal injury
+      - legal case workflow
   source_port:
     source_repository: /Users/aaronwhaley/Github/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml

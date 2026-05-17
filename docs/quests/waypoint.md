@@ -1,10 +1,10 @@
-# Waypoint Quest Operator Guide
+# Project Delivery (GSD) Quest Operator Guide
 
-The Waypoint Quest is the batteries-included Waypoint Quest port of the get-shit-done-cc working loop. It preserves the useful shape of the old GSD flow while moving the implementation into Waypoint primitives.
+The `waypoint` Quest is the batteries-included Project Delivery (GSD) Quest port of the get-shit-done-cc working loop. It preserves the useful shape of the old GSD flow while moving the implementation into Waypoint primitives.
 
 Waypoint is the runtime. GSD is source material for this bundled Quest and Recipe library, not the product name.
 
-## What the Waypoint Quest does
+## What the Project Delivery (GSD) Quest does
 
 The main Quest lives at `quests/waypoint.yaml` and models the journey:
 
@@ -108,7 +108,7 @@ Those are future runtime or host-adapter tracks. Track 4's current scope is the 
 As of P6, the Waypoint source port has:
 
 - 33 namespaced Waypoint Recipes under `recipes/waypoint/`.
-- 1 main Waypoint Quest under `quests/waypoint.yaml`.
+- 1 main Project Delivery (GSD) Quest under `quests/waypoint.yaml`.
 - 35 command-informed/catalog Quest manifests plus the existing example Quest.
 - 65 upstream command mappings in `docs/quests/waypoint-command-map.yaml`.
 - Structural smoke coverage in `src/__tests__/waypoint-port.test.ts`.

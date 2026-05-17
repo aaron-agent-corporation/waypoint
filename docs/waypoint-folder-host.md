@@ -115,7 +115,7 @@ waypoint quests
 waypoint recipes --quest waypoint
 ```
 
-`waypoint quests` lists available bundled Quests. `waypoint recipes --quest waypoint` lists Recipes referenced by the `waypoint` Quest.
+`waypoint quests` lists available bundled Quests, with the primary starter Quests first (`firmvault` and `waypoint`). `waypoint recipes --quest waypoint` lists Recipes referenced by the `waypoint` Project Delivery (GSD) Quest.
 
 ### 3. Start a Quest route
 
@@ -368,7 +368,7 @@ Do not run folder-host smokes from your home directory unless you intentionally 
 
 - This is a private development package, not a globally published CLI.
 - The direct Node TypeScript CLI path is the verified development smoke path.
-- The bundled Waypoint Quest is a catalog/example workflow; it does not make Waypoint a GSD clone.
+- The bundled `waypoint` Quest is the Project Delivery (GSD) starter workflow; it does not make Waypoint itself a GSD clone.
 - The null runtime is safe by default but does not produce real external agent work.
 - The local runtime is intentionally opt-in because it executes local commands.
 - Packaging, release polish, and final readiness cleanup are tracked separately from this guide.

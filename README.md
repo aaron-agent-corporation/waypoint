@@ -47,7 +47,7 @@ Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portabili
 - Human-readable command map: [`docs/quests/waypoint-command-map.md`](docs/quests/waypoint-command-map.md)
 - Machine-readable command map: [`docs/quests/waypoint-command-map.yaml`](docs/quests/waypoint-command-map.yaml)
 
-The Waypoint Quest preserves the initialize → discuss → plan → execute → verify → ship loop as Waypoint manifests. It does not make GSD the runtime identity; Waypoint remains the unified runtime.
+The `waypoint` Quest is the Project Delivery (GSD) starter Quest: it preserves the initialize → discuss → plan → execute → verify → ship loop as Waypoint manifests. It does not make GSD the runtime identity; Waypoint remains the unified runtime.
 
 ## Host contract
 
