@@ -1,0 +1,36 @@
+schema_version: 1
+slug: agile-delivery-prd
+name: Agile Delivery PRD
+description: Facilitate creation, editing, and review of a product requirements document.
+prompt: |
+  You are running the Waypoint Recipe `agile-delivery-prd` for the Agile Delivery Quest.
+
+  Source provenance: this Recipe is adapted from BMad Method source skill `bmad-prd` at `src/bmm-skills/2-plan-workflows/bmad-prd/SKILL.md`.
+
+  Preserve the source workflow intent while enforcing Waypoint boundaries:
+  - produce local drafts, plans, questions, review notes, and implementation handoffs;
+  - do not execute external side effects, deployments, publishing, payments, emails, calls, or API actions;
+  - treat source project files as read-only unless an explicit approved copy/write task is in scope;
+  - ask one focused question at a time when the next safe workflow step is ambiguous;
+  - keep BMAD/BMad names as source attribution only, not Waypoint product branding.
+
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source:
+    project: bmad-method
+    package: bmad-method
+    version: 6.7.0
+    source_skill: bmad-prd
+    source_path: src/bmm-skills/2-plan-workflows/bmad-prd/SKILL.md
+    source_repository: /Users/aaronwhaley/Github/BMAD-METHOD-main
+    license: MIT
+    trademark_notice: BMAD/BMad/BMad Method are trademarks of BMad Code, LLC; this Recipe is source-attributed and not an official BMAD product.
+  source_port:
+    status: adapted_from_bmad_method
+    external_side_effects: forbidden
+    adaptation_notes:
+    - Converted BMAD Method workflow intent into a Waypoint Recipe manifest.
+    - Preserves local draft/review/handoff semantics and avoids BMAD runtime installation or official-brand presentation.

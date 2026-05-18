@@ -1,0 +1,119 @@
+schema_version: 1
+slug: agile-delivery
+name: Agile Delivery
+description: Structured agile software delivery Quest adapted from BMad Method source concepts.
+workflow: workflows/agile-delivery.yaml
+recipes:
+- agile-delivery-prd
+- agile-delivery-architecture
+- agile-delivery-epics-stories
+- agile-delivery-readiness
+- agile-delivery-sprint-planning
+- agile-delivery-create-story
+- agile-delivery-dev-story
+metadata:
+  waypoint:
+    quest_family: primary_starter
+    public_name: Agile Delivery
+    selection_summary: Structured software lifecycle from analysis through PRD, architecture, epics/stories, sprint execution, QA, and retrospective.
+    source_family: bmad-method
+  source:
+    project: bmad-method
+    package: bmad-method
+    version: 6.7.0
+    path: /Users/aaronwhaley/Github/BMAD-METHOD-main
+    license: MIT
+    trademark_notice: BMAD/BMad/BMad Method are trademarks of BMad Code, LLC; Waypoint uses this only as attribution/provenance.
+scaffolds:
+  workstreams:
+  - key: software
+    name: Agile Delivery
+    milestones:
+    - version_label: v1
+      title: Agile software delivery lifecycle
+      phases:
+      - phase_key: '10'
+        phase_slug: analysis
+        lifecycle_phase: analysis
+        plans:
+        - plan_ref: analysis-brief-or-prfaq
+          title: Produce product brief or PRFAQ direction
+          wave: 10
+      - phase_key: '20'
+        phase_slug: planning
+        lifecycle_phase: planning
+        plans:
+        - plan_ref: planning-prd
+          title: Create, edit, and validate PRD
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-prd
+        - plan_ref: planning-ux
+          title: Create UX design when UI is in scope
+          wave: 30
+      - phase_key: '30'
+        phase_slug: solutioning
+        lifecycle_phase: solutioning
+        plans:
+        - plan_ref: solutioning-architecture
+          title: Create architecture
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-architecture
+        - plan_ref: solutioning-epics-stories
+          title: Create epics and stories
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-epics-stories
+        - plan_ref: solutioning-readiness
+          title: Check implementation readiness
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-readiness
+      - phase_key: '40'
+        phase_slug: implementation
+        lifecycle_phase: implementation
+        plans:
+        - plan_ref: implementation-sprint-planning
+          title: Plan sprint execution
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-sprint-planning
+        - plan_ref: implementation-story-cycle
+          title: Create, validate, develop, review, and test stories
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-create-story
+        - plan_ref: implementation-dev-story
+          title: Implement the next approved story
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agile-delivery-dev-story

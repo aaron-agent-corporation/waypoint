@@ -4,12 +4,18 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 
 ## Loader-backed counts
 
-- Total Quests loaded from disk: 38
-- Total Recipes loaded from disk: 91
+- Total Quests loaded from disk: 39
+- Total Recipes loaded from disk: 98
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
 Counts above are based on manifest files under `quests/` and `recipes/` and are covered by `src/__tests__/waypoint-docs.test.ts`.
+
+## Primary starter Quest additions
+
+- `agile-delivery` — Agile Delivery, a structured agile software delivery Quest adapted from BMad Method source concepts.
+  - First-wave Recipes: `agile-delivery-prd`, `agile-delivery-architecture`, `agile-delivery-epics-stories`, `agile-delivery-readiness`, `agile-delivery-sprint-planning`, `agile-delivery-create-story`, `agile-delivery-dev-story`.
+  - Source attribution: BMad Method / `bmad-method@6.7.0`; BMAD/BMad/BMad Method are trademarks of BMad Code, LLC and are used here only for attribution/provenance.
 
 ## Attribution and license
 
