@@ -127,6 +127,65 @@ describe('Referral Package Quest', () => {
     }
   })
 
+  it('hardens START_HERE instructions against the Alma Cristobal package failure', async () => {
+    const recipes = await loadRecipesFromDirectory(recipesDir)
+    expect(recipes.ok).toBe(true)
+    if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
+
+    const startHereBuilder = recipes.registry.get('referral-package-start-here-builder')
+    expect(startHereBuilder).toBeDefined()
+
+    for (const phrase of [
+      'raw markdown syntax must not leak into START_HERE.html',
+      'HTML tables must render as real table elements, not markdown rows in `<pre>` blocks',
+      'surface needs-review counts and the highest-priority unresolved items',
+      'block the dashboard as not handoff-ready when medical chronology artifacts are missing',
+      'record whether the package was produced by a real Waypoint Quest route',
+    ]) {
+      expect(startHereBuilder?.prompt).toContain(phrase)
+    }
+  })
+
+  it('hardens referral package QC against missing Quest execution and Alma Cristobal failure modes', async () => {
+    const recipes = await loadRecipesFromDirectory(recipesDir)
+    expect(recipes.ok).toBe(true)
+    if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
+
+    const qc = recipes.registry.get('referral-package-package-qc')
+    expect(qc).toBeDefined()
+
+    for (const phrase of [
+      'verify that a real Waypoint Quest route/recipe chain produced or governed the package',
+      'missing `.waypoint` route evidence',
+      'duplicate ISO date prefixes',
+      'raw markdown leakage in START_HERE.html',
+      'markdown tables rendered inside `<pre>` blocks',
+      'needs-review count',
+      'obvious folder/category contradictions',
+      'medical records present but chronology artifacts missing',
+    ]) {
+      expect(qc?.prompt).toContain(phrase)
+    }
+  })
+
+  it('hardens filename placement review against duplicated dates and category contradictions', async () => {
+    const recipes = await loadRecipesFromDirectory(recipesDir)
+    expect(recipes.ok).toBe(true)
+    if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
+
+    const filenameReviewer = recipes.registry.get('referral-package-filename-placement-reviewer')
+    expect(filenameReviewer).toBeDefined()
+
+    for (const phrase of [
+      'Reject duplicated ISO date prefixes such as `2024-04-01-2024-04-01-...`',
+      'police reports, citations, trip reports, fuel receipts, open-records requests, and client intake packets are not medical records merely because they mention medical terms',
+      'conflicting folder signals require review questions instead of confident placement',
+      'large needs-review counts must be surfaced to package QC and START_HERE',
+    ]) {
+      expect(filenameReviewer?.prompt).toContain(phrase)
+    }
+  })
+
   it('documents how to inspect and start the referral-package Quest', () => {
     const guide = readFileSync(resolve(repoRoot, 'docs/quests/referral-package.md'), 'utf8')
 

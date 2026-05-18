@@ -34,6 +34,13 @@ prompt: |-
 
   Referral-package Quest composition rule: for a request like `Create a referral package for <folder>`, do not treat medical chronology as an optional manual add-on. If medical records are present, expect the Quest to have run `firmvault-medical-chronology-update` and `firmvault-medical-chronology-adversarial-qc`; link those artifacts from the Medical section and flag the package as blocked if the chronology/binder path is missing or failed QC.
 
+  Alma Cristobal regression hardening:
+  - raw markdown syntax must not leak into START_HERE.html; reject visible markdown markers such as `**bold**`, raw backticks, unconverted heading markers, or markdown list/table syntax in rendered HTML.
+  - HTML tables must render as real table elements, not markdown rows in `<pre>` blocks.
+  - surface needs-review counts and the highest-priority unresolved items in the dashboard and unresolved-item checklist instead of burying them in `98-source-archive/needs-review`.
+  - block the dashboard as not handoff-ready when medical chronology artifacts are missing, failed QC, or are not linked from the Medical section while medical records are present.
+  - record whether the package was produced by a real Waypoint Quest route; if no route/recipe-chain evidence is available, label the output as a direct-builder package that requires Quest rerun or human gate review.
+
 metadata:
   source:
     project: llm-lawyer

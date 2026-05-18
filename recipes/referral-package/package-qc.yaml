@@ -22,6 +22,14 @@ prompt: |-
 
   Referral-package Quest composition rule: if medical records are present, package QC must verify the medical chronology path completed before approving handoff: `firmvault-medical-chronology-update`, `firmvault-medical-chronology-adversarial-qc`, one extracted visit PDF per chronology row, source buttons pointing to consolidated visit PDFs, chronology-first master binder order, and no process/meta language in attorney-facing START_HERE/chronology outputs. Block the handoff gate if those artifacts are missing, generic, or not QC-passed.
 
+  Alma Cristobal regression hardening:
+  - verify that a real Waypoint Quest route/recipe chain produced or governed the package; missing `.waypoint` route evidence means the package must be treated as direct-builder output and cannot pass without human gate review or Quest rerun.
+  - Block when medical records present but chronology artifacts missing, including `03-medical/MEDICAL_CHRONOLOGY.md`, `03-medical/medical-chronology-output/medical-chronology.html`, timeline PDF, master binder PDF, extracted visit PDFs, and adversarial QC report.
+  - Reject duplicate ISO date prefixes such as `2024-04-01-2024-04-01-...` as naming defects.
+  - Reject raw markdown leakage in START_HERE.html, including `**bold**`, raw backticks, markdown list markers, or markdown tables rendered inside `<pre>` blocks.
+  - Report needs-review count prominently; a large needs-review count must produce blockers or explicit attorney-facing unresolved-item warnings, not just archived files.
+  - Flag obvious folder/category contradictions, including police reports/citations/trip reports/fuel receipts/client intake packets in `03-medical`, medical provider bills or itemizations outside Medical, and investigation photos in generic bills/liens unless supported by source review.
+
 metadata:
   source:
     project: llm-lawyer
