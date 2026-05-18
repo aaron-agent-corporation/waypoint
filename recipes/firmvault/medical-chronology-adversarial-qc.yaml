@@ -26,7 +26,12 @@ prompt: |
   - Check all visible Visit Summary text for substance: it must summarize complaints, objective findings, tests/imaging, diagnoses/assessments, treatment, recommendations, and follow-up when supported. Fail summaries that tell the reader to go read the record.
   - Check the HTML chronology surface: date, provider/facility metadata, and Visit Summary should be visible; supporting clinical fields and source links should be inside accordion/details sections.
   - Check source links from the HTML file location, not from package root, and flag broken `View source` targets.
+  - Confirm there is one independent extracted visit PDF per chronology row/date-of-service encounter, named for the DOS/provider/visit and available under `extracted-visit-pdfs/` or the case's equivalent chronology output folder.
+  - Source buttons must point to consolidated visit PDFs. Flag visible source buttons that enumerate repeated provider productions, duplicate PDFs, certified-packet repeats, fax reprints, or the same document copied multiple times.
+  - Confirm the master binder is assembled chronology first, then extracted visit PDFs in chronology order, with the individual visit PDFs still available as standalone files.
+  - Confirm attorney-facing output contains no build-process/meta notes such as `fresh start pass`, `restart pass`, `prior output`, source inventory counts, or agent process commentary. Those notes belong only in internal reports.
   - Check representative or all rendered chronology pages/cards for clipping, orphan continuation pages, excessive blanks, unreadable layout, wrong provider normalization, and missing bordered section boxes.
+  - Use `docs/templates/firmvault/medical-chronology/adversarial-qc-report-template.md` as the report structure when available.
 
   Output contract:
   - Write a local QC report under the chronology output reports folder when available, otherwise under `.waypoint/firmvault/review/`.

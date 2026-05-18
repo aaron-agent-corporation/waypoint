@@ -779,7 +779,7 @@ scaffolds:
               output_landmarks:
               - medical_chronology_updated
         - plan_ref: firmvault-medical-chronology-adversarial-qc-task
-          title: Independent adversarial QC of visual source inspection and visit-level chronology consolidation
+          title: Independent adversarial QC of visual source inspection, visit PDFs, clean source buttons, and visit-level chronology consolidation
           wave: 135
           metadata:
             waypoint:
@@ -792,6 +792,10 @@ scaffolds:
                 checks:
                 - visual_source_inspection
                 - visit_level_consolidation
+                - extracted_visit_pdf_per_row
+                - deduplicated_source_buttons
+                - chronology_first_binder_order
+                - attorney_facing_no_process_meta
                 - duplicate_and_continuation_detection
                 - source_link_and_layout_qc
             source_port:

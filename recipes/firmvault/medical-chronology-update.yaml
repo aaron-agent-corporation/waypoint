@@ -46,6 +46,11 @@ prompt: 'You are running the source-backed Waypoint port of `firmvault-medical-c
   - For hospital or multi-provider same-day care, prefer one date-level encounter card with subparts for treating services/providers rather than a file-by-file row split.
   - Reject certified packet/export/fax date values as DOS unless the embedded clinical record itself has that same treatment date.
   - Before handing off, run or request `firmvault-medical-chronology-adversarial-qc` as an independent check of visual inspection, visit-level consolidation, summary substance, source links, and layout. Do not call the chronology final until adversarial issues are fixed or converted into explicit one-question-at-a-time human review questions.
+  - Repeatability templates live under `docs/templates/firmvault/medical-chronology/`. Use them rather than improvising ad hoc ledgers/checklists: `source-visual-inspection-ledger-template.csv`, `visit-pdf-manifest-template.csv`, `adversarial-qc-report-template.md`, and `attorney-facing-output-cleanliness-checklist.md`.
+  - Create one independent extracted visit PDF per chronology row/date-of-service encounter in `extracted-visit-pdfs/`; name it for the true DOS/provider/visit, such as `YYYY-MM-DD-provider-visit-title.pdf`.
+  - Source buttons must point to the consolidated visit PDF for that row. Do not enumerate repeated copies, duplicate provider productions, certified-packet repeats, or fax reprints as separate visible source buttons; preserve that provenance in the internal visual-inspection ledger or visit-PDF manifest.
+  - The final master binder order is chronology first, then extracted visit PDFs in chronology order. Keep the individual visit PDFs available beside the binder.
+  - The attorney-facing chronology, HTML companion, dashboard, timeline PDF, and binder must not contain build-process or meta commentary, including `fresh start pass`, `restart pass`, `prior output`, inventory counts, or notes about what an agent did. Keep that material in internal reports only.
 
 
   Adapted Mission Control source instructions:

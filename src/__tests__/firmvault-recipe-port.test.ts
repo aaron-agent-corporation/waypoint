@@ -178,11 +178,44 @@ describe('FirmVault source-backed Recipe port', () => {
       'hospital or multi-provider same-day care',
       'certified packet/export/fax date',
       'not by source file',
+      'one independent extracted visit PDF per chronology row',
+      'Source buttons must point to the consolidated visit PDF',
+      'Do not enumerate repeated copies',
+      'chronology first, then extracted visit PDFs in chronology order',
+      'must not contain build-process or meta commentary',
+      'docs/templates/firmvault/medical-chronology/',
     ]) {
       expect(manifest.prompt, phrase).toContain(phrase)
     }
 
     expect(manifest.subagents).toContain('firmvault-medical-chronology-adversarial-qc')
+  })
+
+  it('ships repeatable medical chronology templates for future agents', async () => {
+    const templateDir = join(repoRoot, 'docs/templates/firmvault/medical-chronology')
+    const requiredTemplates = [
+      'visit-pdf-manifest-template.csv',
+      'source-visual-inspection-ledger-template.csv',
+      'adversarial-qc-report-template.md',
+      'attorney-facing-output-cleanliness-checklist.md',
+    ]
+
+    for (const filename of requiredTemplates) {
+      const content = await readFile(join(templateDir, filename), 'utf8')
+      expect(content.length, filename).toBeGreaterThan(100)
+    }
+
+    const visitManifest = await readFile(join(templateDir, 'visit-pdf-manifest-template.csv'), 'utf8')
+    expect(visitManifest).toContain('chronology_row_id,date_of_service,provider,facility,visit_title,visit_pdf_filename')
+    expect(visitManifest).toContain('duplicate_source_group_ids')
+
+    const cleanlinessChecklist = await readFile(
+      join(templateDir, 'attorney-facing-output-cleanliness-checklist.md'),
+      'utf8',
+    )
+    for (const forbiddenPhrase of ['fresh start pass', 'restart pass', 'inventoried', 'prior output']) {
+      expect(cleanlinessChecklist).toContain(forbiddenPhrase)
+    }
   })
 
   it('requires an independent adversarial chronology QC recipe before human completion review', async () => {
@@ -208,6 +241,10 @@ describe('FirmVault source-backed Recipe port', () => {
     expect(qcManifest.prompt).toContain('packet/certification/export dates')
     expect(qcManifest.prompt).toContain('date of service + provider/facility + encounter')
     expect(qcManifest.prompt).toContain('one-question-at-a-time')
+    expect(qcManifest.prompt).toContain('one independent extracted visit PDF per chronology row')
+    expect(qcManifest.prompt).toContain('Source buttons must point to consolidated visit PDFs')
+    expect(qcManifest.prompt).toContain('attorney-facing output contains no build-process/meta notes')
+    expect(qcManifest.prompt).toContain('adversarial-qc-report-template.md')
     expect(qcManifest.prompt).toContain('No external side effects')
 
     expect(chronologyIndex).toBeGreaterThanOrEqual(0)
@@ -216,7 +253,14 @@ describe('FirmVault source-backed Recipe port', () => {
     expect(recordsBillsPlans[qcIndex].metadata.waypoint.recipe.slug).toBe('firmvault-medical-chronology-adversarial-qc')
     expect(recordsBillsPlans[qcIndex].metadata.waypoint.review).toMatchObject({
       independent: true,
-      checks: expect.arrayContaining(['visual_source_inspection', 'visit_level_consolidation']),
+      checks: expect.arrayContaining([
+        'visual_source_inspection',
+        'visit_level_consolidation',
+        'extracted_visit_pdf_per_row',
+        'deduplicated_source_buttons',
+        'chronology_first_binder_order',
+        'attorney_facing_no_process_meta',
+      ]),
     })
   })
 
