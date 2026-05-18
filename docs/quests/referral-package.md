@@ -22,9 +22,12 @@ The Quest models a safe referral-package journey:
 2. review documents and classify them with confidence;
 3. propose split/segment boundaries for bundled packets;
 4. propose canonical referral filenames and folders;
-5. draft a `START_HERE` attorney case dashboard and package index;
-6. run package QC; and
-7. stop at `attorney-handoff-gate` for human approval before any attorney-facing handoff.
+5. if medical records are present, run the FirmVault medical chronology/binder workflow and independent chronology QC;
+6. draft a `START_HERE` attorney case dashboard and package index that link the chronology artifacts from the Medical section;
+7. run package QC, including medical chronology artifact checks when medical records are present; and
+8. stop at `attorney-handoff-gate` for human approval before any attorney-facing handoff.
+
+The intended operator UX is intentionally short: `Create a referral package for <folder>`. The Quest and its Recipes carry the detailed medical chronology/binder rules so the operator does not have to paste them into the prompt.
 
 ## How to inspect and start it
 
@@ -43,7 +46,9 @@ waypoint tasks --route-id route-001
 - `referral-package-document-reviewer` — review one document or shadow for type, entities, dates, facts, confidence, and safe handling notes.
 - `referral-package-packet-segmenter` — propose source-backed splits for bundled packets without mutating the source file.
 - `referral-package-filename-placement-reviewer` — review canonical filenames and package folder placement.
-- `referral-package-start-here-builder` — draft the attorney case dashboard, source-backed case summary, inclusive timeline, document navigator, and unresolved-item list.
+- `firmvault-medical-chronology-update` — when medical records are present, build the visit-level medical chronology/binder package with one extracted visit PDF per chronology row, deduplicated source buttons, chronology-first binder ordering, and no process/meta language in attorney-facing output.
+- `firmvault-medical-chronology-adversarial-qc` — independently QC visual source inspection, visit-level consolidation, extracted visit PDFs, deduplicated source links, binder order, layout, and attorney-facing cleanliness before package dashboard/QC.
+- `referral-package-start-here-builder` — draft the attorney case dashboard, source-backed case summary, inclusive timeline, medical chronology links, document navigator, and unresolved-item list.
 - `referral-package-package-qc` — block/approve readiness for the human handoff gate based on completeness, traceability, and safety.
 
 ## START_HERE dashboard template
@@ -56,6 +61,7 @@ The `referral-package-start-here-builder` Recipe should give agents a reusable d
 - use saved docket/court materials for current status when present, rather than a generic red “verify docket/deadlines” warning;
 - keep the medical summary broad enough to include treatment, providers, medical records, provider bills, payment ledgers, itemizations, and special-damages totals;
 - when chronology output exists, link the chronology markdown, `medical-chronology.html` quick-review accordion, timeline PDF, master binder PDF, and audit reports from the Medical section / chronology review aid;
+- when medical records are present, package QC must treat `medical-chronology-update` and `medical-chronology-adversarial-qc` as part of the referral package path, including one extracted visit PDF per chronology row and source buttons pointing to consolidated visit PDFs;
 - include Activity Log entries in the Timeline when an `Activity Log/` folder is available;
 - name liability/photo evidence descriptively from visible content instead of retaining hash-style names.
 

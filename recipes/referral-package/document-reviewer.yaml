@@ -22,6 +22,8 @@ prompt: |-
   
   Expected output: document classification, proposed canonical filename components, proposed referral-package folder, confidence, source pointers/hashes if available, PII sensitivity notes, and review questions.
 
+  Referral-package Quest composition rule: if the reviewed folder contains medical records, provider records, imaging, bills/itemizations/payment ledgers, treatment notes, or medical-record packets, flag `medical_records_present=true` so the Quest proceeds through `firmvault-medical-chronology-update` and `firmvault-medical-chronology-adversarial-qc` before START_HERE/package QC. The operator should only need to say `Create a referral package for <folder>`; do not require them to paste chronology instructions.
+
 metadata:
   source:
     project: llm-lawyer

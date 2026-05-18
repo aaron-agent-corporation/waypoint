@@ -32,6 +32,8 @@ prompt: |-
   
   Expected output: START_HERE dashboard markdown/HTML draft, package index if needed for audit/reference, unresolved-item checklist, and handoff notes for human review.
 
+  Referral-package Quest composition rule: for a request like `Create a referral package for <folder>`, do not treat medical chronology as an optional manual add-on. If medical records are present, expect the Quest to have run `firmvault-medical-chronology-update` and `firmvault-medical-chronology-adversarial-qc`; link those artifacts from the Medical section and flag the package as blocked if the chronology/binder path is missing or failed QC.
+
 metadata:
   source:
     project: llm-lawyer

@@ -20,6 +20,8 @@ prompt: |-
   
   Expected output: pass/fail status, blocker list, warnings, evidence of source traceability, missing-doc checklist, and recommendation for the attorney-handoff gate.
 
+  Referral-package Quest composition rule: if medical records are present, package QC must verify the medical chronology path completed before approving handoff: `firmvault-medical-chronology-update`, `firmvault-medical-chronology-adversarial-qc`, one extracted visit PDF per chronology row, source buttons pointing to consolidated visit PDFs, chronology-first master binder order, and no process/meta language in attorney-facing START_HERE/chronology outputs. Block the handoff gate if those artifacts are missing, generic, or not QC-passed.
+
 metadata:
   source:
     project: llm-lawyer

@@ -12,6 +12,8 @@ const referralRecipeSlugs = [
   'referral-package-document-reviewer',
   'referral-package-packet-segmenter',
   'referral-package-filename-placement-reviewer',
+  'firmvault-medical-chronology-update',
+  'firmvault-medical-chronology-adversarial-qc',
   'referral-package-start-here-builder',
   'referral-package-package-qc',
 ]
@@ -46,25 +48,54 @@ describe('Referral Package Quest', () => {
     expect(phases.map((phase) => phase.phase_slug)).toEqual([
       'intake-review',
       'document-organization',
+      'medical-chronology',
       'package-drafting',
       'quality-control',
       'handoff',
     ])
-    expect(phases.flatMap((phase) => phase.plans ?? []).map((plan) => plan.plan_ref)).toContain(
-      'attorney-handoff-gate',
+    const allPlans = phases.flatMap((phase) => phase.plans ?? [])
+    expect(allPlans.map((plan) => plan.plan_ref)).toEqual(
+      expect.arrayContaining([
+        'medical-chronology-update',
+        'medical-chronology-adversarial-qc',
+        'attorney-handoff-gate',
+      ]),
+    )
+    const chronologyPlan = allPlans.find((plan) => plan.plan_ref === 'medical-chronology-update') as any
+    expect(chronologyPlan?.title).toContain('if medical records are present')
+    expect(chronologyPlan?.metadata?.waypoint?.recipe?.slug).toBe('firmvault-medical-chronology-update')
+    expect(chronologyPlan?.metadata?.waypoint?.required_when).toBe('medical_records_present')
+
+    const chronologyQcPlan = allPlans.find((plan) => plan.plan_ref === 'medical-chronology-adversarial-qc') as any
+    expect(chronologyQcPlan?.metadata?.waypoint?.recipe?.slug).toBe(
+      'firmvault-medical-chronology-adversarial-qc',
+    )
+    expect(chronologyQcPlan?.metadata?.waypoint?.review?.checks).toEqual(
+      expect.arrayContaining([
+        'extracted_visit_pdf_per_row',
+        'deduplicated_source_buttons',
+        'chronology_first_binder_order',
+        'attorney_facing_no_process_meta',
+      ]),
     )
 
     for (const slug of referralRecipeSlugs) {
       const recipe = recipes.registry.get(slug)
       expect(recipe).toBeDefined()
-      expect(recipe?.metadata).toMatchObject({
-        source: {
-          project: 'llm-lawyer',
-        },
-        safety: {
+      if (slug.startsWith('referral-package-')) {
+        expect(recipe?.metadata).toMatchObject({
+          source: {
+            project: 'llm-lawyer',
+          },
+          safety: {
+            external_side_effects: 'forbidden',
+          },
+        })
+      } else {
+        expect(recipe?.metadata?.source_port).toMatchObject({
           external_side_effects: 'forbidden',
-        },
-      })
+        })
+      }
       expect(recipe?.prompt).toContain('No external side effects')
     }
   })
@@ -108,6 +139,11 @@ describe('Referral Package Quest', () => {
       'does not satisfy FirmVault legal facts',
       'No external side effects',
       'attorney-handoff-gate',
+      'medical-chronology-update',
+      'medical-chronology-adversarial-qc',
+      'Create a referral package for <folder>',
+      'medical records are present',
+      'one extracted visit PDF per chronology row',
     ]) {
       expect(guide).toContain(phrase)
     }

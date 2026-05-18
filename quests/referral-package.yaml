@@ -10,6 +10,8 @@ recipes:
   - referral-package-document-reviewer
   - referral-package-packet-segmenter
   - referral-package-filename-placement-reviewer
+  - firmvault-medical-chronology-update
+  - firmvault-medical-chronology-adversarial-qc
   - referral-package-start-here-builder
   - referral-package-package-qc
 
@@ -60,29 +62,68 @@ scaffolds:
                   title: Convert low-confidence placement and classification into review questions
                   wave: 2
             - phase_key: RP3
+              phase_slug: medical-chronology
+              lifecycle_phase: execute
+              plans:
+                - plan_ref: medical-chronology-update
+                  title: Build medical chronology and binder if medical records are present
+                  wave: 3
+                  metadata:
+                    waypoint:
+                      required_when: medical_records_present
+                      recipe:
+                        slug: firmvault-medical-chronology-update
+                      output_artifacts:
+                        - 03-medical/medical-chronology-output/medical-chronology.html
+                        - 03-medical/medical-chronology-output/medical-chronology-timeline.pdf
+                        - 03-medical/medical-chronology-output/medical-chronology-master-binder.pdf
+                        - 03-medical/medical-chronology-output/extracted-visit-pdfs/
+                      instructions:
+                        - Create one extracted visit PDF per chronology row/date-of-service encounter.
+                        - Deduplicate repeated provider productions from visible source buttons.
+                        - Keep source files read-only and keep chronology artifacts review-aid only.
+                - plan_ref: medical-chronology-adversarial-qc
+                  title: Independently QC medical chronology before package dashboard/QC if medical records are present
+                  wave: 3
+                  metadata:
+                    waypoint:
+                      required_when: medical_records_present
+                      recipe:
+                        slug: firmvault-medical-chronology-adversarial-qc
+                      review:
+                        independent: true
+                        checks:
+                          - visual_source_inspection
+                          - visit_level_consolidation
+                          - extracted_visit_pdf_per_row
+                          - deduplicated_source_buttons
+                          - chronology_first_binder_order
+                          - attorney_facing_no_process_meta
+                          - source_link_and_layout_qc
+            - phase_key: RP4
               phase_slug: package-drafting
               lifecycle_phase: execute
               plans:
                 - plan_ref: start-here-draft
                   title: Draft START_HERE attorney case dashboard with facts, current status, medical summary, medical chronology HTML/PDF links, timeline, and evidence map
-                  wave: 3
+                  wave: 4
                 - plan_ref: package-index
                   title: Draft package index and cross-reference organized documents
-                  wave: 3
-            - phase_key: RP4
+                  wave: 4
+            - phase_key: RP5
               phase_slug: quality-control
               lifecycle_phase: verify
               plans:
                 - plan_ref: package-qc
-                  title: QC referral package completeness, naming, source traceability, and safety boundaries
-                  wave: 4
+                  title: QC referral package completeness, naming, source traceability, medical chronology artifacts when medical records are present, and safety boundaries
+                  wave: 5
                 - plan_ref: attorney-handoff-gate
                   title: Human gate before any attorney-facing handoff or external action
-                  wave: 4
-            - phase_key: RP5
+                  wave: 5
+            - phase_key: RP6
               phase_slug: handoff
               lifecycle_phase: ship
               plans:
                 - plan_ref: handoff-ready-summary
                   title: Produce final handoff-ready summary and explicit unresolved-item checklist
-                  wave: 5
+                  wave: 6
