@@ -5,7 +5,9 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 
-const repoRoot = resolve(new URL('..', import.meta.url).pathname)
+import { fileURLToPath } from 'node:url'
+
+const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const cli = join(repoRoot, 'packages/waypoint-cli/src/bin.ts')
 const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-folder-host-smoke-'))
 

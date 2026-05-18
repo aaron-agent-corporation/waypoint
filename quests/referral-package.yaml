@@ -90,6 +90,8 @@ scaffolds:
                       required_when: medical_records_present
                       recipe:
                         slug: firmvault-medical-chronology-adversarial-qc
+                      output_artifacts:
+                        - 03-medical/medical-chronology-output/adversarial-qc-report.md
                       review:
                         independent: true
                         checks:
@@ -107,9 +109,21 @@ scaffolds:
                 - plan_ref: start-here-draft
                   title: Draft START_HERE attorney case dashboard with facts, current status, medical summary, medical chronology HTML/PDF links, timeline, and evidence map
                   wave: 4
+                  metadata:
+                    waypoint:
+                      recipe:
+                        slug: referral-package-start-here-builder
+                      output_artifacts:
+                        - referral-package-build/attorney-handoff/START_HERE.html
+                        - referral-package-build/attorney-handoff/START_HERE.pdf
                 - plan_ref: package-index
                   title: Draft package index and cross-reference organized documents
                   wave: 4
+                  metadata:
+                    waypoint:
+                      output_artifacts:
+                        - referral-package-build/attorney-handoff/PACKAGE_INDEX.md
+                        - referral-package-build/attorney-handoff/PACKAGE_FILE_INDEX.csv
             - phase_key: RP5
               phase_slug: quality-control
               lifecycle_phase: verify
@@ -117,9 +131,19 @@ scaffolds:
                 - plan_ref: package-qc
                   title: QC referral package completeness, naming, source traceability, medical chronology artifacts when medical records are present, and safety boundaries
                   wave: 5
+                  metadata:
+                    waypoint:
+                      recipe:
+                        slug: referral-package-package-qc
+                      output_artifacts:
+                        - referral-package-build/build-internal/package-qc-report.json
                 - plan_ref: attorney-handoff-gate
                   title: Human gate before any attorney-facing handoff or external action
                   wave: 5
+                  metadata:
+                    waypoint:
+                      gate:
+                        required: true
             - phase_key: RP6
               phase_slug: handoff
               lifecycle_phase: ship

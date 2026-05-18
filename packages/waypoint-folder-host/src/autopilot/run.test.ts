@@ -42,6 +42,36 @@ describe('folder host autopilot', () => {
     expect(events.items.map((event) => event.kind)).toContain('route.autopilot.blocked')
   })
 
+  it('blocks referral package autopilot when declared output artifacts are missing', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'waypoint-referral-autopilot-'))
+    await runWaypointCli(['init', '--quest', 'referral-package'], { cwd, stdout: () => undefined, stderr: () => undefined })
+    await runWaypointCli(['start', '--quest', 'referral-package'], { cwd, stdout: () => undefined, stderr: () => undefined })
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 20 })
+
+    expect(result.status).toBe('blocked')
+    expect(result.blockedNode).toBe('medical-chronology-update')
+    expect(result.completedTasks).not.toContain('task-006')
+
+    const route = await getWaypointRoute(cwd, 'route-001')
+    expect(route).toMatchObject({ status: 'blocked', current_node: 'medical-chronology-update' })
+
+    const tasks = await listWaypointTasks(cwd)
+    expect(tasks.find((task) => task.id === 'task-006')).toMatchObject({
+      status: 'blocked',
+      metadata: {
+        waypoint: {
+          missing_artifacts: expect.arrayContaining([
+            '03-medical/medical-chronology-output/medical-chronology.html',
+          ]),
+        },
+      },
+    })
+
+    const events = await readRouteEvents(cwd, 'route-001', { limit: 20 })
+    expect(events.items.map((event) => event.kind)).toContain('route.autopilot.required_artifacts_missing')
+  })
+
   it('persists autopilot run history', async () => {
     const cwd = await startedProject()
 

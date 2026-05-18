@@ -79,6 +79,21 @@ describe('Referral Package Quest', () => {
       ]),
     )
 
+    const startHerePlan = allPlans.find((plan) => plan.plan_ref === 'start-here-draft') as any
+    expect(startHerePlan?.metadata?.waypoint?.recipe?.slug).toBe('referral-package-start-here-builder')
+    expect(startHerePlan?.metadata?.waypoint?.output_artifacts).toEqual(
+      expect.arrayContaining([
+        'referral-package-build/attorney-handoff/START_HERE.html',
+        'referral-package-build/attorney-handoff/START_HERE.pdf',
+      ]),
+    )
+
+    const packageQcPlan = allPlans.find((plan) => plan.plan_ref === 'package-qc') as any
+    expect(packageQcPlan?.metadata?.waypoint?.recipe?.slug).toBe('referral-package-package-qc')
+    expect(packageQcPlan?.metadata?.waypoint?.output_artifacts).toEqual(
+      expect.arrayContaining(['referral-package-build/build-internal/package-qc-report.json']),
+    )
+
     for (const slug of referralRecipeSlugs) {
       const recipe = recipes.registry.get(slug)
       expect(recipe).toBeDefined()

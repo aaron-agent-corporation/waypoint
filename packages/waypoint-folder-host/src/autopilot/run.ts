@@ -1,5 +1,5 @@
-import { appendFile, mkdir, readFile, readdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { appendFile, mkdir, readFile, readdir, stat } from 'node:fs/promises'
+import { isAbsolute, join, normalize } from 'node:path'
 
 import { parseRecipeManifest } from '@waypoint/core'
 import { appendRouteEvent } from '../events/jsonl.ts'
@@ -81,6 +81,13 @@ export async function runWaypointAutopilot(
     }
 
     if (nextTask.kind === 'checkpoint') {
+      const missingArtifacts = await missingOutputArtifacts(projectRoot, nextTask)
+      if (missingArtifacts.length > 0) {
+        status = 'blocked'
+        blockedNode = nextTask.plan_ref
+        await blockTaskForMissingArtifacts(projectRoot, routeId, nextTask, missingArtifacts, options.now)
+        break
+      }
       await updateWaypointTask(projectRoot, nextTask.id, {
         status: 'done',
         updated_at: timestampFor(options.now),
@@ -145,6 +152,13 @@ export async function runWaypointAutopilot(
         now: options.now,
         payload: { task_id: nextTask.id, node: nextTask.plan_ref, runtime: output },
       })
+      break
+    }
+    const missingArtifacts = await missingOutputArtifacts(projectRoot, nextTask)
+    if (missingArtifacts.length > 0) {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await blockTaskForMissingArtifacts(projectRoot, routeId, nextTask, missingArtifacts, options.now, output)
       break
     }
     await updateWaypointTask(projectRoot, nextTask.id, {
@@ -227,6 +241,69 @@ async function walkYamlFiles(root: string): Promise<string[]> {
     }
   }
   return out.sort()
+}
+
+async function blockTaskForMissingArtifacts(
+  projectRoot: string,
+  routeId: string,
+  task: WaypointFolderTask,
+  missingArtifacts: readonly string[],
+  now?: Date,
+  runtimeOutput?: unknown,
+): Promise<void> {
+  await updateWaypointTask(projectRoot, task.id, {
+    status: 'blocked',
+    updated_at: timestampFor(now),
+    metadata: mergeTaskMetadata(task.metadata, {
+      ...(runtimeOutput ? { autopilot: runtimeOutput } : {}),
+      missing_artifacts: missingArtifacts,
+      block_reason: 'required_artifacts_missing',
+    }),
+  })
+  await updateWaypointRoute(projectRoot, routeId, {
+    status: 'blocked',
+    current_node: task.plan_ref,
+    updated_at: timestampFor(now),
+  })
+  await appendRouteEvent(projectRoot, routeId, {
+    kind: 'route.autopilot.required_artifacts_missing',
+    now,
+    payload: { task_id: task.id, node: task.plan_ref, missing_artifacts: missingArtifacts },
+  })
+}
+
+async function missingOutputArtifacts(projectRoot: string, task: WaypointFolderTask): Promise<string[]> {
+  const artifacts = outputArtifactsForTask(task)
+  const missing: string[] = []
+  for (const artifact of artifacts) {
+    const safePath = safeRelativeArtifactPath(artifact)
+    if (!safePath) {
+      missing.push(artifact)
+      continue
+    }
+    try {
+      await stat(join(projectRoot, safePath))
+    } catch (error) {
+      if (isNodeError(error) && error.code === 'ENOENT') {
+        missing.push(artifact)
+        continue
+      }
+      throw error
+    }
+  }
+  return missing
+}
+
+function outputArtifactsForTask(task: WaypointFolderTask): string[] {
+  const waypoint = isRecord(task.metadata?.waypoint) ? task.metadata.waypoint : {}
+  if (!Array.isArray(waypoint.output_artifacts)) return []
+  return waypoint.output_artifacts.filter((artifact): artifact is string => typeof artifact === 'string' && artifact.trim().length > 0)
+}
+
+function safeRelativeArtifactPath(artifact: string): string | null {
+  const normalized = normalize(artifact.trim())
+  if (isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../') || normalized.startsWith('..\\')) return null
+  return normalized
 }
 
 async function defaultRouteId(projectRoot: string): Promise<string> {
