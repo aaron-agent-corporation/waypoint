@@ -36,6 +36,7 @@ const firmVaultRecipeSlugs = [
   'firmvault-request-records-bills-follow-up',
   'firmvault-medical-records-receive-and-process',
   'firmvault-medical-chronology-update',
+  'firmvault-medical-chronology-adversarial-qc',
   'firmvault-medical-records-prepare-request',
   'firmvault-medical-records-send-request',
   'firmvault-medical-records-first-follow-up',
@@ -77,6 +78,8 @@ const documentPipelineRecipeSlugs = new Set<string>([
   'firmvault-document-pipeline-review-pr',
   'firmvault-document-pipeline-record-merge',
 ])
+
+const waypointNativeRecipeSlugs = new Set<string>(['firmvault-medical-chronology-adversarial-qc'])
 
 const firmvaultDocumentPipelineRoot = '/Users/aaronwhaley/Github/firmvault-document-pipeline'
 const requiredSourceFiles = ['recipe.yaml', 'SOUL.md', 'REVIEW.md'] as const
@@ -168,9 +171,53 @@ describe('FirmVault source-backed Recipe port', () => {
       'Back to Timeline',
       'Do not make executive decisions about whether a visit is related',
       'render representative pages',
+      'visual source-document inspection is mandatory',
+      'source-visual-inspection-ledger',
+      'date of service + provider/facility + encounter',
+      'same date of service at the same provider',
+      'hospital or multi-provider same-day care',
+      'certified packet/export/fax date',
+      'not by source file',
     ]) {
       expect(manifest.prompt, phrase).toContain(phrase)
     }
+
+    expect(manifest.subagents).toContain('firmvault-medical-chronology-adversarial-qc')
+  })
+
+  it('requires an independent adversarial chronology QC recipe before human completion review', async () => {
+    const qcManifest = await readRecipeManifest('firmvault-medical-chronology-adversarial-qc')
+    const questRaw = parseYaml(await readFile(firmvaultQuestPath, 'utf8')) as any
+    const recordsBillsPlans = questRaw.scaffolds.workstreams[0].milestones[0].phases.find(
+      (phase: any) => phase.phase_slug === 'records-bills',
+    ).plans
+    const chronologyIndex = recordsBillsPlans.findIndex(
+      (plan: any) => plan.plan_ref === 'firmvault-medical-chronology-update-task',
+    )
+    const qcIndex = recordsBillsPlans.findIndex(
+      (plan: any) => plan.plan_ref === 'firmvault-medical-chronology-adversarial-qc-task',
+    )
+    const humanReviewIndex = recordsBillsPlans.findIndex(
+      (plan: any) => plan.plan_ref === 'firmvault-records-bills-human-completion-review',
+    )
+
+    expect(qcManifest.prompt).toContain('independent adversarial reviewer')
+    expect(qcManifest.prompt).toContain('visually inspect the source documents')
+    expect(qcManifest.prompt).toContain('missed visits')
+    expect(qcManifest.prompt).toContain('duplicate chronology rows')
+    expect(qcManifest.prompt).toContain('packet/certification/export dates')
+    expect(qcManifest.prompt).toContain('date of service + provider/facility + encounter')
+    expect(qcManifest.prompt).toContain('one-question-at-a-time')
+    expect(qcManifest.prompt).toContain('No external side effects')
+
+    expect(chronologyIndex).toBeGreaterThanOrEqual(0)
+    expect(qcIndex).toBeGreaterThan(chronologyIndex)
+    expect(humanReviewIndex).toBeGreaterThan(qcIndex)
+    expect(recordsBillsPlans[qcIndex].metadata.waypoint.recipe.slug).toBe('firmvault-medical-chronology-adversarial-qc')
+    expect(recordsBillsPlans[qcIndex].metadata.waypoint.review).toMatchObject({
+      independent: true,
+      checks: expect.arrayContaining(['visual_source_inspection', 'visit_level_consolidation']),
+    })
   })
 
   it('ports every current FirmVault Recipe from Mission Control source files with safe folder-host metadata', async () => {
@@ -192,9 +239,12 @@ describe('FirmVault source-backed Recipe port', () => {
       expect(manifest.prompt, `${slug} token-looking secret`).not.toMatch(/sk-[A-Za-z0-9_-]{16,}/)
 
       expect(sourcePort?.status, `${slug} source status`).toMatch(/^ported_from_/)
-      expect(sourcePort?.source_repository, `${slug} source repository`).toBe(
-        documentPipelineRecipeSlugs.has(slug) ? firmvaultDocumentPipelineRoot : missionControlRoot,
-      )
+      const expectedSourceRepository = documentPipelineRecipeSlugs.has(slug)
+        ? firmvaultDocumentPipelineRoot
+        : waypointNativeRecipeSlugs.has(slug)
+          ? repoRoot
+          : missionControlRoot
+      expect(sourcePort?.source_repository, `${slug} source repository`).toBe(expectedSourceRepository)
       expect(sourcePort?.external_side_effects, `${slug} external side effects`).toBe('forbidden')
       expect(sourcePort?.review_criteria, `${slug} review criteria`).toEqual(expect.any(Array))
       expect(sourcePort?.review_criteria?.length ?? 0, `${slug} review criteria length`).toBeGreaterThan(0)

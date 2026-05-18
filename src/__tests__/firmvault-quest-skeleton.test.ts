@@ -229,6 +229,7 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-records-bills-escalate-delay-task',
         'firmvault-records-bills-receive-process-task',
         'firmvault-medical-chronology-update-task',
+        'firmvault-medical-chronology-adversarial-qc-task',
         'firmvault-records-bills-human-completion-review',
       ]),
     )
@@ -252,6 +253,7 @@ describe('FirmVault Quest skeleton', () => {
         'firmvault-medical-records-escalate-delay',
         'firmvault-medical-records-receive-and-process',
         'firmvault-medical-chronology-update',
+        'firmvault-medical-chronology-adversarial-qc',
       ]),
     )
 

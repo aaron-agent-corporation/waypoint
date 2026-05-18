@@ -39,6 +39,13 @@ prompt: 'You are running the source-backed Waypoint port of `firmvault-medical-c
   - Generate a linked chronology workbook, a readable timeline/chronology PDF, and, when requested, one master linked binder PDF with timeline pages first and visit/source PDFs appended.
   - Add bidirectional navigation in the master binder: every timeline `View` link should have a visible `Back to Timeline` link/button on the destination visit/source page when technically feasible.
   - Verify before completion: row counts, matched/unmatched counts, extracted PDFs, timeline and binder page counts, internal forward links, Back to Timeline links, forbidden provenance-string scans, and representative rendered page images. You must render representative pages and visually inspect them before calling a chronology package complete.
+  - Non-negotiable visual inspection gate: visual source-document inspection is mandatory before generating chronology rows. Use OCR, filenames, shadows, and packet indexes only as finding aids; they are not a substitute for looking at the source document images/pages enough to identify true clinical dates of service and encounter boundaries.
+  - Write a `reports/source-visual-inspection-ledger` artifact before drafting final rows. The ledger must list each visually inspected source range, true DOS, provider/facility, document type, page completeness, duplicate/continuation status, and whether it is a clinical visit, billing support, certification/packet material, or needs review.
+  - Build rows from date of service + provider/facility + encounter, not by source file, filename date, OCR date hit, page range, packet date, fax date, print date, upload date, or certification date.
+  - Combine every same date of service at the same provider into one chronology entry unless the visual ledger proves they are genuinely separate encounters. Duplicate PDFs, `-002` copies, continuation pages, and certified-packet repeats belong under supporting sources for that one entry, not separate rows.
+  - For hospital or multi-provider same-day care, prefer one date-level encounter card with subparts for treating services/providers rather than a file-by-file row split.
+  - Reject certified packet/export/fax date values as DOS unless the embedded clinical record itself has that same treatment date.
+  - Before handing off, run or request `firmvault-medical-chronology-adversarial-qc` as an independent check of visual inspection, visit-level consolidation, summary substance, source links, and layout. Do not call the chronology final until adversarial issues are fixed or converted into explicit one-question-at-a-time human review questions.
 
 
   Adapted Mission Control source instructions:
@@ -88,6 +95,8 @@ tools:
 - file_read
 - search_files
 - file_write
+subagents:
+- firmvault-medical-chronology-adversarial-qc
 metadata:
   source_port:
     status: ported_from_mission_control

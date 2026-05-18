@@ -5,7 +5,7 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 ## Loader-backed counts
 
 - Total Quests loaded from disk: 42
-- Total Recipes loaded from disk: 127
+- Total Recipes loaded from disk: 128
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -387,6 +387,10 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 - `firmvault-medical-chronology-update` — FirmVault Medical Chronology - Update
   - Path: `recipes/firmvault/medical-chronology-update.yaml`
   - Description: Updates a provider or case medical chronology from received records shadows.
+  - External side effects: `forbidden`
+- `firmvault-medical-chronology-adversarial-qc` — FirmVault Medical Chronology - Adversarial QC
+  - Path: `recipes/firmvault/medical-chronology-adversarial-qc.yaml`
+  - Description: Independently reviews draft medical chronologies against source-document page images for true date-of-service grouping, duplicate/certified-packet suppression, and substantive visit summaries.
   - External side effects: `forbidden`
 - `firmvault-medical-provider-review-status` — FirmVault Medical Provider Status - Review
   - Path: `recipes/firmvault/medical-provider-review-status.yaml`

@@ -27,6 +27,7 @@ recipes:
 - firmvault-request-records-bills-follow-up
 - firmvault-medical-records-receive-and-process
 - firmvault-medical-chronology-update
+- firmvault-medical-chronology-adversarial-qc
 - firmvault-medical-records-prepare-request
 - firmvault-medical-records-send-request
 - firmvault-medical-records-first-follow-up
@@ -762,7 +763,7 @@ scaffolds:
               - records_and_bills_processed
               - all_records_received
         - plan_ref: firmvault-medical-chronology-update-task
-          title: Build or update medical chronology/binder package with Visit Summary-first PDF cards and HTML accordion chronology
+          title: Build or update medical chronology/binder package with medical-chronology-binder-generation Visit Summary-first PDF cards and HTML accordion chronology
           wave: 130
           metadata:
             waypoint:
@@ -777,8 +778,29 @@ scaffolds:
               supporting_skill: medical-chronology-binder-generation
               output_landmarks:
               - medical_chronology_updated
+        - plan_ref: firmvault-medical-chronology-adversarial-qc-task
+          title: Independent adversarial QC of visual source inspection and visit-level chronology consolidation
+          wave: 135
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: firmvault-medical-chronology-adversarial-qc
+              review:
+                independent: true
+                checks:
+                - visual_source_inspection
+                - visit_level_consolidation
+                - duplicate_and_continuation_detection
+                - source_link_and_layout_qc
+            source_port:
+              workflow_id: firmvault-request-medical-records
+              source_node: adversarial_chronology_qc
+              source_workflow: workflows/firmvault-request-medical-records.yaml
+              supporting_skill: medical-chronology-binder-generation
         - plan_ref: firmvault-records-bills-human-completion-review
-          title: Human completion review for provider records workflow
+          title: Human completion review for provider records workflow after chronology QC
           wave: 140
           metadata:
             waypoint:
