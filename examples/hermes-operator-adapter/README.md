@@ -80,6 +80,8 @@ Allowed read-only commands:
 
 ```text
 waypoint status
+waypoint quests
+waypoint recipes --quest <slug>
 waypoint routes
 waypoint route --route-id <id>
 waypoint route-events --route-id <id> [--limit N] [--offset N]
@@ -90,6 +92,8 @@ waypoint auto status [--limit N] [--offset N]
 Allowed mutation commands are explicitly marked in results:
 
 ```text
+waypoint init --quest <slug>
+waypoint start --quest <slug>
 waypoint discuss --task-id <id> --message <text>
 waypoint auto --route-id <id> [--max-iterations N]
 waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
@@ -97,10 +101,12 @@ waypoint pause --route-id <id> [--reason <text>]
 waypoint resume --route-id <id>
 ```
 
+For a request like “start a Quest,” another agent should resolve a trusted project record, inspect `waypoint quests` / `waypoint recipes --quest <slug>` when the slug is ambiguous, then pass explicit args such as `['init', '--quest', 'agentic-delivery']` and `['start', '--quest', 'agentic-delivery']` into the runner. The runner does not execute natural-language text directly.
+
 Safety behavior:
 
 - command allowlist rejects non-Waypoint shell commands;
-- command allowlist rejects Waypoint commands outside H2 scope, including `init`, `start`, `quests`, `recipes`, and `lifecycle`;
+- command allowlist accepts only catalog inspection (`quests`, `recipes`), Quest init/start, route/task inspection, discussion, autopilot, gate, pause/resume, and safe FirmVault operator commands;
 - each command has a narrow flag allowlist;
 - missing required flag values fail before execution;
 - `gate` requires exactly one of `--approve` or `--reject`;

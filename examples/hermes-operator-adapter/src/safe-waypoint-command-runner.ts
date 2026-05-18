@@ -49,6 +49,29 @@ const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
     summaryHint: 'status',
     allowedFlags: {},
   },
+  quests: {
+    mutation: false,
+    summaryHint: 'quests',
+    allowedFlags: { '--json': 'boolean' },
+  },
+  recipes: {
+    mutation: false,
+    summaryHint: 'recipes',
+    allowedFlags: { '--quest': 'value', '--json': 'boolean' },
+    customValidate: validateOptionalQuestSlug('recipes'),
+  },
+  init: {
+    mutation: true,
+    summaryHint: 'init',
+    allowedFlags: { '--quest': 'value' },
+    customValidate: validateOptionalQuestSlug('init'),
+  },
+  start: {
+    mutation: true,
+    summaryHint: 'start',
+    allowedFlags: { '--quest': 'value', '--json': 'boolean' },
+    customValidate: validateOptionalQuestSlug('start'),
+  },
   routes: {
     mutation: false,
     summaryHint: 'routes',
@@ -329,6 +352,13 @@ function buildFirmVaultNestedCommand(
   }
 }
 
+function validateOptionalQuestSlug(command: string): (args: readonly string[]) => void {
+  return (args) => {
+    const quest = flagValue(args, '--quest')
+    if (quest && !isSafeSlug(quest)) throw new Error(`Waypoint ${command} does not allow unsafe Quest slug: ${quest}`)
+  }
+}
+
 function validateFirmVaultAddDocument(args: readonly string[]): void {
   const source = flagValue(args, '--source')
   const kind = flagValue(args, '--kind')
@@ -407,6 +437,10 @@ function flagValues(args: readonly string[], flag: string): readonly string[] {
     if (args[index] === flag && args[index + 1] !== undefined) values.push(args[index + 1])
   }
   return values
+}
+
+function isSafeSlug(slug: string): boolean {
+  return /^[a-z0-9][a-z0-9-]*$/.test(slug)
 }
 
 function isSafeRelativePath(path: string): boolean {

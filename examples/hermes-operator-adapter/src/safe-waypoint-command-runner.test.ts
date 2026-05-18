@@ -44,17 +44,46 @@ describe('safe Waypoint command runner', () => {
     ])
   })
 
+  it('allows Hermes to inspect catalog options and start a selected Quest with explicit args', () => {
+    const project = projectRecord('/tmp/waypoint-project')
+
+    expect(buildSafeWaypointCommand(project, ['quests', '--json'])).toMatchObject({
+      args: [waypointCli, 'quests', '--json'],
+      cwd: '/tmp/waypoint-project',
+      mutation: false,
+      summaryHint: 'quests',
+    })
+    expect(buildSafeWaypointCommand(project, ['recipes', '--quest', 'agentic-delivery', '--json'])).toMatchObject({
+      args: [waypointCli, 'recipes', '--quest', 'agentic-delivery', '--json'],
+      cwd: '/tmp/waypoint-project',
+      mutation: false,
+      summaryHint: 'recipes',
+    })
+    expect(buildSafeWaypointCommand(project, ['init', '--quest', 'agentic-delivery'])).toMatchObject({
+      args: [waypointCli, 'init', '--quest', 'agentic-delivery'],
+      cwd: '/tmp/waypoint-project',
+      mutation: true,
+      summaryHint: 'init',
+    })
+    expect(buildSafeWaypointCommand(project, ['start', '--quest', 'agentic-delivery', '--json'])).toMatchObject({
+      args: [waypointCli, 'start', '--quest', 'agentic-delivery', '--json'],
+      cwd: '/tmp/waypoint-project',
+      mutation: true,
+      summaryHint: 'start',
+    })
+  })
+
   it('fails closed for shell commands, unknown Waypoint commands, and disallowed flags', () => {
     const project = projectRecord('/tmp/waypoint-project')
 
     expect(() => buildSafeWaypointCommand(project, ['sh', '-c', 'rm -rf .waypoint'])).toThrow(
       'Waypoint command is not allowlisted: sh',
     )
-    expect(() => buildSafeWaypointCommand(project, ['init', '--quest', 'waypoint'])).toThrow(
-      'Waypoint command is not allowlisted: init',
-    )
     expect(() => buildSafeWaypointCommand(project, ['status', '--exec', 'rm -rf .'])).toThrow(
       'Waypoint status does not allow flag: --exec',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['start', '--quest', '../bad'])).toThrow(
+      'Waypoint start does not allow unsafe Quest slug: ../bad',
     )
     expect(() => buildSafeWaypointCommand(project, ['route', '--route-id'])).toThrow(
       'Waypoint route requires a value for --route-id',

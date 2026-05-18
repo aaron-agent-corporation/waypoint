@@ -228,15 +228,20 @@ Allowed read-only commands include:
 
 ```bash
 waypoint status
+waypoint quests
+waypoint recipes --quest <slug>
 waypoint routes
 waypoint route --route-id route-001
 waypoint tasks --route-id route-001
 waypoint route-events --route-id route-001 --limit 20
+waypoint auto status
 ```
 
-Mutation commands are explicitly marked and require clear command intent:
+Allowed mutation commands are explicitly marked and require clear command intent:
 
 ```bash
+waypoint init --quest <slug>
+waypoint start --quest <slug>
 waypoint discuss --task-id task-003 --message "..."
 waypoint auto --route-id route-001 --max-iterations 10
 waypoint gate --route-id route-001 --node plan-approval-gate --approve --next-node execute
@@ -244,11 +249,13 @@ waypoint pause --route-id route-001 --reason "..."
 waypoint resume --route-id route-001
 ```
 
+Another agent can translate “start a Quest” into catalog inspection plus explicit init/start commands: first resolve the trusted project record, run `waypoint quests` and optionally `waypoint recipes --quest <slug>` to confirm the requested Quest, then run `waypoint init --quest <slug>` if the folder is not initialized and `waypoint start --quest <slug>` to create the route. The runner still receives explicit argv arrays only; it does not execute arbitrary natural-language text.
+
 Safety behavior:
 
 - command allowlist rejects non-Waypoint shell commands;
-- command allowlist rejects Waypoint commands outside H2 scope, including `init`, `start`, `quests`, `recipes`, and `lifecycle`;
-- each allowed command has a narrow flag allowlist;
+- command allowlist accepts only catalog inspection (`quests`, `recipes`), Quest start/init, route/task inspection, discussion, autopilot, gate, pause/resume, and safe FirmVault operator commands;
+- each command has a narrow flag allowlist;
 - missing required flag values fail before execution;
 - `gate` requires exactly one of `--approve` or `--reject`;
 - outputs are summarized without dropping route/task IDs by preserving raw stdout and stderr in the command result.

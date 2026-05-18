@@ -104,6 +104,11 @@ describe('Hermes integration plan', () => {
       'outputs are summarized without dropping route/task IDs',
       'waypoint route-events --route-id',
       'waypoint auto status',
+      'waypoint quests',
+      'waypoint recipes --quest <slug>',
+      'waypoint init --quest <slug>',
+      'waypoint start --quest <slug>',
+      'Another agent can translate “start a Quest” into catalog inspection plus explicit init/start commands',
     ]) {
       expect(`${plan}\n${readme}`).toContain(phrase)
     }
