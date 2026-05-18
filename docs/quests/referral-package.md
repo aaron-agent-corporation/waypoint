@@ -55,6 +55,7 @@ The `referral-package-start-here-builder` Recipe should give agents a reusable d
 - structure Case Summary as `Summary of facts`, `Current status`, and `Summary of medicals`;
 - use saved docket/court materials for current status when present, rather than a generic red “verify docket/deadlines” warning;
 - keep the medical summary broad enough to include treatment, providers, medical records, provider bills, payment ledgers, itemizations, and special-damages totals;
+- when chronology output exists, link the chronology markdown, `medical-chronology.html` quick-review accordion, timeline PDF, master binder PDF, and audit reports from the Medical section / chronology review aid;
 - include Activity Log entries in the Timeline when an `Activity Log/` folder is available;
 - name liability/photo evidence descriptively from visible content instead of retaining hash-style names.
 

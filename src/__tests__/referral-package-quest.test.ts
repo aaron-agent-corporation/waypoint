@@ -88,6 +88,9 @@ describe('Referral Package Quest', () => {
       'Case Summary, Insurance, Medical, Liens, Expenses, Litigation, Timeline, Documents',
       'Activity Log',
       'descriptive attorney-facing names',
+      'HTML medical chronology',
+      'medical-chronology.html',
+      'accordion',
     ]) {
       expect(startHereBuilder?.prompt).toContain(phrase)
     }

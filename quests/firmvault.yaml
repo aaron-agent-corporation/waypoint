@@ -762,7 +762,7 @@ scaffolds:
               - records_and_bills_processed
               - all_records_received
         - plan_ref: firmvault-medical-chronology-update-task
-          title: Build or update medical chronology/binder package using medical-chronology-binder-generation guidance
+          title: Build or update medical chronology/binder package with Visit Summary-first PDF cards and HTML accordion chronology
           wave: 130
           metadata:
             waypoint:
