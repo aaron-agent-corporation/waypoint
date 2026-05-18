@@ -163,6 +163,8 @@ describe('FirmVault source-backed Recipe port', () => {
       'Visit Summary first',
       'HTML chronology',
       'accordion',
+      'relative from the HTML file location',
+      'all HTML `View source` links resolve',
       'Back to Timeline',
       'Do not make executive decisions about whether a visit is related',
       'render representative pages',
