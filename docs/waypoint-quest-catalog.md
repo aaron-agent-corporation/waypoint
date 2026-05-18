@@ -4,8 +4,8 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 
 ## Loader-backed counts
 
-- Total Quests loaded from disk: 39
-- Total Recipes loaded from disk: 98
+- Total Quests loaded from disk: 40
+- Total Recipes loaded from disk: 108
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -16,6 +16,9 @@ Counts above are based on manifest files under `quests/` and `recipes/` and are 
 - `agile-delivery` — Agile Delivery, a structured agile software delivery Quest adapted from BMad Method source concepts.
   - First-wave Recipes: `agile-delivery-prd`, `agile-delivery-architecture`, `agile-delivery-epics-stories`, `agile-delivery-readiness`, `agile-delivery-sprint-planning`, `agile-delivery-create-story`, `agile-delivery-dev-story`.
   - Source attribution: BMad Method / `bmad-method@6.7.0`; BMAD/BMad/BMad Method are trademarks of BMad Code, LLC and are used here only for attribution/provenance.
+- `product-sprint` — Product Sprint, a gstack-derived product/software sprint Quest for founder-led product work.
+  - First-wave Recipes: `product-sprint-office-hours`, `product-sprint-ceo-review`, `product-sprint-eng-review`, `product-sprint-design-review`, `product-sprint-devex-review`, `product-sprint-autoplan`, `product-sprint-review`, `product-sprint-qa-only`, `product-sprint-ship`, `product-sprint-retro`.
+  - Source attribution: gstack / `gstack@1.40.0.0`; gstack methodology is used here only as source attribution/provenance and host-specific side effects remain gated or deferred.
 
 ## Attribution and license
 
@@ -152,6 +155,10 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Description: Waypoint catalog Quest port of gsd:pr-branch for create a clean review branch that filters planning-only commits out of the PR diff.
 
   - Recipes: `waypoint-executor`
+- `product-sprint` — Product Sprint
+  - Path: `quests/product-sprint.yaml`
+  - Description: gstack-derived product/software sprint Quest for founder-led product work; think, plan, build, review, test, ship, and reflect.
+  - Recipes: `product-sprint-office-hours`, `product-sprint-ceo-review`, `product-sprint-eng-review`, `product-sprint-design-review`, `product-sprint-devex-review`, `product-sprint-autoplan`, `product-sprint-review`, `product-sprint-qa-only`, `product-sprint-ship`, `product-sprint-retro`
 - `profile-user` — Profile User Quest
   - Path: `quests/profile-user.yaml`
   - Description: Waypoint catalog Quest port of gsd:profile-user for generate developer behavior and preference profile artifacts with consent gates.
@@ -369,6 +376,46 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/firmvault/request-records-bills-send-request.yaml`
   - Description: Confirms sending evidence or prepares a precise human handoff for records and bills requests.
   - External side effects: `forbidden`
+- `product-sprint-autoplan` — Product Sprint Autoplan
+  - Path: `recipes/product-sprint/autoplan.yaml`
+  - Description: Coordinate multiple reviews into a coherent plan before build work starts.
+  - External side effects: `none`
+- `product-sprint-ceo-review` — Product Sprint CEO Review
+  - Path: `recipes/product-sprint/ceo-review.yaml`
+  - Description: Founder/CEO strategy review for product direction, wedge, sequencing, and company-level tradeoffs.
+  - External side effects: `none`
+- `product-sprint-design-review` — Product Sprint Design Review
+  - Path: `recipes/product-sprint/design-review.yaml`
+  - Description: Product taste and UX review for interaction quality, clarity, and AI-slop reduction.
+  - External side effects: `none`
+- `product-sprint-devex-review` — Product Sprint DevEx Review
+  - Path: `recipes/product-sprint/devex-review.yaml`
+  - Description: Developer-experience review for build, setup, testing, and maintainability friction.
+  - External side effects: `none`
+- `product-sprint-eng-review` — Product Sprint Engineering Review
+  - Path: `recipes/product-sprint/eng-review.yaml`
+  - Description: Architecture and implementation-plan review for feasibility, sequencing, and technical risk.
+  - External side effects: `none`
+- `product-sprint-office-hours` — Product Sprint Office Hours
+  - Path: `recipes/product-sprint/office-hours.yaml`
+  - Description: Discovery and product interrogation for early ideas and ambiguous product direction.
+  - External side effects: `none`
+- `product-sprint-qa-only` — Product Sprint QA Only
+  - Path: `recipes/product-sprint/qa-only.yaml`
+  - Description: Report-only QA pass that identifies issues without applying fixes or taking external action.
+  - External side effects: `gated`
+- `product-sprint-retro` — Product Sprint Retro
+  - Path: `recipes/product-sprint/retro.yaml`
+  - Description: Reflection loop to capture learnings, missed risks, and process improvements after a sprint.
+  - External side effects: `none`
+- `product-sprint-review` — Product Sprint Code Review
+  - Path: `recipes/product-sprint/review.yaml`
+  - Description: Review diffs and implementation quality before landing changes.
+  - External side effects: `none`
+- `product-sprint-ship` — Product Sprint Ship
+  - Path: `recipes/product-sprint/ship.yaml`
+  - Description: Release-preparation checklist and handoff with deployment and publishing side effects gated.
+  - External side effects: `gated`
 - `reviewer` — Reviewer
   - Path: `recipes/reviewer.yaml`
   - Description: Reviews completed work for correctness, completeness, and adherence to stated acceptance criteria. Produces a pass/fail verdict with specific issues to address when failing.

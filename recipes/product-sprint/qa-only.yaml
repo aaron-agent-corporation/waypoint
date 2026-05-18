@@ -1,0 +1,39 @@
+schema_version: 1
+slug: product-sprint-qa-only
+name: Product Sprint QA Only
+description: Report-only QA pass that identifies issues without applying fixes or taking external action.
+prompt: |
+  You are running the Waypoint Recipe `product-sprint-qa-only` for the Product Sprint Quest.
+
+  Source provenance: this Recipe is adapted from gstack source skill `qa-only` at `qa-only/SKILL.md`.
+
+  Preserve the source workflow intent while enforcing Waypoint boundaries:
+  - produce local questions, plans, review notes, QA findings, release checklists, and implementation handoffs;
+  - do not install gstack, invoke Claude Code slash commands, start browser daemons, deploy, publish, push, open PRs, or take external side effects from this Recipe;
+  - treat project files as read-only unless the active Waypoint task explicitly authorizes local edits;
+  - ask one focused question at a time when the next safe product or workflow decision is ambiguous;
+  - keep gstack names as source attribution only, not Waypoint product branding.
+
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source:
+    project: gstack
+    package: gstack
+    version: 1.40.0.0
+    source_skill: qa-only
+    source_path: qa-only/SKILL.md
+    local_reference: /Users/aaronwhaley/Github/gstack-main/qa-only/SKILL.md
+    source_repository: /Users/aaronwhaley/Github/gstack-main
+    license: MIT
+  waypoint:
+    external_side_effects: gated
+    source_port_scope: methodology_recipe
+  source_port:
+    status: adapted_from_gstack
+    external_side_effects: gated
+    adaptation_notes:
+    - Converted gstack methodology and role intent into a Waypoint Recipe manifest.
+    - Host-specific gstack setup, browser automation, Claude Code slash command routing, deploy, and canary execution are deferred or gated.

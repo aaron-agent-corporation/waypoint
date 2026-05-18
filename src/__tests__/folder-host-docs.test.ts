@@ -94,8 +94,8 @@ describe('folder host documentation', () => {
       'Best for: general project planning and execution',
       '`agile-delivery` — Agile Delivery',
       'Best for: structured software delivery from PRD through sprint execution',
-      'Product Sprint',
-      'planned starter Quest candidate',
+      '`product-sprint` — Product Sprint',
+      'Best for: product ideation, review, QA, and ship cycles',
     ]) {
       expect(guide).toContain(phrase)
     }

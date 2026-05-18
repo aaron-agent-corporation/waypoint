@@ -34,6 +34,8 @@ describe('catalog commands', () => {
     expect(output).toContain('  Best for: general project planning and execution')
     expect(output).toContain('- agile-delivery: Agile Delivery')
     expect(output).toContain('  Best for: structured software delivery from PRD through sprint execution')
+    expect(output).toContain('- product-sprint: Product Sprint')
+    expect(output).toContain('  Best for: product ideation, review, QA, and ship cycles')
     expect(output).toContain('Additional bundled Quests')
   })
 

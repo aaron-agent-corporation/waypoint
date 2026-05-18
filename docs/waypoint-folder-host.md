@@ -129,9 +129,9 @@ Then present the starter choices as folder setup options instead of assuming eve
 - `agile-delivery` — Agile Delivery
   - Best for: structured software delivery from PRD through sprint execution.
   - Use when the folder is a software/product delivery effort that benefits from PRD, architecture, epics/stories, readiness, sprint planning, story creation, and development loops.
-- Product Sprint
-  - Status: planned starter Quest candidate, not an installed Quest until a `product-sprint` manifest lands.
-  - Best for: product ideation, review, QA, and ship cycles once the catalog entry is implemented.
+- `product-sprint` — Product Sprint
+  - Best for: product ideation, review, QA, and ship cycles.
+  - Use when the folder is a founder/product/software sprint that benefits from discovery, strategy review, engineering/design/devex review, QA, gated ship preparation, and retro loops.
 
 After choosing an installed Quest, inspect the referenced Recipes:
 

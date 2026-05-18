@@ -1,0 +1,39 @@
+schema_version: 1
+slug: product-sprint-ceo-review
+name: Product Sprint CEO Review
+description: Founder/CEO strategy review for product direction, wedge, sequencing, and company-level tradeoffs.
+prompt: |
+  You are running the Waypoint Recipe `product-sprint-ceo-review` for the Product Sprint Quest.
+
+  Source provenance: this Recipe is adapted from gstack source skill `ceo-review` at `plan-ceo-review/SKILL.md`.
+
+  Preserve the source workflow intent while enforcing Waypoint boundaries:
+  - produce local questions, plans, review notes, QA findings, release checklists, and implementation handoffs;
+  - do not install gstack, invoke Claude Code slash commands, start browser daemons, deploy, publish, push, open PRs, or take external side effects from this Recipe;
+  - treat project files as read-only unless the active Waypoint task explicitly authorizes local edits;
+  - ask one focused question at a time when the next safe product or workflow decision is ambiguous;
+  - keep gstack names as source attribution only, not Waypoint product branding.
+
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source:
+    project: gstack
+    package: gstack
+    version: 1.40.0.0
+    source_skill: ceo-review
+    source_path: plan-ceo-review/SKILL.md
+    local_reference: /Users/aaronwhaley/Github/gstack-main/plan-ceo-review/SKILL.md
+    source_repository: /Users/aaronwhaley/Github/gstack-main
+    license: MIT
+  waypoint:
+    external_side_effects: none
+    source_port_scope: methodology_recipe
+  source_port:
+    status: adapted_from_gstack
+    external_side_effects: none
+    adaptation_notes:
+    - Converted gstack methodology and role intent into a Waypoint Recipe manifest.
+    - Host-specific gstack setup, browser automation, Claude Code slash command routing, deploy, and canary execution are deferred or gated.

@@ -1,0 +1,182 @@
+schema_version: 1
+slug: product-sprint
+name: Product Sprint
+description: gstack-derived product/software sprint Quest for founder-led product work; think, plan, build, review, test, ship, and reflect.
+workflow: workflows/product-sprint.yaml
+recipes:
+- product-sprint-office-hours
+- product-sprint-ceo-review
+- product-sprint-eng-review
+- product-sprint-design-review
+- product-sprint-devex-review
+- product-sprint-autoplan
+- product-sprint-review
+- product-sprint-qa-only
+- product-sprint-ship
+- product-sprint-retro
+metadata:
+  waypoint:
+    quest_family: primary_starter
+    public_name: Product Sprint
+    selection_summary: product ideation, review, QA, and ship cycles
+    source_family: gstack
+    user_prompt_names:
+    - Product Sprint
+    - gstack
+    - AI Product Sprint
+    - founder sprint
+    - product management
+    - virtual engineering team
+  source:
+    project: gstack
+    package: gstack
+    version: 1.40.0.0
+    path: /Users/aaronwhaley/Github/gstack-main
+    license: MIT
+scaffolds:
+  workstreams:
+  - key: product
+    name: Product Sprint
+    milestones:
+    - version_label: v1
+      title: Product sprint loop
+      phases:
+      - phase_key: '00'
+        phase_slug: think
+        lifecycle_phase: think
+        plans:
+        - plan_ref: think-office-hours
+          title: Clarify the product opportunity and narrowest useful wedge
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              discussion:
+                enabled: true
+                agent: product-sprint-office-hours
+              recipe:
+                slug: product-sprint-office-hours
+      - phase_key: '10'
+        phase_slug: plan
+        lifecycle_phase: plan
+        plans:
+        - plan_ref: plan-ceo-review
+          title: Review product strategy and sequencing
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-ceo-review
+        - plan_ref: plan-eng-review
+          title: Review architecture and implementation feasibility
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-eng-review
+        - plan_ref: plan-design-review
+          title: Review UX, taste, and product clarity
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-design-review
+        - plan_ref: plan-devex-review
+          title: Review developer experience and maintainability
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-devex-review
+        - plan_ref: plan-approval-gate
+          title: Human approval before build execution
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+      - phase_key: '20'
+        phase_slug: build
+        lifecycle_phase: build
+        plans:
+        - plan_ref: build-autoplan
+          title: Convert review findings into an executable build plan
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-autoplan
+      - phase_key: '30'
+        phase_slug: review
+        lifecycle_phase: review
+        plans:
+        - plan_ref: review-diff
+          title: Review the implementation before landing
+          wave: 80
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-review
+      - phase_key: '40'
+        phase_slug: test
+        lifecycle_phase: test
+        plans:
+        - plan_ref: test-qa-only
+          title: Run a report-only QA pass
+          wave: 90
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-qa-only
+      - phase_key: '50'
+        phase_slug: ship
+        lifecycle_phase: ship
+        plans:
+        - plan_ref: ship-checklist
+          title: Prepare release checklist and gated ship handoff
+          wave: 100
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-ship
+        - plan_ref: ship-approval-gate
+          title: Human approval before release side effects
+          wave: 110
+          metadata:
+            waypoint:
+              node:
+                type: gate
+              gate:
+                required: true
+      - phase_key: '60'
+        phase_slug: reflect
+        lifecycle_phase: reflect
+        plans:
+        - plan_ref: reflect-retro
+          title: Capture sprint learnings and next-loop improvements
+          wave: 120
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: product-sprint-retro
