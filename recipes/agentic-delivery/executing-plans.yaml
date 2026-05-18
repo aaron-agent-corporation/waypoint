@@ -1,0 +1,165 @@
+schema_version: 1
+slug: agentic-delivery-executing-plans
+name: Agentic Delivery Executing Plans
+description: Execute implementation plans directly with disciplined checkpoints and verification.
+prompt: 'You are running the Waypoint Recipe `agentic-delivery-executing-plans` for the Agentic Delivery Quest.
+
+
+  Source provenance: this Recipe is adapted from Superpowers source skill `executing-plans` at `skills/executing-plans/SKILL.md`. Preserve the source methodology intent while enforcing Waypoint boundaries:
+
+  - produce local questions, plans, reviews, checklists, implementation guidance, or verification evidence only;
+
+  - do not create branches, merge, open PRs, publish, deploy, install plugins, or take external side effects from this Recipe unless a future host adapter explicitly gates and authorizes that action;
+
+  - keep Superpowers names as source attribution only, not Waypoint product branding.
+
+
+  --- BEGIN SOURCE SKILL ---
+
+  ---
+
+  name: executing-plans
+
+  description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+
+  ---
+
+
+  # Executing Plans
+
+
+  ## Overview
+
+
+  Load plan, review critically, execute all tasks, report when complete.
+
+
+  **Announce at start:** "I''m using the executing-plans skill to implement this plan."
+
+
+  **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+
+
+  ## The Process
+
+
+  ### Step 1: Load and Review Plan
+
+  1. Read plan file
+
+  2. Review critically - identify any questions or concerns about the plan
+
+  3. If concerns: Raise them with your human partner before starting
+
+  4. If no concerns: Create TodoWrite and proceed
+
+
+  ### Step 2: Execute Tasks
+
+
+  For each task:
+
+  1. Mark as in_progress
+
+  2. Follow each step exactly (plan has bite-sized steps)
+
+  3. Run verifications as specified
+
+  4. Mark as completed
+
+
+  ### Step 3: Complete Development
+
+
+  After all tasks complete and verified:
+
+  - Announce: "I''m using the finishing-a-development-branch skill to complete this work."
+
+  - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+
+  - Follow that skill to verify tests, present options, execute choice
+
+
+  ## When to Stop and Ask for Help
+
+
+  **STOP executing immediately when:**
+
+  - Hit a blocker (missing dependency, test fails, instruction unclear)
+
+  - Plan has critical gaps preventing starting
+
+  - You don''t understand an instruction
+
+  - Verification fails repeatedly
+
+
+  **Ask for clarification rather than guessing.**
+
+
+  ## When to Revisit Earlier Steps
+
+
+  **Return to Review (Step 1) when:**
+
+  - Partner updates the plan based on your feedback
+
+  - Fundamental approach needs rethinking
+
+
+  **Don''t force through blockers** - stop and ask.
+
+
+  ## Remember
+
+  - Review plan critically first
+
+  - Follow plan steps exactly
+
+  - Don''t skip verifications
+
+  - Reference skills when plan says to
+
+  - Stop when blocked, don''t guess
+
+  - Never start implementation on main/master branch without explicit user consent
+
+
+  ## Integration
+
+
+  **Required workflow skills:**
+
+  - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+
+  - **superpowers:writing-plans** - Creates the plan this skill executes
+
+  - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+
+  --- END SOURCE SKILL ---
+
+  '
+tools:
+- file_read
+- search_files
+- file_write
+metadata:
+  source:
+    project: Superpowers
+    package: superpowers
+    version: 5.1.0
+    source_skill: executing-plans
+    source_file: skills/executing-plans/SKILL.md
+    path: /Users/aaronwhaley/Github/superpowers-main
+    license: MIT
+    copyright: Copyright (c) 2025 Jesse Vincent
+  waypoint:
+    source_port_scope: methodology_recipe
+    external_side_effects: forbidden
+  source_port:
+    status: adapted_from_superpowers
+    external_side_effects: forbidden
+    adaptation_notes:
+    - Converted Superpowers skill methodology into a Waypoint Recipe manifest.
+    - Host-specific plugin installation, branch operations, PR creation, merge, deploy, and publish actions are deferred or gated.

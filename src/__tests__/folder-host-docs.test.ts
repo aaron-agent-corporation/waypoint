@@ -96,6 +96,8 @@ describe('folder host documentation', () => {
       'Best for: structured software delivery from PRD through sprint execution',
       '`product-sprint` — Product Sprint',
       'Best for: product ideation, review, QA, and ship cycles',
+      '`agentic-delivery` — Agentic Delivery',
+      'Best for: disciplined AI-assisted software delivery from idea through verified branch finish',
     ]) {
       expect(guide).toContain(phrase)
     }

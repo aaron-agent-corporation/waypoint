@@ -1,0 +1,204 @@
+schema_version: 1
+slug: agentic-delivery
+name: Agentic Delivery
+description: Disciplined AI-assisted software delivery Quest adapted from Superpowers methodology.
+workflow: workflows/agentic-delivery.yaml
+recipes:
+- agentic-delivery-using-superpowers
+- agentic-delivery-brainstorming
+- agentic-delivery-using-git-worktrees
+- agentic-delivery-writing-plans
+- agentic-delivery-subagent-driven-development
+- agentic-delivery-executing-plans
+- agentic-delivery-dispatching-parallel-agents
+- agentic-delivery-test-driven-development
+- agentic-delivery-systematic-debugging
+- agentic-delivery-requesting-code-review
+- agentic-delivery-receiving-code-review
+- agentic-delivery-verification-before-completion
+- agentic-delivery-finishing-a-development-branch
+- agentic-delivery-writing-skills
+metadata:
+  waypoint:
+    quest_family: primary_starter
+    public_name: Agentic Delivery
+    selection_summary: disciplined AI-assisted software delivery from idea through verified branch finish
+    source_family: superpowers
+  source:
+    project: Superpowers
+    package: superpowers
+    version: 5.1.0
+    path: /Users/aaronwhaley/Github/superpowers-main
+    license: MIT
+    copyright: Copyright (c) 2025 Jesse Vincent
+scaffolds:
+  workstreams:
+  - key: software
+    name: Agentic Delivery
+    milestones:
+    - version_label: v1
+      title: Disciplined AI-assisted software delivery
+      phases:
+      - phase_key: '10'
+        phase_slug: discover
+        lifecycle_phase: discovery
+        plans:
+        - plan_ref: discover-methodology-fit
+          title: Clarify whether Agentic Delivery fits the requested software work
+          wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-using-superpowers
+        - plan_ref: discover-product-direction
+          title: Brainstorm and refine the desired software outcome
+          wave: 11
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-brainstorming
+      - phase_key: '20'
+        phase_slug: design
+        lifecycle_phase: design
+        plans:
+        - plan_ref: design-approved-spec
+          title: Produce an operator-approved design/specification
+          wave: 20
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-brainstorming
+      - phase_key: '30'
+        phase_slug: plan
+        lifecycle_phase: planning
+        plans:
+        - plan_ref: plan-isolated-workspace
+          title: Plan safe isolated workspace setup
+          wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-using-git-worktrees
+        - plan_ref: plan-implementation-tasks
+          title: Write the implementation plan
+          wave: 31
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-writing-plans
+      - phase_key: '40'
+        phase_slug: execute
+        lifecycle_phase: execution
+        plans:
+        - plan_ref: execute-subagent-plan
+          title: Execute the plan with subagent-driven development when tasks are independent
+          wave: 40
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-subagent-driven-development
+        - plan_ref: execute-direct-plan
+          title: Execute tightly-coupled plan work directly when subagents are not appropriate
+          wave: 41
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-executing-plans
+        - plan_ref: execute-parallel-agents
+          title: Dispatch parallel agents for independent workstreams when safe
+          wave: 42
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-dispatching-parallel-agents
+        - plan_ref: execute-tdd-cycle
+          title: Implement behavior with RED-GREEN-REFACTOR evidence
+          wave: 43
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-test-driven-development
+      - phase_key: '50'
+        phase_slug: verify
+        lifecycle_phase: verification
+        plans:
+        - plan_ref: verify-root-cause-debugging
+          title: Investigate failures systematically before fixes
+          wave: 50
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-systematic-debugging
+        - plan_ref: verify-code-review
+          title: Request structured code review
+          wave: 51
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-requesting-code-review
+        - plan_ref: verify-review-response
+          title: Respond to review findings safely
+          wave: 52
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-receiving-code-review
+        - plan_ref: verify-completion-evidence
+          title: Collect fresh verification evidence before completion claims
+          wave: 53
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-verification-before-completion
+      - phase_key: '60'
+        phase_slug: ship
+        lifecycle_phase: shipping
+        plans:
+        - plan_ref: ship-branch-finish
+          title: Prepare branch finish options under human gate
+          wave: 60
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-finishing-a-development-branch
+      - phase_key: '70'
+        phase_slug: improve
+        lifecycle_phase: improvement
+        plans:
+        - plan_ref: improve-process-skills
+          title: Capture reusable process improvements as skills when warranted
+          wave: 70
+          metadata:
+            waypoint:
+              node:
+                type: recipe
+              recipe:
+                slug: agentic-delivery-writing-skills

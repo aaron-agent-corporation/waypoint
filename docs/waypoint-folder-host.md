@@ -132,6 +132,9 @@ Then present the starter choices as folder setup options instead of assuming eve
 - `product-sprint` — Product Sprint
   - Best for: product ideation, review, QA, and ship cycles.
   - Use when the folder is a founder/product/software sprint that benefits from discovery, strategy review, engineering/design/devex review, QA, gated ship preparation, and retro loops.
+- `agentic-delivery` — Agentic Delivery
+  - Best for: disciplined AI-assisted software delivery from idea through verified branch finish.
+  - Use when the folder is a software project that should follow Superpowers-derived discipline: brainstorm first, write plans, execute with TDD/subagents, review, verify, and finish the branch under human gates.
 
 After choosing an installed Quest, inspect the referenced Recipes:
 

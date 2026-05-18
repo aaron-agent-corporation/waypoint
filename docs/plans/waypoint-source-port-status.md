@@ -174,8 +174,8 @@ P7 added (implementation commit `4f83277`):
 
 P8 records the final close-out state for the Track 4 Waypoint Quest/Recipe port.
 
-- Actual Quest count: 40
-- Actual Recipe count: 108
+- Actual Quest count: 41
+- Actual Recipe count: 122
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands to run for close-out:

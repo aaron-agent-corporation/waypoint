@@ -4,8 +4,8 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 
 ## Loader-backed counts
 
-- Total Quests loaded from disk: 40
-- Total Recipes loaded from disk: 108
+- Total Quests loaded from disk: 41
+- Total Recipes loaded from disk: 122
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -19,6 +19,10 @@ Counts above are based on manifest files under `quests/` and `recipes/` and are 
 - `product-sprint` — Product Sprint, a gstack-derived product/software sprint Quest for founder-led product work.
   - First-wave Recipes: `product-sprint-office-hours`, `product-sprint-ceo-review`, `product-sprint-eng-review`, `product-sprint-design-review`, `product-sprint-devex-review`, `product-sprint-autoplan`, `product-sprint-review`, `product-sprint-qa-only`, `product-sprint-ship`, `product-sprint-retro`.
   - Source attribution: gstack / `gstack@1.40.0.0`; gstack methodology is used here only as source attribution/provenance and host-specific side effects remain gated or deferred.
+
+- `agentic-delivery` — Agentic Delivery, a Superpowers-derived Quest for disciplined AI-assisted software delivery from idea through verified branch finish.
+  - First-wave Recipes: `agentic-delivery-using-superpowers`, `agentic-delivery-brainstorming`, `agentic-delivery-using-git-worktrees`, `agentic-delivery-writing-plans`, `agentic-delivery-subagent-driven-development`, `agentic-delivery-executing-plans`, `agentic-delivery-dispatching-parallel-agents`, `agentic-delivery-test-driven-development`, `agentic-delivery-systematic-debugging`, `agentic-delivery-requesting-code-review`, `agentic-delivery-receiving-code-review`, `agentic-delivery-verification-before-completion`, `agentic-delivery-finishing-a-development-branch`, `agentic-delivery-writing-skills`.
+  - Source attribution: Superpowers / `superpowers@5.1.0`; Superpowers methodology is used here only as source attribution/provenance and host-specific side effects remain gated or deferred.
 
 ## Attribution and license
 
@@ -36,6 +40,10 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 
 ## Quests
 
+- `agentic-delivery` — Agentic Delivery
+  - Path: `quests/agentic-delivery.yaml`
+  - Description: Disciplined AI-assisted software delivery Quest adapted from Superpowers methodology.
+  - Recipes: `agentic-delivery-using-superpowers`, `agentic-delivery-brainstorming`, `agentic-delivery-using-git-worktrees`, `agentic-delivery-writing-plans`, `agentic-delivery-subagent-driven-development`, `agentic-delivery-executing-plans`, `agentic-delivery-dispatching-parallel-agents`, `agentic-delivery-test-driven-development`, `agentic-delivery-systematic-debugging`, `agentic-delivery-requesting-code-review`, `agentic-delivery-receiving-code-review`, `agentic-delivery-verification-before-completion`, `agentic-delivery-finishing-a-development-branch`, `agentic-delivery-writing-skills`
 - `add-tests` — Add Tests Quest
   - Path: `quests/add-tests.yaml`
   - Description: Waypoint catalog Quest port of gsd:add-tests for generate tests for a completed phase from UAT criteria and implementation evidence.
@@ -232,6 +240,62 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
 
 ## Recipes
 
+- `agentic-delivery-brainstorming` — Agentic Delivery Brainstorming
+  - Path: `recipes/agentic-delivery/brainstorming.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-dispatching-parallel-agents` — Agentic Delivery Dispatching Parallel Agents
+  - Path: `recipes/agentic-delivery/dispatching-parallel-agents.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-executing-plans` — Agentic Delivery Executing Plans
+  - Path: `recipes/agentic-delivery/executing-plans.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-finishing-a-development-branch` — Agentic Delivery Finishing a Development Branch
+  - Path: `recipes/agentic-delivery/finishing-a-development-branch.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `gated`
+- `agentic-delivery-receiving-code-review` — Agentic Delivery Receiving Code Review
+  - Path: `recipes/agentic-delivery/receiving-code-review.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-requesting-code-review` — Agentic Delivery Requesting Code Review
+  - Path: `recipes/agentic-delivery/requesting-code-review.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `gated`
+- `agentic-delivery-subagent-driven-development` — Agentic Delivery Subagent-Driven Development
+  - Path: `recipes/agentic-delivery/subagent-driven-development.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-systematic-debugging` — Agentic Delivery Systematic Debugging
+  - Path: `recipes/agentic-delivery/systematic-debugging.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-test-driven-development` — Agentic Delivery Test-Driven Development
+  - Path: `recipes/agentic-delivery/test-driven-development.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-using-git-worktrees` — Agentic Delivery Using Git Worktrees
+  - Path: `recipes/agentic-delivery/using-git-worktrees.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `gated`
+- `agentic-delivery-using-superpowers` — Agentic Delivery Using Superpowers
+  - Path: `recipes/agentic-delivery/using-superpowers.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-verification-before-completion` — Agentic Delivery Verification Before Completion
+  - Path: `recipes/agentic-delivery/verification-before-completion.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-writing-plans` — Agentic Delivery Writing Plans
+  - Path: `recipes/agentic-delivery/writing-plans.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
+- `agentic-delivery-writing-skills` — Agentic Delivery Writing Skills
+  - Path: `recipes/agentic-delivery/writing-skills.yaml`
+  - Description: Superpowers-derived methodology Recipe for the Agentic Delivery Quest.
+  - External side effects: `forbidden`
 - `doc-writer` — Doc Writer
   - Path: `recipes/doc-writer.yaml`
   - Description: Produces clear, well-organized documentation from a set of source notes or an outline. Favors concrete examples over abstractions.
