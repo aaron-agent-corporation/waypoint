@@ -4,8 +4,8 @@ This catalog is generated from the Quest and Recipe manifests currently present 
 
 ## Loader-backed counts
 
-- Total Quests loaded from disk: 41
-- Total Recipes loaded from disk: 122
+- Total Quests loaded from disk: 42
+- Total Recipes loaded from disk: 127
 - Waypoint source-derived Recipes: 33
 - Source command mappings documented: 65
 
@@ -23,6 +23,10 @@ Counts above are based on manifest files under `quests/` and `recipes/` and are 
 - `agentic-delivery` — Agentic Delivery, a Superpowers-derived Quest for disciplined AI-assisted software delivery from idea through verified branch finish.
   - First-wave Recipes: `agentic-delivery-using-superpowers`, `agentic-delivery-brainstorming`, `agentic-delivery-using-git-worktrees`, `agentic-delivery-writing-plans`, `agentic-delivery-subagent-driven-development`, `agentic-delivery-executing-plans`, `agentic-delivery-dispatching-parallel-agents`, `agentic-delivery-test-driven-development`, `agentic-delivery-systematic-debugging`, `agentic-delivery-requesting-code-review`, `agentic-delivery-receiving-code-review`, `agentic-delivery-verification-before-completion`, `agentic-delivery-finishing-a-development-branch`, `agentic-delivery-writing-skills`.
   - Source attribution: Superpowers / `superpowers@5.1.0`; Superpowers methodology is used here only as source attribution/provenance and host-specific side effects remain gated or deferred.
+
+- `referral-package` — Referral Package, an llm-lawyer-derived Quest for attorney referral handoff package assembly, document review, canonical naming, START_HERE drafting, and QC.
+  - First-wave Recipes: `referral-package-document-reviewer`, `referral-package-packet-segmenter`, `referral-package-filename-placement-reviewer`, `referral-package-start-here-builder`, `referral-package-package-qc`.
+  - Source attribution: llm-lawyer local referral SOP under `/Users/aaronwhaley/Github/llm-lawyer/docs/referrals`; used here only as source/provenance with no external side effects.
 
 ## Attribution and license
 
@@ -177,6 +181,10 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Description: Waypoint catalog Quest port of gsd:quick for short-path task execution with optional discussion, research, and validation.
 
   - Recipes: `waypoint-planner`, `waypoint-executor`, `waypoint-verifier`
+- `referral-package` — Referral Package
+  - Path: `quests/referral-package.yaml`
+  - Description: attorney referral handoff package Quest for reviewing, organizing, naming, QCing, and preparing a safe handoff package.
+  - Recipes: `referral-package-document-reviewer`, `referral-package-packet-segmenter`, `referral-package-filename-placement-reviewer`, `referral-package-start-here-builder`, `referral-package-package-qc`
 - `review` — External Review Quest
   - Path: `quests/review.yaml`
   - Description: Waypoint catalog Quest port of gsd:review for cross-AI peer review of phase plans.
@@ -480,6 +488,26 @@ When redistributing Waypoint with the Waypoint source-derived Quest/Recipe libra
   - Path: `recipes/product-sprint/ship.yaml`
   - Description: Release-preparation checklist and handoff with deployment and publishing side effects gated.
   - External side effects: `gated`
+- `referral-package-document-reviewer` — Referral Package Document Reviewer
+  - Path: `recipes/referral-package/document-reviewer.yaml`
+  - Description: Review one source document for referral-package classification, key facts, confidence, and safe handling notes.
+  - External side effects: `forbidden`
+- `referral-package-filename-placement-reviewer` — Referral Package Filename Placement Reviewer
+  - Path: `recipes/referral-package/filename-placement-reviewer.yaml`
+  - Description: Review proposed canonical filenames and referral package folder placement.
+  - External side effects: `forbidden`
+- `referral-package-package-qc` — Referral Package QC
+  - Path: `recipes/referral-package/package-qc.yaml`
+  - Description: Quality-control a referral package for completeness, naming, traceability, and no-side-effect safety.
+  - External side effects: `forbidden`
+- `referral-package-packet-segmenter` — Referral Package Packet Segmenter
+  - Path: `recipes/referral-package/packet-segmenter.yaml`
+  - Description: Identify logical segments in bundled referral packets without mutating source files.
+  - External side effects: `forbidden`
+- `referral-package-start-here-builder` — Referral Package START_HERE Builder
+  - Path: `recipes/referral-package/start-here-builder.yaml`
+  - Description: Draft a source-backed START_HERE overview and package index for attorney referral review.
+  - External side effects: `forbidden`
 - `reviewer` — Reviewer
   - Path: `recipes/reviewer.yaml`
   - Description: Reviews completed work for correctness, completeness, and adherence to stated acceptance criteria. Produces a pass/fail verdict with specific issues to address when failing.

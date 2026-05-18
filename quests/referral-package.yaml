@@ -1,0 +1,88 @@
+schema_version: 1
+slug: referral-package
+name: Referral Package
+workflow: referral-package
+
+# Builds an attorney referral handoff package from messy case documents while keeping source material read-only.
+description: attorney referral handoff package Quest for reviewing, organizing, naming, QCing, and preparing a safe handoff package.
+
+recipes:
+  - referral-package-document-reviewer
+  - referral-package-packet-segmenter
+  - referral-package-filename-placement-reviewer
+  - referral-package-start-here-builder
+  - referral-package-package-qc
+
+metadata:
+  waypoint:
+    quest_family: primary_starter
+    selection_summary: attorney referral handoff package assembly with safe document review and QC
+  source:
+    project: llm-lawyer
+    path: docs/referrals/referral-package-and-document-naming-sop.md
+    local_snapshot: /Users/aaronwhaley/Github/llm-lawyer/docs/referrals
+    ported_at: '2026-05-18'
+  safety:
+    source_files_read_only: true
+    external_side_effects: forbidden
+    legal_facts_satisfied_by_output: false
+    firmvault_state_mutation: forbidden_without_approved_apply
+
+scaffolds:
+  workstreams:
+    - key: referral-package
+      name: Referral Package
+      milestones:
+        - version_label: v1
+          title: Attorney referral package handoff
+          phases:
+            - phase_key: RP1
+              phase_slug: intake-review
+              lifecycle_phase: discover
+              plans:
+                - plan_ref: source-inventory
+                  title: Inventory source documents and preserve original paths/hashes
+                  wave: 1
+                - plan_ref: document-review
+                  title: Review each source document for type, parties, dates, confidence, and handling notes
+                  wave: 1
+            - phase_key: RP2
+              phase_slug: document-organization
+              lifecycle_phase: plan
+              plans:
+                - plan_ref: packet-segmentation
+                  title: Split or segment bundled packets into reviewable source-backed documents when appropriate
+                  wave: 2
+                - plan_ref: filename-placement
+                  title: Propose canonical referral filenames and destination folders
+                  wave: 2
+                - plan_ref: ambiguity-review
+                  title: Convert low-confidence placement and classification into review questions
+                  wave: 2
+            - phase_key: RP3
+              phase_slug: package-drafting
+              lifecycle_phase: execute
+              plans:
+                - plan_ref: start-here-draft
+                  title: Draft START_HERE overview, chronology, key issues, and evidence map
+                  wave: 3
+                - plan_ref: package-index
+                  title: Draft package index and cross-reference organized documents
+                  wave: 3
+            - phase_key: RP4
+              phase_slug: quality-control
+              lifecycle_phase: verify
+              plans:
+                - plan_ref: package-qc
+                  title: QC referral package completeness, naming, source traceability, and safety boundaries
+                  wave: 4
+                - plan_ref: attorney-handoff-gate
+                  title: Human gate before any attorney-facing handoff or external action
+                  wave: 4
+            - phase_key: RP5
+              phase_slug: handoff
+              lifecycle_phase: ship
+              plans:
+                - plan_ref: handoff-ready-summary
+                  title: Produce final handoff-ready summary and explicit unresolved-item checklist
+                  wave: 5

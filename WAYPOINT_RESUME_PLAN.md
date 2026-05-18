@@ -268,8 +268,8 @@ Each phase below has:
 
 Final close-out state for the accepted Track 4 recovery plan:
 
-- Actual Quest count: 41
-- Actual Recipe count: 122
+- Actual Quest count: 42
+- Actual Recipe count: 127
 - Waypoint source-derived Recipe count: 33
 - Source command mappings documented: 65
 - Verification commands run for close-out:

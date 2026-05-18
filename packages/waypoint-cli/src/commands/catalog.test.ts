@@ -40,6 +40,10 @@ describe('catalog commands', () => {
     expect(output).toContain(
       '  Best for: disciplined AI-assisted software delivery from idea through verified branch finish',
     )
+    expect(output).toContain('- referral-package: Referral Package')
+    expect(output).toContain(
+      '  Best for: attorney referral handoff package assembly with safe document review and QC',
+    )
     expect(output).toContain('Additional bundled Quests')
   })
 
