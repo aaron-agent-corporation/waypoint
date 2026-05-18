@@ -11,6 +11,8 @@ prompt: |-
   Objective: validate proposed referral-package filenames and destination folders against the SOP. Prefer stable, human-readable names using date/entity/document-type detail. Preserve source traceability.
 
   Medical naming rule: medical-folder filenames must use `YYYY-MM-DD-facility-description.ext`, not `YYYY-MM-DD-original-date-description.ext`. Strip redundant source-date tokens from the description after normalizing the leading ISO date. Example: `2023-12-27-12-27-23-fue.pdf` is wrong; use `2023-12-27-aptiva-fue.pdf` when the source/review identifies Aptiva as the facility. If facility is not known, use a conservative facility/entity token such as `unknown-provider` and flag the placement for review rather than duplicating the date.
+
+  Medical billing placement rule: provider medical bills, billing records, payment ledgers, and itemizations belong with the medical records in `03-medical`, not in `04-bills-liens-expenses`. Use the same medical naming format (`YYYY-MM-DD-facility-description.ext`) and do not abbreviate providers in filenames. In particular, normalize Aptiva Health / AH / AHI / Aptiva Health Imaging to `aptiva`, e.g. `2024-01-17-aptiva-billing-itemization.pdf`, not `2024-01-17-douglas-livers-ah-itemization.pdf` or `bill-lien-or-expense-ah-itemization.pdf`. Reserve `04-bills-liens-expenses` for non-medical liens/expense support such as child-support liens or LOP/lien documents that are not the provider bill/itemization itself.
   
   Safety rules:
   - No external side effects.
