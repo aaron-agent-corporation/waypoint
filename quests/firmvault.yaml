@@ -762,7 +762,7 @@ scaffolds:
               - records_and_bills_processed
               - all_records_received
         - plan_ref: firmvault-medical-chronology-update-task
-          title: Update medical chronology from processed record shadows
+          title: Build or update medical chronology/binder package using medical-chronology-binder-generation guidance
           wave: 130
           metadata:
             waypoint:
@@ -774,6 +774,7 @@ scaffolds:
               workflow_id: firmvault-request-medical-records
               source_node: update_medical_chronology
               source_workflow: workflows/firmvault-request-medical-records.yaml
+              supporting_skill: medical-chronology-binder-generation
               output_landmarks:
               - medical_chronology_updated
         - plan_ref: firmvault-records-bills-human-completion-review

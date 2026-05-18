@@ -19,6 +19,23 @@ prompt: 'You are running the source-backed Waypoint port of `firmvault-medical-c
 
   Records/bills wave adaptation: operate on explicit `.waypoint/firmvault/records.yaml` status and local evidence paths. Do not infer completion from arbitrary legacy folder shape. If records, bills, authorizations, confirmations, or chronology evidence is missing, write a blocked checkpoint or human handoff rather than marking a landmark complete.
 
+  Medical chronology binder-generation overlay: when creating or materially updating the case medical chronology, follow the Hermes skill `medical-chronology-binder-generation` as the template for agent work product. Treat that skill as the detailed operating procedure for jumbled medical-record corpora and produce local, source-backed artifacts only.
+
+  Required chronology/binder output pattern from the skill:
+
+  - Create a local `medical-chronology-output/` work area with `organized-source-pdfs/`, `extracted-visit-pdfs/`, `page-text/`, and `reports/` subfolders when the host task asks for a chronology package rather than a small note-only update.
+  - Preserve originals. Copy/extract into output folders; never destructively modify original medical-record PDFs or source shadows.
+  - Inventory PDFs and write audit reports such as `reports/source-inventory.csv`, `reports/source-inventory.json`, page/date hit reports, visit candidates, extraction reports, and a build summary.
+  - Generate a candidate Review sheet for human decisions when the corpus is messy. Decision values should include `ADD TO CHRONOLOGY`, `already in chronology`, `duplicate`, `merge into page range`, `billing only`, `not a visit`, `POSSIBLE ADD ROW`, and `needs review`.
+  - Build chronology rows around visits/encounters, not filenames or raw date hits. Summarize visits, not documents. Group same-encounter multi-page or multi-document records into one row when supported.
+  - Do not make executive decisions about whether a visit is related to the accident, MVA-focused, too remote, or before/after DOI unless the human explicitly narrows the assignment. Put relatedness uncertainty in review/audit notes rather than excluding records.
+  - Prefer clinical notes over billing records for visible medical summaries. Billing/CMB pages may support dates/charges, but billing-only duplicates should be marked as support/review candidates unless no clinical record exists.
+  - Timeline prose is not an audit trail. Visible summaries must not include `extracted from`, source filenames, page numbers, raw OCR snippets, or cleanup/build language. Keep provenance in reports and link columns.
+  - Use clean clinical summary sections when writing chronology entries: History/Narrative, Complaints, Tests, Diagnosis, Prescriptions(new), Plan, and Natural language summary.
+  - Generate a linked chronology workbook, a readable timeline/chronology PDF, and, when requested, one master linked binder PDF with timeline pages first and visit/source PDFs appended.
+  - Add bidirectional navigation in the master binder: every timeline `View` link should have a visible `Back to Timeline` link/button on the destination visit/source page when technically feasible.
+  - Verify before completion: row counts, matched/unmatched counts, extracted PDFs, timeline and binder page counts, internal forward links, Back to Timeline links, forbidden provenance-string scans, and representative rendered page images. You must render representative pages and visually inspect them before calling a chronology package complete.
+
 
   Adapted Mission Control source instructions:
 

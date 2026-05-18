@@ -21,6 +21,7 @@ type ScaffoldPlan = {
     }
     readonly source_port?: {
       readonly allow_plan_ref_recipe_slug?: boolean
+      readonly supporting_skill?: string
     }
   }
 }
@@ -235,6 +236,13 @@ describe('FirmVault Quest skeleton', () => {
       (recordsPhase?.plans ?? [])
         .filter((plan) => plan.metadata?.waypoint?.node?.type === 'recipe')
         .map((plan) => plan.metadata?.waypoint?.recipe?.slug),
+    )
+    const chronologyPlan = (recordsPhase?.plans ?? []).find(
+      (plan) => plan.plan_ref === 'firmvault-medical-chronology-update-task',
+    )
+    expect(chronologyPlan?.title).toContain('medical-chronology-binder-generation')
+    expect(chronologyPlan?.metadata?.source_port?.supporting_skill).toBe(
+      'medical-chronology-binder-generation',
     )
     expect([...recordsRecipeSlugs]).toEqual(
       expect.arrayContaining([

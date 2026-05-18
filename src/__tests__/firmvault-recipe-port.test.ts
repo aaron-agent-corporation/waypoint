@@ -132,6 +132,28 @@ describe('FirmVault source-backed Recipe port', () => {
     }
   })
 
+  it('uses the medical chronology binder-generation skill for medical chronology creation', async () => {
+    const manifest = await readRecipeManifest('firmvault-medical-chronology-update')
+
+    for (const phrase of [
+      'medical-chronology-binder-generation',
+      'medical-chronology-output/',
+      'organized-source-pdfs/',
+      'extracted-visit-pdfs/',
+      'linked chronology workbook',
+      'master linked binder PDF',
+      'Review sheet',
+      'Preserve originals',
+      'Timeline prose is not an audit trail',
+      'Summarize visits, not documents',
+      'Back to Timeline',
+      'Do not make executive decisions about whether a visit is related',
+      'render representative pages',
+    ]) {
+      expect(manifest.prompt, phrase).toContain(phrase)
+    }
+  })
+
   it('ports every current FirmVault Recipe from Mission Control source files with safe folder-host metadata', async () => {
     for (const slug of firmVaultRecipeSlugs) {
       const manifest = await readRecipeManifest(slug)
