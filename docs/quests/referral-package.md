@@ -22,7 +22,7 @@ The Quest models a safe referral-package journey:
 2. review documents and classify them with confidence;
 3. propose split/segment boundaries for bundled packets;
 4. propose canonical referral filenames and folders;
-5. draft a `START_HERE` package overview and index;
+5. draft a `START_HERE` attorney case dashboard and package index;
 6. run package QC; and
 7. stop at `attorney-handoff-gate` for human approval before any attorney-facing handoff.
 
@@ -43,8 +43,20 @@ waypoint tasks --route-id route-001
 - `referral-package-document-reviewer` — review one document or shadow for type, entities, dates, facts, confidence, and safe handling notes.
 - `referral-package-packet-segmenter` — propose source-backed splits for bundled packets without mutating the source file.
 - `referral-package-filename-placement-reviewer` — review canonical filenames and package folder placement.
-- `referral-package-start-here-builder` — draft the package overview, index, chronology, and unresolved-item list.
+- `referral-package-start-here-builder` — draft the attorney case dashboard, source-backed case summary, inclusive timeline, document navigator, and unresolved-item list.
 - `referral-package-package-qc` — block/approve readiness for the human handoff gate based on completeness, traceability, and safety.
+
+## START_HERE dashboard template
+
+The `referral-package-start-here-builder` Recipe should give agents a reusable dashboard format to fill in, not a blank “overview” prompt:
+
+- start directly with the case header and attorney-useful vitals; do not copy fake screenshot chrome such as Tasks, Feed, Search, hamburger menus, or nonfunctional top navigation;
+- use left-side category navigation: Case Summary, Insurance, Medical, Liens, Expenses, Litigation, Timeline, Documents;
+- structure Case Summary as `Summary of facts`, `Current status`, and `Summary of medicals`;
+- use saved docket/court materials for current status when present, rather than a generic red “verify docket/deadlines” warning;
+- keep the medical summary broad enough to include treatment, providers, medical records, provider bills, payment ledgers, itemizations, and special-damages totals;
+- include Activity Log entries in the Timeline when an `Activity Log/` folder is available;
+- name liability/photo evidence descriptively from visible content instead of retaining hash-style names.
 
 ## Safety boundaries
 

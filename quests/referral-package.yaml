@@ -64,7 +64,7 @@ scaffolds:
               lifecycle_phase: execute
               plans:
                 - plan_ref: start-here-draft
-                  title: Draft START_HERE overview, chronology, key issues, and evidence map
+                  title: Draft START_HERE attorney case dashboard with facts, current status, medical summary, timeline, and evidence map
                   wave: 3
                 - plan_ref: package-index
                   title: Draft package index and cross-reference organized documents

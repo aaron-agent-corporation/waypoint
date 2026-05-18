@@ -69,6 +69,30 @@ describe('Referral Package Quest', () => {
     }
   })
 
+  it('templates the attorney-facing START_HERE dashboard structure for agents', async () => {
+    const recipes = await loadRecipesFromDirectory(recipesDir)
+    expect(recipes.ok).toBe(true)
+    if (!recipes.ok) throw new Error(JSON.stringify(recipes.errors))
+
+    const startHereBuilder = recipes.registry.get('referral-package-start-here-builder')
+    expect(startHereBuilder).toBeDefined()
+
+    for (const phrase of [
+      'real attorney-facing case dashboard',
+      'Do not copy nonfunctional UI chrome',
+      'fake top bars',
+      'Summary of facts',
+      'Current status',
+      'Summary of medicals',
+      'left-side category navigation',
+      'Case Summary, Insurance, Medical, Liens, Expenses, Litigation, Timeline, Documents',
+      'Activity Log',
+      'descriptive attorney-facing names',
+    ]) {
+      expect(startHereBuilder?.prompt).toContain(phrase)
+    }
+  })
+
   it('documents how to inspect and start the referral-package Quest', () => {
     const guide = readFileSync(resolve(repoRoot, 'docs/quests/referral-package.md'), 'utf8')
 
