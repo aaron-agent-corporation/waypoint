@@ -108,14 +108,38 @@ Check status:
 waypoint status
 ```
 
-### 2. Inspect bundled catalog content
+### 2. Choose and inspect bundled catalog content
+
+If the operator says "set up a Waypoint Quest for this folder", first run:
 
 ```bash
 waypoint quests
+```
+
+Then present the starter choices as folder setup options instead of assuming every folder should use the same Quest.
+
+## Choosing a starter Quest
+
+- `firmvault` — FirmVault
+  - Best for: legal case workflow with evidence-backed FirmVault state.
+  - Use when the folder is a personal-injury case file, needs document intake, legal-state facts, landmarks, and safe Wizard/FirmVault apply behavior.
+- `waypoint` — Project Delivery
+  - Best for: general project planning and execution.
+  - Use when the folder is a normal project that needs objective clarification, planning, execution, verification, and shipping gates.
+- `agile-delivery` — Agile Delivery
+  - Best for: structured software delivery from PRD through sprint execution.
+  - Use when the folder is a software/product delivery effort that benefits from PRD, architecture, epics/stories, readiness, sprint planning, story creation, and development loops.
+- Product Sprint
+  - Status: planned starter Quest candidate, not an installed Quest until a `product-sprint` manifest lands.
+  - Best for: product ideation, review, QA, and ship cycles once the catalog entry is implemented.
+
+After choosing an installed Quest, inspect the referenced Recipes:
+
+```bash
 waypoint recipes --quest waypoint
 ```
 
-`waypoint quests` lists available bundled Quests, with the primary starter Quests first (`firmvault` and `waypoint`). `waypoint recipes --quest waypoint` lists Recipes referenced by the `waypoint` Project Delivery (GSD) Quest.
+`waypoint quests` lists available bundled Quests, with primary starter Quests first. `waypoint recipes --quest waypoint` lists Recipes referenced by the `waypoint` Project Delivery Quest.
 
 ### 3. Start a Quest route
 

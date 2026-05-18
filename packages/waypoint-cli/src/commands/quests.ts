@@ -18,6 +18,8 @@ export async function runQuestsCommand(args: readonly string[], io: WaypointCliI
     io.stdout('Primary starter Quests')
     for (const quest of primary) {
       io.stdout(`- ${quest.slug}: ${quest.name}`)
+      const summary = getQuestSelectionSummary(quest.slug, quest.metadata)
+      if (summary) io.stdout(`  Best for: ${summary}`)
     }
   }
 
@@ -35,4 +37,26 @@ function isPrimaryStarterQuest(metadata: unknown): boolean {
   const waypoint = (metadata as { waypoint?: unknown }).waypoint
   if (!waypoint || typeof waypoint !== 'object' || Array.isArray(waypoint)) return false
   return (waypoint as { quest_family?: unknown }).quest_family === 'primary_starter'
+}
+
+function getQuestSelectionSummary(slug: string, metadata: unknown): string | null {
+  const metadataSummary = readWaypointMetadataString(metadata, 'selection_summary')
+  if (metadataSummary) return metadataSummary
+
+  switch (slug) {
+    case 'firmvault':
+      return 'legal case workflow with evidence-backed FirmVault state'
+    case 'waypoint':
+      return 'general project planning and execution'
+    default:
+      return null
+  }
+}
+
+function readWaypointMetadataString(metadata: unknown, key: string): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const waypoint = (metadata as { waypoint?: unknown }).waypoint
+  if (!waypoint || typeof waypoint !== 'object' || Array.isArray(waypoint)) return null
+  const value = (waypoint as Record<string, unknown>)[key]
+  return typeof value === 'string' && value.trim().length > 0 ? value : null
 }

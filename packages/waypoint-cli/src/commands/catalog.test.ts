@@ -29,7 +29,11 @@ describe('catalog commands', () => {
     expect(output).toContain('Waypoint Quests')
     expect(output).toContain('Primary starter Quests')
     expect(output).toContain('- firmvault: FirmVault')
+    expect(output).toContain('  Best for: legal case workflow with evidence-backed FirmVault state')
     expect(output).toContain('- waypoint: Project Delivery (GSD)')
+    expect(output).toContain('  Best for: general project planning and execution')
+    expect(output).toContain('- agile-delivery: Agile Delivery')
+    expect(output).toContain('  Best for: structured software delivery from PRD through sprint execution')
     expect(output).toContain('Additional bundled Quests')
   })
 

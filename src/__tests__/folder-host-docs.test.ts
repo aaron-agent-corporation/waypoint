@@ -82,6 +82,25 @@ describe('folder host documentation', () => {
     }
   })
 
+  it('documents starter Quest selection guidance for folder setup', () => {
+    const guide = readRepoFile('docs/waypoint-folder-host.md')
+
+    for (const phrase of [
+      'Choosing a starter Quest',
+      'If the operator says "set up a Waypoint Quest for this folder"',
+      '`firmvault` — FirmVault',
+      'Best for: legal case workflow with evidence-backed FirmVault state',
+      '`waypoint` — Project Delivery',
+      'Best for: general project planning and execution',
+      '`agile-delivery` — Agile Delivery',
+      'Best for: structured software delivery from PRD through sprint execution',
+      'Product Sprint',
+      'planned starter Quest candidate',
+    ]) {
+      expect(guide).toContain(phrase)
+    }
+  })
+
   it('keeps documented command surfaces aligned with the CLI help registry', () => {
     const guide = readRepoFile('docs/waypoint-folder-host.md')
     const example = readRepoFile('examples/folder-host-quest/README.md')

@@ -15,7 +15,7 @@ metadata:
   waypoint:
     quest_family: primary_starter
     public_name: Agile Delivery
-    selection_summary: Structured software lifecycle from analysis through PRD, architecture, epics/stories, sprint execution, QA, and retrospective.
+    selection_summary: structured software delivery from PRD through sprint execution
     source_family: bmad-method
   source:
     project: bmad-method
