@@ -203,6 +203,11 @@ describe('Referral Package Quest', () => {
       'Create a referral package for <folder>',
       'medical records are present',
       'one extracted visit PDF per chronology row',
+      'Paralegal/Perry agents must invoke the Waypoint CLI rather than an ad hoc direct builder',
+      'Missing `.waypoint` route evidence means the output is not Quest-governed',
+      'waypoint route-events --route-id route-001 --json',
+      'medical records present → chronology artifacts required',
+      'Do not mark the referral package handoff-ready from files alone',
     ]) {
       expect(guide).toContain(phrase)
     }
