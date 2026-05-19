@@ -282,7 +282,10 @@ async function missingOutputArtifacts(projectRoot: string, task: WaypointFolderT
       continue
     }
     try {
-      await stat(join(projectRoot, safePath))
+      const fullPath = join(projectRoot, safePath)
+      await stat(fullPath)
+      const invalidReason = await invalidOutputArtifactReason(projectRoot, safePath)
+      if (invalidReason) missing.push(`${artifact} (${invalidReason})`)
     } catch (error) {
       if (isNodeError(error) && error.code === 'ENOENT') {
         missing.push(artifact)
@@ -298,6 +301,80 @@ function outputArtifactsForTask(task: WaypointFolderTask): string[] {
   const waypoint = isRecord(task.metadata?.waypoint) ? task.metadata.waypoint : {}
   if (!Array.isArray(waypoint.output_artifacts)) return []
   return waypoint.output_artifacts.filter((artifact): artifact is string => typeof artifact === 'string' && artifact.trim().length > 0)
+}
+
+async function invalidOutputArtifactReason(projectRoot: string, safePath: string): Promise<string | null> {
+  if (safePath !== '03-medical/medical-chronology-output/medical-chronology.html') return null
+  const html = await readFile(join(projectRoot, safePath), 'utf8')
+  return await invalidMedicalChronologyHtmlReason(projectRoot, safePath, html)
+}
+
+async function invalidMedicalChronologyHtmlReason(projectRoot: string, safePath: string, html: string): Promise<string | null> {
+  const requiredFragments = [
+    "class='visit-card'",
+    "class=\"visit-card\"",
+    "class='visit-head'",
+    "class=\"visit-head\"",
+    "class='summary'",
+    "class=\"summary\"",
+    'Visit Summary:',
+    "class='details-grid'",
+    "class=\"details-grid\"",
+    "class='box'",
+    "class=\"box\"",
+    "class='source-row'",
+    "class=\"source-row\"",
+  ]
+  const hasVisitCard = requiredFragments.slice(0, 2).some((fragment) => html.includes(fragment))
+  const missingRequired = [
+    hasVisitCard ? null : 'visit-card',
+    requiredFragments.slice(2, 4).some((fragment) => html.includes(fragment)) ? null : 'visit-head',
+    requiredFragments.slice(4, 6).some((fragment) => html.includes(fragment)) ? null : 'summary',
+    html.includes('Visit Summary:') ? null : 'Visit Summary label',
+    requiredFragments.slice(7, 9).some((fragment) => html.includes(fragment)) ? null : 'details-grid',
+    requiredFragments.slice(9, 11).some((fragment) => html.includes(fragment)) ? null : 'box',
+    requiredFragments.slice(11, 13).some((fragment) => html.includes(fragment)) ? null : 'source-row',
+  ].filter((item): item is string => Boolean(item))
+  const processLanguage = [
+    'Quest task-',
+    '<strong>Generated:</strong>',
+    'Internal reports:',
+    'Internal citations',
+    'source-visual-inspection-ledger',
+  ].filter((fragment) => html.includes(fragment))
+  const unresolvedSourceLinks = await unresolvedChronologySourceLinks(projectRoot, safePath, html)
+  const reasons = [
+    ...missingRequired.map((item) => `missing ${item}`),
+    ...processLanguage.map((item) => `attorney-facing process/meta text: ${item}`),
+    ...unresolvedSourceLinks.map((item) => `missing source PDF link target: ${item}`),
+  ]
+  return reasons.length > 0 ? `invalid chronology template: ${reasons.join('; ')}` : null
+}
+
+async function unresolvedChronologySourceLinks(projectRoot: string, safePath: string, html: string): Promise<string[]> {
+  const out: string[] = []
+  const linkPattern = /href=["']([^"']+\.pdf)["']/gi
+  let match: RegExpExecArray | null
+  while ((match = linkPattern.exec(html)) !== null) {
+    const href = match[1]
+    if (!href || href.startsWith('http:') || href.startsWith('https:') || href.startsWith('mailto:') || isAbsolute(href)) continue
+    const artifactDir = safePath.split('/').slice(0, -1).join('/')
+    const target = safeRelativeArtifactPath(join(artifactDir, href))
+    if (!target) {
+      out.push(href)
+      continue
+    }
+    try {
+      await stat(join(projectRoot, target))
+    } catch (error) {
+      if (isNodeError(error) && error.code === 'ENOENT') {
+        out.push(href)
+        continue
+      }
+      throw error
+    }
+  }
+  return out
 }
 
 function safeRelativeArtifactPath(artifact: string): string | null {

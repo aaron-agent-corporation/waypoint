@@ -37,11 +37,47 @@ async function writeFileWithParents(path: string, content: string): Promise<void
 async function writeDraftChronologyArtifacts(projectRoot: string): Promise<void> {
   await writeFileWithParents(
     join(projectRoot, '03-medical/medical-chronology-output/medical-chronology.html'),
-    '<html><body><section class="visit-card"><h1>Draft chronology completed by paralegal</h1></section></body></html>',
+    `<!doctype html><html><body>
+<article class='visit-card'>
+  <div class='visit-head'><h2>2024-01-01 — Example visit</h2><div class='meta'>Provider: Example · Facility: Example</div></div>
+  <div class='body'>
+    <div class='summary'><strong>Visit Summary:</strong> Attorney-readable visit summary.</div>
+    <details><summary>Clinical details and source</summary><div class='details-grid'>
+      <div class='label'>History / Narrative</div><div class='box'>History.</div>
+      <div class='label'>Complaints</div><div class='box'>Complaint.</div>
+      <div class='label'>Tests</div><div class='box'>N.A.</div>
+      <div class='label'>Diagnosis</div><div class='box'>N.A.</div>
+      <div class='label'>Rx / Meds</div><div class='box'>N.A.</div>
+      <div class='label'>Plan</div><div class='box'>N.A.</div>
+    </div><div class='source-row'><a class='btn' href='extracted-visit-pdfs/example.pdf'>View source PDF</a></div></details>
+  </div>
+</article>
+</body></html>`,
   )
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/extracted-visit-pdfs/example.pdf'), '%PDF-1.4\n% extracted visit source\n')
   await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-timeline.pdf'), '%PDF-1.4\n% draft chronology\n')
   await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-master-binder.pdf'), '%PDF-1.4\n% draft binder\n')
-  await mkdir(join(projectRoot, '03-medical/medical-chronology-output/extracted-visit-pdfs'), { recursive: true })
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/adversarial-qc-report.md'),
+    '# Adversarial QC\n\nDraft QC completed by paralegal; unresolved issues remain for transfer notes.\n',
+  )
+}
+
+async function writeAlmaStyleChronologyArtifacts(projectRoot: string): Promise<void> {
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/medical-chronology.html'),
+    `<!doctype html><html><body>
+<h1>Alma Cristobal — Source-Backed Medical Chronology</h1>
+<p class='note'><strong>Status:</strong> Quest task-006 work product / review aid.</p>
+<p><strong>Generated:</strong> 2026-05-19T14:04:25Z. <strong>Internal reports:</strong> reports/source-visual-inspection-ledger.csv.</p>
+<section class='visit'><h2>2024-02-15 — UofL Health</h2><p><strong>Visit summary:</strong> Initial ED evaluation.</p>
+<p><a class='button' href='extracted-visit-pdfs/example.pdf'>View extracted source PDF</a></p>
+<details open><summary>Clinical details and source traceability</summary><h3>Internal citations</h3><ul><li>analysis.md:1-2</li></ul></details></section>
+</body></html>`,
+  )
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/extracted-visit-pdfs/example.pdf'), '%PDF-1.4\n% extracted visit source\n')
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-timeline.pdf'), '%PDF-1.4\n% draft chronology\n')
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-master-binder.pdf'), '%PDF-1.4\n% draft binder\n')
   await writeFileWithParents(
     join(projectRoot, '03-medical/medical-chronology-output/adversarial-qc-report.md'),
     '# Adversarial QC\n\nDraft QC completed by paralegal; unresolved issues remain for transfer notes.\n',
@@ -121,6 +157,23 @@ describe('folder host autopilot', () => {
         recipe: 'firmvault-medical-chronology-update',
       },
       block_reason: 'required_artifacts_missing',
+    })
+  })
+
+  it('blocks referral package autopilot when chronology HTML does not match the shared visit-card template', async () => {
+    const cwd = await startedReferralProjectWithLocalBuilder()
+    await writeAlmaStyleChronologyArtifacts(cwd)
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 20 })
+
+    expect(result.status).toBe('blocked')
+    expect(result.blockedNode).toBe('medical-chronology-update')
+    const tasks = await listWaypointTasks(cwd)
+    expect(tasks.find((task) => task.id === 'task-006')?.metadata?.waypoint).toMatchObject({
+      block_reason: 'required_artifacts_missing',
+      missing_artifacts: expect.arrayContaining([
+        expect.stringContaining('medical-chronology.html'),
+      ]),
     })
   })
 
