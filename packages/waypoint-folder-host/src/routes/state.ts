@@ -1,7 +1,12 @@
+import { stat } from 'node:fs/promises'
+import { isAbsolute, join, normalize } from 'node:path'
+
 import { appendRouteEvent } from '../events/jsonl.ts'
+import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
 
 import { getWaypointRoute, updateWaypointRoute } from './store.ts'
 
+import type { WaypointFolderTask } from '../tasks/types.ts'
 import type { WaypointFolderRoute, WaypointFolderRouteStatus } from './types.ts'
 
 export interface RouteGateDecisionInput {
@@ -20,6 +25,12 @@ export interface PauseWaypointRouteInput {
 
 export interface ResumeWaypointRouteInput {
   readonly routeId: string
+  readonly now?: Date
+}
+
+export interface ResolveWaypointRouteBlockerInput {
+  readonly routeId: string
+  readonly note?: string
   readonly now?: Date
 }
 
@@ -97,10 +108,97 @@ export async function resumeWaypointRoute(projectRoot: string, input: ResumeWayp
   return updated
 }
 
+export async function resolveWaypointRouteBlocker(
+  projectRoot: string,
+  input: ResolveWaypointRouteBlockerInput,
+): Promise<WaypointFolderRoute> {
+  const route = await requireRoute(projectRoot, input.routeId)
+  const blockedTask = await currentBlockedTask(projectRoot, route)
+  if (!blockedTask) throw new Error(`No blocked task found for route ${route.id}`)
+  const missingArtifacts = await missingOutputArtifacts(projectRoot, blockedTask)
+  if (missingArtifacts.length > 0) {
+    throw new Error(`Missing required artifacts for ${blockedTask.plan_ref}: ${missingArtifacts.join(', ')}`)
+  }
+
+  const waypoint = isRecord(blockedTask.metadata?.waypoint) ? blockedTask.metadata.waypoint : {}
+  const { missing_artifacts: _missingArtifacts, block_reason: _blockReason, ...cleanWaypoint } = waypoint
+  await updateWaypointTask(projectRoot, blockedTask.id, {
+    status: 'open',
+    updated_at: timestampFor(input.now),
+    metadata: { ...(blockedTask.metadata ?? {}), waypoint: cleanWaypoint },
+  })
+  const updated = await updateWaypointRoute(projectRoot, route.id, {
+    status: 'active',
+    current_node: blockedTask.plan_ref,
+    updated_at: timestampFor(input.now),
+  })
+  await appendRouteEvent(projectRoot, route.id, {
+    kind: 'route.blocker.resolved',
+    now: input.now,
+    payload: {
+      task_id: blockedTask.id,
+      node: blockedTask.plan_ref,
+      previous_status: route.status,
+      ...(input.note ? { note: input.note } : {}),
+    },
+  })
+  return updated
+}
+
 async function requireRoute(projectRoot: string, routeId: string): Promise<WaypointFolderRoute> {
   const route = await getWaypointRoute(projectRoot, routeId)
   if (!route) throw new Error(`Route not found: ${routeId}`)
   return route
+}
+
+async function currentBlockedTask(projectRoot: string, route: WaypointFolderRoute): Promise<WaypointFolderTask | null> {
+  const tasks = await listWaypointTasks(projectRoot)
+  return tasks.find((task) => task.route_id === route.id && task.status === 'blocked' && task.plan_ref === route.current_node) ??
+    tasks.find((task) => task.route_id === route.id && task.status === 'blocked') ??
+    null
+}
+
+async function missingOutputArtifacts(projectRoot: string, task: WaypointFolderTask): Promise<string[]> {
+  const waypoint = isRecord(task.metadata?.waypoint) ? task.metadata.waypoint : {}
+  const artifacts = Array.isArray(waypoint.output_artifacts)
+    ? waypoint.output_artifacts.flatMap((artifact): string[] => {
+        if (typeof artifact === 'string' && artifact.trim().length > 0) return [artifact]
+        if (isRecord(artifact) && typeof artifact.path === 'string' && artifact.path.trim().length > 0) return [artifact.path]
+        return []
+      })
+    : []
+  const missing: string[] = []
+  for (const artifact of artifacts) {
+    const safePath = safeRelativeArtifactPath(artifact)
+    if (!safePath) {
+      missing.push(artifact)
+      continue
+    }
+    try {
+      await stat(join(projectRoot, safePath))
+    } catch (error) {
+      if (isNodeError(error) && error.code === 'ENOENT') {
+        missing.push(artifact)
+        continue
+      }
+      throw error
+    }
+  }
+  return missing
+}
+
+function safeRelativeArtifactPath(artifact: string): string | null {
+  const normalized = normalize(artifact.trim())
+  if (isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../') || normalized.startsWith('..\\')) return null
+  return normalized
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error
 }
 
 function timestampFor(now: Date | undefined): string {

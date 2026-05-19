@@ -53,7 +53,7 @@ export type {
   LifecycleWorkstream,
 } from './lifecycle/types.ts'
 export { createWaypointRoute, getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from './routes/store.ts'
-export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resumeWaypointRoute } from './routes/state.ts'
+export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './routes/state.ts'
 export { startQuestRoute } from './routes/start.ts'
 export type { StartQuestRouteOptions, StartedQuestRoute } from './routes/start.ts'
 export { applyQuestScaffold } from './quests/scaffold.ts'
@@ -79,6 +79,7 @@ export type {
 } from './autopilot/types.ts'
 export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
 export { LocalRecipeRuntime } from './runtime/local-runtime.ts'
+export { runReferralPackageBuilder, runReferralPackageBuilderFromStdin } from './runtime/referral-package-builder.ts'
 export {
   FIRMVAULT_REQUIRED_CASE_PATHS,
   FIRMVAULT_STARTER_CASE_PATHS,

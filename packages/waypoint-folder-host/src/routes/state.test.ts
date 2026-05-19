@@ -1,12 +1,14 @@
-import { mkdtemp } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
 import { appendRouteEvent, readRouteEvents } from '../events/jsonl'
-import { createWaypointRoute, getWaypointRoute } from './store'
-import { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resumeWaypointRoute } from './state'
+import { updateWaypointTask } from '../tasks/store'
+import type { WaypointFolderTask } from '../tasks/types'
+import { createWaypointRoute, getWaypointRoute, updateWaypointRoute } from './store'
+import { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './state'
 
 async function tempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-route-state-'))
@@ -19,6 +21,16 @@ async function createRoute(projectRoot: string) {
     subject: { type: 'project', id: 'local' },
     now: new Date('2026-05-07T16:30:00.000Z'),
   })
+}
+
+async function writeTaskState(projectRoot: string, tasks: WaypointFolderTask[]): Promise<void> {
+  await mkdir(join(projectRoot, '.waypoint', 'tasks'), { recursive: true })
+  await writeFile(join(projectRoot, '.waypoint', 'tasks', 'tasks.yaml'), JSON.stringify({ schema_version: 1, tasks }), 'utf8')
+}
+
+async function writeRequiredArtifact(projectRoot: string): Promise<void> {
+  await mkdir(join(projectRoot, 'referral-package-build', 'attorney-handoff'), { recursive: true })
+  await writeFile(join(projectRoot, 'referral-package-build', 'attorney-handoff', 'START_HERE.html'), '<html>resolved</html>', 'utf8')
 }
 
 describe('route state controls', () => {
@@ -85,5 +97,62 @@ describe('route state controls', () => {
     expect(events.items.map((event) => event.kind)).toEqual(['route.started', 'route.paused', 'route.resumed'])
     expect(events.items[1]).toMatchObject({ payload: { reason: 'Waiting on review', previous_status: 'active' } })
     expect(events.items[2]).toMatchObject({ payload: { previous_status: 'blocked' } })
+  })
+
+  it('resolves a required artifact blocker after the missing artifact exists', async () => {
+    const projectRoot = await tempProject()
+    const route = await createRoute(projectRoot)
+    await updateWaypointRoute(projectRoot, route.id, { status: 'blocked', current_node: 'start-here-draft' })
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-001',
+        route_id: route.id,
+        plan_ref: 'start-here-draft',
+        title: 'Draft START_HERE dashboard',
+        phase: 'handoff',
+        wave: 1,
+        kind: 'recipe',
+        status: 'blocked',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+        metadata: {
+          waypoint: {
+            output_artifacts: [{ path: 'referral-package-build/attorney-handoff/START_HERE.html' }],
+            missing_artifacts: ['referral-package-build/attorney-handoff/START_HERE.html'],
+            block_reason: 'required_artifacts_missing',
+          },
+        },
+      },
+    ])
+
+    await expect(
+      resolveWaypointRouteBlocker(projectRoot, {
+        routeId: route.id,
+        note: 'Paralegal finished the missing package artifact',
+        now: new Date('2026-05-07T16:35:00.000Z'),
+      }),
+    ).rejects.toThrow(/Missing required artifacts/)
+
+    await writeRequiredArtifact(projectRoot)
+    const resolved = await resolveWaypointRouteBlocker(projectRoot, {
+      routeId: route.id,
+      note: 'Paralegal finished the missing package artifact',
+      now: new Date('2026-05-07T16:36:00.000Z'),
+    })
+
+    expect(resolved).toMatchObject({ status: 'active', current_node: 'start-here-draft' })
+    const task = await updateWaypointTask(projectRoot, 'task-001', {})
+    expect(task).toMatchObject({ status: 'open' })
+    expect(task.metadata?.waypoint).not.toHaveProperty('missing_artifacts')
+    expect(task.metadata?.waypoint).not.toHaveProperty('block_reason')
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.at(-1)).toMatchObject({
+      kind: 'route.blocker.resolved',
+      payload: {
+        task_id: 'task-001',
+        node: 'start-here-draft',
+        note: 'Paralegal finished the missing package artifact',
+      },
+    })
   })
 })

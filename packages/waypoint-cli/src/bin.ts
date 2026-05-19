@@ -23,6 +23,7 @@ import { runStatusCommand } from './commands/status.ts'
 import { runTasksCommand } from './commands/tasks.ts'
 import { runToolsCommand } from './commands/tools.ts'
 import { runWizardCommand } from './commands/wizard.ts'
+import { runReferralPackageBuilderFromStdin } from '@waypoint/folder-host'
 
 const rootPackageVersion = cliPackage.version
 
@@ -54,10 +55,12 @@ Usage:
   waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
   waypoint auto [--route-id <id>] [--max-iterations N] [--json]
   waypoint auto status [--limit N] [--offset N] [--json]
+  waypoint runtime referral-package-builder
   # Safety: local Recipe runtime executes configured commands only when .waypoint/config.yaml explicitly sets runtime.recipe: local.
   waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
   waypoint pause --route-id <id> [--reason <text>]
-  waypoint resume --route-id <id>
+  waypoint resume --route-id <id> [--resolve-blocker] [--note <text>]
+  # Use --resolve-blocker after the operator/paralegal resolves the missing artifact or other blocked Quest input; then run waypoint auto again.
   waypoint lifecycle add workstream --key <key> --name <name>
   waypoint lifecycle add milestone --workstream <key> --key <key> --title <title>
   waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
@@ -168,6 +171,15 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'auto') {
     return runAutoCommand(args.slice(1), io)
+  }
+
+  if (command === 'runtime') {
+    if (args[1] === 'referral-package-builder') {
+      await runReferralPackageBuilderFromStdin(process.stdin)
+      return 0
+    }
+    io.stderr(`Unknown Waypoint runtime command: ${args.slice(1).join(' ')}`)
+    return 1
   }
 
   if (command === 'gate') {

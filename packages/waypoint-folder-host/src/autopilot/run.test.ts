@@ -1,6 +1,6 @@
-import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -15,6 +15,37 @@ async function startedProject(): Promise<string> {
   await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   await runWaypointCli(['start', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
   return cwd
+}
+
+async function startedReferralProjectWithLocalBuilder(): Promise<string> {
+  const cwd = await mkdtemp(join(tmpdir(), 'waypoint-referral-builder-'))
+  await runWaypointCli(['init', '--quest', 'referral-package'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  await writeFile(
+    join(cwd, '.waypoint', 'config.yaml'),
+    `schema_version: 1\nenabled: true\nquest: referral-package\nruntime:\n  recipe: local\n  command: ${JSON.stringify(process.execPath)}\n  args:\n    - ${JSON.stringify(resolve('packages/waypoint-folder-host/src/runtime/referral-package-builder-bin.ts'))}\ncreated_at: '2026-01-01T00:00:00.000Z'\nupdated_at: '2026-01-01T00:00:00.000Z'\n`,
+    'utf8',
+  )
+  await runWaypointCli(['start', '--quest', 'referral-package'], { cwd, stdout: () => undefined, stderr: () => undefined })
+  return cwd
+}
+
+async function writeFileWithParents(path: string, content: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, content, 'utf8')
+}
+
+async function writeDraftChronologyArtifacts(projectRoot: string): Promise<void> {
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/medical-chronology.html'),
+    '<html><body><section class="visit-card"><h1>Draft chronology completed by paralegal</h1></section></body></html>',
+  )
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-timeline.pdf'), '%PDF-1.4\n% draft chronology\n')
+  await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-master-binder.pdf'), '%PDF-1.4\n% draft binder\n')
+  await mkdir(join(projectRoot, '03-medical/medical-chronology-output/extracted-visit-pdfs'), { recursive: true })
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/adversarial-qc-report.md'),
+    '# Adversarial QC\n\nDraft QC completed by paralegal; unresolved issues remain for transfer notes.\n',
+  )
 }
 
 describe('folder host autopilot', () => {
@@ -70,6 +101,49 @@ describe('folder host autopilot', () => {
 
     const events = await readRouteEvents(cwd, 'route-001', { limit: 20 })
     expect(events.items.map((event) => event.kind)).toContain('route.autopilot.required_artifacts_missing')
+  })
+
+  it('blocks the referral package local builder at medical chronology instead of fabricating chronology artifacts', async () => {
+    const cwd = await startedReferralProjectWithLocalBuilder()
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 20 })
+
+    expect(result.status).toBe('blocked')
+    expect(result.blockedNode).toBe('medical-chronology-update')
+    const route = await getWaypointRoute(cwd, 'route-001')
+    expect(route).toMatchObject({ status: 'blocked', current_node: 'medical-chronology-update' })
+    await expect(stat(join(cwd, '03-medical/medical-chronology-output/medical-chronology.html'))).rejects.toMatchObject({ code: 'ENOENT' })
+    const tasks = await listWaypointTasks(cwd)
+    expect(tasks.find((task) => task.id === 'task-006')?.metadata?.waypoint).toMatchObject({
+      autopilot: {
+        runtime: 'local',
+        status: 'success',
+        recipe: 'firmvault-medical-chronology-update',
+      },
+      block_reason: 'required_artifacts_missing',
+    })
+  })
+
+  it('runs the referral package local builder after medical chronology is resolved and blocks at handoff gate', async () => {
+    const cwd = await startedReferralProjectWithLocalBuilder()
+    await writeDraftChronologyArtifacts(cwd)
+
+    const result = await runWaypointAutopilot(cwd, { routeId: 'route-001', maxIterations: 20 })
+
+    expect(result.status).toBe('blocked')
+    expect(result.blockedNode).toBe('attorney-handoff-gate')
+    expect(result.completedTasks).toContain('task-010')
+    await expect(stat(join(cwd, 'referral-package-build/attorney-handoff/START_HERE.html'))).resolves.toBeDefined()
+    await expect(stat(join(cwd, 'referral-package-build/attorney-handoff/START_HERE.pdf'))).resolves.toBeDefined()
+    await expect(stat(join(cwd, 'referral-package-build/attorney-handoff/PACKAGE_INDEX.md'))).resolves.toBeDefined()
+    await expect(stat(join(cwd, 'referral-package-build/attorney-handoff/PACKAGE_FILE_INDEX.csv'))).resolves.toBeDefined()
+    await expect(stat(join(cwd, 'referral-package-build/build-internal/package-qc-report.json'))).resolves.toBeDefined()
+    await expect(readFile(join(cwd, 'referral-package-build/build-internal/package-qc-report.json'), 'utf8')).resolves.toContain('blocked_not_attorney_ready')
+
+    const tasks = await listWaypointTasks(cwd)
+    expect(tasks.find((task) => task.id === 'task-006')?.metadata?.waypoint).toMatchObject({ autopilot: { runtime: 'local', status: 'success' } })
+    expect(tasks.find((task) => task.id === 'task-010')?.metadata?.waypoint).toMatchObject({ autopilot: { runtime: 'local', status: 'success' } })
+    expect(tasks.find((task) => task.id === 'task-011')?.status).toBe('blocked')
   })
 
   it('persists autopilot run history', async () => {

@@ -67,9 +67,12 @@ waypoint tasks [--route-id <id>] [--json]
 waypoint discuss --task-id <id> [--message <text>] [--author user|agent]
 waypoint auto [--route-id <id>] [--max-iterations N] [--json]
 waypoint auto status [--limit N] [--offset N] [--json]
+waypoint runtime referral-package-builder
+# Safety: local Recipe runtime executes configured commands only when .waypoint/config.yaml explicitly sets runtime.recipe: local.
 waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
 waypoint pause --route-id <id> [--reason <text>]
-waypoint resume --route-id <id>
+waypoint resume --route-id <id> [--resolve-blocker] [--note <text>]
+# Use --resolve-blocker after the operator/paralegal resolves the missing artifact or other blocked Quest input; then run waypoint auto again.
 waypoint lifecycle add workstream --key <key> --name <name>
 waypoint lifecycle add milestone --workstream <key> --key <key> --title <title>
 waypoint lifecycle add phase --milestone <key> --key <key> --lifecycle <name>
@@ -186,11 +189,13 @@ When autopilot blocks on a gate, approve or reject it explicitly:
 waypoint gate --route-id route-001 --node plan-approval-gate --approve --note "Plan accepted."
 ```
 
-You can also pause and resume a route:
+You can also pause and resume a route, or resolve a Quest blocker after the missing input/artifact is supplied and then run autopilot again:
 
 ```bash
 waypoint pause --route-id route-001 --reason "Waiting for owner review."
 waypoint resume --route-id route-001
+waypoint resume --route-id route-001 --resolve-blocker --note "Paralegal completed the missing medical chronology artifact."
+waypoint auto --route-id route-001
 ```
 
 ### FirmVault case-state contract
