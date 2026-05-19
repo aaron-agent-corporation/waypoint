@@ -65,6 +65,13 @@ describe('Referral Package Quest', () => {
     expect(chronologyPlan?.title).toContain('if medical records are present')
     expect(chronologyPlan?.metadata?.waypoint?.recipe?.slug).toBe('firmvault-medical-chronology-update')
     expect(chronologyPlan?.metadata?.waypoint?.required_when).toBe('medical_records_present')
+    expect(chronologyPlan?.metadata?.waypoint?.output_artifacts).toEqual(
+      expect.arrayContaining([
+        '03-medical/medical-chronology-output/reports/date-of-service-ledger.json',
+        '03-medical/medical-chronology-output/reports/visit-content.json',
+        '03-medical/medical-chronology-output/reports/rendered-template-check.json',
+      ]),
+    )
 
     const chronologyQcPlan = allPlans.find((plan) => plan.plan_ref === 'medical-chronology-adversarial-qc') as any
     expect(chronologyQcPlan?.metadata?.waypoint?.recipe?.slug).toBe(

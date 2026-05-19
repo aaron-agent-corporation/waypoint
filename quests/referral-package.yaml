@@ -74,11 +74,17 @@ scaffolds:
                       recipe:
                         slug: firmvault-medical-chronology-update
                       output_artifacts:
+                        - 03-medical/medical-chronology-output/reports/date-of-service-ledger.json
+                        - 03-medical/medical-chronology-output/reports/visit-content.json
+                        - 03-medical/medical-chronology-output/reports/rendered-template-check.json
                         - 03-medical/medical-chronology-output/medical-chronology.html
                         - 03-medical/medical-chronology-output/medical-chronology-timeline.pdf
                         - 03-medical/medical-chronology-output/medical-chronology-master-binder.pdf
                         - 03-medical/medical-chronology-output/extracted-visit-pdfs/
                       instructions:
+                        - Start by extracting a structured date-of-service ledger, using bills/itemizations/ledgers as a first-pass DOS source and medical records for clinical confirmation.
+                        - Fill structured visit-content JSON for each ledger encounter before rendering.
+                        - Render attorney-facing chronology HTML through the shared deterministic template, not agent-authored HTML.
                         - Create one extracted visit PDF per chronology row/date-of-service encounter.
                         - Deduplicate repeated provider productions from visible source buttons.
                         - Keep source files read-only and keep chronology artifacts review-aid only.

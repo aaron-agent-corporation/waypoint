@@ -184,6 +184,11 @@ describe('FirmVault source-backed Recipe port', () => {
       'chronology first, then extracted visit PDFs in chronology order',
       'must not contain build-process or meta commentary',
       'docs/templates/firmvault/medical-chronology/',
+      'date-of-service-ledger.json',
+      'bills are a first-class starting point for dates of service',
+      'visit-content.json',
+      'Agents fill structured visit fields; they do not hand-author final HTML',
+      'shared deterministic renderer owns attorney-facing HTML',
     ]) {
       expect(manifest.prompt, phrase).toContain(phrase)
     }
