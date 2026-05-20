@@ -123,7 +123,11 @@ try {
       `for (const [name, value] of Object.entries(checks)) {\n` +
       `  if (typeof value !== 'function') throw new Error(name + ' export missing')\n` +
       `}\n` +
-      `console.log('installed package imports: ok')\n`,
+      `const catalog = await loadBundledWaypointCatalog()\n` +
+      `if (!catalog.quests.has('referral-package')) throw new Error('referral-package quest missing')\n` +
+      `const resolved = catalog.resolveQuestRecipes('referral-package')\n` +
+      `if (!resolved.ok) throw new Error(resolved.message)\n` +
+      `console.log('installed package imports and bundled catalog: ok')\n`,
   )
   run('node', ['verify.mjs'], { cwd: projectDir })
   run('pnpm', ['exec', 'waypoint', '--version'], { cwd: projectDir })

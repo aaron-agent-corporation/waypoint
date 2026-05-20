@@ -128,7 +128,17 @@ async function findBundledCatalogRoot(): Promise<string> {
   let current = dirname(fileURLToPath(import.meta.url))
 
   for (let depth = 0; depth < 10; depth += 1) {
-    if ((await isDirectory(join(current, 'quests'))) && (await isDirectory(join(current, 'recipes')))) {
+    if (await hasCatalogYamlFiles(current)) {
+      return current
+    }
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+
+  current = dirname(fileURLToPath(import.meta.resolve('@waypoint/core')))
+  for (let depth = 0; depth < 10; depth += 1) {
+    if (await hasCatalogYamlFiles(current)) {
       return current
     }
     const parent = dirname(current)
@@ -142,6 +152,22 @@ async function findBundledCatalogRoot(): Promise<string> {
 async function isDirectory(path: string): Promise<boolean> {
   try {
     return (await stat(path)).isDirectory()
+  } catch {
+    return false
+  }
+}
+
+async function hasCatalogYamlFiles(path: string): Promise<boolean> {
+  const questsDir = join(path, 'quests')
+  const recipesDir = join(path, 'recipes')
+  if (!(await isDirectory(questsDir)) || !(await isDirectory(recipesDir))) return false
+  return (await hasYamlFile(questsDir)) && (await hasYamlFile(recipesDir))
+}
+
+async function hasYamlFile(path: string): Promise<boolean> {
+  try {
+    const entries = await readdir(path, { withFileTypes: true })
+    return entries.some((entry) => entry.isFile() && (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml')))
   } catch {
     return false
   }
