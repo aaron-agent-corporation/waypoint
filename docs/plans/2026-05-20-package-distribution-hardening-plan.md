@@ -69,10 +69,11 @@ git commit -m "docs: plan package distribution hardening"
 3. Inspect each packed `package/package.json`.
 4. Fail if any packed package has `private: true`.
 5. Fail if any packed package dependency contains `workspace:`.
-6. Create a clean temp project with dependencies pointing to the packed tarballs and **no pnpm overrides**.
-7. Run `pnpm install --ignore-scripts`.
-8. Import and assert core/folder-host/cli exports.
-9. Run `pnpm exec waypoint --version`.
+6. Create a clean temp project with dependencies pointing to the packed tarballs.
+7. Use local-only `pnpm.overrides` inside that temp project to simulate private-registry resolution of exact transitive `@waypoint/*` dependencies; do not use this override shape in Mission Control.
+8. Run `pnpm install --ignore-scripts`.
+9. Import and assert core/folder-host/cli exports.
+10. Run `pnpm exec waypoint --version`.
 
 **Run RED:**
 
@@ -129,7 +130,7 @@ pnpm verify:package-distribution
 
 This slice is complete when:
 
-1. `pnpm verify:package-distribution` passes from a clean temp install with no overrides.
+1. `pnpm verify:package-distribution` passes from a clean temp install that uses local-only tarball overrides to simulate private-registry resolution.
 2. Packed package manifests contain no `private: true` and no `workspace:` dependencies.
 3. Core/folder-host/CLI exports import from the installed tarballs.
 4. `pnpm verify:built-imports` passes.

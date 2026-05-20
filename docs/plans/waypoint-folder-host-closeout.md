@@ -2,7 +2,7 @@
 
 **Status:** complete through F12.  
 **Scope:** local filesystem-backed Waypoint host and development CLI.  
-**Package posture:** private development package; not a globally published CLI.
+**Package posture:** publish-ready private-registry package shape; not a globally published CLI.
 
 ## What Track 1 delivers
 
@@ -23,11 +23,11 @@ A folder can now:
 
 F12 introduces `pnpm-workspace.yaml` with the root package and `packages/*` as workspace members. This is the smallest package-manager cleanup that matches the existing package manifests, which already use `workspace:*` dependencies:
 
-- root private package: `@waypoint/core`
-- private internal package: `@waypoint/folder-host`
-- private internal package: `@waypoint/cli`
+- root package: `@waypoint/core` with publish-ready metadata for private-registry release
+- package: `@waypoint/folder-host` with publish-ready metadata for private-registry release
+- package: `@waypoint/cli` with publish-ready metadata for private-registry release
 
-The root package remains private and source-first. The CLI is still run directly in development or through root scripts; there is no claim that `waypoint` is globally installed or published.
+The package manifests now allow private-registry publication while retaining source workspace links for development. The CLI is still run directly in development, through root scripts, or through packed/private-registry installs; there is no claim that `waypoint` is globally installed or published.
 
 ## Operator commands
 
@@ -95,7 +95,7 @@ Because `runtime.recipe: local` executes local commands, project owners should t
 
 ## Current limitations
 
-- This is a private development package, not a globally published CLI.
+- This is a publish-ready private-registry package shape, not a globally published CLI.
 - There is no network sync.
 - There is no multi-user collaboration layer.
 - There is no web UI.

@@ -63,9 +63,10 @@ Required gates before use:
 1. `pnpm build`
 2. `pnpm verify:built-imports`
 3. `pnpm smoke:install`
-4. `pnpm test`
-5. `pnpm typecheck`
-6. tag the verified commit
+4. `pnpm verify:package-distribution`
+5. `pnpm test`
+6. `pnpm typecheck`
+7. tag the verified commit
 
 Risks:
 
@@ -94,7 +95,8 @@ Required gates before use:
 1. Create package registry auth and `.npmrc` strategy.
 2. Publish `@waypoint/core`, `@waypoint/folder-host`, and `@waypoint/cli` in dependency order.
 3. Verify install from a clean temp project with registry auth only, no local filesystem paths.
-4. Record published versions and immutable package URLs.
+4. Run `pnpm verify:package-distribution` before publish to prove packed manifests have no `private: true` flags and no leaked `workspace:` dependencies.
+5. Record published versions and immutable package URLs.
 
 Risks:
 
@@ -149,6 +151,7 @@ Mission Control cutover should not start until a Waypoint commit has passed:
 pnpm build
 pnpm verify:built-imports
 pnpm smoke:install
+pnpm verify:package-distribution
 pnpm test
 pnpm typecheck
 ```

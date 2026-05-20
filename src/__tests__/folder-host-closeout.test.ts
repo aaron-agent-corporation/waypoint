@@ -22,21 +22,22 @@ describe('folder host closeout', () => {
     expect(workspace).toContain("'packages/*'")
   })
 
-  it('keeps package manifests private and workspace-linked while targeting built CLI output', () => {
+  it('keeps package manifests publishable and workspace-linked while targeting built CLI output', () => {
     const rootPackage = JSON.parse(readRepoFile('package.json'))
     const cliPackage = JSON.parse(readRepoFile('packages/waypoint-cli/package.json'))
     const hostPackage = JSON.parse(readRepoFile('packages/waypoint-folder-host/package.json'))
 
-    expect(rootPackage.private).toBe(true)
+    expect(rootPackage.private).toBe(false)
     expect(rootPackage.main).toBe('./dist/src/index.js')
     expect(rootPackage.scripts.build).toBe('tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs')
+    expect(rootPackage.scripts['verify:package-distribution']).toBe('node scripts/verify-package-distribution.mjs')
 
-    expect(cliPackage.private).toBe(true)
+    expect(cliPackage.private).toBe(false)
     expect(cliPackage.bin.waypoint).toBe('./dist/bin.js')
     expect(cliPackage.dependencies['@waypoint/core']).toBe('workspace:*')
     expect(cliPackage.dependencies['@waypoint/folder-host']).toBe('workspace:*')
 
-    expect(hostPackage.private).toBe(true)
+    expect(hostPackage.private).toBe(false)
     expect(hostPackage.main).toBe('./dist/index.js')
     expect(hostPackage.dependencies['@waypoint/core']).toBe('workspace:*')
   })
@@ -50,7 +51,7 @@ describe('folder host closeout', () => {
       'pnpm smoke:folder-host',
       'pnpm test',
       'pnpm typecheck',
-      'private development package',
+      'publish-ready private-registry package shape',
       'not a globally published CLI',
       'network sync',
       'multi-user collaboration',

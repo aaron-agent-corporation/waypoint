@@ -55,6 +55,42 @@ async function writeDraftChronologyArtifacts(projectRoot: string): Promise<void>
 </body></html>`,
   )
   await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/extracted-visit-pdfs/example.pdf'), '%PDF-1.4\n% extracted visit source\n')
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/reports/date-of-service-ledger.json'),
+    `${JSON.stringify(
+      {
+        encounters: [
+          {
+            date_of_service: '2024-01-01',
+            provider: 'Example',
+            source_bill: 'example.pdf',
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  )
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/reports/visit-content.json'),
+    `${JSON.stringify(
+      {
+        visits: [
+          {
+            date_of_service: '2024-01-01',
+            provider: 'Example',
+            summary: 'Attorney-readable visit summary.',
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  )
+  await writeFileWithParents(
+    join(projectRoot, '03-medical/medical-chronology-output/reports/rendered-template-check.json'),
+    `${JSON.stringify({ template: 'visit-card', ok: true }, null, 2)}\n`,
+  )
   await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-timeline.pdf'), '%PDF-1.4\n% draft chronology\n')
   await writeFileWithParents(join(projectRoot, '03-medical/medical-chronology-output/medical-chronology-master-binder.pdf'), '%PDF-1.4\n% draft binder\n')
   await writeFileWithParents(

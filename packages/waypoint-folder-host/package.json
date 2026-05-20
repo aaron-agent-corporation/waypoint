@@ -1,7 +1,7 @@
 {
   "name": "@waypoint/folder-host",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Filesystem-backed local folder host for Waypoint projects.",
   "type": "module",
   "main": "./dist/index.js",

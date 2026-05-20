@@ -1,7 +1,7 @@
 {
   "name": "@waypoint/core",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Waypoint \u2014 host-agnostic lifecycle + workflow execution runtime. Mission Control is its first host/adapter.",
   "type": "module",
   "main": "./dist/src/index.js",
@@ -33,6 +33,7 @@
     "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
     "prepack": "pnpm clean && pnpm build",
     "verify:built-imports": "node scripts/verify-built-package-imports.mjs",
+    "verify:package-distribution": "node scripts/verify-package-distribution.mjs",
     "smoke:install": "node scripts/local-install-smoke.mjs"
   },
   "devDependencies": {
