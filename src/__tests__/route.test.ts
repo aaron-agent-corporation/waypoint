@@ -75,6 +75,8 @@ describe('normalizeWaypointScope', () => {
   })
 
   it('treats compat gsd_* subject types as valid waypoint subjects', () => {
+    expect(WAYPOINT_COMPAT_SUBJECT_TYPES.plan).toBe('gsd_plan')
+
     const scope = normalizeWaypointScope({
       subjectType: WAYPOINT_COMPAT_SUBJECT_TYPES.phase,
       subjectId: '7',

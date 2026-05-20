@@ -21,11 +21,11 @@ export const WAYPOINT_SUBJECT_TYPES = {
 } as const
 
 export const WAYPOINT_COMPAT_SUBJECT_TYPES = {
-  project: 'waypoint_project',
-  workstream: 'waypoint_workstream',
-  milestone: 'waypoint_milestone',
-  phase: 'waypoint_phase',
-  plan: 'waypoint_plan',
+  project: 'gsd_project',
+  workstream: 'gsd_workstream',
+  milestone: 'gsd_milestone',
+  phase: 'gsd_phase',
+  plan: 'gsd_plan',
 } as const
 
 const waypointSubjectTypeValues = new Set<string>([
