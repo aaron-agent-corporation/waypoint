@@ -31,12 +31,24 @@ scaffolds:
                 - plan_ref: validate-context
                   title: Validate frontend phase context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: research-ui
                   title: Research UI patterns and constraints
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: verify-ui-spec
                   title: Write and verify UI-SPEC
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

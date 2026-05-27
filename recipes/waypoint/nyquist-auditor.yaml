@@ -208,5 +208,15 @@ prompt: |
   - [ ] Test files listed for commit
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+
 runtime:
   allowed_tools: []
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

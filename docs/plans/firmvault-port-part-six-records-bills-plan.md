@@ -14,7 +14,7 @@
 
 Primary sources for this slice:
 
-- Mission Control workflow: `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-request-medical-records.yaml`
+- Mission Control workflow: `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-request-medical-records.yaml`
 - Mission Control recipes:
   - `recipes/firmvault-medical-records-verify-authorization`
   - `recipes/firmvault-request-records-bills-prepare-request`

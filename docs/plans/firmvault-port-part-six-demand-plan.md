@@ -8,18 +8,18 @@ Port the Mission Control FirmVault demand workflows into Waypoint as source-back
 
 Primary source workflows:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-demand-readiness.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-draft-demand.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-send-demand.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-demand-readiness.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-draft-demand.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-send-demand.yaml`
 - `docs/quests/firmvault-workflow-map.yaml`
 
 Source recipe directories:
 
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-demand-gather-materials/`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-demand-check-final-lien-process/`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-demand-draft-letter/`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-demand-identify-recipients/`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-demand-send-package/`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-demand-gather-materials/`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-demand-check-final-lien-process/`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-demand-draft-letter/`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-demand-identify-recipients/`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-demand-send-package/`
 
 ## Deliverables
 

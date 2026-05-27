@@ -9,8 +9,13 @@ export async function runStartCommand(args: readonly string[], io: WaypointCliIo
     const route = await startQuestRoute(io.cwd ?? process.cwd(), { quest })
     io.stdout(`Started Waypoint route ${route.id}`)
     io.stdout(`quest: ${route.quest}`)
+    io.stdout(`route backend: ${route.backend}`)
     io.stdout(`status: ${route.status}`)
     io.stdout(`current node: ${route.current_node ?? 'none'}`)
+    if (route.beads) {
+      io.stdout(`beads root issue: ${route.beads.root_issue_id}`)
+      io.stdout(`beads graph: ${route.beads.issue_count} issues, ${route.beads.dependency_count} dependencies`)
+    }
     io.stdout(
       `scaffolded lifecycle: ${route.scaffold.workstreams} ${plural('workstream', route.scaffold.workstreams)}, ${route.scaffold.milestones} ${plural('milestone', route.scaffold.milestones)}, ${route.scaffold.phases} ${plural('phase', route.scaffold.phases)}, ${route.scaffold.plans} ${plural('plan', route.scaffold.plans)}`,
     )

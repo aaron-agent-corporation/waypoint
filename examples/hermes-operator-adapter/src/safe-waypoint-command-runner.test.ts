@@ -33,6 +33,11 @@ describe('safe Waypoint command runner', () => {
       mutation: false,
       summaryHint: 'status',
     })
+    expect(buildSafeWaypointCommand(project, ['status', '--json'])).toMatchObject({
+      args: [waypointCli, 'status', '--json'],
+      mutation: false,
+      summaryHint: 'status',
+    })
 
     expect(buildSafeWaypointCommand(project, ['route-events', '--route-id', 'route-001', '--limit', '20']).args).toEqual([
       waypointCli,
@@ -65,6 +70,18 @@ describe('safe Waypoint command runner', () => {
       mutation: true,
       summaryHint: 'init',
     })
+    expect(buildSafeWaypointCommand(project, ['init', '--quest', 'agentic-delivery', '--backend', 'beads'])).toMatchObject({
+      args: [waypointCli, 'init', '--quest', 'agentic-delivery', '--backend', 'beads'],
+      cwd: '/tmp/waypoint-project',
+      mutation: true,
+      summaryHint: 'init',
+    })
+    expect(buildSafeWaypointCommand(project, ['init', '--quest', 'agentic-delivery', '--backend', 'beads', '--init-beads'])).toMatchObject({
+      args: [waypointCli, 'init', '--quest', 'agentic-delivery', '--backend', 'beads', '--init-beads'],
+      cwd: '/tmp/waypoint-project',
+      mutation: true,
+      summaryHint: 'init',
+    })
     expect(buildSafeWaypointCommand(project, ['start', '--quest', 'agentic-delivery', '--json'])).toMatchObject({
       args: [waypointCli, 'start', '--quest', 'agentic-delivery', '--json'],
       cwd: '/tmp/waypoint-project',
@@ -87,6 +104,12 @@ describe('safe Waypoint command runner', () => {
     )
     expect(() => buildSafeWaypointCommand(project, ['route', '--route-id'])).toThrow(
       'Waypoint route requires a value for --route-id',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['init', '--backend', 'sqlite'])).toThrow(
+      'Waypoint init does not allow route backend: sqlite',
+    )
+    expect(() => buildSafeWaypointCommand(project, ['init', '--init-beads'])).toThrow(
+      'Waypoint init only allows --init-beads with --backend beads',
     )
   })
 
@@ -114,6 +137,19 @@ describe('safe Waypoint command runner', () => {
     expect(() => buildSafeWaypointCommand(project, ['pause', '--route-id', 'route-001', '--reason'])).toThrow(
       'Waypoint pause requires a value for --reason',
     )
+    expect(buildSafeWaypointCommand(project, [
+      'resume',
+      '--route-id',
+      'route-001',
+      '--resolve-blocker',
+      '--note',
+      'Wait resolved.',
+      '--json',
+    ])).toMatchObject({
+      args: [waypointCli, 'resume', '--route-id', 'route-001', '--resolve-blocker', '--note', 'Wait resolved.', '--json'],
+      mutation: true,
+      summaryHint: 'resume',
+    })
   })
 
   it('allowlists only safe FirmVault document intake and handoff commands', () => {
@@ -173,6 +209,60 @@ describe('safe Waypoint command runner', () => {
     expect(() => buildSafeWaypointCommand(project, ['firmvault', 'document-handoff', '--document-id', 'document-001', '--status', 'bogus'])).toThrow(
       'Waypoint firmvault document-handoff does not allow status: bogus',
     )
+  })
+
+  it('allowlists FirmVault Beads bootstrap only through explicit backend initialization flags', () => {
+    const project = projectRecord('/trusted/firmvault/cases')
+
+    expect(buildSafeWaypointCommand(project, [
+      'firmvault',
+      'bootstrap',
+      '--cases-root',
+      '/trusted/firmvault/cases',
+      '--case-name',
+      'Jane Smith v. Acme Trucking',
+      '--case-type',
+      'personal-injury',
+      '--backend',
+      'beads',
+      '--init-beads',
+      '--start',
+      '--json',
+    ])).toMatchObject({
+      args: [
+        waypointCli,
+        'firmvault',
+        'bootstrap',
+        '--cases-root',
+        '/trusted/firmvault/cases',
+        '--case-name',
+        'Jane Smith v. Acme Trucking',
+        '--case-type',
+        'personal-injury',
+        '--backend',
+        'beads',
+        '--init-beads',
+        '--start',
+        '--json',
+      ],
+      cwd: '/trusted/firmvault/cases',
+      mutation: true,
+      summaryHint: 'firmvault bootstrap',
+    })
+
+    expect(() => buildSafeWaypointCommand(project, [
+      'firmvault',
+      'bootstrap',
+      '--cases-root',
+      '/trusted/firmvault/cases',
+      '--case-name',
+      'Jane Smith v. Acme Trucking',
+      '--case-type',
+      'personal-injury',
+      '--backend',
+      'folder',
+      '--init-beads',
+    ])).toThrow('Waypoint firmvault bootstrap only allows --init-beads with --backend beads')
   })
 
   it('allowlists safe FirmVault legal state commands for paralegal operation', () => {

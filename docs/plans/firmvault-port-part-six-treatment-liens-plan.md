@@ -6,10 +6,10 @@ Port the next Wave 2 FirmVault slice after BI/PIP insurance: provider treatment-
 
 ## Primary sources
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-medical-provider-status.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-early-lien-identification.yaml`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-medical-provider-review-status/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-lien-identify-potential/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-medical-provider-status.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-early-lien-identification.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-medical-provider-review-status/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-lien-identify-potential/{recipe.yaml,SOUL.md,REVIEW.md}`
 - `docs/quests/firmvault-workflow-map.yaml`
 
 ## Scope

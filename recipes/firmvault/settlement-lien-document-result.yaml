@@ -65,7 +65,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control_workflow
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflow: workflows/firmvault-settlement-lien-negotiation.yaml
     source_node: document_lien_negotiation_result
     external_side_effects: forbidden

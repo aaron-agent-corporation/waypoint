@@ -1519,7 +1519,7 @@ metadata:
       - law firm personal injury
       - legal case workflow
   source_port:
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     workflow_map: docs/quests/firmvault-workflow-map.yaml
     status: document_pipeline_review_tasks_wave
     external_side_effects: forbidden

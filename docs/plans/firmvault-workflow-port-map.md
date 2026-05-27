@@ -4,9 +4,9 @@ This document explains the source-backed inventory in `docs/quests/firmvault-wor
 
 ## Source authority stack
 
-- Primary executable source: `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-*.yaml`.
-- Aggregate/legacy workflow source: `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-workflows.yaml`.
-- Passive landmark source for later phases: `/Users/aaronwhaley/Github/mission-control/src/lib/firmvault-passive-landmarks.ts`.
+- Primary executable source: `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-*.yaml`.
+- Aggregate/legacy workflow source: `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-workflows.yaml`.
+- Passive landmark source for later phases: `/Users/aaronwhaley/Github/Active Projects/mission-control/src/lib/firmvault-passive-landmarks.ts`.
 
 ## Duplicate source rule
 

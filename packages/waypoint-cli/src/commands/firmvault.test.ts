@@ -122,6 +122,55 @@ describe('waypoint firmvault commands', () => {
     expect(body.landmarks.total).toBe(82)
   })
 
+  it('bootstraps a FirmVault case with the Beads route backend selected from the CLI', async () => {
+    const casesRoot = await tempProjectRoot()
+    const { io, stdout, stderr } = captureIo(casesRoot)
+
+    const exitCode = await runWaypointCli([
+      'firmvault',
+      'bootstrap',
+      '--cases-root',
+      casesRoot,
+      '--case-name',
+      'Beads Json Client',
+      '--case-type',
+      'personal-injury',
+      '--backend',
+      'beads',
+      '--json',
+    ], io)
+
+    expect(exitCode).toBe(0)
+    expect(stderr).toEqual([])
+    const body = JSON.parse(stdout.join('\n'))
+    expect(body.case_slug).toBe('beads-json-client')
+    expect(body.backend).toBe('beads')
+    expect(body.route_id).toBeNull()
+    expect(body.beads).toBeNull()
+  })
+
+  it('rejects Beads workspace initialization without the Beads backend', async () => {
+    const casesRoot = await tempProjectRoot()
+    const { io, stderr } = captureIo(casesRoot)
+
+    const exitCode = await runWaypointCli([
+      'firmvault',
+      'bootstrap',
+      '--cases-root',
+      casesRoot,
+      '--case-name',
+      'Invalid Init Beads Client',
+      '--case-type',
+      'personal-injury',
+      '--init-beads',
+      '--json',
+    ], io)
+
+    expect(exitCode).toBe(1)
+    expect(stderr[0]).toBe('--init-beads can only be used with --backend beads')
+    expect(existsSync(join(casesRoot, 'invalid-init-beads-client'))).toBe(false)
+  })
+
   it('adds a local document to a FirmVault case from the CLI', async () => {
     const root = await tempProjectRoot()
     const init = captureIo(root)

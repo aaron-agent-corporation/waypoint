@@ -1457,6 +1457,14 @@ prompt: |
   - [ ] Appropriate return format based on mode
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - file.edit
+  - shell
+  - file.search
+  - web.search
+
 runtime:
   allowed_tools:
     - file.read
@@ -1465,3 +1473,7 @@ runtime:
     - shell
     - file.search
     - web.search
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

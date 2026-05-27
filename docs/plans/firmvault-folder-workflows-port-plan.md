@@ -13,7 +13,7 @@
 ## Source Evidence Checked Before Writing This Plan
 
 - Standalone Waypoint repo: `/Users/aaronwhaley/Github/waypoint`, branch `main...origin/main`, recent commit `a45cc9d docs(package): define consumption strategy`.
-- Mission Control repo: `/Users/aaronwhaley/Github/mission-control`, branch `feat/waypoint-runtime-slice`, recent commit `5585a59 feat(waypoint): add agent authorship + loop prevention to discussion messages (W1)`.
+- Mission Control repo: `/Users/aaronwhaley/Github/Active Projects/mission-control`, branch `feat/waypoint-runtime-slice`, recent commit `5585a59 feat(waypoint): add agent authorship + loop prevention to discussion messages (W1)`.
 - Primary legacy workflow source file in current Mission Control: `workflows/firmvault-workflows.yaml`.
 - Roadmap/live-test source in current Mission Control: `docs/superpowers/plans/2026-04-28-firmvault-workflow-build-roadmap.md`.
 - Law-firm workflow adapter source in current Mission Control: `src/lib/law-firm-workflow.ts`.
@@ -110,7 +110,7 @@ Expected local state:
 - Test: `src/__tests__/firmvault-workflow-port-map.test.ts`
 
 **Steps:**
-1. Read source workflow files from `/Users/aaronwhaley/Github/mission-control/workflows/firmvault*.yaml` and recipes under `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-*`.
+1. Read source workflow files from `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault*.yaml` and recipes under `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-*`.
 2. Write a failing docs/map test asserting the map exists and includes at least these workflow ids: `firmvault-case-setup`, `firmvault-document-collection`, `firmvault-accident-report`, `firmvault-medical-provider-setup`, `firmvault-client-check-in-cadence`, `firmvault-request-medical-records`, `firmvault-demand-readiness`, `firmvault-draft-demand`, `firmvault-send-demand`, `firmvault-track-offers`, `firmvault-offer-evaluation`, `firmvault-negotiate-claim`, `firmvault-settlement-processing`, `firmvault-lien-resolution`, `firmvault-final-distribution`, `firmvault-close-case`.
 3. Add map fields for `source_file`, `wave`, `status`, `trigger_landmarks`, `output_landmarks`, `canonical_paths`, `node_count`, `recipe_slugs`, and `human_gates`.
 4. Verify the map against current source files, not hand-maintained counts.

@@ -5,11 +5,13 @@ import {
   createWaypointProjectConfig,
   serializeWaypointProjectConfig,
   type WaypointProjectConfig,
+  type WaypointRouteBackendMode,
 } from './config.ts'
 import { getWaypointProjectPaths } from './root.ts'
 
 export interface InitWaypointProjectOptions {
   readonly quest: string
+  readonly backend?: WaypointRouteBackendMode
   readonly now?: Date
 }
 
@@ -26,7 +28,7 @@ export async function initWaypointProject(
   options: InitWaypointProjectOptions,
 ): Promise<InitWaypointProjectResult> {
   const paths = getWaypointProjectPaths(projectRoot)
-  const config = createWaypointProjectConfig({ quest: options.quest, now: options.now })
+  const config = createWaypointProjectConfig({ quest: options.quest, backend: options.backend, now: options.now })
 
   await mkdir(paths.waypointDir, { recursive: true })
   await Promise.all(requiredStateDirectories.map((name) => mkdir(join(paths.waypointDir, name), { recursive: true })))

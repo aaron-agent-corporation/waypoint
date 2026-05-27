@@ -28,12 +28,26 @@ scaffolds:
                 - plan_ref: graphify-intake
                   title: Capture inputs and current context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: graphify-run
-                  title: Run the mapped Waypoint Recipes
+                  title: Run Pattern Mapper
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-pattern-mapper
                 - plan_ref: graphify-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

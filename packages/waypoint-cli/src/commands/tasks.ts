@@ -1,11 +1,11 @@
-import { listWaypointTasks } from '@waypoint/folder-host'
+import { listWaypointRuntimeTasks } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
 export async function runTasksCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const projectRoot = io.cwd ?? process.cwd()
   const routeId = valueAfter(args, '--route-id')
-  const tasks = (await listWaypointTasks(projectRoot)).filter((task) => !routeId || task.route_id === routeId)
+  const tasks = await listWaypointRuntimeTasks(projectRoot, { routeId })
 
   if (args.includes('--json')) {
     io.stdout(JSON.stringify({ tasks }, null, 2))

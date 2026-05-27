@@ -42,10 +42,10 @@ The CLI help registry currently exposes these commands:
 ```text
 waypoint --help
 waypoint --version
-waypoint init [--quest <slug>]
-waypoint status
+waypoint init [--quest <slug>] [--backend folder|beads] [--init-beads]
+waypoint status [--json]
 waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--upgrade-plan] [--json]
-waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
+waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--backend folder|beads] [--init-beads] [--start] [--json]
 waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
 waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
 waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
@@ -105,11 +105,61 @@ waypoint init --quest waypoint
 
 This creates `.waypoint/config.yaml`, installs the bundled `waypoint` Quest manifest, installs the Recipes referenced by that Quest, and creates the local state directories.
 
+Use `--backend beads` to select the Beads route backend for route/task graph
+materialization:
+
+```bash
+waypoint init --quest waypoint --backend beads
+```
+
+Both backends install and read the same Quest and Recipe manifests. `folder`
+keeps route/task state in `.waypoint/`; `beads` derives Beads issues and
+dependencies from those manifests. Quest and Recipe YAML remain the source of
+truth in both modes.
+
+`--backend beads` records the backend selector. Use `--init-beads` when this
+folder also needs Waypoint to run `bd init` non-interactively:
+
+```bash
+waypoint init --quest waypoint --backend beads --init-beads
+```
+
+When `--init-beads` is omitted, Waypoint does not create or repair `.beads/`.
+This is deliberate: the operator may want to use an existing Beads workspace,
+remote, or policy. `waypoint status --json` reports the readiness state, and
+`waypoint start` fails before graph writes with an action hint if `bd` is
+missing or no Beads workspace is active.
+
+Backend behavior in normal CLI use:
+
+| Backend | Runtime behavior |
+|---|---|
+| `folder` | Default mode. `waypoint start` writes route YAML, task YAML, and route events under `.waypoint/`. `waypoint routes`, `waypoint route`, `waypoint tasks`, `waypoint status`, `waypoint auto`, `waypoint gate`, and `waypoint resume` read and mutate that folder-local state. No Beads workspace is required. |
+| `beads` | `waypoint init --backend beads` records `backend.route: beads` in `.waypoint/config.yaml`. `waypoint start` creates a compatibility route record and materializes the executable route graph as Beads issues with parent/child links, dependencies, and Waypoint metadata. `waypoint routes`, `waypoint route`, `waypoint tasks`, and `waypoint status` reconstruct their read model from Beads issue snapshots. `waypoint route-events` synthesizes route history from the route issue and Waypoint-tagged Beads comments. `waypoint discuss` stores task-scoped discussion as Beads comments on the task issue. `waypoint auto` advances ready Beads issues, stops at gates and waits, enforces Recipe side-effect policy and artifact verification, and records the autopilot run under `.waypoint/`. `waypoint gate` closes or blocks the Beads gate issue; `waypoint pause`/`waypoint resume` update the Beads route issue; `waypoint resume --resolve-blocker` can resolve supported waits or artifact blockers but does not bypass human gates. |
+
+The Recipe runtime selector is independent of the route backend. Both backends
+use the safe null Recipe runtime unless `.waypoint/config.yaml` explicitly sets
+`runtime.recipe: local` and provides a command.
+
 Check status:
 
 ```bash
 waypoint status
+waypoint status --json
 ```
+
+For Beads projects, status includes the Beads workspace readiness:
+
+```text
+route backend: beads
+beads workspace: ready
+beads path: /path/to/project/.beads
+beads root issues: waypoint-abc
+```
+
+If the workspace is missing, status still succeeds and reports `beads action:`
+with the next command to run. Start remains fail-closed until readiness is
+healthy.
 
 ### 2. Choose and inspect bundled catalog content
 
@@ -208,7 +258,13 @@ To create and activate a new PI case folder from a trusted cases root:
 waypoint firmvault bootstrap --cases-root /path/to/cases --case-name "Smith v. Acme" --case-type personal-injury --start
 ```
 
-`bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present. For agent-initiated bootstrap, use the Hermes operator adapter's trusted `cases_roots` registry and route FirmVault new-case requests through the `paralegal` profile; see `docs/firmvault-new-case-bootstrap.md`.
+`bootstrap` creates the canonical case folder, initializes Waypoint with the bundled `firmvault` Quest, installs the Quest/Recipe manifests, initializes `.waypoint/firmvault/` state, and starts the route when `--start` is present. It uses the folder backend unless `--backend beads` is supplied:
+
+```bash
+waypoint firmvault bootstrap --cases-root /path/to/cases --case-name "Smith v. Acme" --case-type personal-injury --backend beads --init-beads --start --json
+```
+
+With `--backend beads`, the case folder still receives the local FirmVault state files and manifest copies, while the route/task runtime is materialized in Beads and read back through the same `status`, `routes`, `route`, `tasks`, `auto`, `gate`, `resume`, `discuss`, and `route-events` command surfaces. Use `--init-beads` when the new case should own its Beads workspace; without it, `--start` requires an existing healthy Beads workspace at the cases root and fails before case creation if readiness is missing. For agent-initiated bootstrap, use the Hermes operator adapter's trusted `cases_roots` registry and route FirmVault new-case requests through the `paralegal` profile; see `docs/firmvault-new-case-bootstrap.md`.
 
 To add a local document after bootstrap or case-state initialization:
 
@@ -332,7 +388,7 @@ A project-local folder host state tree looks like this:
     phases.yaml
     plans.yaml
   routes/
-    route-001.yaml            # live route state
+    route-001.yaml            # live route state, or compatibility route record when backend.route is beads
   events/
     route-001.jsonl           # append-only route event log
   tasks/
@@ -357,6 +413,11 @@ A project-local folder host state tree looks like this:
 Key path prefixes are `.waypoint/routes/`, `.waypoint/events/`, `.waypoint/tasks/`, `.waypoint/autopilot/runs.jsonl`, and `.waypoint/firmvault/`.
 
 These files are intended to be readable and inspectable. A project may choose to commit or ignore `.waypoint/` depending on whether the route state is part of the repo's audit trail.
+
+When `backend.route: beads`, `.waypoint/config.yaml`, installed manifests,
+FirmVault state, and autopilot run history remain local. Route/task truth lives
+in Beads issues and dependencies, with route events and discussions recorded as
+Waypoint-tagged Beads comments.
 
 ## Runtime modes
 
@@ -404,6 +465,19 @@ Do not run folder-host smokes from your home directory unless you intentionally 
 - The null runtime is safe by default but does not produce real external agent work.
 - The local runtime is intentionally opt-in because it executes local commands.
 - Packaging, release polish, and final readiness cleanup are tracked separately from this guide.
+
+## Beads smoke coverage
+
+The test suite carries two Beads backend smokes:
+
+- `packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts` has a deterministic fake-`bd` smoke for command-boundary behavior.
+- The same file has a real-`bd` smoke that runs when the `bd` binary is available. It creates a temp Beads workspace through `waypoint init --backend beads --init-beads`, verifies `status --json`, starts a route, runs autopilot until the route blocks at a real Beads gate, approves the gate, resumes, and verifies Beads-backed route events.
+
+Run just those smokes with:
+
+```bash
+pnpm exec vitest run packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts
+```
 
 ## Reference example
 

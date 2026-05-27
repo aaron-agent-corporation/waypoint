@@ -30,12 +30,24 @@ scaffolds:
                 - plan_ref: locate-security-artifacts
                   title: Locate SECURITY.md or threat model artifacts
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: audit-mitigations
                   title: Verify mitigations against built work
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: update-security-record
                   title: Update SECURITY.md and list gaps
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

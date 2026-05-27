@@ -141,6 +141,14 @@ prompt: |
   - [ ] Sources listed in Section 3
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - web.fetch
+  - web.search
+
 runtime:
   kind: agent
   allowed_tools:
@@ -152,6 +160,8 @@ runtime:
     - web.search
 
 metadata:
+  waypoint:
+    external_side_effects: forbidden
   owner: aaron
   tags:
     - waypoint-port

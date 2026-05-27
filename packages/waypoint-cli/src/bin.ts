@@ -38,11 +38,12 @@ const helpText = `Waypoint local folder host
 Usage:
   waypoint --help
   waypoint --version
-  waypoint init [--quest <slug>]
-  waypoint status
+  waypoint init [--quest <slug>] [--backend folder|beads] [--init-beads]
+  waypoint status [--json]
   waypoint doctor firmvault [--profile paralegal] [--workspace-root <path>] [--upgrade-plan] [--json]
-  waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]
+  waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--backend folder|beads] [--init-beads] [--start] [--json]
   waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]
+  waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]
   waypoint firmvault init-case [--case-type personal-injury] [--case-slug <slug>]
   waypoint firmvault landmarks [--json]
   waypoint quests

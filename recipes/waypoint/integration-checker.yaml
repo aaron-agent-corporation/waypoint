@@ -481,8 +481,17 @@ prompt: |
   - [ ] Structured report returned to auditor
         </success_criteria>
 
+tools:
+  - file.read
+  - shell
+  - file.search
+
 runtime:
   allowed_tools:
     - file.read
     - shell
     - file.search
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

@@ -121,6 +121,12 @@ prompt: |
 
   </modes>
 
+tools:
+  - file.read
+  - file.write
+  - file.search
+  - shell
+
 runtime:
   kind: agent
   allowed_tools:
@@ -130,6 +136,8 @@ runtime:
     - shell
 
 metadata:
+  waypoint:
+    external_side_effects: forbidden
   owner: aaron
   tags:
     - docs

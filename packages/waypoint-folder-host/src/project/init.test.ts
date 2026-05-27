@@ -29,6 +29,7 @@ describe('initWaypointProject', () => {
       schema_version: 1,
       enabled: true,
       quest: 'waypoint',
+      backend: { route: 'folder' },
       runtime: { recipe: null },
     })
     expect(typeof config.created_at).toBe('string')

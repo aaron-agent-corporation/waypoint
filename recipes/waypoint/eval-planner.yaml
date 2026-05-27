@@ -162,6 +162,13 @@ prompt: |
   - [ ] Sections 5, 6, 7 of AI-SPEC.md written and non-empty
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - askuserquestion
+
 runtime:
   allowed_tools:
     - file.read
@@ -169,3 +176,7 @@ runtime:
     - shell
     - file.search
     - askuserquestion
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

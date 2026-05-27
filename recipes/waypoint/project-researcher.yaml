@@ -683,6 +683,17 @@ prompt: |
 
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - web.search
+  - web.fetch
+  - mcp__context7__*
+  - mcp__firecrawl__*
+  - mcp__exa__*
+
 runtime:
   allowed_tools:
     - file.read
@@ -694,3 +705,7 @@ runtime:
     - mcp__context7__*
     - mcp__firecrawl__*
     - mcp__exa__*
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

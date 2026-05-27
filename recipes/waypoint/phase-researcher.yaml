@@ -541,26 +541,29 @@ prompt: |
   - User decided "simple UI, no animations" → don't research animation libraries
   - Marked as Claude's discretion → research options and recommend
 
-  ## Step 1.3: Load Graph Context
+  ## Step 1.3: Load Code-KG Context
 
-  Check for knowledge graph:
+  Check for a Code-KG knowledge base:
 
   ```bash
-  ls .planning/graphs/graph.json 2>/dev/null
+  code-kg agents status
   ```
 
-  If graph.json exists, check freshness:
+  Validate source/knowledge consistency:
 
   ```bash
-  node "$HOME/.claude/get-shit-done/bin/waypoint-tools.cjs" graphify status
+  code-kg check
+  code-kg drift
   ```
 
-  If the status response has `stale: true`, note for later: "Graph is {age_hours}h old -- treat semantic relationships as approximate." Include this annotation inline with any graph context injected below.
-
-  Query the graph for each major capability in the phase scope (2-3 queries per D-05, discovery-focused):
+  If `code-kg drift` reports findings, note them inline and treat generated
+  relationships as approximate until the knowledge base is refreshed. Query
+  Code-KG for each major capability in the phase scope (2-3 queries per D-05,
+  discovery-focused):
 
   ```bash
-  node "$HOME/.claude/get-shit-done/bin/waypoint-tools.cjs" graphify query "<capability-keyword>" --budget 1500
+  code-kg search "<capability-keyword>" --backend auto-semantic
+  code-kg section "<section-id>"
   ```
 
   Derive query terms from the phase goal and requirement descriptions. Examples:
@@ -847,6 +850,17 @@ prompt: |
 
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - web.search
+  - web.fetch
+  - mcp__context7__*
+  - mcp__firecrawl__*
+  - mcp__exa__*
+
 runtime:
   allowed_tools:
     - file.read
@@ -858,3 +872,7 @@ runtime:
     - mcp__context7__*
     - mcp__firecrawl__*
     - mcp__exa__*
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

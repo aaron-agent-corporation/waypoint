@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep|Glob|Read|LS|List|read_file|list_directory",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "code-kg hook-check"
+          }
+        ]
+      }
+    ]
+  }
+}

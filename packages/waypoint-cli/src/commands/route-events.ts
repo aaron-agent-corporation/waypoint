@@ -1,5 +1,4 @@
-import { readRouteEvents } from '@waypoint/folder-host'
-import { getWaypointRoute } from '@waypoint/folder-host'
+import { getWaypointRuntimeRoute, readWaypointRuntimeRouteEvents } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -11,7 +10,7 @@ export async function runRouteEventsCommand(args: readonly string[], io: Waypoin
   }
 
   const projectRoot = io.cwd ?? process.cwd()
-  const route = await getWaypointRoute(projectRoot, routeId.value)
+  const route = await getWaypointRuntimeRoute(projectRoot, routeId.value)
   if (!route) {
     io.stderr(`Route not found: ${routeId.value}`)
     return 1
@@ -29,7 +28,7 @@ export async function runRouteEventsCommand(args: readonly string[], io: Waypoin
   }
 
   try {
-    const page = await readRouteEvents(projectRoot, routeId.value, { limit: limit.value, offset: offset.value })
+    const page = await readWaypointRuntimeRouteEvents(projectRoot, routeId.value, { limit: limit.value, offset: offset.value })
     if (args.includes('--json')) {
       io.stdout(JSON.stringify({ route_id: routeId.value, ...page }, null, 2))
       return 0

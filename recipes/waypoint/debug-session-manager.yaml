@@ -321,6 +321,14 @@ prompt: |
   - [ ] Compact summary returned (at most 2K tokens)
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - task.spawn
+  - askuserquestion
+
 runtime:
   allowed_tools:
     - file.read
@@ -329,3 +337,7 @@ runtime:
     - file.search
     - task.spawn
     - askuserquestion
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

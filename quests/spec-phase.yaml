@@ -31,12 +31,27 @@ scaffolds:
                 - plan_ref: scout
                   title: Scout project and code context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: interview
                   title: Reduce ambiguity through questions or defaults
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: write-spec
                   title: Write SPEC.md and readiness handoff
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: handoff
+                      handoff:
+                        kind: spec_readiness
+                        gate_required: false
 
 metadata:
   source:

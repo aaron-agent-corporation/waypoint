@@ -173,6 +173,13 @@ prompt: |
   - [ ] Structured result returned to orchestrator
   </success_criteria>
 
+tools:
+  - file.read
+  - shell
+  - file.search
+  - web.search
+  - askuserquestion
+
 runtime:
   allowed_tools:
     - file.read
@@ -180,3 +187,7 @@ runtime:
     - file.search
     - web.search
     - askuserquestion
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

@@ -45,9 +45,17 @@ scaffolds:
                 - plan_ref: source-inventory
                   title: Inventory source documents and preserve original paths/hashes
                   wave: 1
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: document-review
                   title: Review each source document for type, parties, dates, confidence, and handling notes
                   wave: 1
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
             - phase_key: RP2
               phase_slug: document-organization
               lifecycle_phase: plan
@@ -55,12 +63,24 @@ scaffolds:
                 - plan_ref: packet-segmentation
                   title: Split or segment bundled packets into reviewable source-backed documents when appropriate
                   wave: 2
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: filename-placement
                   title: Propose canonical referral filenames and destination folders
                   wave: 2
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: ambiguity-review
                   title: Convert low-confidence placement and classification into review questions
                   wave: 2
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
             - phase_key: RP3
               phase_slug: medical-chronology
               lifecycle_phase: execute
@@ -81,6 +101,12 @@ scaffolds:
                         - 03-medical/medical-chronology-output/medical-chronology-timeline.pdf
                         - 03-medical/medical-chronology-output/medical-chronology-master-binder.pdf
                         - 03-medical/medical-chronology-output/extracted-visit-pdfs/
+                      artifact_verifier:
+                        kind: required_paths
+                        checks:
+                          - exists
+                          - non_empty
+                          - directory_non_empty
                       instructions:
                         - Start by extracting a structured date-of-service ledger, using bills/itemizations/ledgers as a first-pass DOS source and medical records for clinical confirmation.
                         - Fill structured visit-content JSON for each ledger encounter before rendering.
@@ -88,6 +114,8 @@ scaffolds:
                         - Create one extracted visit PDF per chronology row/date-of-service encounter.
                         - Deduplicate repeated provider productions from visible source buttons.
                         - Keep source files read-only and keep chronology artifacts review-aid only.
+                      node:
+                        type: recipe
                 - plan_ref: medical-chronology-adversarial-qc
                   title: Independently QC medical chronology before package dashboard/QC if medical records are present
                   wave: 3
@@ -98,6 +126,11 @@ scaffolds:
                         slug: firmvault-medical-chronology-adversarial-qc
                       output_artifacts:
                         - 03-medical/medical-chronology-output/adversarial-qc-report.md
+                      artifact_verifier:
+                        kind: required_paths
+                        checks:
+                          - exists
+                          - non_empty
                       review:
                         independent: true
                         checks:
@@ -108,6 +141,8 @@ scaffolds:
                           - chronology_first_binder_order
                           - attorney_facing_no_process_meta
                           - source_link_and_layout_qc
+                      node:
+                        type: recipe
             - phase_key: RP4
               phase_slug: package-drafting
               lifecycle_phase: execute
@@ -122,6 +157,13 @@ scaffolds:
                       output_artifacts:
                         - referral-package-build/attorney-handoff/START_HERE.html
                         - referral-package-build/attorney-handoff/START_HERE.pdf
+                      artifact_verifier:
+                        kind: required_paths
+                        checks:
+                          - exists
+                          - non_empty
+                      node:
+                        type: recipe
                 - plan_ref: package-index
                   title: Draft package index and cross-reference organized documents
                   wave: 4
@@ -130,6 +172,13 @@ scaffolds:
                       output_artifacts:
                         - referral-package-build/attorney-handoff/PACKAGE_INDEX.md
                         - referral-package-build/attorney-handoff/PACKAGE_FILE_INDEX.csv
+                      artifact_verifier:
+                        kind: required_paths
+                        checks:
+                          - exists
+                          - non_empty
+                      node:
+                        type: artifact
             - phase_key: RP5
               phase_slug: quality-control
               lifecycle_phase: verify
@@ -143,6 +192,13 @@ scaffolds:
                         slug: referral-package-package-qc
                       output_artifacts:
                         - referral-package-build/build-internal/package-qc-report.json
+                      artifact_verifier:
+                        kind: required_paths
+                        checks:
+                          - exists
+                          - non_empty
+                      node:
+                        type: recipe
                 - plan_ref: attorney-handoff-gate
                   title: Human gate before any attorney-facing handoff or external action
                   wave: 5
@@ -150,6 +206,9 @@ scaffolds:
                     waypoint:
                       gate:
                         required: true
+                        kind: attorney_handoff_approval
+                      node:
+                        type: gate
             - phase_key: RP6
               phase_slug: handoff
               lifecycle_phase: ship
@@ -157,3 +216,11 @@ scaffolds:
                 - plan_ref: handoff-ready-summary
                   title: Produce final handoff-ready summary and explicit unresolved-item checklist
                   wave: 6
+                  metadata:
+                    waypoint:
+                      node:
+                        type: handoff
+                      handoff:
+                        kind: attorney_referral_package
+                        gate_required: true
+                        gate_ref: attorney-handoff-gate

@@ -2,6 +2,16 @@ import { stat } from 'node:fs/promises'
 import { isAbsolute, join, normalize } from 'node:path'
 
 import { appendRouteEvent } from '../events/jsonl.ts'
+import {
+  approveWaypointBeadsRouteGate,
+  pauseWaypointBeadsRoute,
+  rejectWaypointBeadsRouteGate,
+  resolveWaypointBeadsRouteBlocker,
+  resumeWaypointBeadsRoute,
+  type WaypointBeadsTransitionOptions,
+} from '../beads/transitions.ts'
+import { readWaypointProjectConfig, type WaypointRouteBackendMode } from '../project/config.ts'
+import { getWaypointProjectPaths } from '../project/root.ts'
 import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
 
 import { getWaypointRoute, updateWaypointRoute } from './store.ts'
@@ -9,7 +19,7 @@ import { getWaypointRoute, updateWaypointRoute } from './store.ts'
 import type { WaypointFolderTask } from '../tasks/types.ts'
 import type { WaypointFolderRoute, WaypointFolderRouteStatus } from './types.ts'
 
-export interface RouteGateDecisionInput {
+export interface RouteGateDecisionInput extends WaypointBeadsTransitionOptions {
   readonly routeId: string
   readonly node: string
   readonly note?: string
@@ -17,24 +27,26 @@ export interface RouteGateDecisionInput {
   readonly now?: Date
 }
 
-export interface PauseWaypointRouteInput {
+export interface PauseWaypointRouteInput extends WaypointBeadsTransitionOptions {
   readonly routeId: string
   readonly reason?: string
   readonly now?: Date
 }
 
-export interface ResumeWaypointRouteInput {
+export interface ResumeWaypointRouteInput extends WaypointBeadsTransitionOptions {
   readonly routeId: string
   readonly now?: Date
 }
 
-export interface ResolveWaypointRouteBlockerInput {
+export interface ResolveWaypointRouteBlockerInput extends WaypointBeadsTransitionOptions {
   readonly routeId: string
   readonly note?: string
   readonly now?: Date
 }
 
 export async function approveRouteGate(projectRoot: string, input: RouteGateDecisionInput): Promise<WaypointFolderRoute> {
+  if ((await routeBackend(projectRoot)) === 'beads') return approveWaypointBeadsRouteGate(projectRoot, input)
+
   const route = await requireRoute(projectRoot, input.routeId)
   const previousNode = route.current_node
   const nextNode = input.nextNode ?? route.current_node
@@ -58,6 +70,8 @@ export async function approveRouteGate(projectRoot: string, input: RouteGateDeci
 }
 
 export async function rejectRouteGate(projectRoot: string, input: RouteGateDecisionInput): Promise<WaypointFolderRoute> {
+  if ((await routeBackend(projectRoot)) === 'beads') return rejectWaypointBeadsRouteGate(projectRoot, input)
+
   const route = await requireRoute(projectRoot, input.routeId)
   const updated = await updateWaypointRoute(projectRoot, route.id, {
     status: 'blocked',
@@ -78,6 +92,8 @@ export async function rejectRouteGate(projectRoot: string, input: RouteGateDecis
 }
 
 export async function pauseWaypointRoute(projectRoot: string, input: PauseWaypointRouteInput): Promise<WaypointFolderRoute> {
+  if ((await routeBackend(projectRoot)) === 'beads') return pauseWaypointBeadsRoute(projectRoot, input)
+
   const route = await requireRoute(projectRoot, input.routeId)
   const updated = await updateWaypointRoute(projectRoot, route.id, {
     status: 'blocked',
@@ -95,6 +111,8 @@ export async function pauseWaypointRoute(projectRoot: string, input: PauseWaypoi
 }
 
 export async function resumeWaypointRoute(projectRoot: string, input: ResumeWaypointRouteInput): Promise<WaypointFolderRoute> {
+  if ((await routeBackend(projectRoot)) === 'beads') return resumeWaypointBeadsRoute(projectRoot, input)
+
   const route = await requireRoute(projectRoot, input.routeId)
   const updated = await updateWaypointRoute(projectRoot, route.id, {
     status: 'active',
@@ -112,6 +130,8 @@ export async function resolveWaypointRouteBlocker(
   projectRoot: string,
   input: ResolveWaypointRouteBlockerInput,
 ): Promise<WaypointFolderRoute> {
+  if ((await routeBackend(projectRoot)) === 'beads') return resolveWaypointBeadsRouteBlocker(projectRoot, input)
+
   const route = await requireRoute(projectRoot, input.routeId)
   const blockedTask = await currentBlockedTask(projectRoot, route)
   if (!blockedTask) throw new Error(`No blocked task found for route ${route.id}`)
@@ -143,6 +163,16 @@ export async function resolveWaypointRouteBlocker(
     },
   })
   return updated
+}
+
+async function routeBackend(projectRoot: string): Promise<WaypointRouteBackendMode> {
+  try {
+    const config = await readWaypointProjectConfig(getWaypointProjectPaths(projectRoot).configPath)
+    return config.backend.route
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') return 'folder'
+    throw error
+  }
 }
 
 async function requireRoute(projectRoot: string, routeId: string): Promise<WaypointFolderRoute> {

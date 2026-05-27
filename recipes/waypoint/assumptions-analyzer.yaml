@@ -116,6 +116,11 @@ prompt: |
   - Do NOT invent assumptions about code you haven't read -- read first, then form opinions
   </anti_patterns>
 
+tools:
+  - file.read
+  - shell
+  - file.search
+
 runtime:
   kind: agent
   allowed_tools:
@@ -124,6 +129,8 @@ runtime:
     - file.search
 
 metadata:
+  waypoint:
+    external_side_effects: forbidden
   owner: aaron
   tags:
     - waypoint-port

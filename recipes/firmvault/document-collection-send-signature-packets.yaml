@@ -104,7 +104,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_recipe: recipes/firmvault-document-collection-send-signature-packets
     source_files:
     - recipe.yaml

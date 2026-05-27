@@ -30,12 +30,44 @@ scaffolds:
                 - plan_ref: audit-fix-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: audit-fix-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: audit-fix-run-code-reviewer
+                  title: Run Code Reviewer
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-code-reviewer
+                - plan_ref: audit-fix-run-code-fixer
+                  title: Run Code Fixer
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-code-fixer
+                - plan_ref: audit-fix-run-verifier
+                  title: Run Verifier
+                  wave: 22
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-verifier
                 - plan_ref: audit-fix-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

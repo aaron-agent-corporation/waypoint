@@ -63,7 +63,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control_workflow
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflow: workflows/firmvault-settlement-processing.yaml
     source_node: prepare_authorization_to_settle
     external_side_effects: forbidden

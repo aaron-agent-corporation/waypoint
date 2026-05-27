@@ -29,12 +29,35 @@ scaffolds:
                 - plan_ref: plan-review-convergence-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: plan-review-convergence-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: plan-review-convergence-run-planner
+                  title: Run Planner
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-planner
+                - plan_ref: plan-review-convergence-run-plan-checker
+                  title: Run Plan Checker
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-plan-checker
                 - plan_ref: plan-review-convergence-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

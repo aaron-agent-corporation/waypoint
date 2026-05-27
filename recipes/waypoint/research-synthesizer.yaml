@@ -253,8 +253,17 @@ prompt: |
 
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+
 runtime:
   allowed_tools:
     - file.read
     - file.write
     - shell
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

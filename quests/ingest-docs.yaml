@@ -29,12 +29,35 @@ scaffolds:
                 - plan_ref: ingest-docs-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: ingest-docs-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: ingest-docs-run-doc-classifier
+                  title: Run Doc Classifier
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-doc-classifier
+                - plan_ref: ingest-docs-run-doc-synthesizer
+                  title: Run Doc Synthesizer
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-doc-synthesizer
                 - plan_ref: ingest-docs-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

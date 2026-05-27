@@ -14,10 +14,10 @@
 
 Read these Mission Control workflow sources before implementation and cite them in Recipe/Quest metadata:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-settlement-processing.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-settlement-lien-negotiation.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-lien-resolution.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-final-distribution.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-settlement-processing.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-settlement-lien-negotiation.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-lien-resolution.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-final-distribution.yaml`
 
 No matching Mission Control per-recipe directories are required for this slice. If none exist for a target slug, use workflow-backed Recipe manifests and do not claim `recipe.yaml`/`SOUL.md`/`REVIEW.md` provenance.
 
@@ -192,7 +192,7 @@ Modify `packages/waypoint-folder-host/src/firmvault/state.ts`:
 1. Use Mission Control workflow node `task_goal` and canonical paths as source content.
 2. Include metadata:
    - `source_port.status: ported_from_mission_control_workflow`
-   - `source_repository: /Users/aaronwhaley/Github/mission-control`
+   - `source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control`
    - `source_workflow: workflows/<workflow>.yaml`
    - `source_node: <node>`
    - `external_side_effects: forbidden`

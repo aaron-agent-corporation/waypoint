@@ -3,7 +3,7 @@ kind: firmvault_workflow_port_map
 source:
   repositories:
     mission_control:
-      path: /Users/aaronwhaley/Github/mission-control
+      path: /Users/aaronwhaley/Github/Active Projects/mission-control
       branch: feat/waypoint-runtime-slice
       head: 5585a59
   workflow_glob: workflows/firmvault*.yaml

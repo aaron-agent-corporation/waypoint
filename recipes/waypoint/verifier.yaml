@@ -836,9 +836,19 @@ prompt: |
   - [ ] Results returned to orchestrator (NOT committed)
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+
 runtime:
   allowed_tools:
     - file.read
     - file.write
     - shell
     - file.search
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

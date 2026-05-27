@@ -683,6 +683,14 @@ prompt: |
   - [ ] Completion format returned to orchestrator
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - file.edit
+  - shell
+  - file.search
+  - mcp__context7__*
+
 runtime:
   allowed_tools:
     - file.read
@@ -691,3 +699,7 @@ runtime:
     - shell
     - file.search
     - mcp__context7__*
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

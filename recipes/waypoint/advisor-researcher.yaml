@@ -138,6 +138,13 @@ prompt: |
   - Do NOT produce extended analysis paragraphs beyond the single rationale paragraph
   </anti_patterns>
 
+tools:
+  - file.read
+  - shell
+  - file.search
+  - web.search
+  - web.fetch
+
 runtime:
   kind: agent
   allowed_tools:
@@ -148,6 +155,8 @@ runtime:
     - web.fetch
 
 metadata:
+  waypoint:
+    external_side_effects: forbidden
   owner: aaron
   tags:
     - waypoint-port

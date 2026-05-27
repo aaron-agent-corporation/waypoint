@@ -17,6 +17,7 @@ export interface WaypointFolderRoute {
 }
 
 export interface CreateWaypointRouteInput {
+  readonly id?: string
   readonly quest: string
   readonly subject: WaypointFolderRouteSubject
   readonly current_node?: string | null

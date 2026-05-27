@@ -30,12 +30,24 @@ scaffolds:
                 - plan_ref: prepare-cloud-plan
                   title: Prepare remote planning context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: review-cloud-plan
                   title: Review and comment on generated plan
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: import-plan
                   title: Import accepted plan back into Waypoint context
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

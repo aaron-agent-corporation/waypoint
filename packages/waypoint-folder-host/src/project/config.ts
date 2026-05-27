@@ -2,6 +2,11 @@ import { readFile } from 'node:fs/promises'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
 export type WaypointRecipeRuntimeMode = 'null' | 'local'
+export type WaypointRouteBackendMode = 'folder' | 'beads'
+
+export interface WaypointProjectBackendConfig {
+  readonly route: WaypointRouteBackendMode
+}
 
 export interface WaypointProjectRuntimeConfig {
   readonly recipe: WaypointRecipeRuntimeMode | null
@@ -13,18 +18,26 @@ export interface WaypointProjectConfig {
   readonly schema_version: 1
   readonly enabled: boolean
   readonly quest: string
+  readonly backend: WaypointProjectBackendConfig
   readonly runtime: WaypointProjectRuntimeConfig
   readonly created_at: string
   readonly updated_at: string
 }
 
-export function createWaypointProjectConfig(input: { quest: string; now?: Date }): WaypointProjectConfig {
+export function createWaypointProjectConfig(input: {
+  quest: string
+  backend?: WaypointRouteBackendMode
+  now?: Date
+}): WaypointProjectConfig {
   const now = (input.now ?? new Date()).toISOString()
 
   return {
     schema_version: 1,
     enabled: true,
     quest: input.quest,
+    backend: {
+      route: input.backend ?? 'folder',
+    },
     runtime: {
       recipe: null,
     },
@@ -52,9 +65,17 @@ export function parseWaypointProjectConfig(text: string): WaypointProjectConfig 
     schema_version: 1,
     enabled: parsed.enabled === true,
     quest: parsed.quest,
+    backend: parseBackendConfig(parsed.backend),
     runtime: parseRuntimeConfig(parsed.runtime),
     created_at: String(parsed.created_at ?? ''),
     updated_at: String(parsed.updated_at ?? ''),
+  }
+}
+
+function parseBackendConfig(value: unknown): WaypointProjectBackendConfig {
+  const backend = isRecord(value) ? value : {}
+  return {
+    route: backend.route === 'beads' ? 'beads' : 'folder',
   }
 }
 

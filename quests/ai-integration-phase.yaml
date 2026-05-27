@@ -31,12 +31,24 @@ scaffolds:
                 - plan_ref: select-framework
                   title: Select appropriate AI framework
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: research-ai-domain
                   title: Research implementation and domain constraints
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: design-evals
                   title: Design evaluation strategy and AI-SPEC
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

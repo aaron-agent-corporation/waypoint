@@ -14,9 +14,9 @@
 
 Read these Mission Control workflow sources before implementation and cite them in metadata:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-track-offers.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-offer-evaluation.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-negotiate-claim.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-track-offers.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-offer-evaluation.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-negotiate-claim.yaml`
 
 No matching Mission Control `recipes/firmvault-negotiation-*` directories currently exist, so this slice must use workflow-backed Recipe manifests and must not claim per-recipe `recipe.yaml`/`SOUL.md`/`REVIEW.md` provenance.
 
@@ -137,7 +137,7 @@ Modify `packages/waypoint-folder-host/src/firmvault/state.ts`:
 1. Use the Mission Control workflow node `task_goal` and canonical paths as source content.
 2. Include metadata:
    - `source_port.status: ported_from_mission_control_workflow`
-   - `source_repository: /Users/aaronwhaley/Github/mission-control`
+   - `source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control`
    - `source_workflow: workflows/<workflow>.yaml`
    - `source_node: <node>`
    - `external_side_effects: forbidden`
