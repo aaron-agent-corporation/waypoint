@@ -14,7 +14,7 @@
 
 Read this Mission Control workflow source before implementation and cite it in Recipe/Quest metadata:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-close-case.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-close-case.yaml`
 
 No matching Mission Control per-recipe directories are required for this slice. If none exist for a target slug, use workflow-backed Recipe manifests and do not claim `recipe.yaml`/`SOUL.md`/`REVIEW.md` provenance.
 
@@ -128,7 +128,7 @@ Modify `packages/waypoint-folder-host/src/firmvault/state.ts`:
 1. Use Mission Control workflow node `task_goal` text as source content.
 2. Include metadata:
    - `source_port.status: ported_from_mission_control_workflow`
-   - `source_repository: /Users/aaronwhaley/Github/mission-control`
+   - `source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control`
    - `source_workflow: workflows/firmvault-close-case.yaml`
    - `source_node: <node>`
    - `external_side_effects: forbidden`

@@ -1,5 +1,5 @@
 import { appendTaskDiscussionMessage, readTaskDiscussionMessages } from '@waypoint/folder-host'
-import { getWaypointTask } from '@waypoint/folder-host'
+import { getWaypointRuntimeTask } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -17,7 +17,7 @@ export async function runDiscussCommand(args: readonly string[], io: WaypointCli
     await appendTaskDiscussionMessage(projectRoot, taskId, { author, content: message })
   }
 
-  const task = await getWaypointTask(projectRoot, taskId)
+  const task = await getWaypointRuntimeTask(projectRoot, taskId)
   if (!task) {
     io.stderr(`Task not found: ${taskId}`)
     return 1

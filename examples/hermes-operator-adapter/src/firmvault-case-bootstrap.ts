@@ -5,6 +5,7 @@ import { parse as yamlParse } from 'yaml'
 import { runSafeWaypointCommand, type WaypointCommandExecutor } from './safe-waypoint-command-runner.ts'
 
 export type FirmVaultCaseType = 'personal_injury'
+export type WaypointRouteBackendMode = 'folder' | 'beads'
 
 export interface FirmVaultCasesRootRecord {
   readonly key: string
@@ -21,6 +22,8 @@ export interface FirmVaultNewCaseRequest {
   readonly casesRootKey: string
   readonly caseName: string
   readonly caseType: FirmVaultCaseType
+  readonly backend?: WaypointRouteBackendMode
+  readonly initBeads?: boolean
   readonly start?: boolean
 }
 
@@ -34,11 +37,19 @@ export interface FirmVaultHermesBootstrapResult {
   readonly hermesProfile: 'paralegal'
   readonly caseRoot: string
   readonly caseSlug: string
+  readonly backend: WaypointRouteBackendMode
   readonly routeId: string | null
+  readonly beads: FirmVaultHermesBeadsRouteSummary | null
   readonly landmarkCount: number
   readonly stdout: string
   readonly stderr: string
   readonly summary: string
+}
+
+export interface FirmVaultHermesBeadsRouteSummary {
+  readonly rootIssueId: string
+  readonly issueCount: number
+  readonly dependencyCount: number
 }
 
 export type FirmVaultDocumentKind = 'medical_records' | 'bill' | 'insurance' | 'police_report' | 'correspondence' | 'unknown'
@@ -161,7 +172,9 @@ export interface FirmVaultHermesStateSetResult {
 interface FirmVaultBootstrapJson {
   readonly case_root?: unknown
   readonly case_slug?: unknown
+  readonly backend?: unknown
   readonly route_id?: unknown
+  readonly beads?: unknown
   readonly landmarks?: unknown
 }
 
@@ -254,6 +267,8 @@ export function createFirmVaultCaseWithHermesOperator(
     request.caseName,
     '--case-type',
     'personal-injury',
+    ...(request.backend ? ['--backend', request.backend] : []),
+    ...(request.initBeads ? ['--init-beads'] : []),
     ...(request.start ? ['--start'] : []),
     '--json',
   ]
@@ -264,7 +279,9 @@ export function createFirmVaultCaseWithHermesOperator(
     const parsed = parseBootstrapJson(commandResult.stdout)
     const caseSlug = stringJsonField(parsed.case_slug, 'case_slug')
     const caseRoot = stringJsonField(parsed.case_root, 'case_root')
+    const backend = routeBackendJsonField(parsed.backend)
     const routeId = typeof parsed.route_id === 'string' ? parsed.route_id : null
+    const beads = beadsRouteJsonField(parsed.beads)
     const landmarkCount = readLandmarkCount(parsed.landmarks)
 
     return {
@@ -273,11 +290,13 @@ export function createFirmVaultCaseWithHermesOperator(
       hermesProfile: casesRoot.hermesProfile,
       caseRoot,
       caseSlug,
+      backend,
       routeId,
+      beads,
       landmarkCount,
       stdout: commandResult.stdout,
       stderr: commandResult.stderr,
-      summary: `FirmVault case ${caseSlug} bootstrapped under ${casesRoot.key} with Hermes profile ${casesRoot.hermesProfile}.`,
+      summary: `FirmVault case ${caseSlug} bootstrapped under ${casesRoot.key} with Hermes profile ${casesRoot.hermesProfile} using ${backend} backend.`,
     }
   })
 }
@@ -595,6 +614,22 @@ function readLandmarkCount(value: unknown): number {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return 0
   const total = (value as Record<string, unknown>).total
   return typeof total === 'number' ? total : 0
+}
+
+function routeBackendJsonField(value: unknown): WaypointRouteBackendMode {
+  if (value === undefined || value === null) return 'folder'
+  if (value === 'folder' || value === 'beads') return value
+  throw new Error(`FirmVault bootstrap JSON has unsupported backend: ${String(value)}`)
+}
+
+function beadsRouteJsonField(value: unknown): FirmVaultHermesBeadsRouteSummary | null {
+  if (value === undefined || value === null) return null
+  const beads = asRecord(value, 'FirmVault bootstrap JSON beads must be an object or null')
+  return {
+    rootIssueId: stringJsonField(beads.root_issue_id, 'beads.root_issue_id'),
+    issueCount: numberJsonField(beads.issue_count, 'beads.issue_count'),
+    dependencyCount: numberJsonField(beads.dependency_count, 'beads.dependency_count'),
+  }
 }
 
 function stringJsonField(value: unknown, field: string): string {

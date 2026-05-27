@@ -32,12 +32,27 @@ scaffolds:
                 - plan_ref: spike-frame
                   title: Frame idea or frontier opportunity
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: experiment
                   title: Build and observe focused experiments
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: wrap-up
                   title: Capture findings and handoff knowledge
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: handoff
+                      handoff:
+                        kind: spike_findings
+                        gate_required: false
 
 metadata:
   source:

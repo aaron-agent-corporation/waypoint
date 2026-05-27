@@ -3,6 +3,13 @@ import { isAbsolute, join, relative, sep } from 'node:path'
 
 import { loadBundledWaypointCatalog } from '../catalog/bundled.ts'
 import { installQuestCatalog, type InstallQuestCatalogResult } from '../catalog/install.ts'
+import {
+  checkWaypointBeadsWorkspace,
+  formatWaypointBeadsWorkspaceReadinessFailure,
+  initializeWaypointBeadsWorkspace,
+  type WaypointBeadsWorkspaceOptions,
+} from '../beads/workspace.ts'
+import type { WaypointRouteBackendMode } from '../project/config.ts'
 import { initWaypointProject, type InitWaypointProjectResult } from '../project/init.ts'
 import { startQuestRoute, type StartedQuestRoute } from '../routes/start.ts'
 import { FIRMVAULT_REQUIRED_CASE_PATHS } from './case-folder'
@@ -25,6 +32,9 @@ export interface FirmVaultCaseBootstrapFolderResult {
 
 export interface FirmVaultCaseActivationInput extends FirmVaultCaseBootstrapInput {
   readonly startRoute?: boolean
+  readonly backend?: WaypointRouteBackendMode
+  readonly initBeads?: boolean
+  readonly beadsWorkspace?: WaypointBeadsWorkspaceOptions
 }
 
 export interface FirmVaultCaseActivationResult extends FirmVaultCaseBootstrapFolderResult {
@@ -37,9 +47,24 @@ export interface FirmVaultCaseActivationResult extends FirmVaultCaseBootstrapFol
 export async function bootstrapFirmVaultCase(
   input: FirmVaultCaseActivationInput,
 ): Promise<FirmVaultCaseActivationResult> {
+  const backend = input.backend ?? 'folder'
+  await assertBeadsBootstrapWorkspacePreconditions(input, backend)
+
   const folder = await createFirmVaultCaseFolder(input)
+  if (backend === 'beads' && input.initBeads) {
+    const readiness = await initializeWaypointBeadsWorkspace({
+      ...input.beadsWorkspace,
+      cwd: input.beadsWorkspace?.cwd ?? folder.caseRoot,
+      prefix: input.beadsWorkspace?.prefix ?? folder.caseSlug,
+    })
+    if (!readiness.ok) {
+      throw new Error(formatWaypointBeadsWorkspaceReadinessFailure(readiness))
+    }
+  }
+
   const project = await initWaypointProject(folder.caseRoot, {
     quest: 'firmvault',
+    ...(input.backend ? { backend: input.backend } : {}),
     now: input.now,
   })
   const catalog = await installQuestCatalog(folder.caseRoot, await loadBundledWaypointCatalog(), {
@@ -51,7 +76,18 @@ export async function bootstrapFirmVaultCase(
     now: input.now,
   })
   const route = input.startRoute
-    ? await startQuestRoute(folder.caseRoot, { quest: 'firmvault', now: input.now })
+    ? await startQuestRoute(folder.caseRoot, {
+      quest: 'firmvault',
+      now: input.now,
+      ...(input.beadsWorkspace
+        ? {
+          beadsWorkspace: {
+            ...input.beadsWorkspace,
+            cwd: input.beadsWorkspace.cwd ?? folder.caseRoot,
+          },
+        }
+        : {}),
+    })
     : undefined
 
   return {
@@ -60,6 +96,38 @@ export async function bootstrapFirmVaultCase(
     catalog,
     firmvaultState,
     ...(route ? { route } : {}),
+  }
+}
+
+async function assertBeadsBootstrapWorkspacePreconditions(
+  input: FirmVaultCaseActivationInput,
+  backend: WaypointRouteBackendMode,
+): Promise<void> {
+  if (backend !== 'beads') {
+    if (input.initBeads) {
+      throw new Error('FirmVault Beads workspace initialization requires --backend beads.')
+    }
+    return
+  }
+
+  if (!input.startRoute && !input.initBeads) return
+
+  const readiness = await checkWaypointBeadsWorkspace({
+    ...input.beadsWorkspace,
+    cwd: input.beadsWorkspace?.cwd ?? input.casesRoot,
+  })
+
+  if (input.initBeads) {
+    if (readiness.status === 'missing-command') {
+      throw new Error(formatWaypointBeadsWorkspaceReadinessFailure(readiness))
+    }
+    return
+  }
+
+  if (!readiness.ok) {
+    throw new Error(
+      `Beads-backed FirmVault bootstrap with --start requires an existing Beads workspace at the cases root, or --init-beads to create one in the new case root. ${formatWaypointBeadsWorkspaceReadinessFailure(readiness)}`,
+    )
   }
 }
 

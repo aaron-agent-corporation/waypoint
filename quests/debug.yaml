@@ -29,12 +29,24 @@ scaffolds:
                 - plan_ref: debug-intake
                   title: Capture symptoms and current session state
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: root-cause-investigation
                   title: Investigate root cause with debugger recipe
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: fix-or-report
                   title: Apply fix or return root cause report
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

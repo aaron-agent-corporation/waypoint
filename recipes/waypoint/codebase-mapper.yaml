@@ -859,9 +859,19 @@ prompt: |
   - [ ] Confirmation returned (not document contents)
   </success_criteria>
 
+tools:
+  - file.read
+  - shell
+  - file.search
+  - file.write
+
 runtime:
   allowed_tools:
     - file.read
     - shell
     - file.search
     - file.write
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

@@ -183,6 +183,13 @@ prompt: |
   - When evidence is genuinely insufficient, report UNSCORED with "insufficient data" -- do not guess
   </constraints>
 
+tools:
+  - file.read
+
 runtime:
   allowed_tools:
     - file.read
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

@@ -106,6 +106,7 @@ scaffolds:
                 type: gate
               gate:
                 required: true
+                kind: build_approval
       - phase_key: '20'
         phase_slug: build
         lifecycle_phase: build
@@ -167,6 +168,7 @@ scaffolds:
                 type: gate
               gate:
                 required: true
+                kind: ship_approval
       - phase_key: '60'
         phase_slug: reflect
         lifecycle_phase: reflect

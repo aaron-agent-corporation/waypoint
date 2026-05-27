@@ -39,6 +39,10 @@ scaffolds:
         - plan_ref: analysis-brief-or-prfaq
           title: Produce product brief or PRFAQ direction
           wave: 10
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
       - phase_key: '20'
         phase_slug: planning
         lifecycle_phase: planning
@@ -55,6 +59,10 @@ scaffolds:
         - plan_ref: planning-ux
           title: Create UX design when UI is in scope
           wave: 30
+          metadata:
+            waypoint:
+              node:
+                type: checkpoint
       - phase_key: '30'
         phase_slug: solutioning
         lifecycle_phase: solutioning

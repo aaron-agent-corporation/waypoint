@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import type { WaypointBeadsCliCommandInput, WaypointBeadsCliCommandOutput, WaypointBeadsCliCommandRunner } from '../beads/cli-client.ts'
 import { FIRMVAULT_REQUIRED_CASE_PATHS, inspectFirmVaultCaseFolder } from './case-folder'
 import { bootstrapFirmVaultCase, createFirmVaultCaseFolder } from './bootstrap'
 
@@ -90,11 +91,13 @@ describe('createFirmVaultCaseFolder', () => {
 
     expect(result.caseSlug).toBe('sam-client-v-city-bus')
     expect(result.project.config.quest).toBe('firmvault')
+    expect(result.project.config.backend).toEqual({ route: 'folder' })
     expect(result.catalog.quest.slug).toBe('firmvault')
     expect(result.catalog.recipes.length).toBeGreaterThan(0)
     expect(result.firmvaultState.projection.landmarks.case_setup_complete.satisfied).toBe(false)
     expect(result.route?.id).toBe('route-001')
     expect(result.route?.quest).toBe('firmvault')
+    expect(result.route?.backend).toBe('folder')
 
     expect(await pathExists(join(result.caseRoot, '.waypoint/config.yaml'))).toBe(true)
     expect(await pathExists(join(result.caseRoot, '.waypoint/quests/firmvault.yaml'))).toBe(true)
@@ -102,4 +105,104 @@ describe('createFirmVaultCaseFolder', () => {
     expect(await pathExists(join(result.caseRoot, '.waypoint/routes/route-001.yaml'))).toBe(true)
     expect(await pathExists(join(result.caseRoot, '.waypoint/tasks/tasks.yaml'))).toBe(true)
   })
+
+  it('can bootstrap a case with the Beads route backend selected', async () => {
+    const casesRoot = await tempCasesRoot()
+
+    const result = await bootstrapFirmVaultCase({
+      casesRoot,
+      caseName: 'Beads Client v. Runtime Co',
+      caseType: 'personal_injury',
+      backend: 'beads',
+      now: new Date('2026-05-08T13:30:00.000Z'),
+    })
+
+    expect(result.project.config.backend).toEqual({ route: 'beads' })
+    expect(result.project.config.quest).toBe('firmvault')
+    expect(result.route).toBeUndefined()
+  })
+
+  it('fails before creating a case when Beads start is requested without a workspace', async () => {
+    const casesRoot = await tempCasesRoot()
+    const runner = recordingRunner([
+      {
+        exitCode: 1,
+        signal: null,
+        stdout: JSON.stringify({
+          error: 'no_beads_directory',
+          message: 'No active beads workspace found.',
+        }),
+        stderr: '',
+      },
+    ])
+
+    await expect(bootstrapFirmVaultCase({
+      casesRoot,
+      caseName: 'Beads Start Client',
+      caseType: 'personal_injury',
+      backend: 'beads',
+      startRoute: true,
+      beadsWorkspace: { runner },
+    })).rejects.toThrow('requires an existing Beads workspace')
+
+    expect(runner.calls[0]).toMatchObject({ args: ['where', '--json'], cwd: casesRoot })
+    expect(await pathExists(join(casesRoot, 'beads-start-client'))).toBe(false)
+  })
+
+  it('can initialize a case-local Beads workspace during Beads bootstrap', async () => {
+    const casesRoot = await tempCasesRoot()
+    const caseRoot = join(casesRoot, 'beads-init-client')
+    const runner = recordingRunner([
+      {
+        exitCode: 1,
+        signal: null,
+        stdout: JSON.stringify({
+          error: 'no_beads_directory',
+          message: 'No active beads workspace found.',
+        }),
+        stderr: '',
+      },
+      { exitCode: 0, signal: null, stdout: 'initialized', stderr: '' },
+      {
+        exitCode: 0,
+        signal: null,
+        stdout: JSON.stringify({ path: join(caseRoot, '.beads'), prefix: 'beads-init-client' }),
+        stderr: '',
+      },
+    ])
+
+    const result = await bootstrapFirmVaultCase({
+      casesRoot,
+      caseName: 'Beads Init Client',
+      caseType: 'personal_injury',
+      backend: 'beads',
+      initBeads: true,
+      beadsWorkspace: { runner },
+      now: new Date('2026-05-08T13:45:00.000Z'),
+    })
+
+    expect(result.caseRoot).toBe(caseRoot)
+    expect(result.project.config.backend).toEqual({ route: 'beads' })
+    expect(result.route).toBeUndefined()
+    expect(runner.calls.map((call) => ({ args: call.args, cwd: call.cwd }))).toEqual([
+      { args: ['where', '--json'], cwd: casesRoot },
+      { args: ['init', '--non-interactive', '--skip-agents', '--skip-hooks', '--prefix', 'beads-init-client'], cwd: caseRoot },
+      { args: ['where', '--json'], cwd: caseRoot },
+    ])
+  })
 })
+
+function recordingRunner(outputs: readonly WaypointBeadsCliCommandOutput[]): WaypointBeadsCliCommandRunner & {
+  readonly calls: WaypointBeadsCliCommandInput[]
+} {
+  const calls: WaypointBeadsCliCommandInput[] = []
+  return {
+    calls,
+    async run(input) {
+      calls.push(input)
+      const output = outputs[calls.length - 1]
+      if (!output) throw new Error(`Unexpected command: ${input.command} ${input.args.join(' ')}`)
+      return output
+    },
+  }
+}

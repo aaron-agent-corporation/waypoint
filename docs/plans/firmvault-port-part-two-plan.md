@@ -25,7 +25,7 @@
   - `firmvault-medical-provider-setup-case`
   - `firmvault-client-check-in-start-cadence`
   - `firmvault-client-check-in-prepare-handoff`
-- Mission Control source recipe directories exist at `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/` for all eight slugs, and each contains:
+- Mission Control source recipe directories exist at `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/` for all eight slugs, and each contains:
   - `recipe.yaml`
   - `SOUL.md`
   - `REVIEW.md`
@@ -86,7 +86,7 @@ Part Two is complete only when all of these are true:
 - Create: `src/__tests__/firmvault-recipe-port.test.ts`
 - Read: `quests/firmvault.yaml`
 - Read: `recipes/firmvault/*.yaml`
-- Read source: `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/{recipe.yaml,SOUL.md,REVIEW.md}`
+- Read source: `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/{recipe.yaml,SOUL.md,REVIEW.md}`
 
 **Test requirements:**
 
@@ -103,7 +103,7 @@ Part Two is complete only when all of these are true:
   - `prompt` includes `local Waypoint project folder`
   - `prompt` does not include the exact placeholder phrase from Part One
   - `metadata.source_port.status === "ported_from_mission_control"`
-  - `metadata.source_port.source_repository === "/Users/aaronwhaley/Github/mission-control"`
+  - `metadata.source_port.source_repository === "/Users/aaronwhaley/Github/Active Projects/mission-control"`
   - `metadata.source_port.source_recipe === "recipes/<slug>"`
   - `metadata.source_port.source_files` includes `recipe.yaml`, `SOUL.md`, and `REVIEW.md`
   - `metadata.source_port.external_side_effects === "forbidden"`
@@ -124,9 +124,9 @@ Expected: FAIL because the Part One manifests still use `placeholder_until_fvp2`
 **Slug:** `firmvault-case-setup-create-shell`
 
 **Source files:**
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-case-setup-create-shell/recipe.yaml`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-case-setup-create-shell/SOUL.md`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-case-setup-create-shell/REVIEW.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-case-setup-create-shell/recipe.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-case-setup-create-shell/SOUL.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-case-setup-create-shell/REVIEW.md`
 
 **Port requirements:**
 
@@ -151,9 +151,9 @@ Expected: still FAIL until all eight recipes are ported, but this slug's placeho
 - `firmvault-document-collection-send-signature-packets`
 
 **Source files:**
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/recipe.yaml`
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/SOUL.md`
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/REVIEW.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/recipe.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/SOUL.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/REVIEW.md`
 
 **Port requirements:**
 
@@ -177,9 +177,9 @@ pnpm exec vitest run src/__tests__/firmvault-recipe-port.test.ts
 - `firmvault-client-check-in-prepare-handoff`
 
 **Source files:**
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/recipe.yaml`
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/SOUL.md`
-- `/Users/aaronwhaley/Github/mission-control/recipes/<slug>/REVIEW.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/recipe.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/SOUL.md`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/<slug>/REVIEW.md`
 
 **Port requirements:**
 

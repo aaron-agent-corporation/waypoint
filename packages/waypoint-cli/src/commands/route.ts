@@ -1,4 +1,4 @@
-import { getWaypointRoute } from '@waypoint/folder-host'
+import { getWaypointRuntimeRoute } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -9,7 +9,7 @@ export async function runRouteCommand(args: readonly string[], io: WaypointCliIo
     return 1
   }
 
-  const route = await getWaypointRoute(io.cwd ?? process.cwd(), routeId.value)
+  const route = await getWaypointRuntimeRoute(io.cwd ?? process.cwd(), routeId.value)
   if (!route) {
     io.stderr(`Route not found: ${routeId.value}`)
     return 1

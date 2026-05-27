@@ -29,6 +29,8 @@ tools:
   - search_files
 
 metadata:
+  waypoint:
+    external_side_effects: forbidden
   owner: aaron
   tags:
     - review

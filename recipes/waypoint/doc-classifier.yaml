@@ -175,8 +175,17 @@ prompt: |
   - [ ] Confirmation line returned to orchestrator (≤ 1 line)
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - file.search
+
 runtime:
   allowed_tools:
     - file.read
     - file.write
     - file.search
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

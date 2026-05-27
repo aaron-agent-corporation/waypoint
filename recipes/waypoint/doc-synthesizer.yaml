@@ -212,9 +212,19 @@ prompt: |
   - [ ] Confirmation returned (≤ 10 lines)
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - file.search
+  - shell
+
 runtime:
   allowed_tools:
     - file.read
     - file.write
     - file.search
     - shell
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

@@ -17,11 +17,11 @@ Primary source commands run before writing this plan showed:
 - Waypoint repo: `/Users/aaronwhaley/Github/waypoint`
   - `git log --oneline -20` showed `42dd86d docs(firmvault): plan folder workflow port` at HEAD.
   - `git status --short --branch` showed `## main...origin/main [ahead 1]` before this plan file was written.
-- Mission Control repo: `/Users/aaronwhaley/Github/mission-control`
+- Mission Control repo: `/Users/aaronwhaley/Github/Active Projects/mission-control`
   - `git status --short --branch` showed `## feat/waypoint-runtime-slice`.
   - `git log --oneline -5` showed `5585a59 feat(waypoint): add agent authorship + loop prevention to discussion messages (W1)` at HEAD.
 - Current Mission Control FirmVault workflow source:
-  - 22 files matched `/Users/aaronwhaley/Github/mission-control/workflows/firmvault*.yaml`.
+  - 22 files matched `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault*.yaml`.
   - Parsing those files produced 43 FirmVault workflow entries when counting both standalone workflow YAML files and the aggregate `firmvault-workflows.yaml` entries.
 - Current folder-host behavior relevant to Part One:
   - `packages/waypoint-folder-host/src/catalog/bundled.ts` recursively loads YAML manifests under `quests/` and `recipes/` and resolves each Quest's `recipes:` list.
@@ -83,14 +83,14 @@ Part One is complete only when all of these are true:
 
 **Files:**
 - Create: `src/__tests__/firmvault-workflow-port-map.test.ts`
-- Read source: `/Users/aaronwhaley/Github/mission-control/workflows/firmvault*.yaml`
+- Read source: `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault*.yaml`
 
 **Step 1: Write the failing test**
 
 Create `src/__tests__/firmvault-workflow-port-map.test.ts` with tests that:
 
 - Parse `docs/quests/firmvault-workflow-map.yaml`.
-- Assert `source.repositories.mission_control.path === "/Users/aaronwhaley/Github/mission-control"`.
+- Assert `source.repositories.mission_control.path === "/Users/aaronwhaley/Github/Active Projects/mission-control"`.
 - Assert `source.workflow_glob === "workflows/firmvault*.yaml"`.
 - Assert the required workflow ids listed in Acceptance Gates exist.
 - Assert each workflow entry has:
@@ -105,7 +105,7 @@ Create `src/__tests__/firmvault-workflow-port-map.test.ts` with tests that:
   - `human_gates`
   - `waits`
   - `canonical_paths`
-- Assert every workflow entry's `source_files` path exists under `/Users/aaronwhaley/Github/mission-control`.
+- Assert every workflow entry's `source_files` path exists under `/Users/aaronwhaley/Github/Active Projects/mission-control`.
 
 **Step 2: Verify RED**
 
@@ -127,9 +127,9 @@ Do not commit the RED test alone unless implementation is interrupted. Keep it a
 
 **Files:**
 - Create: `docs/quests/firmvault-workflow-map.yaml`
-- Source: `/Users/aaronwhaley/Github/mission-control/workflows/firmvault*.yaml`
-- Source: `/Users/aaronwhaley/Github/mission-control/src/lib/firmvault-passive-landmarks.ts`
-- Source: `/Users/aaronwhaley/Github/mission-control/docs/superpowers/plans/2026-04-28-firmvault-workflow-build-roadmap.md`
+- Source: `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault*.yaml`
+- Source: `/Users/aaronwhaley/Github/Active Projects/mission-control/src/lib/firmvault-passive-landmarks.ts`
+- Source: `/Users/aaronwhaley/Github/Active Projects/mission-control/docs/superpowers/plans/2026-04-28-firmvault-workflow-build-roadmap.md`
 
 **Implementation notes:**
 
@@ -159,7 +159,7 @@ kind: firmvault_workflow_port_map
 source:
   repositories:
     mission_control:
-      path: /Users/aaronwhaley/Github/mission-control
+      path: /Users/aaronwhaley/Github/Active Projects/mission-control
       branch: feat/waypoint-runtime-slice
   workflow_glob: workflows/firmvault*.yaml
   passive_landmarks_source: src/lib/firmvault-passive-landmarks.ts
@@ -292,7 +292,7 @@ tools:
 metadata:
   source_port:
     status: placeholder_until_fvp2
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflows:
       - workflows/firmvault-case-setup.yaml
     external_side_effects: forbidden

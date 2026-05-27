@@ -9,11 +9,21 @@ interface BootstrapFirmVaultCaseResult {
   readonly caseRoot: string
   readonly caseSlug: string
   readonly createdPaths: readonly string[]
-  readonly project: { readonly config: { readonly quest: string } }
+  readonly project: { readonly config: { readonly quest: string; readonly backend?: { readonly route?: WaypointRouteBackendMode } } }
   readonly catalog: { readonly recipes: readonly unknown[] }
   readonly firmvaultState: InitFirmVaultCaseStateResult
-  readonly route?: { readonly id: string }
+  readonly route?: {
+    readonly id: string
+    readonly backend?: WaypointRouteBackendMode
+    readonly beads?: {
+      readonly root_issue_id: string
+      readonly issue_count: number
+      readonly dependency_count: number
+    }
+  }
 }
+
+type WaypointRouteBackendMode = 'folder' | 'beads'
 
 interface FirmVaultLandmarkProjection {
   readonly schema_version: 1
@@ -78,6 +88,8 @@ type FirmVaultStateModule = {
       readonly caseType: 'personal_injury'
       readonly caseSlug?: string
       readonly startRoute?: boolean
+      readonly backend?: WaypointRouteBackendMode
+      readonly initBeads?: boolean
     },
   ) => Promise<BootstrapFirmVaultCaseResult>
   readonly initFirmVaultCaseState: (
@@ -135,7 +147,7 @@ interface FirmVaultDocumentIndexEntry {
 }
 
 const usageLines = [
-  'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--start] [--json]',
+  'Usage: waypoint firmvault bootstrap --cases-root <path> --case-name <name> [--case-type personal-injury] [--case-slug <slug>] [--backend folder|beads] [--init-beads] [--start] [--json]',
   'Usage: waypoint firmvault add-document --source <path> --kind medical-records|bill|insurance|police-report|correspondence|unknown [--note <note>] [--json]',
   'Usage: waypoint firmvault document-handoff --document-id <id> --status not-started|submitted|pr-opened|merged|deferred|failed [--pr-number <number>] [--pr-url <url>] [--branch <branch>] [--submitted-at <iso>] [--completed-at <iso>] [--json]',
   'Usage: waypoint firmvault state show [--section <section>] [--json]',
@@ -206,17 +218,22 @@ async function runBootstrap(args: readonly string[], io: WaypointCliIo): Promise
     caseName: parsed.caseName,
     caseType: parsed.caseType,
     ...(parsed.caseSlug ? { caseSlug: parsed.caseSlug } : {}),
+    ...(parsed.backend ? { backend: parsed.backend } : {}),
+    ...(parsed.initBeads ? { initBeads: true } : {}),
     ...(parsed.startRoute ? { startRoute: true } : {}),
   })
   const satisfied = countSatisfiedLandmarks(result.firmvaultState.projection)
   const total = Object.keys(result.firmvaultState.projection.landmarks).length
+  const routeBackend = result.project.config.backend?.route ?? 'folder'
 
   if (parsed.json) {
     io.stdout(JSON.stringify({
       case_root: result.caseRoot,
       case_slug: result.caseSlug,
       quest: result.project.config.quest,
+      backend: routeBackend,
       route_id: result.route?.id ?? null,
+      beads: result.route?.beads ?? null,
       created_paths: result.createdPaths,
       recipes_installed: result.catalog.recipes.length,
       landmarks: {
@@ -231,8 +248,13 @@ async function runBootstrap(args: readonly string[], io: WaypointCliIo): Promise
   io.stdout(`case_root: ${result.caseRoot}`)
   io.stdout(`case_slug: ${result.caseSlug}`)
   io.stdout(`quest: ${result.project.config.quest}`)
+  io.stdout(`route backend: ${routeBackend}`)
   io.stdout(`recipes installed: ${result.catalog.recipes.length}`)
   io.stdout(`route_id: ${result.route?.id ?? 'null'}`)
+  if (result.route?.beads) {
+    io.stdout(`beads root issue: ${result.route.beads.root_issue_id}`)
+    io.stdout(`beads graph: ${result.route.beads.issue_count} issues, ${result.route.beads.dependency_count} dependencies`)
+  }
   io.stdout(`landmarks satisfied: ${satisfied}/${total}`)
   return 0
 }
@@ -889,6 +911,8 @@ function parseBootstrapArgs(args: readonly string[]):
     readonly caseName: string
     readonly caseType: 'personal_injury'
     readonly caseSlug?: string
+    readonly backend?: WaypointRouteBackendMode
+    readonly initBeads: boolean
     readonly startRoute: boolean
     readonly json: boolean
   }
@@ -897,6 +921,8 @@ function parseBootstrapArgs(args: readonly string[]):
   let caseName: string | undefined
   let caseType: 'personal_injury' = 'personal_injury'
   let caseSlug: string | undefined
+  let backend: WaypointRouteBackendMode | undefined
+  let initBeads = false
   let startRoute = false
   let json = false
 
@@ -932,6 +958,19 @@ function parseBootstrapArgs(args: readonly string[]):
       index += 1
       continue
     }
+    if (arg === '--backend') {
+      const value = args[index + 1]
+      if (value !== 'folder' && value !== 'beads') {
+        return { ok: false, error: `Unsupported route backend: ${value ?? '<missing>'}` }
+      }
+      backend = value
+      index += 1
+      continue
+    }
+    if (arg === '--init-beads') {
+      initBeads = true
+      continue
+    }
     if (arg === '--start') {
       startRoute = true
       continue
@@ -945,14 +984,17 @@ function parseBootstrapArgs(args: readonly string[]):
 
   if (!casesRoot) return { ok: false, error: 'Missing required --cases-root' }
   if (!caseName) return { ok: false, error: 'Missing required --case-name' }
+  if (initBeads && backend !== 'beads') return { ok: false, error: '--init-beads can only be used with --backend beads' }
 
   return {
     ok: true,
     casesRoot,
     caseName,
     caseType,
+    initBeads,
     startRoute,
     json,
+    ...(backend ? { backend } : {}),
     ...(caseSlug ? { caseSlug } : {}),
   }
 }

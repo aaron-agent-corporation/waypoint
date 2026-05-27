@@ -31,12 +31,24 @@ scaffolds:
                 - plan_ref: locate-validation-artifacts
                   title: Locate VALIDATION.md, SUMMARY.md, and related evidence
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: audit-validation-coverage
                   title: Audit Nyquist coverage and identify gaps
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: fill-validation-gaps
                   title: Update validation artifacts and generated tests
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

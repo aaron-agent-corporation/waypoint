@@ -79,7 +79,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_recipe: recipes/firmvault-accident-report-analyze
     source_files:
     - recipe.yaml

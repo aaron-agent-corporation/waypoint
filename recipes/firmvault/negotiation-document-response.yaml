@@ -68,7 +68,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control_workflow
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflow: workflows/firmvault-negotiate-claim.yaml
     source_node: document_negotiation_response
     external_side_effects: forbidden

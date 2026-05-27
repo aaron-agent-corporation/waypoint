@@ -47,7 +47,7 @@ const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
   status: {
     mutation: false,
     summaryHint: 'status',
-    allowedFlags: {},
+    allowedFlags: { '--json': 'boolean' },
   },
   quests: {
     mutation: false,
@@ -63,8 +63,8 @@ const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
   init: {
     mutation: true,
     summaryHint: 'init',
-    allowedFlags: { '--quest': 'value' },
-    customValidate: validateOptionalQuestSlug('init'),
+    allowedFlags: { '--quest': 'value', '--backend': 'value', '--init-beads': 'boolean' },
+    customValidate: validateInitCommand,
   },
   start: {
     mutation: true,
@@ -131,7 +131,7 @@ const COMMAND_RULES: Readonly<Record<string, CommandRule>> = {
   resume: {
     mutation: true,
     summaryHint: 'resume',
-    allowedFlags: { '--route-id': 'value' },
+    allowedFlags: { '--route-id': 'value', '--resolve-blocker': 'boolean', '--note': 'value', '--json': 'boolean' },
     requiredFlags: ['--route-id'],
   },
 }
@@ -170,6 +170,8 @@ export function buildSafeWaypointCommand(
           '--case-name': 'value',
           '--case-type': 'value',
           '--case-slug': 'value',
+          '--backend': 'value',
+          '--init-beads': 'boolean',
           '--start': 'boolean',
           '--json': 'boolean',
         },
@@ -182,6 +184,10 @@ export function buildSafeWaypointCommand(
           }
           if (caseTypeIndex === -1 || args[caseTypeIndex + 1] !== 'personal-injury') {
             throw new Error('Waypoint firmvault bootstrap only allows --case-type personal-injury')
+          }
+          validateOptionalRouteBackend(args, 'firmvault bootstrap')
+          if (args.includes('--init-beads') && flagValue(args, '--backend') !== 'beads') {
+            throw new Error('Waypoint firmvault bootstrap only allows --init-beads with --backend beads')
           }
         },
       })
@@ -356,6 +362,21 @@ function validateOptionalQuestSlug(command: string): (args: readonly string[]) =
   return (args) => {
     const quest = flagValue(args, '--quest')
     if (quest && !isSafeSlug(quest)) throw new Error(`Waypoint ${command} does not allow unsafe Quest slug: ${quest}`)
+  }
+}
+
+function validateInitCommand(args: readonly string[]): void {
+  validateOptionalQuestSlug('init')(args)
+  validateOptionalRouteBackend(args, 'init')
+  if (args.includes('--init-beads') && flagValue(args, '--backend') !== 'beads') {
+    throw new Error('Waypoint init only allows --init-beads with --backend beads')
+  }
+}
+
+function validateOptionalRouteBackend(args: readonly string[], command: string): void {
+  const backend = flagValue(args, '--backend')
+  if (backend && backend !== 'folder' && backend !== 'beads') {
+    throw new Error(`Waypoint ${command} does not allow route backend: ${backend}`)
   }
 }
 

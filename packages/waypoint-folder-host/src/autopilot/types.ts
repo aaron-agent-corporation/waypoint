@@ -1,3 +1,7 @@
+import type { WaypointBeadsIssueMutationClient, WaypointBeadsIssueSnapshotReader } from '../beads/cli-client.ts'
+import type { WaypointBeadsRecipeRuntimePolicy } from '../beads/execution.ts'
+import type { WaypointBeadsArtifactVerifier } from '../beads/verification.ts'
+
 export type WaypointAutopilotRunStatus = 'complete' | 'blocked' | 'iteration_cap' | 'failed'
 
 export interface WaypointAutopilotRunRecord {
@@ -23,6 +27,10 @@ export interface RunWaypointAutopilotOptions {
   readonly routeId?: string
   readonly maxIterations?: number
   readonly now?: Date
+  readonly beadsReader?: WaypointBeadsIssueSnapshotReader
+  readonly beadsMutator?: WaypointBeadsIssueMutationClient
+  readonly artifactVerifier?: WaypointBeadsArtifactVerifier
+  readonly beadsRuntimePolicy?: WaypointBeadsRecipeRuntimePolicy
 }
 
 export interface RunWaypointAutopilotResult {

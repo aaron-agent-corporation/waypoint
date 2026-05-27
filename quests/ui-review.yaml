@@ -29,12 +29,35 @@ scaffolds:
                 - plan_ref: ui-review-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: ui-review-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: ui-review-run-ui-auditor
+                  title: Run Ui Auditor
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-ui-auditor
+                - plan_ref: ui-review-run-ui-checker
+                  title: Run Ui Checker
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-ui-checker
                 - plan_ref: ui-review-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

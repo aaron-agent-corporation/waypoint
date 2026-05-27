@@ -25,7 +25,12 @@ export {
   parseWaypointProjectConfig,
   serializeWaypointProjectConfig,
 } from './project/config.ts'
-export type { WaypointProjectConfig } from './project/config.ts'
+export type {
+  WaypointProjectBackendConfig,
+  WaypointProjectConfig,
+  WaypointRecipeRuntimeMode,
+  WaypointRouteBackendMode,
+} from './project/config.ts'
 export { loadBundledWaypointCatalog } from './catalog/bundled.ts'
 export type {
   BundledWaypointCatalog,
@@ -34,6 +39,123 @@ export type {
 } from './catalog/bundled.ts'
 export { installQuestCatalog } from './catalog/install.ts'
 export type { InstallQuestCatalogOptions, InstallQuestCatalogResult } from './catalog/install.ts'
+export { compileQuestToBeadsGraph } from './beads/compiler.ts'
+export type {
+  CompileQuestToBeadsGraphInput,
+  WaypointBeadsArtifactSpec,
+  WaypointBeadsDependencySpec,
+  WaypointBeadsDependencyType,
+  WaypointBeadsExternalSideEffects,
+  WaypointBeadsGraph,
+  WaypointBeadsIssueKind,
+  WaypointBeadsIssueSpec,
+  WaypointBeadsIssueType,
+  WaypointBeadsMetadata,
+  WaypointBeadsPolicy,
+  WaypointBeadsRecipeRuntimeSpec,
+  WaypointBeadsScaffoldRef,
+  WaypointBeadsSourceRef,
+  WaypointBeadsSubject,
+} from './beads/compiler.ts'
+export {
+  compileQuestToBeadsFormula,
+  compileWaypointCatalogToBeadsFormulas,
+  exportWaypointCatalogAsBeadsFormulaFiles,
+  serializeWaypointBeadsFormulaJson,
+} from './beads/formula.ts'
+export type {
+  CompileWaypointCatalogToBeadsFormulasInput,
+  WaypointBeadsFormula,
+  WaypointBeadsFormulaFileSpec,
+  WaypointBeadsFormulaStep,
+  WaypointBeadsFormulaStepType,
+  WaypointBeadsFormulaType,
+  WaypointBeadsFormulaVar,
+} from './beads/formula.ts'
+export { listRunnableWaypointBeadsRecipeExecutions, planWaypointBeadsRecipeExecution } from './beads/execution.ts'
+export type {
+  WaypointBeadsRecipeExecutionAction,
+  WaypointBeadsRecipeExecutionBlockReason,
+  WaypointBeadsRecipeExecutionPlan,
+  WaypointBeadsRecipeRuntimePolicy,
+  WaypointBeadsRuntimeExternalSideEffects,
+} from './beads/execution.ts'
+export { verifyWaypointBeadsTaskCompletion } from './beads/verification.ts'
+export type {
+  VerifyWaypointBeadsTaskCompletionInput,
+  WaypointBeadsArtifactVerificationResult,
+  WaypointBeadsArtifactVerificationStatus,
+  WaypointBeadsArtifactVerifier,
+  WaypointBeadsTaskCompletionAction,
+  WaypointBeadsTaskCompletionBlockReason,
+  WaypointBeadsTaskCompletionVerification,
+} from './beads/verification.ts'
+export { instantiateWaypointRouteInBeads } from './beads/instantiate.ts'
+export type {
+  InstantiateWaypointRouteInBeadsInput,
+  WaypointBeadsDependencyCreateInput,
+  WaypointBeadsInstantiatedDependency,
+  WaypointBeadsInstantiatedIssue,
+  WaypointBeadsInstantiationResult,
+  WaypointBeadsIssueClient,
+  WaypointBeadsIssueCreateInput,
+  WaypointBeadsIssueCreateResult,
+} from './beads/instantiate.ts'
+export { SpawnWaypointBeadsCliCommandRunner, WaypointBeadsCliCommandError, WaypointBeadsCliIssueClient } from './beads/cli-client.ts'
+export type {
+  WaypointBeadsCliCommandInput,
+  WaypointBeadsCliCommandOutput,
+  WaypointBeadsCliCommandRunner,
+  WaypointBeadsCliIssueClientConfig,
+  WaypointBeadsIssueCloseInput,
+  WaypointBeadsIssueCommentReader,
+  WaypointBeadsIssueCommentInput,
+  WaypointBeadsIssueCommentSnapshot,
+  WaypointBeadsIssueMutationClient,
+  WaypointBeadsIssueSnapshotListResult,
+  WaypointBeadsIssueSnapshotReader,
+  WaypointBeadsIssueStatusUpdateInput,
+} from './beads/cli-client.ts'
+export {
+  checkWaypointBeadsWorkspace,
+  formatWaypointBeadsWorkspaceReadinessFailure,
+  initializeWaypointBeadsWorkspace,
+} from './beads/workspace.ts'
+export type {
+  WaypointBeadsWorkspaceOptions,
+  WaypointBeadsWorkspaceReadiness,
+  WaypointBeadsWorkspaceReadinessStatus,
+} from './beads/workspace.ts'
+export {
+  approveWaypointBeadsRouteGate,
+  pauseWaypointBeadsRoute,
+  rejectWaypointBeadsRouteGate,
+  resolveWaypointBeadsRouteBlocker,
+  resumeWaypointBeadsRoute,
+} from './beads/transitions.ts'
+export type { WaypointBeadsTransitionOptions } from './beads/transitions.ts'
+export { checkWaypointCatalogBeadsReadiness } from './beads/readiness.ts'
+export type {
+  WaypointBeadsCatalogReadinessFinding,
+  WaypointBeadsCatalogReadinessFindingCode,
+  WaypointBeadsCatalogReadinessFindingSeverity,
+  WaypointBeadsCatalogReadinessReport,
+  WaypointBeadsCatalogReadinessSummary,
+} from './beads/readiness.ts'
+export { reconstructWaypointRunFromBeads } from './beads/reconstruct.ts'
+export type {
+  ReconstructWaypointRunFromBeadsInput,
+  WaypointBeadsDependencySnapshot,
+  WaypointBeadsIssueDependencySnapshot,
+  WaypointBeadsIssueSnapshot,
+  WaypointBeadsRouteRun,
+  WaypointBeadsRunProgress,
+  WaypointBeadsRunReconstruction,
+  WaypointBeadsRunStatus,
+  WaypointBeadsRunTask,
+  WaypointBeadsRunTaskStatus,
+  WaypointBeadsSnapshotStatus,
+} from './beads/reconstruct.ts'
 export {
   addLifecycleMilestone,
   addLifecyclePhase,
@@ -56,6 +178,8 @@ export { createWaypointRoute, getWaypointRoute, listWaypointRoutes, updateWaypoi
 export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './routes/state.ts'
 export { startQuestRoute } from './routes/start.ts'
 export type { StartQuestRouteOptions, StartedQuestRoute } from './routes/start.ts'
+export { getWaypointRuntimeRoute, getWaypointRuntimeTask, listWaypointRuntimeRoutes, listWaypointRuntimeTasks } from './routes/read-model.ts'
+export type { ListWaypointRuntimeTasksOptions, WaypointRuntimeReadOptions } from './routes/read-model.ts'
 export { applyQuestScaffold } from './quests/scaffold.ts'
 export type { AppliedQuestScaffoldSummary, ApplyQuestScaffoldOptions } from './quests/scaffold.ts'
 export type {
@@ -65,6 +189,8 @@ export type {
   WaypointFolderRouteSubject,
 } from './routes/types.ts'
 export { appendRouteEvent, readRouteEvents } from './events/jsonl.ts'
+export { readWaypointRuntimeRouteEvents } from './events/read-model.ts'
+export type { WaypointRuntimeRouteEventOptions } from './events/read-model.ts'
 export { createRouteEventBus } from './events/event-bus.ts'
 export { getWaypointTask, listWaypointTasks, materializeQuestTasks, updateWaypointTask } from './tasks/store.ts'
 export type { WaypointFolderTask, WaypointFolderTaskKind, WaypointFolderTaskState, WaypointFolderTaskStatus } from './tasks/types.ts'
@@ -78,6 +204,7 @@ export type {
   WaypointAutopilotRunStatus,
 } from './autopilot/types.ts'
 export { appendTaskDiscussionMessage, readTaskDiscussionMessages } from './discussion/store.ts'
+export type { WaypointTaskDiscussionRuntimeOptions } from './discussion/store.ts'
 export { LocalRecipeRuntime } from './runtime/local-runtime.ts'
 export { runReferralPackageBuilder, runReferralPackageBuilderFromStdin } from './runtime/referral-package-builder.ts'
 export {

@@ -109,7 +109,7 @@ subagents:
 metadata:
   source_port:
     status: ported_from_mission_control
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_recipe: recipes/firmvault-medical-chronology-update
     source_files:
     - recipe.yaml

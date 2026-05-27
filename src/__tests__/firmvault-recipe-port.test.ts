@@ -8,7 +8,7 @@ import { parse as parseYaml } from 'yaml'
 import { parseRecipeManifest } from '../recipes/manifest.js'
 
 const repoRoot = resolve(__dirname, '../..')
-const missionControlRoot = '/Users/aaronwhaley/Github/mission-control'
+const missionControlRoot = '/Users/aaronwhaley/Github/Active Projects/mission-control'
 const firmvaultRecipeDir = join(repoRoot, 'recipes', 'firmvault')
 const firmvaultQuestPath = join(repoRoot, 'quests', 'firmvault.yaml')
 

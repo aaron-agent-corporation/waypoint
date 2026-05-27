@@ -3,8 +3,13 @@ import { isAbsolute, join, normalize } from 'node:path'
 
 import { parseRecipeManifest } from '@waypoint/core'
 import { appendRouteEvent } from '../events/jsonl.ts'
-import { readWaypointProjectConfig } from '../project/config.ts'
+import { readWaypointProjectConfig, type WaypointProjectConfig } from '../project/config.ts'
 import { getWaypointProjectPaths } from '../project/root.ts'
+import { WaypointBeadsCliIssueClient, type WaypointBeadsIssueMutationClient } from '../beads/cli-client.ts'
+import { planWaypointBeadsRecipeExecution, type WaypointBeadsRecipeRuntimePolicy } from '../beads/execution.ts'
+import { reconstructWaypointRunFromBeads, type WaypointBeadsRunReconstruction, type WaypointBeadsRunTask } from '../beads/reconstruct.ts'
+import { verifyWaypointBeadsTaskCompletion } from '../beads/verification.ts'
+import { listWaypointRuntimeRoutes } from '../routes/read-model.ts'
 import { getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from '../routes/store.ts'
 import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
 import { LocalRecipeRuntime } from '../runtime/local-runtime.ts'
@@ -26,6 +31,9 @@ export async function runWaypointAutopilot(
   projectRoot: string,
   options: RunWaypointAutopilotOptions = {},
 ): Promise<RunWaypointAutopilotResult> {
+  const config = await readWaypointProjectConfig(getWaypointProjectPaths(projectRoot).configPath)
+  if (config.backend.route === 'beads') return runWaypointBeadsAutopilot(projectRoot, config, options)
+
   const routeId = options.routeId ?? (await defaultRouteId(projectRoot))
   const route = await getWaypointRoute(projectRoot, routeId)
   if (!route) throw new Error(`Route not found: ${routeId}`)
@@ -200,6 +208,120 @@ export async function runWaypointAutopilot(
   return { run, status, routeId, iterations, completedTasks, blockedNode }
 }
 
+async function runWaypointBeadsAutopilot(
+  projectRoot: string,
+  config: WaypointProjectConfig,
+  options: RunWaypointAutopilotOptions,
+): Promise<RunWaypointAutopilotResult> {
+  const routeId = options.routeId ?? (await defaultBeadsRouteId(projectRoot, options))
+  const maxIterations = options.maxIterations ?? DEFAULT_MAX_ITERATIONS
+  if (!Number.isInteger(maxIterations) || maxIterations <= 0) {
+    throw new Error(`Autopilot max iterations must be a positive integer: ${maxIterations}`)
+  }
+
+  const mutator = beadsMutationClient(projectRoot, options)
+  const runtimePolicy = options.beadsRuntimePolicy ?? beadsRuntimePolicyFor(config)
+  const completedTasks: string[] = []
+  let iterations = 0
+  let status: WaypointAutopilotRunStatus = 'complete'
+  let blockedNode: string | null = null
+
+  while (iterations < maxIterations) {
+    const run = await loadBeadsRun(projectRoot, routeId, options)
+    const nextTask = run.tasks.find((task) => task.status === 'open' && task.blockers.length === 0)
+    if (!nextTask) {
+      status = run.route.status === 'complete' ? 'complete' : 'blocked'
+      blockedNode = run.route.current_node
+      break
+    }
+
+    iterations += 1
+
+    if (nextTask.kind === 'gate' || nextTask.kind === 'wait') {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await blockBeadsTask(mutator, nextTask, `Waypoint autopilot stopped at ${nextTask.kind} ${nextTask.plan_ref}`)
+      break
+    }
+
+    if (nextTask.kind === 'checkpoint' || nextTask.kind === 'discussion') {
+      await closeBeadsAutopilotTask(mutator, nextTask, `Waypoint autopilot completed ${nextTask.kind} ${nextTask.plan_ref}`)
+      completedTasks.push(nextTask.beads_id)
+      continue
+    }
+
+    if (nextTask.kind !== 'recipe') {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await blockBeadsTask(mutator, nextTask, `Waypoint autopilot does not support ${nextTask.kind} tasks yet`)
+      break
+    }
+
+    const plan = planWaypointBeadsRecipeExecution(nextTask, runtimePolicy)
+    if (plan.action !== 'run') {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await blockBeadsTask(mutator, nextTask, `Waypoint autopilot recipe blocked: ${plan.block_reason ?? 'blocked'}`)
+      break
+    }
+
+    const runtime = await createRecipeRuntime(projectRoot)
+    const recipe = runtime instanceof LocalRecipeRuntime ? await loadRecipeManifest(projectRoot, plan.recipe_slug!) : null
+    const output = await runtime.runRecipe({
+      routeId,
+      taskId: nextTask.beads_id,
+      recipe: recipe?.slug ?? plan.recipe_slug!,
+      prompt: recipe?.prompt ?? '',
+      projectRoot,
+    })
+    if (output.status === 'failed') {
+      status = 'failed'
+      blockedNode = nextTask.plan_ref
+      await mutator.addIssueComment({
+        id: nextTask.beads_id,
+        text: `Waypoint autopilot recipe failed for ${nextTask.plan_ref}\n\n${JSON.stringify(output)}`,
+      })
+      await mutator.updateIssueStatus({ id: nextTask.beads_id, status: 'failed' })
+      break
+    }
+
+    const verification = await verifyWaypointBeadsTaskCompletion(nextTask, { artifactVerifier: options.artifactVerifier })
+    if (verification.action === 'block_close') {
+      status = 'blocked'
+      blockedNode = nextTask.plan_ref
+      await blockBeadsTask(
+        mutator,
+        nextTask,
+        `Waypoint autopilot cannot close ${nextTask.plan_ref}: ${verification.block_reasons.join(', ')}`,
+      )
+      break
+    }
+
+    await closeBeadsAutopilotTask(
+      mutator,
+      nextTask,
+      `Waypoint autopilot ${output.runtime === 'local' ? 'executed' : 'simulated'} recipe ${plan.recipe_slug}`,
+      output,
+    )
+    completedTasks.push(nextTask.beads_id)
+  }
+
+  if (iterations >= maxIterations && status === 'complete') {
+    status = 'iteration_cap'
+  }
+
+  const run = await appendAutopilotRun(projectRoot, {
+    route_id: routeId,
+    status,
+    iterations,
+    completed_tasks: completedTasks,
+    blocked_node: blockedNode,
+    now: options.now,
+  })
+
+  return { run, status, routeId, iterations, completedTasks, blockedNode }
+}
+
 export async function listWaypointAutopilotRuns(
   projectRoot: string,
   options: { readonly limit?: number; readonly offset?: number } = {},
@@ -210,6 +332,54 @@ export async function listWaypointAutopilotRuns(
   if (!Number.isInteger(offset) || offset < 0) throw new Error(`Autopilot run offset must be a non-negative integer: ${offset}`)
   const runs = await readAllAutopilotRuns(projectRoot)
   return { items: runs.slice(offset, offset + limit), total: runs.length, limit, offset }
+}
+
+async function defaultBeadsRouteId(projectRoot: string, options: RunWaypointAutopilotOptions): Promise<string> {
+  const routes = await listWaypointRuntimeRoutes(projectRoot, { beadsReader: options.beadsReader })
+  const route = routes.find((item) => item.status === 'active') ?? routes[0]
+  if (!route) throw new Error('No Waypoint Beads routes found')
+  return route.id
+}
+
+async function loadBeadsRun(
+  projectRoot: string,
+  routeId: string,
+  options: RunWaypointAutopilotOptions,
+): Promise<WaypointBeadsRunReconstruction> {
+  const reader = options.beadsReader ?? new WaypointBeadsCliIssueClient({ cwd: projectRoot })
+  return reconstructWaypointRunFromBeads({ ...(await reader.listIssueSnapshots()), routeId })
+}
+
+function beadsMutationClient(projectRoot: string, options: RunWaypointAutopilotOptions): WaypointBeadsIssueMutationClient {
+  return options.beadsMutator ?? new WaypointBeadsCliIssueClient({ cwd: projectRoot })
+}
+
+function beadsRuntimePolicyFor(config: WaypointProjectConfig): WaypointBeadsRecipeRuntimePolicy {
+  return {
+    external_side_effects: config.runtime.recipe === 'local' ? 'allowed' : 'none',
+  }
+}
+
+async function closeBeadsAutopilotTask(
+  mutator: WaypointBeadsIssueMutationClient,
+  task: WaypointBeadsRunTask,
+  reason: string,
+  runtimeOutput?: unknown,
+): Promise<void> {
+  await mutator.addIssueComment({
+    id: task.beads_id,
+    text: runtimeOutput ? `${reason}\n\n${JSON.stringify(runtimeOutput)}` : reason,
+  })
+  await mutator.closeIssue({ id: task.beads_id, reason })
+}
+
+async function blockBeadsTask(
+  mutator: WaypointBeadsIssueMutationClient,
+  task: WaypointBeadsRunTask,
+  reason: string,
+): Promise<void> {
+  await mutator.addIssueComment({ id: task.beads_id, text: reason })
+  await mutator.updateIssueStatus({ id: task.beads_id, status: 'blocked', note: reason })
 }
 
 async function createRecipeRuntime(projectRoot: string): Promise<NullRecipeRuntime | LocalRecipeRuntime> {

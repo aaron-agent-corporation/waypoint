@@ -14,15 +14,15 @@
 
 Use these primary sources for this slice:
 
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-bi-claim-setup.yaml`
-- `/Users/aaronwhaley/Github/mission-control/workflows/firmvault-pip-claim-setup.yaml`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-insurance-bi-identify-carrier/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-insurance-bi-prepare-lor/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-insurance-bi-process-acknowledgment/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-insurance-pip-open-claim/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-pip-file-application/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-pip-confirm-approval/{recipe.yaml,SOUL.md,REVIEW.md}`
-- `/Users/aaronwhaley/Github/mission-control/recipes/firmvault-pip-track-exhaustion/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-bi-claim-setup.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/workflows/firmvault-pip-claim-setup.yaml`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-insurance-bi-identify-carrier/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-insurance-bi-prepare-lor/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-insurance-bi-process-acknowledgment/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-insurance-pip-open-claim/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-pip-file-application/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-pip-confirm-approval/{recipe.yaml,SOUL.md,REVIEW.md}`
+- `/Users/aaronwhaley/Github/Active Projects/mission-control/recipes/firmvault-pip-track-exhaustion/{recipe.yaml,SOUL.md,REVIEW.md}`
 - `docs/quests/firmvault-workflow-map.yaml`
 
 ## Scope

@@ -37,7 +37,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control_workflow
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflow: workflows/firmvault-close-case.yaml
     source_node: document_case_closed
     external_side_effects: forbidden

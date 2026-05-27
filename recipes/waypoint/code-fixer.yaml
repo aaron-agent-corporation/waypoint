@@ -678,6 +678,13 @@ prompt: |
 
   </success_criteria>
 
+tools:
+  - file.read
+  - file.edit
+  - file.write
+  - shell
+  - file.search
+
 runtime:
   allowed_tools:
     - file.read
@@ -685,3 +692,7 @@ runtime:
     - file.write
     - shell
     - file.search
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

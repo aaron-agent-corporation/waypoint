@@ -29,12 +29,35 @@ scaffolds:
                 - plan_ref: add-tests-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: add-tests-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: add-tests-run-verifier
+                  title: Run Verifier
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-verifier
+                - plan_ref: add-tests-run-executor
+                  title: Run Executor
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-executor
                 - plan_ref: add-tests-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

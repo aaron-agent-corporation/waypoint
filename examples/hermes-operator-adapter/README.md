@@ -79,7 +79,7 @@ The runner accepts only explicit `waypoint` argument arrays. Natural-language op
 Allowed read-only commands:
 
 ```text
-waypoint status
+waypoint status [--json]
 waypoint quests
 waypoint recipes --quest <slug>
 waypoint routes
@@ -93,15 +93,32 @@ Allowed mutation commands are explicitly marked in results:
 
 ```text
 waypoint init --quest <slug>
+waypoint init --quest <slug> --backend folder|beads [--init-beads]
 waypoint start --quest <slug>
 waypoint discuss --task-id <id> --message <text>
 waypoint auto --route-id <id> [--max-iterations N]
 waypoint gate --route-id <id> --node <node> (--approve|--reject) [--note <text>] [--next-node <node>]
 waypoint pause --route-id <id> [--reason <text>]
 waypoint resume --route-id <id>
+waypoint resume --route-id <id> --resolve-blocker [--note <text>] [--json]
 ```
 
 For a request like “start a Quest,” another agent should resolve a trusted project record, inspect `waypoint quests` / `waypoint recipes --quest <slug>` when the slug is ambiguous, then pass explicit args such as `['init', '--quest', 'agentic-delivery']` and `['start', '--quest', 'agentic-delivery']` into the runner. The runner does not execute natural-language text directly.
+
+The runner can select the Beads route backend only through explicit allowlisted flags:
+
+```ts
+await runSafeWaypointCommand(project, ['init', '--quest', 'firmvault', '--backend', 'beads'])
+await runSafeWaypointCommand(project, ['init', '--quest', 'firmvault', '--backend', 'beads', '--init-beads'])
+await runSafeWaypointCommand(project, ['start', '--quest', 'firmvault'])
+```
+
+After that, the same safe command surface reads and mutates the Beads-backed route: `status`, `routes`, `route`, `tasks`, `auto`, `gate`, `resume --resolve-blocker`, `discuss`, and `route-events`. The adapter validates `--backend` as `folder` or `beads`; arbitrary backend names fail before execution.
+
+For real Beads workspaces, prefer `status --json` before `start`. It exposes
+`beads.readiness` so Hermes can tell the operator whether `bd` is missing, the
+workspace is missing, or the workspace is ready. `start` fails before writing
+Beads route issues when readiness is unhealthy.
 
 Safety behavior:
 
@@ -112,6 +129,13 @@ Safety behavior:
 - `gate` requires exactly one of `--approve` or `--reject`;
 - Mutation commands are explicitly marked;
 - outputs are summarized without dropping route/task IDs by preserving raw stdout and stderr.
+
+Safe FirmVault bootstrap can also choose the Beads runtime backend, but only when
+the trusted cases root matches the registered project path:
+
+```text
+waypoint firmvault bootstrap --cases-root <registered-root> --case-name <name> --case-type personal-injury --backend beads --init-beads --start --json
+```
 
 ## H4 discussion loop
 

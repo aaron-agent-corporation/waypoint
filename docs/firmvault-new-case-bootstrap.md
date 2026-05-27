@@ -6,7 +6,7 @@ This runbook covers the standalone Waypoint path for creating a new FirmVault pe
 
 - Create cases only under a configured trusted cases root.
 - Route agent-initiated FirmVault bootstrap requests through the Hermes `paralegal` profile.
-- Use structured input: `casesRootKey`, `caseName`, `caseType`, and optional `start`.
+- Use structured input: `casesRootKey`, `caseName`, `caseType`, optional `backend`, and optional `start`.
 - Do not let natural-language paths become filesystem paths.
 - Do not send emails, faxes, portal messages, API calls, or trust-account actions.
 - Document intake is local copying/indexing only; substantive landmarks require explicit state/evidence updates.
@@ -41,6 +41,43 @@ waypoint firmvault bootstrap \
   --json
 ```
 
+Use `--backend beads` when the case route/task runtime should be backed by
+Beads rather than `.waypoint/tasks.yaml`:
+
+```bash
+waypoint firmvault bootstrap \
+  --cases-root /trusted/FirmVault/Cases \
+  --case-name "Jane Smith v. Acme Trucking" \
+  --case-type personal-injury \
+  --backend beads \
+  --init-beads \
+  --start \
+  --json
+```
+
+`--init-beads` creates the case-local Beads workspace with
+`bd init --non-interactive --skip-agents --skip-hooks` before the route graph is
+materialized. To use an existing Beads workspace instead, omit `--init-beads`
+and initialize or verify the workspace before starting the route:
+
+```bash
+waypoint firmvault bootstrap \
+  --cases-root /trusted/FirmVault/Cases \
+  --case-name "Jane Smith v. Acme Trucking" \
+  --case-type personal-injury \
+  --backend beads \
+  --json
+
+cd /trusted/FirmVault/Cases/jane-smith-v-acme-trucking
+bd init --non-interactive --skip-agents --skip-hooks --prefix jane-smith-v-acme-trucking
+waypoint start --quest firmvault
+```
+
+When `--backend beads --start` is used without `--init-beads`, `bd` must already
+be available and the cases root must already resolve to a healthy Beads
+workspace. If not, Waypoint fails before creating the case folder and tells the
+operator to use `--init-beads` or prepare the workspace explicitly.
+
 Expected result:
 
 - creates `/trusted/FirmVault/Cases/jane-smith-v-acme-trucking/`;
@@ -48,7 +85,8 @@ Expected result:
 - initializes `.waypoint/config.yaml` with the `firmvault` Quest;
 - installs bundled FirmVault Quest/Recipe manifests;
 - initializes `.waypoint/firmvault/*.yaml` state;
-- with `--start`, creates `route-001`, `tasks.yaml`, and route events.
+- with `--start` on the folder backend, creates `route-001`, `tasks.yaml`, and route events;
+- with `--start --backend beads`, creates the same case-local FirmVault state and manifest files, then materializes route tasks, gates, blockers, discussion, and route event history through Beads issues and comments.
 
 ## Agent phrase examples
 
@@ -65,6 +103,7 @@ Structured adapter request:
   casesRootKey: 'pi',
   caseName: 'Jane Smith v. Acme Trucking',
   caseType: 'personal_injury',
+  backend: 'beads',
   start: true,
 }
 ```
@@ -124,6 +163,7 @@ Run these from the case folder:
 
 ```bash
 waypoint status
+waypoint status --json
 waypoint routes --json
 waypoint tasks --route-id route-001 --json
 waypoint firmvault landmarks --json

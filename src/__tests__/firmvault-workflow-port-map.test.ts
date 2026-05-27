@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 const repoRoot = resolve(__dirname, '../..')
-const missionControlRoot = '/Users/aaronwhaley/Github/mission-control'
+const missionControlRoot = '/Users/aaronwhaley/Github/Active Projects/mission-control'
 const mapPath = join(repoRoot, 'docs', 'quests', 'firmvault-workflow-map.yaml')
 const notesPath = join(repoRoot, 'docs', 'plans', 'firmvault-workflow-port-map.md')
 

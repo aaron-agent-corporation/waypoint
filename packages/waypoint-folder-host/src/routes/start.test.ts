@@ -10,12 +10,19 @@ import { loadBundledWaypointCatalog } from '../catalog/bundled'
 import { readRouteEvents } from '../events/jsonl'
 import { listLifecycleState } from '../lifecycle/store'
 import { initWaypointProject } from '../project/init'
+import { listWaypointTasks } from '../tasks/store'
+import type {
+  WaypointBeadsDependencyCreateInput,
+  WaypointBeadsIssueClient,
+  WaypointBeadsIssueCreateInput,
+} from '../beads/instantiate'
+import type { WaypointBeadsCliCommandRunner } from '../beads/cli-client'
 import { getWaypointRoute, listWaypointRoutes } from './store'
 import { startQuestRoute } from './start'
 
-async function tempProject(): Promise<string> {
+async function tempProject(backend: 'folder' | 'beads' = 'folder'): Promise<string> {
   const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-start-'))
-  await initWaypointProject(projectRoot, { quest: 'waypoint' })
+  await initWaypointProject(projectRoot, { quest: 'waypoint', backend })
   await installQuestCatalog(projectRoot, await loadBundledWaypointCatalog(), { quest: 'waypoint' })
   return projectRoot
 }
@@ -60,6 +67,7 @@ describe('startQuestRoute', () => {
     expect(route).toMatchObject({
       id: 'route-001',
       quest: 'waypoint',
+      backend: 'folder',
       status: 'active',
       current_node: 'initialize',
       subject: { type: 'project', id: 'local' },
@@ -86,4 +94,111 @@ describe('startQuestRoute', () => {
       },
     })
   })
+
+  it('materializes a Beads-backed route graph when the route backend is beads', async () => {
+    const projectRoot = await tempProject('beads')
+    const client = createRecordingClient()
+
+    const route = await startQuestRoute(projectRoot, { quest: 'waypoint', beadsClient: client })
+
+    expect(route).toMatchObject({
+      id: 'route-001',
+      quest: 'waypoint',
+      backend: 'beads',
+      beads: {
+        root_issue_id: 'bd-001',
+      },
+    })
+    expect(client.issueCreates[0]).toMatchObject({
+      issueType: 'epic',
+      metadata: {
+        waypoint: {
+          kind: 'route',
+          quest_slug: 'waypoint',
+          route_id: 'route-001',
+        },
+      },
+    })
+    expect(client.issueCreates.length).toBe(routeIssueCountForWaypointQuest())
+    expect(client.dependencyCreates.length).toBeGreaterThan(1)
+    expect(await listWaypointTasks(projectRoot)).toEqual([])
+
+    const savedRoute = await getWaypointRoute(projectRoot, 'route-001')
+    expect(savedRoute?.metadata).toMatchObject({
+      backend: { route: 'beads' },
+      beads: {
+        root_issue_id: 'bd-001',
+        issue_count: client.issueCreates.length,
+        dependency_count: client.dependencyCreates.length,
+      },
+    })
+
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items[0]).toMatchObject({
+      kind: 'route.started',
+      payload: {
+        backend: 'beads',
+        beads: {
+          root_issue_id: 'bd-001',
+        },
+      },
+    })
+  })
+
+  it('fails with an actionable readiness message before writing a Beads graph when the workspace is missing', async () => {
+    const projectRoot = await tempProject('beads')
+    const runner: WaypointBeadsCliCommandRunner = {
+      async run() {
+        return {
+          exitCode: 1,
+          signal: null,
+          stdout: JSON.stringify({
+            error: 'no_beads_directory',
+            message: 'No active beads workspace found.',
+          }),
+          stderr: '',
+        }
+      },
+    }
+
+    await expect(startQuestRoute(projectRoot, { quest: 'waypoint', beadsWorkspace: { runner } })).rejects.toThrow(
+      'Run waypoint init --backend beads --init-beads',
+    )
+    expect(await listWaypointRoutes(projectRoot)).toEqual([])
+  })
+
+  it('fails safely instead of duplicating an existing Beads route graph', async () => {
+    const projectRoot = await tempProject('beads')
+    const client = createRecordingClient()
+
+    await startQuestRoute(projectRoot, { quest: 'waypoint', beadsClient: client })
+
+    await expect(startQuestRoute(projectRoot, { quest: 'waypoint', beadsClient: client })).rejects.toThrow(
+      'Beads route already started for quest waypoint: route-001',
+    )
+    expect(client.issueCreates.length).toBe(routeIssueCountForWaypointQuest())
+  })
 })
+
+function createRecordingClient(): WaypointBeadsIssueClient & {
+  readonly issueCreates: WaypointBeadsIssueCreateInput[]
+  readonly dependencyCreates: WaypointBeadsDependencyCreateInput[]
+} {
+  const issueCreates: WaypointBeadsIssueCreateInput[] = []
+  const dependencyCreates: WaypointBeadsDependencyCreateInput[] = []
+  return {
+    issueCreates,
+    dependencyCreates,
+    async createIssue(input) {
+      issueCreates.push(input)
+      return { id: `bd-${String(issueCreates.length).padStart(3, '0')}` }
+    },
+    async addDependency(input) {
+      dependencyCreates.push(input)
+    },
+  }
+}
+
+function routeIssueCountForWaypointQuest(): number {
+  return 13
+}

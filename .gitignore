@@ -8,3 +8,18 @@ build/
 coverage/
 .vitest/
 *.tsbuildinfo
+.code-kg/cache/
+.code-kg/search.sqlite
+.code-kg/tmp/
+lat.md/.cache/
+
+# Local reference snapshots
+docs/beads-main/
+
+# Legacy generated graph output (Code-KG is the active repo map)
+graphify-out/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key

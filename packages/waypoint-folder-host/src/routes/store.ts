@@ -15,9 +15,12 @@ export async function createWaypointRoute(
   input: CreateWaypointRouteInput,
 ): Promise<WaypointFolderRoute> {
   const existingRoutes = await listWaypointRoutes(projectRoot)
+  if (input.id && existingRoutes.some((route) => route.id === input.id)) {
+    throw new Error(`Route already exists: ${input.id}`)
+  }
   const timestamp = timestampFor(input.now)
   const route: WaypointFolderRoute = {
-    id: nextRouteId(existingRoutes),
+    id: input.id ?? nextRouteId(existingRoutes),
     quest: input.quest,
     status: input.status ?? 'active',
     current_node: input.current_node ?? null,

@@ -860,28 +860,28 @@ prompt: |
   | (default) | STACK.md, ARCHITECTURE.md |
   </step>
 
-  <step name="load_graph_context">
-  Check for knowledge graph:
+  <step name="load_code_kg_context">
+  Check for a Code-KG knowledge base:
 
   ```bash
-  ls .planning/graphs/graph.json 2>/dev/null
+  code-kg agents status
   ```
 
-  If graph.json exists, check freshness:
+  Validate source/knowledge consistency:
 
   ```bash
-  node "$HOME/.claude/get-shit-done/bin/waypoint-tools.cjs" graphify status
+  code-kg check
+  code-kg drift
   ```
 
-  If the status response has `stale: true`, note for later: "Graph is {age_hours}h old -- treat semantic relationships as approximate." Include this annotation inline with any graph context injected below.
-
-  Query the graph for phase-relevant dependency context (single query per D-06):
+  If `code-kg drift` reports findings, note them inline and treat generated
+  relationships as approximate until the knowledge base is refreshed. Query
+  Code-KG for phase-relevant dependency context (single query per D-06):
 
   ```bash
-  node "$HOME/.claude/get-shit-done/bin/waypoint-tools.cjs" graphify query "<phase-goal-keyword>" --budget 2000
+  code-kg search "<phase-goal-keyword>" --backend auto-semantic
+  code-kg section "<section-id>"
   ```
-
-  (graphify is not exposed on `waypoint-sdk query` yet; use `waypoint-tools.cjs` for graphify only.)
 
   Use the keyword that best captures the phase goal. Examples:
   - Phase "User Authentication" -> query term "auth"
@@ -1260,6 +1260,14 @@ prompt: |
 
   </success_criteria>
 
+tools:
+  - file.read
+  - file.write
+  - shell
+  - file.search
+  - web.fetch
+  - mcp__context7__*
+
 runtime:
   allowed_tools:
     - file.read
@@ -1268,3 +1276,7 @@ runtime:
     - file.search
     - web.fetch
     - mcp__context7__*
+
+metadata:
+  waypoint:
+    external_side_effects: forbidden

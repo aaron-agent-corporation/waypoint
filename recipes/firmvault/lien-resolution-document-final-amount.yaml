@@ -52,7 +52,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_mission_control_workflow
-    source_repository: /Users/aaronwhaley/Github/mission-control
+    source_repository: /Users/aaronwhaley/Github/Active Projects/mission-control
     source_workflow: workflows/firmvault-lien-resolution.yaml
     source_node: document_final_lien_amount
     external_side_effects: forbidden

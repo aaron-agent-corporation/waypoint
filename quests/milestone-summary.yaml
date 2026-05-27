@@ -28,12 +28,26 @@ scaffolds:
                 - plan_ref: milestone-summary-intake
                   title: Capture inputs and current context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: milestone-summary-run
-                  title: Run the mapped Waypoint Recipes
+                  title: Run Doc Synthesizer
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-doc-synthesizer
                 - plan_ref: milestone-summary-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

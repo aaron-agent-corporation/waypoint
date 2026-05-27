@@ -28,12 +28,26 @@ scaffolds:
                 - plan_ref: map-codebase-intake
                   title: Capture inputs and current context
                   wave: 10
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
                 - plan_ref: map-codebase-run
-                  title: Run the mapped Waypoint Recipes
+                  title: Run Codebase Mapper
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-codebase-mapper
                 - plan_ref: map-codebase-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:

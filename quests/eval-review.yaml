@@ -29,12 +29,35 @@ scaffolds:
                 - plan_ref: eval-review-intake
                   title: Capture inputs and current context
                   wave: 10
-                - plan_ref: eval-review-run
-                  title: Run the mapped Waypoint Recipes
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
+                - plan_ref: eval-review-run-eval-auditor
+                  title: Run Eval Auditor
                   wave: 20
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-eval-auditor
+                - plan_ref: eval-review-run-eval-planner
+                  title: Run Eval Planner
+                  wave: 21
+                  metadata:
+                    waypoint:
+                      node:
+                        type: recipe
+                      recipe:
+                        slug: waypoint-eval-planner
                 - plan_ref: eval-review-report
                   title: Produce operator-facing output and next actions
                   wave: 30
+                  metadata:
+                    waypoint:
+                      node:
+                        type: checkpoint
 
 metadata:
   source:
