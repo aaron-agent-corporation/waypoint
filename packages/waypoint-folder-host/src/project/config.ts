@@ -12,6 +12,25 @@ export interface WaypointProjectRuntimeConfig {
   readonly recipe: WaypointRecipeRuntimeMode | null
   readonly command?: string
   readonly args?: readonly string[]
+  readonly gascity?: WaypointProjectGasCityRuntimeConfig
+}
+
+export interface WaypointProjectGasCityRuntimeConfig {
+  readonly enabled: boolean
+  readonly city?: string
+  readonly rig?: string
+  readonly target?: string
+  readonly provider?: string
+  readonly auto_start?: boolean
+  readonly sling?: {
+    readonly mode?: string
+    readonly no_formula?: boolean
+    readonly nudge?: boolean
+  }
+  readonly repair_policy?: {
+    readonly route_metadata?: string
+    readonly stranded_assignment?: string
+  }
 }
 
 export interface WaypointProjectConfig {
@@ -84,10 +103,39 @@ function parseRuntimeConfig(value: unknown): WaypointProjectRuntimeConfig {
   const recipe = runtime.recipe === 'local' || runtime.recipe === 'null' ? runtime.recipe : null
   const command = typeof runtime.command === 'string' ? runtime.command : undefined
   const args = Array.isArray(runtime.args) ? runtime.args.filter((arg): arg is string => typeof arg === 'string') : undefined
+  const gascity = parseGasCityRuntimeConfig(runtime.gascity)
   return {
     recipe,
     ...(command ? { command } : {}),
     ...(args ? { args } : {}),
+    ...(gascity ? { gascity } : {}),
+  }
+}
+
+function parseGasCityRuntimeConfig(value: unknown): WaypointProjectGasCityRuntimeConfig | undefined {
+  if (!isRecord(value)) return undefined
+  const sling = isRecord(value.sling)
+    ? {
+        ...(typeof value.sling.mode === 'string' ? { mode: value.sling.mode } : {}),
+        ...(typeof value.sling.no_formula === 'boolean' ? { no_formula: value.sling.no_formula } : {}),
+        ...(typeof value.sling.nudge === 'boolean' ? { nudge: value.sling.nudge } : {}),
+      }
+    : undefined
+  const repairPolicy = isRecord(value.repair_policy)
+    ? {
+        ...(typeof value.repair_policy.route_metadata === 'string' ? { route_metadata: value.repair_policy.route_metadata } : {}),
+        ...(typeof value.repair_policy.stranded_assignment === 'string' ? { stranded_assignment: value.repair_policy.stranded_assignment } : {}),
+      }
+    : undefined
+  return {
+    enabled: value.enabled === true,
+    ...(typeof value.city === 'string' ? { city: value.city } : {}),
+    ...(typeof value.rig === 'string' ? { rig: value.rig } : {}),
+    ...(typeof value.target === 'string' ? { target: value.target } : {}),
+    ...(typeof value.provider === 'string' ? { provider: value.provider } : {}),
+    ...(typeof value.auto_start === 'boolean' ? { auto_start: value.auto_start } : {}),
+    ...(sling && Object.keys(sling).length > 0 ? { sling } : {}),
+    ...(repairPolicy && Object.keys(repairPolicy).length > 0 ? { repair_policy: repairPolicy } : {}),
   }
 }
 

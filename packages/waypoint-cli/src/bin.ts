@@ -6,6 +6,7 @@ import { runAutoCommand } from './commands/auto.ts'
 import { runDiscussCommand } from './commands/discuss.ts'
 import { runDoctorCommand } from './commands/doctor.ts'
 import { runFirmVaultCommand } from './commands/firmvault.ts'
+import { runGasCityCommand } from './commands/gascity.ts'
 import { runGateCommand } from './commands/gate.ts'
 import { runHandoffsCommand } from './commands/handoffs.ts'
 import { runInitCommand } from './commands/init.ts'
@@ -48,7 +49,10 @@ Usage:
   waypoint firmvault landmarks [--json]
   waypoint quests
   waypoint recipes [--quest <slug>]
-  waypoint start [--quest <slug>]
+  waypoint start [--quest <slug>] [--gascity] [--gascity-target <rig/agent>] [--gascity-city <path>] [--gascity-rig <name>] [--gascity-provider <provider>] [--gascity-dry-run] [--gascity-no-nudge] [--gascity-repair-metadata]
+  waypoint gascity preflight [--city <path>] [--rig <name>] [--provider <provider>] [--json]
+  waypoint gascity diagnose --route-id <id> [--target <rig/agent>] [--city <path>] [--rig <name>] [--provider <provider>] [--json]
+  waypoint gascity sling --route-id <id> [--target <rig/agent>] [--city <path>] [--rig <name>] [--provider <provider>] [--dry-run] [--no-nudge] [--repair-metadata] [--json]
   waypoint routes [--json]
   waypoint route --route-id <id> [--json]
   waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
@@ -148,6 +152,10 @@ export async function runWaypointCli(args: readonly string[], io: WaypointCliIo 
 
   if (command === 'start') {
     return runStartCommand(args.slice(1), io)
+  }
+
+  if (command === 'gascity') {
+    return runGasCityCommand(args.slice(1), io)
   }
 
   if (command === 'routes') {

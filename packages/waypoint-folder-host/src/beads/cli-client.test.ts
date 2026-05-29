@@ -139,17 +139,20 @@ describe('WaypointBeadsCliIssueClient', () => {
     const runner = createRecordingRunner([
       { exitCode: 0, signal: null, stdout: JSON.stringify({ status: 'closed' }), stderr: '' },
       { exitCode: 0, signal: null, stdout: JSON.stringify({ status: 'updated' }), stderr: '' },
+      { exitCode: 0, signal: null, stdout: JSON.stringify({ status: 'updated' }), stderr: '' },
       { exitCode: 0, signal: null, stdout: JSON.stringify({ status: 'commented' }), stderr: '' },
     ])
     const client = new WaypointBeadsCliIssueClient({ runner })
 
     await client.closeIssue({ id: 'bd-gate', reason: 'Approved gate plan-review' })
     await client.updateIssueStatus({ id: 'bd-gate', status: 'blocked', note: 'Rejected gate plan-review' })
+    await client.updateIssueMetadata({ id: 'bd-gate', metadata: { 'gc.routed_to': 'waypoint/codex', molecule_id: 'wpg-9ay' } })
     await client.addIssueComment({ id: 'bd-gate', text: 'Waypoint gate decision recorded.' })
 
     expect(runner.calls.map((call) => call.args)).toEqual([
       ['close', 'bd-gate', '--reason', 'Approved gate plan-review', '--json'],
       ['update', 'bd-gate', '--status', 'blocked', '--json', '--append-notes', 'Rejected gate plan-review'],
+      ['update', 'bd-gate', '--json', '--set-metadata', 'gc.routed_to=waypoint/codex', '--set-metadata', 'molecule_id=wpg-9ay'],
       ['comment', 'bd-gate', 'Waypoint gate decision recorded.', '--json'],
     ])
   })

@@ -1,4 +1,6 @@
-import { basename } from 'node:path'
+import { readFile, writeFile } from 'node:fs/promises'
+import { basename, join } from 'node:path'
+import { parseDocument } from 'yaml'
 
 import { SpawnWaypointBeadsCliCommandRunner, type WaypointBeadsCliCommandRunner } from './cli-client.ts'
 
@@ -86,6 +88,17 @@ export async function initializeWaypointBeadsWorkspace(
         details: output.stderr.trim() || output.stdout.trim(),
       }
     }
+    try {
+      await ensureLegacyBeadsIssuePrefixConfig(options.cwd ?? process.cwd(), prefix)
+    } catch (error) {
+      return {
+        ok: false,
+        status: 'unhealthy',
+        message: 'Beads workspace initialization created a workspace, but Waypoint could not update Beads compatibility config.',
+        hint: 'Inspect .beads/config.yaml and ensure it is writable YAML with the expected Beads issue prefix.',
+        details: error instanceof Error ? error.message : String(error),
+      }
+    }
     return checkWaypointBeadsWorkspace(options)
   } catch (error) {
     if (isMissingCommandError(error)) {
@@ -165,6 +178,28 @@ function parseOptionalJson(text: string): Record<string, unknown> | null {
   }
 }
 
+async function ensureLegacyBeadsIssuePrefixConfig(cwd: string, prefix: string): Promise<void> {
+  const configPath = join(cwd, '.beads', 'config.yaml')
+  let text: string
+  try {
+    text = await readFile(configPath, 'utf8')
+  } catch (error) {
+    if (isNodeErrorWithCode(error, 'ENOENT')) return
+    throw error
+  }
+
+  const document = parseDocument(text)
+  if (document.errors.length > 0) {
+    throw new Error(`Invalid Beads config YAML at ${configPath}: ${document.errors[0]?.message ?? 'parse error'}`)
+  }
+
+  const existing = document.get('issue_prefix')
+  if (typeof existing === 'string' && existing.trim() !== '') return
+
+  document.set('issue_prefix', prefix)
+  await writeFile(configPath, document.toString())
+}
+
 function sanitizeBeadsPrefix(value: string): string {
   const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
   return normalized || 'waypoint'
@@ -181,4 +216,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isMissingCommandError(error: unknown): boolean {
   return isRecord(error) && error.code === 'ENOENT'
+}
+
+function isNodeErrorWithCode(error: unknown, code: string): boolean {
+  return isRecord(error) && error.code === code
 }

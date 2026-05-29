@@ -1,4 +1,5 @@
 import { mkdtemp, readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -47,5 +48,16 @@ describe('waypoint start command', () => {
     const eventLines = (await readFile(join(cwd, '.waypoint/events/route-001.jsonl'), 'utf8')).trim().split('\n')
     expect(eventLines).toHaveLength(1)
     expect(JSON.parse(eventLines[0])).toMatchObject({ kind: 'route.started', route_id: 'route-001' })
+  })
+
+  it('rejects Gas City launch for folder-backed projects before starting a route', async () => {
+    const cwd = await tempProject()
+    await runWaypointCli(['init', '--quest', 'waypoint'], { cwd, stdout: () => undefined, stderr: () => undefined })
+
+    const { io, stdout, stderr } = makeIo(cwd)
+    expect(await runWaypointCli(['start', '--quest', 'waypoint', '--gascity', '--gascity-target', 'waypoint/codex'], io)).toBe(1)
+    expect(stdout).toEqual([])
+    expect(stderr.join('\n')).toContain('Gas City runtime requires route backend beads')
+    expect(existsSync(join(cwd, '.waypoint/routes/route-001.yaml'))).toBe(false)
   })
 })

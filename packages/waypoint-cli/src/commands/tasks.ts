@@ -16,8 +16,11 @@ export async function runTasksCommand(args: readonly string[], io: WaypointCliIo
   io.stdout(`total: ${tasks.length}`)
   for (const task of tasks) {
     const discussion = discussionMetadata(task.metadata)
+    const beads = beadsMetadata(task.metadata)
     io.stdout(`- ${task.id} ${task.plan_ref}`)
     io.stdout(`  status: ${task.status}`)
+    if (typeof beads.status === 'string' && beads.status !== task.status) io.stdout(`  beads status: ${beads.status}`)
+    if (typeof beads.assignee === 'string') io.stdout(`  assignee: ${beads.assignee}`)
     io.stdout(`  kind: ${task.kind}`)
     io.stdout(`  phase: ${task.phase}`)
     if (typeof discussion.agent === 'string') io.stdout(`  agent: ${discussion.agent}`)
@@ -34,6 +37,11 @@ function discussionMetadata(metadata: unknown): Record<string, unknown> {
   const outer = isRecord(metadata) ? metadata : {}
   const waypoint = isRecord(outer.waypoint) ? outer.waypoint : {}
   return isRecord(waypoint.discussion) ? waypoint.discussion : {}
+}
+
+function beadsMetadata(metadata: unknown): Record<string, unknown> {
+  const outer = isRecord(metadata) ? metadata : {}
+  return isRecord(outer.beads) ? outer.beads : {}
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

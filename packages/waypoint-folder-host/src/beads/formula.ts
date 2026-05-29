@@ -10,7 +10,7 @@ import {
 import { describeWaypointBeadsIssue } from './descriptions.ts'
 
 export type WaypointBeadsFormulaType = 'workflow'
-export type WaypointBeadsFormulaStepType = 'task' | 'bug' | 'feature' | 'epic' | 'chore'
+export type WaypointBeadsFormulaStepType = 'task' | 'bug' | 'feature' | 'epic' | 'chore' | 'convoy'
 
 export interface WaypointBeadsFormulaVar {
   readonly description?: string

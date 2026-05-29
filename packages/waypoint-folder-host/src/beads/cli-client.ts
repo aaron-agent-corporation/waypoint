@@ -66,6 +66,11 @@ export interface WaypointBeadsIssueStatusUpdateInput {
   readonly note?: string
 }
 
+export interface WaypointBeadsIssueMetadataUpdateInput {
+  readonly id: string
+  readonly metadata: Readonly<Record<string, string>>
+}
+
 export interface WaypointBeadsIssueCommentInput {
   readonly id: string
   readonly text: string
@@ -75,6 +80,10 @@ export interface WaypointBeadsIssueMutationClient {
   closeIssue(input: WaypointBeadsIssueCloseInput): Promise<void>
   updateIssueStatus(input: WaypointBeadsIssueStatusUpdateInput): Promise<void>
   addIssueComment(input: WaypointBeadsIssueCommentInput): Promise<void>
+}
+
+export interface WaypointBeadsIssueMetadataMutationClient {
+  updateIssueMetadata(input: WaypointBeadsIssueMetadataUpdateInput): Promise<void>
 }
 
 export class WaypointBeadsCliCommandError extends Error {
@@ -187,6 +196,14 @@ export class WaypointBeadsCliIssueClient
     await this.run(args, 'update issue status')
   }
 
+  async updateIssueMetadata(input: WaypointBeadsIssueMetadataUpdateInput): Promise<void> {
+    const args = [...this.globalArgs, 'update', input.id, '--json']
+    for (const [key, value] of Object.entries(input.metadata)) {
+      args.push('--set-metadata', `${key}=${value}`)
+    }
+    await this.run(args, 'update issue metadata')
+  }
+
   async addIssueComment(input: WaypointBeadsIssueCommentInput): Promise<void> {
     await this.run([...this.globalArgs, 'comment', input.id, input.text, '--json'], 'comment issue')
   }
@@ -269,6 +286,11 @@ function issueSnapshotFromBeadsListEntry(entry: unknown): WaypointBeadsIssueSnap
   const issueType = typeof entry.issue_type === 'string' ? entry.issue_type : undefined
   const createdAt = typeof entry.created_at === 'string' ? entry.created_at : undefined
   const updatedAt = typeof entry.updated_at === 'string' ? entry.updated_at : undefined
+  const startedAt = typeof entry.started_at === 'string' ? entry.started_at : undefined
+  const closedAt = typeof entry.closed_at === 'string' ? entry.closed_at : undefined
+  const closeReason = typeof entry.close_reason === 'string' ? entry.close_reason : undefined
+  const notes = typeof entry.notes === 'string' ? entry.notes : undefined
+  const assignee = typeof entry.assignee === 'string' ? entry.assignee : undefined
   const parent = typeof entry.parent === 'string' ? entry.parent : undefined
   const dependencies = Array.isArray(entry.dependencies)
     ? entry.dependencies.map((dependency) => dependencySnapshotFromBeadsListEntry(dependency)).filter(isPresent)
@@ -280,7 +302,12 @@ function issueSnapshotFromBeadsListEntry(entry: unknown): WaypointBeadsIssueSnap
     ...(issueType ? { issue_type: issueType } : {}),
     ...(createdAt ? { created_at: createdAt } : {}),
     ...(updatedAt ? { updated_at: updatedAt } : {}),
+    ...(startedAt ? { started_at: startedAt } : {}),
+    ...(closedAt ? { closed_at: closedAt } : {}),
+    ...(closeReason ? { close_reason: closeReason } : {}),
+    ...(notes ? { notes } : {}),
     ...(entry.metadata !== undefined ? { metadata: entry.metadata } : {}),
+    ...(assignee ? { assignee } : {}),
     ...(parent ? { parent } : {}),
     ...(dependencies ? { dependencies } : {}),
   }

@@ -28,6 +28,40 @@ These paths looked test-related during local discovery.
 - packages/waypoint-cli/src/commands/doctor.test.ts
 - packages/waypoint-cli/src/commands/firmvault.test.ts
 
+## Gas City And Beads Runtime Tests
+<!-- code-kg:id tests.gascity-beads-runtime -->
+
+Focused validation for the Gas City runtime and Beads read-model contracts:
+
+- `packages/waypoint-folder-host/src/gascity/cli-adapter.test.ts` covers
+  command construction, session/event diagnostics, missing-assignee warnings,
+  and route-scoped config-drift behavior.
+- `packages/waypoint-folder-host/src/gascity/diagnostics.test.ts` covers
+  read-only `waypoint gascity diagnose` behavior, including no-nudge route-root
+  diagnosis from `route.runtime.delegated` events and the
+  `gascity-work-claim-released-after-start` diagnostic for started work that was
+  reopened and unassigned.
+- `packages/waypoint-folder-host/src/gascity/delegate.test.ts` covers
+  nudge-enabled dispatch, including selecting the next executable task after a
+  closed Beads task and stopping at open gates or waits.
+- `packages/waypoint-cli/src/commands/gascity.test.ts` covers CLI output and
+  error envelopes for the Gas City command surface.
+- `packages/waypoint-folder-host/src/routes/read-model.test.ts` covers Beads
+  route/task readback, including closed Beads tasks surfacing as Waypoint
+  `done` tasks without auto-completing gates.
+- `packages/waypoint-folder-host/src/events/read-model.test.ts` covers Beads
+  comments as route events, including `payload.task_status`.
+- `scripts/gascity-runtime-smoke.mjs` covers fixture-backed Gas City delegation
+  plus opt-in live no-nudge, explicit-dispatch, and live completion smokes.
+  Live modes also guard against stale built package artifacts before provider
+  execution. `--live-complete` checks provider task closure, Beads
+  notes/comments, Waypoint route/task/event readback, and next-dispatch dry-run
+  behavior. Live temp state uses an isolated `GC_HOME`; cleanup stops the temp
+  city and isolated supervisor, asserts the supervisor is no longer running,
+  checks for lingering temp-root processes, and retains typed blockers on
+  failure. The latest no-override proof used `gc=/opt/homebrew/bin/gc` version
+  `1.1.1` and global `waypoint` version `0.1.2`.
+
 ## Source Test Highlights
 
 These generated highlights come from deterministic file, symbol, and import extraction so agents can search source-shaped concepts before opening raw files.

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { WaypointBeadsIssueCommentReader, WaypointBeadsIssueSnapshotReader } from '../beads/cli-client'
 import { instantiateWaypointRouteInBeads, type WaypointBeadsInstantiationResult, type WaypointBeadsIssueClient } from '../beads/instantiate'
-import type { WaypointBeadsDependencySnapshot, WaypointBeadsIssueSnapshot } from '../beads/reconstruct'
+import type { WaypointBeadsDependencySnapshot, WaypointBeadsIssueSnapshot, WaypointBeadsSnapshotStatus } from '../beads/reconstruct'
 import { loadBundledWaypointCatalog } from '../catalog/bundled'
 import { initWaypointProject } from '../project/init'
 import { readWaypointRuntimeRouteEvents } from './read-model'
@@ -23,7 +23,9 @@ describe('Waypoint runtime route events', () => {
       client: createRecordingIssueClient(),
     })
     const gate = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'gate')
+    const checkpoint = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'checkpoint')
     expect(gate).toBeTruthy()
+    expect(checkpoint).toBeTruthy()
     const comments = commentsByIssue({
       [instantiated.root.beadsId]: [
         {
@@ -41,15 +43,23 @@ describe('Waypoint runtime route events', () => {
           created_at: '2026-05-27T12:02:00.000Z',
         },
       ],
+      [checkpoint!.beadsId]: [
+        {
+          id: 'comment-003',
+          issue_id: checkpoint!.beadsId,
+          text: 'Worker completed the checkpoint and attached notes.',
+          created_at: '2026-05-27T12:03:00.000Z',
+        },
+      ],
     })
 
     const page = await readWaypointRuntimeRouteEvents(projectRoot, 'route-waypoint', {
-      beadsReader: snapshotReader(snapshotFromInstantiation(instantiated)),
+      beadsReader: snapshotReader(snapshotFromInstantiation(instantiated, { [checkpoint!.logicalId]: 'closed' })),
       beadsCommentReader: comments,
     })
 
-    expect(page.total).toBe(3)
-    expect(page.items.map((event) => event.kind)).toEqual(['route.started', 'route.paused', 'route.gate.approved'])
+    expect(page.total).toBe(4)
+    expect(page.items.map((event) => event.kind)).toEqual(['route.started', 'route.paused', 'route.gate.approved', 'route.issue.comment'])
     expect(page.items[1]).toMatchObject({
       id: `beads-${instantiated.root.beadsId}-comment-001`,
       payload: { backend: 'beads', issue_id: instantiated.root.beadsId },
@@ -60,7 +70,18 @@ describe('Waypoint runtime route events', () => {
         issue_id: gate?.beadsId,
         task_id: gate?.beadsId,
         task_kind: 'gate',
+        task_status: 'blocked',
         text: 'Waypoint gate approved on route route-waypoint: plan-approval-gate\n\nApproved.',
+      },
+    })
+    expect(page.items[3]).toMatchObject({
+      payload: {
+        backend: 'beads',
+        issue_id: checkpoint?.beadsId,
+        task_id: checkpoint?.beadsId,
+        task_kind: 'checkpoint',
+        task_status: 'done',
+        text: 'Worker completed the checkpoint and attached notes.',
       },
     })
   })
@@ -77,7 +98,7 @@ function snapshotReader(snapshot: {
   }
 }
 
-function snapshotFromInstantiation(result: WaypointBeadsInstantiationResult): {
+function snapshotFromInstantiation(result: WaypointBeadsInstantiationResult, statuses: Record<string, WaypointBeadsSnapshotStatus> = {}): {
   readonly issues: readonly WaypointBeadsIssueSnapshot[]
   readonly dependencies: readonly WaypointBeadsDependencySnapshot[]
 } {
@@ -85,7 +106,7 @@ function snapshotFromInstantiation(result: WaypointBeadsInstantiationResult): {
     issues: result.issues.map((issue) => ({
       id: issue.beadsId,
       title: issue.spec.title,
-      status: 'open',
+      status: statuses[issue.logicalId] ?? 'open',
       issue_type: issue.spec.issueType,
       created_at: '2026-05-27T12:00:00.000Z',
       updated_at: '2026-05-27T12:00:00.000Z',

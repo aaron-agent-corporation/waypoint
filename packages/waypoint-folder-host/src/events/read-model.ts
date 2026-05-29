@@ -70,7 +70,7 @@ async function eventsForBeadsIssue(
     payload: {
       backend: 'beads',
       issue_id: source.issueId,
-      ...(source.task ? { task_id: source.task.id, node: source.task.plan_ref, task_kind: source.task.kind } : {}),
+      ...(source.task ? { task_id: source.task.id, node: source.task.plan_ref, task_kind: source.task.kind, task_status: source.task.status } : {}),
       ...(comment.author ? { author: comment.author } : {}),
       text: comment.text,
     },

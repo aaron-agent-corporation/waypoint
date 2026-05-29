@@ -31,7 +31,12 @@ export interface WaypointBeadsIssueSnapshot {
   readonly issue_type?: string
   readonly created_at?: string
   readonly updated_at?: string
+  readonly started_at?: string
+  readonly closed_at?: string
+  readonly close_reason?: string
+  readonly notes?: string
   readonly metadata?: unknown
+  readonly assignee?: string
   readonly parent?: string
   readonly dependencies?: readonly WaypointBeadsIssueDependencySnapshot[]
 }
@@ -51,6 +56,7 @@ export interface ReconstructWaypointRunFromBeadsInput {
 export interface WaypointBeadsRunTask {
   readonly id: string
   readonly beads_id: string
+  readonly beads_status: WaypointBeadsSnapshotStatus
   readonly route_id: string
   readonly plan_ref: string
   readonly title: string
@@ -61,6 +67,7 @@ export interface WaypointBeadsRunTask {
   readonly status: WaypointBeadsRunTaskStatus
   readonly blockers: readonly string[]
   readonly metadata: WaypointBeadsMetadata
+  readonly assignee?: string
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -78,6 +85,7 @@ export interface WaypointBeadsRunProgress {
 export interface WaypointBeadsRouteRun {
   readonly id: string
   readonly beads_id: string
+  readonly beads_status: WaypointBeadsSnapshotStatus
   readonly quest: string
   readonly status: WaypointBeadsRunStatus
   readonly current_node: string | null
@@ -85,6 +93,7 @@ export interface WaypointBeadsRouteRun {
   readonly created_at?: string
   readonly updated_at?: string
   readonly metadata: WaypointBeadsMetadata
+  readonly assignee?: string
   readonly progress: WaypointBeadsRunProgress
 }
 
@@ -119,6 +128,7 @@ export function reconstructWaypointRunFromBeads(
     route: {
       id: routeId,
       beads_id: root.issue.id,
+      beads_status: root.issue.status,
       quest: root.metadata.waypoint.quest_slug,
       status,
       current_node: currentNode,
@@ -126,6 +136,7 @@ export function reconstructWaypointRunFromBeads(
       ...(root.issue.created_at ? { created_at: root.issue.created_at } : {}),
       ...(root.issue.updated_at ? { updated_at: root.issue.updated_at } : {}),
       metadata: root.metadata,
+      ...(root.issue.assignee ? { assignee: root.issue.assignee } : {}),
       progress,
     },
     tasks,
@@ -157,6 +168,7 @@ function runTaskFromIssue(
   return {
     id: issue.id,
     beads_id: issue.id,
+    beads_status: issue.status,
     route_id: metadata.waypoint.route_id,
     plan_ref: metadata.waypoint.node_key ?? scaffold?.plan_ref ?? issue.id,
     title: issue.title,
@@ -167,6 +179,7 @@ function runTaskFromIssue(
     status: taskStatus(issue.status, blockers),
     blockers,
     metadata,
+    ...(issue.assignee ? { assignee: issue.assignee } : {}),
     ...(issue.created_at ? { created_at: issue.created_at } : {}),
     ...(issue.updated_at ? { updated_at: issue.updated_at } : {}),
   }

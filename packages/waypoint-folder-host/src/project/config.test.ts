@@ -30,4 +30,51 @@ updated_at: '2026-01-01T00:00:00.000Z'
       runtime: { recipe: null },
     })
   })
+
+  it('parses optional Gas City runtime host config without making it a route backend', () => {
+    const config = parseWaypointProjectConfig(`
+schema_version: 1
+enabled: true
+quest: waypoint
+backend:
+  route: beads
+runtime:
+  recipe: null
+  gascity:
+    enabled: true
+    city: /tmp/gascity
+    rig: waypoint
+    target: waypoint/codex
+    provider: codex
+    auto_start: false
+    sling:
+      mode: route-root
+      no_formula: true
+      nudge: true
+    repair_policy:
+      route_metadata: report-only
+      stranded_assignment: report-only
+created_at: '2026-01-01T00:00:00.000Z'
+updated_at: '2026-01-01T00:00:00.000Z'
+`)
+
+    expect(config.backend).toEqual({ route: 'beads' })
+    expect(config.runtime.gascity).toEqual({
+      enabled: true,
+      city: '/tmp/gascity',
+      rig: 'waypoint',
+      target: 'waypoint/codex',
+      provider: 'codex',
+      auto_start: false,
+      sling: {
+        mode: 'route-root',
+        no_formula: true,
+        nudge: true,
+      },
+      repair_policy: {
+        route_metadata: 'report-only',
+        stranded_assignment: 'report-only',
+      },
+    })
+  })
 })

@@ -121,6 +121,8 @@ function routeFromBeadsRun(run: WaypointBeadsRunReconstruction): WaypointFolderR
       waypoint: run.route.metadata.waypoint,
       beads: {
         issue_id: run.route.beads_id,
+        status: run.route.beads_status,
+        ...(run.route.assignee ? { assignee: run.route.assignee } : {}),
         progress: run.route.progress,
       },
       backend: {
@@ -146,6 +148,8 @@ function taskFromBeadsRunTask(task: WaypointBeadsRunReconstruction['tasks'][numb
       waypoint: task.metadata.waypoint,
       beads: {
         issue_id: task.beads_id,
+        status: task.beads_status,
+        ...(task.assignee ? { assignee: task.assignee } : {}),
         blockers: task.blockers,
       },
     },

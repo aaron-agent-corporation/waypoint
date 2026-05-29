@@ -15,6 +15,8 @@ The folder host can currently:
 - pause/resume routes and approve/reject gates;
 - run autopilot in the safe null runtime by default;
 - run Recipes through an explicitly configured local command runtime;
+- optionally delegate Beads-backed route work to Gas City for external agent
+  execution;
 - initialize product-owned FirmVault case state and project workflow landmarks from explicit YAML state plus evidence paths;
 - add local FirmVault documents into `documents/inbox/`, index them in `.waypoint/firmvault/documents.yaml`, and append FirmVault document events without marking substantive landmarks complete.
 
@@ -59,7 +61,10 @@ waypoint wizard plan --case <case-root> [--write-plan .waypoint/wizard/adoption-
 waypoint wizard apply --case <case-root> [--plan .waypoint/wizard/adoption-plan.yaml] [--json]
 waypoint quests
 waypoint recipes [--quest <slug>]
-waypoint start [--quest <slug>]
+waypoint start [--quest <slug>] [--gascity] [--gascity-target <rig/agent>] [--gascity-city <path>] [--gascity-rig <name>] [--gascity-provider <provider>] [--gascity-dry-run] [--gascity-no-nudge] [--gascity-repair-metadata]
+waypoint gascity preflight [--city <path>] [--rig <name>] [--provider <provider>] [--json]
+waypoint gascity diagnose --route-id <id> [--target <rig/agent>] [--city <path>] [--rig <name>] [--provider <provider>] [--json]
+waypoint gascity sling --route-id <id> [--target <rig/agent>] [--city <path>] [--rig <name>] [--provider <provider>] [--dry-run] [--no-nudge] [--repair-metadata] [--json]
 waypoint routes [--json]
 waypoint route --route-id <id> [--json]
 waypoint route-events --route-id <id> [--limit N] [--offset N] [--json]
@@ -140,6 +145,353 @@ Backend behavior in normal CLI use:
 The Recipe runtime selector is independent of the route backend. Both backends
 use the safe null Recipe runtime unless `.waypoint/config.yaml` explicitly sets
 `runtime.recipe: local` and provides a command.
+
+### Optional Gas City runtime over Beads
+
+Gas City is an optional execution supervisor for Beads-backed Waypoint routes.
+It does not replace the route backend. Waypoint still owns Quest/Recipe
+manifests, route materialization, gates, policy checks, and Beads metadata.
+Beads remains the durable work graph. Gas City owns city/rig registration,
+session startup, nudges, and agent/provider supervision.
+
+Prerequisites for the current local flow:
+
+- `gc`, `dolt`, `flock`, and the selected provider CLI such as `codex` are on
+  `PATH`.
+- End-to-end completion requires a Gas City build that includes the post-claim
+  completion reliability fix. On this machine, `gc` resolves to
+  `/opt/homebrew/bin/gc` version `1.1.1`; the previous `1.1.0` binary is backed
+  up at `/opt/homebrew/bin/gc.1.1.0.backup-20260529`.
+- A Gas City city exists, or the operator is ready to create one with `gc init`.
+- The current project folder is registered as a Gas City rig. For the current
+  live path, let Gas City initialize the Beads workspace when the rig is added,
+  then initialize Waypoint against that Beads backend.
+
+Current local setup path:
+
+```bash
+gc init --provider codex --skip-provider-readiness /path/to/gascity
+gc --city /path/to/gascity rig add "$PWD" --name waypoint --prefix WPT --start-suspended
+
+waypoint init --quest waypoint --backend beads
+
+waypoint gascity preflight \
+  --city /path/to/gascity \
+  --rig waypoint \
+  --provider codex
+
+waypoint start --quest waypoint \
+  --gascity \
+  --gascity-city /path/to/gascity \
+  --gascity-rig waypoint \
+  --gascity-target waypoint/codex \
+  --gascity-no-nudge
+```
+
+The earlier `waypoint init --backend beads --init-beads` followed by
+`gc rig add --adopt` flow is not the recommended live path yet. On the tested
+Gas City 1.1.0 local runtime, adoption can register the rig but leave the
+inherited Beads store unavailable to the project. The Gas City-owned rig init
+path above is the path that reaches Waypoint route materialization today.
+
+`waypoint start --gascity` validates that `backend.route: beads` is configured,
+preflights Gas City before writing a new route, starts the normal Waypoint
+Beads route, and delegates the generated Beads work to the configured Gas City
+target. In metadata-only no-nudge mode that work is the route root. In
+nudge-enabled execution mode it is the current executable Beads task for the
+route, because Gas City hook queries ignore epic issues.
+
+Use `--gascity-no-nudge` when the operator wants durable routing metadata only:
+Waypoint records `gc.routed_to=<target>` on the route root and verifies it, but
+does not start or wake a Gas City worker.
+
+Use the default nudge-enabled path only when intentional execution is desired.
+With Gas City 1.1.0, Waypoint selects the current open, unblocked, non-gate,
+non-wait Beads task, wraps that task in a Gas City-owned dispatch convoy, and
+then slings the convoy:
+
+```bash
+gc --city <city> --rig <rig> convoy create waypoint-route-001 <current-task-bead-id>
+gc --city <city> --rig <rig> sling <target> <convoy-id> --no-formula --nudge
+```
+
+`--no-formula` is intentional: Waypoint already created the route graph in
+Beads, so Gas City should route the existing graph rather than generate a
+separate formula graph. The dispatch convoy id and routed task id are runtime
+metadata; the Waypoint route identity remains the route root Bead id. The CLI
+prints both when they differ:
+
+```text
+gascity bead: <route-root-bead-id>
+gascity routed bead: <current-task-bead-id>
+gascity dispatch bead: <convoy-id>
+```
+
+When `--gascity-no-nudge` is set, Waypoint does not call `gc sling`. It writes
+`gc.routed_to=<target>` directly onto the Beads route root with `bd update`,
+then reads the root Bead back and verifies the metadata. This metadata-only path
+is bounded by Beads update/read behavior and does not start, wake, or poke Gas
+City sessions. If verification fails, `waypoint start --gascity` and `waypoint
+gascity sling --no-nudge` return a failed result instead of claiming that the
+route was delegated.
+
+The same settings can be stored in `.waypoint/config.yaml` so the start command
+only needs `--gascity`:
+
+```yaml
+backend:
+  route: beads
+runtime:
+  recipe: null
+  gascity:
+    enabled: true
+    city: /path/to/gascity
+    rig: waypoint
+    target: waypoint/codex
+    provider: codex
+    sling:
+      mode: current-task
+      no_formula: true
+      nudge: true
+    repair_policy:
+      route_metadata: report-only
+      stranded_assignment: report-only
+```
+
+After launch, inspect Waypoint and Gas City state separately:
+
+```bash
+waypoint route --route-id route-001 --json
+waypoint tasks --route-id route-001 --json
+waypoint route-events --route-id route-001 --json
+
+waypoint gascity diagnose \
+  --route-id route-001 \
+  --target waypoint/codex \
+  --city /path/to/gascity \
+  --rig waypoint
+```
+
+For Beads-backed routes, `waypoint tasks --json` reports Waypoint-normalized
+task status plus `metadata.beads.status` and `metadata.beads.assignee` when an
+external worker has claimed or changed an issue. Closed Beads issues read back
+as Waypoint `done` tasks while retaining the raw Beads status in metadata.
+`waypoint route-events` reads Beads comments as route events and includes
+`payload.task_status` for task comments, so worker notes remain visible without
+giving Waypoint permission to bypass gates or waits.
+
+If the route already exists and the initial Gas City handoff failed, retry the
+handoff without creating a duplicate route:
+
+```bash
+waypoint gascity sling \
+  --route-id route-001 \
+  --target waypoint/codex \
+  --city /path/to/gascity \
+  --rig waypoint
+```
+
+By default, post-sling metadata verification is report-only. To explicitly
+repair missing `gc.routed_to` metadata on the routed Bead, pass
+`--repair-metadata` to `waypoint gascity sling` or `--gascity-repair-metadata`
+to `waypoint start --gascity`. This repair flag is for nudge-enabled `gc sling`
+or retry paths where Waypoint must repair metadata after an external delegation
+attempt. It is not required for `--gascity-no-nudge`, because no-nudge
+delegation is already a metadata-only Beads update. The equivalent config value
+is:
+
+```yaml
+runtime:
+  gascity:
+    repair_policy:
+      route_metadata: metadata-only
+```
+
+This repair only writes `gc.routed_to=<target>` to the routed Bead. Stranded
+assignments and session cleanup remain manual.
+
+`waypoint gascity diagnose` is read-only. It checks prerequisites, reads the
+latest `route.runtime.delegated` event when one exists, chooses the appropriate
+diagnostic Bead from that event, lists Gas City sessions, reads recent Gas City
+events, and reports known blocker states with concrete Bead ids or next
+commands. Metadata-only no-nudge delegation is diagnosed on the route root
+because that is where Waypoint writes `gc.routed_to`; explicit dispatch is
+diagnosed on the routed executable task while still reporting the route root
+and dispatch convoy ids. Diagnose does not clear assignments, reopen Beads,
+delete sessions, or repair Gas City state by default.
+
+Live smoke verification:
+
+```bash
+pnpm smoke:gascity-runtime -- --json
+pnpm smoke:gascity-runtime -- --live-preflight
+pnpm smoke:gascity-runtime -- --live --json
+pnpm smoke:gascity-runtime -- --live-execute --json
+pnpm build
+pnpm smoke:gascity-runtime -- --live-complete --json
+```
+
+The default smoke is fixture-backed and does not mutate this repo, start Gas
+City, or touch provider sessions. `--live-preflight` only checks local `gc`,
+`bd`, `dolt`, `flock`, and provider CLI availability. `--live` is opt-in
+because it creates a temporary Gas City city, registers it with the local
+supervisor, creates a temporary project/rig, initializes Waypoint with the
+Beads backend, runs `waypoint start --gascity --gascity-no-nudge`, compares
+Gas City session snapshots before and after the no-nudge handoff, and then runs
+`waypoint gascity diagnose`.
+
+`--live-execute` is a separate opt-in mode for intentional dispatch. It follows
+the same temp project/city setup, but runs `waypoint start --gascity` without
+`--gascity-no-nudge`, expects Waypoint to create a Gas City dispatch convoy, and
+checks Gas City Beads provider health before dispatch. After dispatch it probes
+Gas City hook output for the active session agent candidates, waits for a
+bounded Beads claim or completion signal only if a Waypoint route issue is
+hook-visible, records route and task readback, and runs `waypoint gascity
+diagnose`. This proves dispatch-to-claim/readback and diagnostics, not
+autonomous provider completion of every task. On failure it keeps the temp root
+and reports a typed blocker such as
+`gascity-hook-no-visible-dispatch-work`,
+`gascity-live-session-creating-without-claim`,
+`gascity-live-execution-no-claim`, or
+`gascity-live-beads-dolt-unavailable`.
+
+`--live-complete` is the strict end-to-end completion probe. Run `pnpm build`
+first when validating local source changes because `packages/waypoint-cli/src`
+imports workspace packages through package exports, which resolve to the
+ignored built `dist/` output at runtime. Live modes now enforce this with a
+machine-readable `live_build_freshness` guard; stale builds fail at
+`stage: build-freshness` before temp runtime state is created. This mode
+follows the explicit dispatch path, waits for the routed Beads task to close
+within `WAYPOINT_GASCITY_LIVE_COMPLETION_WAIT_MS`, records Beads
+close/notes/comment signals, verifies Waypoint route/task/event readbacks, and
+then dry-runs the next Gas City dispatch. The dry-run must select a new
+executable task, find the route complete, or stop at an explicit gate/wait. It
+retains temp state and reports typed blockers when provider completion, route
+advancement, or cleanup cannot be proven.
+
+The live smoke passes only if:
+
+- route creation and metadata-only delegation return successfully;
+- the routed Bead has `gc.routed_to=<target>`;
+- no new session id appears after no-nudge delegation starts;
+- no existing inactive session becomes active after no-nudge delegation; and
+- `waypoint gascity diagnose` completes.
+
+The live execution smoke passes only if:
+
+- route creation returns with both `root_bead_id` and `dispatch_bead_id`;
+- Gas City hook output includes at least one Waypoint route issue id for an
+  active session agent candidate;
+- Waypoint route readback succeeds;
+- Waypoint task readback succeeds and exposes `metadata.beads.status` plus
+  `metadata.beads.assignee` when the routed task has been claimed;
+- `waypoint gascity diagnose` completes for the routed work;
+- some Beads issue in the temp route is claimed or completed within
+  `WAYPOINT_GASCITY_LIVE_EXECUTION_WAIT_MS`; and
+- failures are classified with retained temp paths instead of being treated as
+  successful execution.
+
+The live completion smoke passes only if:
+
+- the routed Beads task closes and exposes a close, notes, or comment signal;
+- `waypoint tasks --route-id route-001 --json` reads that task as Waypoint
+  `done` with raw Beads status `closed`;
+- `waypoint route --route-id route-001 --json` advances past the completed
+  node, marks the route complete, or stops on an explicit gate/wait;
+- `waypoint route-events --route-id route-001 --json` remains readable;
+- `waypoint gascity sling --dry-run --json` selects the next executable task,
+  reports route completion, or refuses to bypass a gate/wait; and
+- cleanup stops the temp city, stops the isolated Gas City supervisor with
+  `gc supervisor stop --wait --json`, confirms the isolated supervisor is no
+  longer running, and finds no temp-root processes; and
+- failures retain temp paths with a typed blocker.
+
+Typed live execution blockers and warnings:
+
+- Gas City/Beads/Dolt can become unavailable during temp-store writes. The smoke
+  reports this as `gascity-live-beads-dolt-unavailable`; inspect the retained
+  temp project with `bd dolt status --json` and `bd doctor`.
+- Dispatch can become hook-visible while provider sessions remain in startup and
+  no Beads claim appears before the execution wait expires. The smoke reports
+  this as `gascity-live-session-creating-without-claim` or
+  `gascity-live-execution-no-claim`; inspect Gas City sessions/events before
+  retrying or clearing assignments.
+- Completion can also become hook-visible and even started without closing
+  before the completion wait expires. The completion smoke reports this as
+  `gascity-work-claim-released-after-start`,
+  `gascity-live-task-claimed-not-completed`,
+  `gascity-live-session-creating-without-completion`, or
+  `gascity-live-completion-not-observed`; inspect the retained Beads issue,
+  comments, sessions, and recent Gas City events before recovery.
+- If the routed issue closes but Waypoint readback or next-dispatch probing
+  does not prove route advancement, the smoke reports
+  `waypoint-live-completion-readback-mismatch` or
+  `waypoint-live-next-dispatch-probe-failed`.
+- If route proof passes but cleanup cannot prove the isolated supervisor and
+  temp-root provider processes are stopped, the smoke reports
+  `gascity-live-cleanup` and keeps the temp root for inspection.
+- After a Beads claim exists, the Beads assignee is the source of truth for the
+  claim. If the assignee does not appear in the current Gas City session-list
+  snapshot, diagnose emits the warning
+  `gascity-work-assignee-not-in-session-list` instead of failing the run.
+- Config-drift events and drained background sessions are scoped to the routed
+  work. They are warnings unless they match the expected target or the task
+  assignee; a matching inactive assignee remains
+  `gascity-work-stranded-on-drained-assignee`.
+
+On success the harness stops the temp city, stops the isolated supervisor,
+verifies no temp-root processes remain, and removes the temp root. On failure it
+keeps the temp root and prints retained paths plus command output for diagnosis.
+
+Latest local evidence from May 29, 2026:
+
+- Repeated `--live-complete` runs with `/tmp/gc-patched-bin/gc` version `1.1.1`
+  closed routed tasks `wpl-t4x.1`, `wpl-bc9.1`, and `wpl-96k.1`, and each
+  next-dispatch dry-run selected the following executable task.
+- A follow-up cleanup proof closed `wpl-oh8.1`, dry-ran next dispatch to
+  `wpl-oh8.2`, stopped the isolated supervisor, confirmed `running: false`, saw
+  `process_count: 0`, and removed the temp root. The proof file is
+  `/tmp/waypoint-gascity-cleanup-proof.json`.
+- After installing the patched binary as `/opt/homebrew/bin/gc`, a no-override
+  `--live-complete` run passed with `gc` version `1.1.1` and global
+  `waypoint` version `0.1.2`: routed task `wpl-y66.1` closed, next dry-run
+  selected `wpl-y66.2`, cleanup removed the temp root, and no temp supervisor
+  or Dolt process remained. Raw proof:
+  `/tmp/waypoint-gascity-global-proof.json`; summary:
+  `/tmp/waypoint-gascity-global-proof-summary.json`.
+
+Useful live timeout knobs:
+
+```bash
+WAYPOINT_GASCITY_LIVE_GC_INIT_TIMEOUT_MS=360000
+WAYPOINT_GASCITY_LIVE_GC_STOP_TIMEOUT_MS=90000
+WAYPOINT_GASCITY_LIVE_STORE_READY_TIMEOUT_MS=90000
+WAYPOINT_GASCITY_LIVE_WAYPOINT_START_TIMEOUT_MS=240000
+WAYPOINT_GASCITY_LIVE_MAX_BUFFER_BYTES=16777216
+WAYPOINT_GASCITY_COMMAND_TIMEOUT_MS=240000
+```
+
+Current limitations:
+
+- Diagnostics are report-only. Missing `gc.routed_to` metadata and route-scoped
+  stranded assignments include candidate inspection or repair commands, but
+  Waypoint does not mutate them automatically.
+- Provider login/trust prompts remain provider-specific. If Codex or another
+  provider opens an interactive prompt, Gas City can start a session while work
+  still remains blocked.
+- Gas City config drift, drained sessions, and supervisor health are external
+  runtime concerns. Waypoint reports route-scoped failures as runtime blockers
+  rather than Quest failures, and treats unrelated background session drift as
+  advisory diagnostic context.
+- Non-waking delegation is metadata-only. It makes the route visible to Gas
+  City's work queries, but execution still requires an explicit nudge-enabled
+  dispatch or an active Gas City controller/reconciler policy outside Waypoint.
+- The first nudge-enabled integration delegates the current executable task and
+  proves the next dispatch with a dry-run. Automatically looping through every
+  task in a route, Formula export, and release packaging remain future work.
+- This remains a development install. The global `waypoint` command is a pnpm
+  link to this workspace's CLI package; release packaging/publishing is still
+  separate from the local runtime proof.
 
 Check status:
 
@@ -477,6 +829,63 @@ Run just those smokes with:
 
 ```bash
 pnpm exec vitest run packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts
+```
+
+Gas City command and diagnostic coverage is split between a deterministic smoke
+script and mocked command-runner unit tests:
+
+- `pnpm smoke:gascity-runtime` exercises the expected Gas City command/state
+  contract and the metadata-only no-nudge route without starting Gas City,
+  Beads, tmux, Dolt, or Codex.
+- `pnpm smoke:gascity-runtime -- --live-preflight` additionally checks local
+  availability of `gc`, `bd`, `dolt`, `flock`, and `codex` without mutating the
+  Waypoint repository.
+- `pnpm smoke:gascity-runtime -- --live --json` is an opt-in live probe. It
+  creates a temp Waypoint project and temp Gas City city, registers the project
+  as a suspended Gas City rig with `--start-suspended`, waits for the Gas
+  City-owned Beads store, then runs `waypoint init --backend beads`,
+  `waypoint gascity preflight`, `waypoint start --gascity
+  --gascity-no-nudge`, and `waypoint gascity diagnose` when start returns. The
+  no-nudge delegation step updates Beads route metadata rather than invoking
+  `gc sling`, so any session startup observed in this smoke belongs to Gas City
+  initialization or later controller behavior, not the Waypoint handoff. The
+  live probe never writes into this repository. On failure it stops the temp
+  city best-effort, keeps the temp root, and prints the retained path plus
+  captured command output for diagnosis.
+  Skip this mode in CI, on machines without a local `gc` supervisor setup, or
+  anywhere it is not acceptable for Gas City to register a temporary city and
+  install/start its local supervisor service. Use `--live-preflight` for a
+  non-mutating dependency check. The live `gc init` step uses a 360 second
+  timeout to match Gas City's documented 5 minute city readiness budget plus a
+  small buffer. Waypoint Gas City commands are bounded by
+  `WAYPOINT_GASCITY_COMMAND_TIMEOUT_MS` and the live start wrapper is bounded
+  by `WAYPOINT_GASCITY_LIVE_WAYPOINT_START_TIMEOUT_MS`; override these only
+  when diagnosing startup or delegation behavior.
+- `pnpm smoke:gascity-runtime -- --live-execute --json` is the intentional
+  dispatch probe. It creates the same temp setup as `--live`, omits
+  `--gascity-no-nudge`, verifies a dispatch convoy id, runs `waypoint route`
+  and `waypoint tasks` readback, runs `waypoint gascity diagnose`, and waits
+  for a Beads claim/completion signal within
+  `WAYPOINT_GASCITY_LIVE_EXECUTION_WAIT_MS` (default 60000ms). It is expected to
+  wake or reuse Gas City provider sessions. The passing live contract proves
+  dispatch, hook visibility, claim observation, readback, and diagnostics; it
+  does not require the provider to complete every task. On failure it retains
+  temp state and reports a typed blocker.
+- `pnpm smoke:gascity-runtime -- --live-complete --json` is the intentional
+  completion probe. Run `pnpm build` first for source-tree validation. It waits
+  for the routed Beads task to close, verifies notes/comments and Waypoint
+  route/task/event readbacks, then dry-runs the next Gas City dispatch to prove
+  the route advanced to another executable task, completed, or stopped at a
+  gate/wait. On failure it retains temp state and reports the typed blocker.
+- `packages/waypoint-folder-host/src/gascity/*.test.ts` and
+  `packages/waypoint-cli/src/commands/gascity.test.ts` cover command
+  construction, route delegation, diagnostics, and CLI output through injected
+  runners/readers.
+
+```bash
+pnpm smoke:gascity-runtime
+pnpm smoke:gascity-runtime -- --live-preflight
+pnpm exec vitest run packages/waypoint-folder-host/src/gascity packages/waypoint-cli/src/commands/gascity.test.ts
 ```
 
 ## Reference example

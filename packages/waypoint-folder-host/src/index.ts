@@ -23,11 +23,13 @@ export type { WaypointProjectPaths } from './project/root.ts'
 export {
   createWaypointProjectConfig,
   parseWaypointProjectConfig,
+  readWaypointProjectConfig,
   serializeWaypointProjectConfig,
 } from './project/config.ts'
 export type {
   WaypointProjectBackendConfig,
   WaypointProjectConfig,
+  WaypointProjectGasCityRuntimeConfig,
   WaypointRecipeRuntimeMode,
   WaypointRouteBackendMode,
 } from './project/config.ts'
@@ -111,6 +113,8 @@ export type {
   WaypointBeadsIssueCommentReader,
   WaypointBeadsIssueCommentInput,
   WaypointBeadsIssueCommentSnapshot,
+  WaypointBeadsIssueMetadataMutationClient,
+  WaypointBeadsIssueMetadataUpdateInput,
   WaypointBeadsIssueMutationClient,
   WaypointBeadsIssueSnapshotListResult,
   WaypointBeadsIssueSnapshotReader,
@@ -126,6 +130,75 @@ export type {
   WaypointBeadsWorkspaceReadiness,
   WaypointBeadsWorkspaceReadinessStatus,
 } from './beads/workspace.ts'
+export {
+  diagnoseWaypointGasCityState,
+  formatWaypointGasCityErrorEnvelope,
+  SpawnWaypointGasCityCommandRunner,
+  WaypointGasCityCliAdapter,
+  WaypointGasCityCliCommandError,
+} from './gascity/cli-adapter.ts'
+export { inspectWaypointGasCityRoute } from './gascity/diagnostics.ts'
+export { delegateWaypointRouteToGasCity, formatWaypointGasCityPreflightFailure } from './gascity/delegate.ts'
+export {
+  formatWaypointGasCityMetadataVerificationFailure,
+  repairWaypointGasCityRouteMetadata,
+  verifyWaypointGasCityRouteMetadata,
+} from './gascity/metadata.ts'
+export type {
+  WaypointGasCityAddRigInput,
+  WaypointGasCityCliAdapterConfig,
+  WaypointGasCityCommandInput,
+  WaypointGasCityCommandOutput,
+  WaypointGasCityCommandResult,
+  WaypointGasCityCommandRunner,
+  WaypointGasCityConvoyResult,
+  WaypointGasCityCreateConvoyInput,
+  WaypointGasCityDiagnostic,
+  WaypointGasCityDiagnosticCode,
+  WaypointGasCityDiagnosticInput,
+  WaypointGasCityErrorEnvelope,
+  WaypointGasCityEventObservation,
+  WaypointGasCityEventPage,
+  WaypointGasCityEventsInput,
+  WaypointGasCityHookItem,
+  WaypointGasCityInitCityInput,
+  WaypointGasCityPreflight,
+  WaypointGasCityPreflightInput,
+  WaypointGasCityPreflightTool,
+  WaypointGasCityRegisterCityInput,
+  WaypointGasCityScopeInput,
+  WaypointGasCitySession,
+  WaypointGasCitySessionList,
+  WaypointGasCitySessionListInput,
+  WaypointGasCitySessionObservation,
+  WaypointGasCitySlingBeadInput,
+  WaypointGasCitySlingResult,
+  WaypointGasCityStatus,
+  WaypointGasCityStatusInput,
+  WaypointGasCityTaskObservation,
+  WaypointGasCityToolCheck,
+  WaypointGasCityToolCheckSpec,
+  WaypointGasCityVersion,
+} from './gascity/cli-adapter.ts'
+export type {
+  DelegateWaypointRouteToGasCityInput,
+  DelegateWaypointRouteToGasCityResult,
+  WaypointGasCityDelegatableRoute,
+  WaypointGasCityRouteRuntime,
+} from './gascity/delegate.ts'
+export type {
+  InspectWaypointGasCityRouteInput,
+  InspectWaypointGasCityRouteResult,
+  WaypointGasCityDiagnosticsRuntime,
+  WaypointGasCityTaskDiagnosticSnapshot,
+} from './gascity/diagnostics.ts'
+export type {
+  RepairWaypointGasCityRouteMetadataInput,
+  VerifyWaypointGasCityRouteMetadataInput,
+  WaypointGasCityRouteMetadataRepairClient,
+  WaypointGasCityRouteMetadataRepairPolicy,
+  WaypointGasCityRouteMetadataVerification,
+} from './gascity/metadata.ts'
 export {
   approveWaypointBeadsRouteGate,
   pauseWaypointBeadsRoute,
@@ -177,7 +250,7 @@ export type {
 export { createWaypointRoute, getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from './routes/store.ts'
 export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './routes/state.ts'
 export { startQuestRoute } from './routes/start.ts'
-export type { StartQuestRouteOptions, StartedQuestRoute } from './routes/start.ts'
+export type { StartQuestRouteOptions, StartedQuestRoute, StartedQuestRouteBeadsSummary } from './routes/start.ts'
 export { getWaypointRuntimeRoute, getWaypointRuntimeTask, listWaypointRuntimeRoutes, listWaypointRuntimeTasks } from './routes/read-model.ts'
 export type { ListWaypointRuntimeTasksOptions, WaypointRuntimeReadOptions } from './routes/read-model.ts'
 export { applyQuestScaffold } from './quests/scaffold.ts'

@@ -1,4 +1,8 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { parse as parseYaml } from 'yaml'
 
 import type { WaypointBeadsCliCommandInput, WaypointBeadsCliCommandOutput, WaypointBeadsCliCommandRunner } from './cli-client.ts'
 import {
@@ -94,6 +98,34 @@ describe('Waypoint Beads workspace readiness', () => {
     })
     expect(runner.calls[1]).toMatchObject({ args: ['where', '--json'], cwd: '/tmp/My Project' })
     expect(readiness).toMatchObject({ ok: true, status: 'ready', prefix: 'my-project' })
+  })
+
+  it('writes the legacy Beads issue_prefix config key for adapter compatibility', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-beads-workspace-'))
+    const configPath = join(projectRoot, '.beads', 'config.yaml')
+    const runner = recordingRunner([
+      { exitCode: 0, signal: null, stdout: 'initialized', stderr: '' },
+      {
+        exitCode: 0,
+        signal: null,
+        stdout: JSON.stringify({ path: `${projectRoot}/.beads`, prefix: 'wpl' }),
+        stderr: '',
+      },
+    ])
+
+    try {
+      await mkdir(join(projectRoot, '.beads'), { recursive: true })
+      await writeFile(configPath, '# Beads config\nissue-prefix: wpl\n')
+
+      const readiness = await initializeWaypointBeadsWorkspace({ cwd: projectRoot, prefix: 'WPL', runner })
+      const parsed = parseYaml(await readFile(configPath, 'utf8')) as Record<string, unknown>
+
+      expect(readiness).toMatchObject({ ok: true, status: 'ready', prefix: 'wpl' })
+      expect(parsed.issue_prefix).toBe('wpl')
+      expect(parsed['issue-prefix']).toBe('wpl')
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true })
+    }
   })
 
   it('surfaces failed bd init output as an unhealthy workspace', async () => {

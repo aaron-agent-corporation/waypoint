@@ -18,6 +18,11 @@ This is a backend contract, not a rebrand. Waypoint should not become Beads,
 Mission Control, FirmVault, or GSD. Beads should not absorb Waypoint's catalog
 or policy semantics.
 
+For the optional agent/session runtime layer on top of this Beads backend, see
+[`2026-05-27-waypoint-gascity-runtime.md`](./2026-05-27-waypoint-gascity-runtime.md).
+Gas City is treated there as a host adapter/supervisor target, not as a new
+core dependency or route backend replacement.
+
 ## Current Implementation Snapshot
 
 The parity landing keeps `folder` as the default backend and enables `beads`

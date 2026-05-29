@@ -2,7 +2,7 @@
   "version": 1,
   "tool_version": "0.1.0",
   "project_root": ".",
-  "generated_at": "2026-05-27T18:42:52.102Z",
+  "generated_at": "2026-05-28T17:38:33.359Z",
   "sections": {
     "lat": {
       "stable_id": "lat",
@@ -15,9 +15,9 @@
       "source_anchor_policy": "coverage-only",
       "source_node_ids": [],
       "source_spans": [],
-      "generated_hash": "sha256:f4961f815f22ab2959f909848f407ad1e7ee58664215b4d213400d30e8b05afa",
-      "current_hash": "sha256:f4961f815f22ab2959f909848f407ad1e7ee58664215b4d213400d30e8b05afa",
-      "last_seen_graph_hash": "sha256:b7e056a5c2ddb1ccaaf1a58c5d6087f0356e336697fef0debebb87c87da9328d"
+      "generated_hash": "sha256:e0918145f09766734792f1011c05dda693499ddad9cb4e5ed35e9a5de4353a5c",
+      "current_hash": "sha256:e0918145f09766734792f1011c05dda693499ddad9cb4e5ed35e9a5de4353a5c",
+      "last_seen_graph_hash": "sha256:18bb577f8c8e120d0172dc62ab9c03d9ebd02e3f8119f19b71ba20e2493bc5ee"
     },
     "architecture": {
       "stable_id": "architecture",
@@ -1613,24 +1613,24 @@
       "heading_path": [
         "Cross-Cutting Concerns"
       ],
-      "status": "generated",
+      "status": "edited",
       "source_anchor_policy": "coverage-only",
       "source_node_ids": [
+        "file_packages_waypoint_folder_host_src_gascity_cli_adapter_ts_24ba62b9",
         "file_packages_waypoint_cli_src_bin_ts_5e758677",
         "file_packages_waypoint_folder_host_src_beads_cli_client_ts_b0e54da9",
         "file_packages_waypoint_folder_host_src_firmvault_state_ts_f993ea51",
         "file_examples_hermes_operator_adapter_src_firmvault_case_bootstrap_ts_7e51ee18",
         "file_packages_waypoint_folder_host_src_catalog_bundled_ts_cd7a7ed5",
         "file_src_wizard_types_ts_a235e742",
-        "file_src_index_ts_c5fb8502",
-        "file_packages_waypoint_folder_host_src_autopilot_run_ts_ef1d0913",
         "file_packages_waypoint_folder_host_src_beads_reconstruct_ts_5512c0d9",
-        "file_packages_waypoint_folder_host_src_beads_compiler_ts_97e6a066"
+        "file_src_index_ts_c5fb8502",
+        "file_packages_waypoint_folder_host_src_autopilot_run_ts_ef1d0913"
       ],
       "source_spans": [],
-      "generated_hash": "sha256:7bddbf32b96b562507f92b70b804d4ee75504c0d2e698d809293436c12492085",
-      "current_hash": "sha256:7bddbf32b96b562507f92b70b804d4ee75504c0d2e698d809293436c12492085",
-      "last_seen_graph_hash": "sha256:b7e056a5c2ddb1ccaaf1a58c5d6087f0356e336697fef0debebb87c87da9328d"
+      "generated_hash": "sha256:bb1c9e5665baec89e69845dbe0aa0862a35736a9dc4a2315bf1a2bebe1d5b128",
+      "current_hash": "sha256:904ad17b1497869593ca7c2df49fefdece660e4c86b841d0e3498d0129eb8605",
+      "last_seen_graph_hash": "sha256:bfc7604d22caed6cdcf1bd68f9aac8ee71cf8b643dfb0dd3ff2ce52d8907adb4"
     },
     "confidence": {
       "stable_id": "confidence",
@@ -1645,7 +1645,7 @@
       "source_spans": [],
       "generated_hash": "sha256:ea881ed52ef1d84ccd03f0bab9674be79a44ead2692635a188371da9389c6c1e",
       "current_hash": "sha256:ea881ed52ef1d84ccd03f0bab9674be79a44ead2692635a188371da9389c6c1e",
-      "last_seen_graph_hash": "sha256:b7e056a5c2ddb1ccaaf1a58c5d6087f0356e336697fef0debebb87c87da9328d"
+      "last_seen_graph_hash": "sha256:18bb577f8c8e120d0172dc62ab9c03d9ebd02e3f8119f19b71ba20e2493bc5ee"
     },
     "tests.tests": {
       "stable_id": "tests.tests",
@@ -1659,7 +1659,7 @@
       "source_node_ids": [],
       "source_spans": [],
       "generated_hash": "sha256:3372ec874c6b063c7f616dbb58d0ac0ada34f278adf7e0220973dab31ec5283e",
-      "current_hash": "sha256:1d90fb9f79a8a084ce3bd60f978fffe0da680994f8a258d453cb20a6247c509e",
+      "current_hash": "sha256:8da62828fa6cc3ca06ff9bf0acbb89a91291f53d58796a51e702e920355c1417",
       "last_seen_graph_hash": "sha256:bc2a86a324d96704eebbc9ae61e53e69f87073d9feee7848bf18edf1d902b6cc"
     }
   },

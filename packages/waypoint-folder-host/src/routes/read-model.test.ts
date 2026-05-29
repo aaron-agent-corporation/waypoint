@@ -42,9 +42,15 @@ describe('Waypoint route read model', () => {
       subject: { type: 'folder', id: 'referral-fixture' },
       client: createRecordingClient(),
     })
+    const claimedTask = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.node_key === 'source-inventory')
+    expect(claimedTask).toBeTruthy()
     const beadsReader = {
       async listIssueSnapshots() {
-        return snapshotFromInstantiation(instantiated)
+        return snapshotFromInstantiation(
+          instantiated,
+          { [claimedTask!.logicalId]: 'in_progress' },
+          { [claimedTask!.logicalId]: 'codex-worker-001' },
+        )
       },
     }
 
@@ -59,10 +65,12 @@ describe('Waypoint route read model', () => {
         backend: { route: 'beads' },
         beads: {
           issue_id: 'bd-001',
+          status: 'open',
           progress: {
             total: 12,
+            in_progress: 1,
             blocked: 10,
-            ready: 2,
+            ready: 1,
           },
         },
       },
@@ -76,12 +84,23 @@ describe('Waypoint route read model', () => {
 
     const tasks = await listWaypointRuntimeTasks(projectRoot, { routeId: 'route-referral', beadsReader })
     expect(tasks).toHaveLength(12)
+    expect(tasks.find((task) => task.plan_ref === 'source-inventory')).toMatchObject({
+      id: claimedTask?.beadsId,
+      status: 'in_progress',
+      metadata: {
+        beads: {
+          status: 'in_progress',
+          assignee: 'codex-worker-001',
+        },
+      },
+    })
     expect(tasks.find((task) => task.plan_ref === 'start-here-draft')).toMatchObject({
       id: 'bd-009',
       status: 'blocked',
       kind: 'recipe',
       metadata: {
         beads: {
+          status: 'open',
           blockers: ['bd-007', 'bd-008'],
         },
       },
@@ -98,6 +117,52 @@ describe('Waypoint route read model', () => {
         blocked: 0,
       },
     })
+  })
+
+  it('surfaces completed Beads tasks without bypassing gates', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-read-model-complete-'))
+    await initWaypointProject(projectRoot, { quest: 'waypoint', backend: 'beads' })
+    const catalog = await loadBundledWaypointCatalog()
+    const instantiated = await instantiateWaypointRouteInBeads(catalog, {
+      quest: 'waypoint',
+      routeId: 'route-waypoint',
+      subject: { type: 'project', id: 'local' },
+      client: createRecordingClient(),
+    })
+    const completedTask = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'checkpoint')
+    const gate = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'gate')
+    expect(completedTask).toBeTruthy()
+    expect(gate).toBeTruthy()
+    const beadsReader = {
+      async listIssueSnapshots() {
+        return snapshotFromInstantiation(instantiated, { [completedTask!.logicalId]: 'closed' })
+      },
+    }
+
+    const route = await getWaypointRuntimeRoute(projectRoot, 'route-waypoint', { beadsReader })
+    expect(route).toMatchObject({
+      id: 'route-waypoint',
+      status: 'active',
+      metadata: {
+        beads: {
+          progress: {
+            done: 1,
+          },
+        },
+      },
+    })
+    expect(route?.current_node).not.toBe(completedTask?.spec.metadata.waypoint.node_key)
+
+    const tasks = await listWaypointRuntimeTasks(projectRoot, { routeId: 'route-waypoint', beadsReader })
+    expect(tasks.find((task) => task.id === completedTask?.beadsId)).toMatchObject({
+      status: 'done',
+      metadata: {
+        beads: {
+          status: 'closed',
+        },
+      },
+    })
+    expect(tasks.find((task) => task.id === gate?.beadsId)?.status).not.toBe('done')
   })
 })
 
@@ -117,6 +182,7 @@ function readyBeadsWorkspaceRunner(projectRoot: string) {
 function snapshotFromInstantiation(
   result: WaypointBeadsInstantiationResult,
   statuses: Record<string, WaypointBeadsSnapshotStatus> = {},
+  assignees: Record<string, string> = {},
 ): {
   readonly issues: readonly WaypointBeadsIssueSnapshot[]
   readonly dependencies: readonly WaypointBeadsDependencySnapshot[]
@@ -130,6 +196,7 @@ function snapshotFromInstantiation(
       created_at: '2026-05-27T00:00:00.000Z',
       updated_at: '2026-05-27T00:00:00.000Z',
       metadata: index % 2 === 0 ? issue.spec.metadata : JSON.stringify(issue.spec.metadata),
+      ...(assignees[issue.logicalId] ? { assignee: assignees[issue.logicalId] } : {}),
       ...(issue.spec.parent ? { parent: result.root.beadsId } : {}),
       dependencies: result.dependencies
         .filter((dependency) => dependency.dependent === issue.beadsId)

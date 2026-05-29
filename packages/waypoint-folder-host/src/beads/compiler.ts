@@ -82,6 +82,9 @@ export interface WaypointBeadsPolicy {
 }
 
 export interface WaypointBeadsRecipeRuntimeSpec {
+  readonly name?: string
+  readonly description?: string
+  readonly prompt?: string
   readonly tools?: readonly string[]
   readonly runtime?: unknown
 }
@@ -486,10 +489,13 @@ function externalSideEffectsFromMetadata(metadata: unknown): WaypointBeadsExtern
 function recipeRuntimeSpec(recipe: CatalogRecipeManifest | undefined): WaypointBeadsRecipeRuntimeSpec | undefined {
   if (!recipe) return undefined
   const spec: WaypointBeadsRecipeRuntimeSpec = {
+    name: recipe.name,
+    ...(recipe.description ? { description: recipe.description } : {}),
+    ...(recipe.prompt ? { prompt: recipe.prompt } : {}),
     ...(recipe.tools ? { tools: recipe.tools } : {}),
     ...(recipe.runtime !== undefined ? { runtime: recipe.runtime } : {}),
   }
-  return spec.tools || spec.runtime !== undefined ? spec : undefined
+  return spec
 }
 
 function waypointIssueKindFromNodeMetadata(node: Record<string, unknown> | undefined): WaypointBeadsIssueKind | undefined {
