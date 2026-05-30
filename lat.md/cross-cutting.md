@@ -91,6 +91,11 @@ Observed contract:
   following executable tasks. `gc` on PATH now resolves to
   `/opt/homebrew/bin/gc` version `1.1.1`; the old `1.1.0` binary is backed up
   at `/opt/homebrew/bin/gc.1.1.0.backup-20260529`.
+- Waypoint treats Gas City as an external runtime dependency. The local
+  completion-ready `gc` binary is fork-patched from `Whaleylaw/gascity` branch
+  `codex/post-claim-completion-reliability` at commit `8cd2efb0`; upstream PR
+  `https://github.com/gastownhall/gascity/pull/2737` may remain open without
+  blocking Waypoint's fork/patched-binary runtime path.
 
 ## Beads Read Models For External Work
 <!-- code-kg:id cross-cutting.beads-read-models -->

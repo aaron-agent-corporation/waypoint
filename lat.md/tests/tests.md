@@ -60,7 +60,10 @@ Focused validation for the Gas City runtime and Beads read-model contracts:
   city and isolated supervisor, asserts the supervisor is no longer running,
   checks for lingering temp-root processes, and retains typed blockers on
   failure. The latest no-override proof used `gc=/opt/homebrew/bin/gc` version
-  `1.1.1` and global `waypoint` version `0.1.2`.
+  `1.1.1` and global `waypoint` version `0.1.2`. That `gc` is a
+  fork-patched Gas City binary from `Whaleylaw/gascity` commit `8cd2efb0`;
+  upstream Gas City PR `https://github.com/gastownhall/gascity/pull/2737`
+  remains external to Waypoint.
 
 ## Source Test Highlights
 

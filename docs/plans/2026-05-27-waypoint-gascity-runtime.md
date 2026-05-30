@@ -5,8 +5,13 @@ typed completion diagnostics, repeated live-completion proof, deterministic
 temp-runtime cleanup, and global/default `gc` rollout on this machine. `gc` on
 PATH resolves to `/opt/homebrew/bin/gc` version `1.1.1`; the previous
 `1.1.0` binary is backed up at
-`/opt/homebrew/bin/gc.1.1.0.backup-20260529`.
-**Date:** 2026-05-27 local / updated 2026-05-29 local
+`/opt/homebrew/bin/gc.1.1.0.backup-20260529`. Gas City is an external
+dependency for Waypoint: the patched local binary comes from the
+`Whaleylaw/gascity` fork branch `codex/post-claim-completion-reliability` at
+commit `8cd2efb0`, while upstream PR
+`https://github.com/gastownhall/gascity/pull/2737` remains open for the Gas
+City maintainers.
+**Date:** 2026-05-27 local / updated 2026-05-30 local
 
 ## Goal
 
@@ -16,7 +21,10 @@ already materialized into Beads.
 Waypoint remains the portable Quest and Recipe runtime. Beads remains the
 durable work graph. Gas City owns orchestration around that graph: cities,
 rigs, session templates, `gc sling`, agent session startup, nudges, formulas,
-molecules, convoys, and supervisor reconciliation.
+molecules, convoys, and supervisor reconciliation. Waypoint treats Gas City as
+an external runtime dependency, not an owned source tree; local readiness uses a
+fork-patched `gc` binary until the upstream Gas City project merges or replaces
+the post-claim completion fix.
 
 This is an adapter/runtime target. It must not move Gas City assumptions into
 `@waypoint/core`, and it must not replace the existing `folder` and `beads`
@@ -525,6 +533,12 @@ Completion-loop live evidence from 2026-05-28 and 2026-05-29:
   `running: false`, found `process_count: 0`, and removed the temp root. Raw
   proof is saved at `/tmp/waypoint-gascity-global-proof.json`; summary at
   `/tmp/waypoint-gascity-global-proof-summary.json`.
+- The local `gc` binary should now be treated as fork-patched Gas City, not an
+  upstream Gas City release. The source patch is preserved in
+  `Whaleylaw/gascity` on branch `codex/post-claim-completion-reliability`
+  (`8cd2efb0`), with upstream review left to
+  `https://github.com/gastownhall/gascity/pull/2737`. Waypoint can continue to
+  run against the fork/patched binary while the upstream PR remains open.
 
 ## Live Diagnosis Runbook
 

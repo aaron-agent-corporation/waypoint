@@ -161,7 +161,11 @@ Prerequisites for the current local flow:
 - End-to-end completion requires a Gas City build that includes the post-claim
   completion reliability fix. On this machine, `gc` resolves to
   `/opt/homebrew/bin/gc` version `1.1.1`; the previous `1.1.0` binary is backed
-  up at `/opt/homebrew/bin/gc.1.1.0.backup-20260529`.
+  up at `/opt/homebrew/bin/gc.1.1.0.backup-20260529`. This is a fork-patched
+  binary from `Whaleylaw/gascity` branch
+  `codex/post-claim-completion-reliability` at commit `8cd2efb0`; upstream Gas
+  City PR `https://github.com/gastownhall/gascity/pull/2737` can remain open
+  without blocking Waypoint's local runtime path.
 - A Gas City city exists, or the operator is ready to create one with `gc init`.
 - The current project folder is registered as a Gas City rig. For the current
   live path, let Gas City initialize the Beads workspace when the rig is added,
