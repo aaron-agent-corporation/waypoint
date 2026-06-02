@@ -10,6 +10,23 @@ Waypoint is the portable runtime. Mission Control is only the first host/adapter
 
 GSD is historical inspiration and compatibility naming in some docs/catalog assets. Do not rebrand Waypoint back into GSD or Mission Control.
 
+## Runtime modes
+
+Waypoint supports multiple host runtime paths. Keep them separate:
+
+- `folder` is the default route backend and stores route/task state under `.waypoint/`.
+- `beads` is an explicit route backend and materializes route work into Beads issues. Beads uses embedded Dolt in this checkout.
+- Gas City is an optional execution supervisor for Beads-backed routes. It is not a third route backend and must not replace the existing `folder` or `beads` modes.
+- Codex can be a Gas City provider/agent target, but Codex provider behavior belongs to the host/runtime layer, not `@waypoint/core`.
+
+The current local-main testing setup intentionally keeps the Beads Dolt remote in `.beads/config.yaml`:
+
+```text
+sync.remote: file:///Users/aaronwhaley/.beads-remotes/waypoint
+```
+
+Preserve that local setup while comparing runtime modes. If Gas City becomes the primary production runtime, revisit this as a portable/shared sync policy instead of hard-coding a personal remote.
+
 ## Current architecture map
 
 Primary directories:
@@ -25,12 +42,14 @@ Primary directories:
   - `quests/`, `handoffs/` — manifest parsing/resolution and registries.
 - `packages/waypoint-cli/` — CLI commands and command surfaces.
 - `packages/waypoint-folder-host/` — local folder host, tasks store, recipe runtime, FirmVault integration surface.
+  - `src/beads/` — Beads route backend adapter, graph compiler, readback, transitions, and smoke-facing command boundary.
+  - `src/gascity/` — optional Gas City runtime adapter over Beads routes, including preflight, sling/delegation, metadata, routing, and diagnostics.
 - `examples/host-minimal/` — minimal external host reference.
 - `examples/folder-host-quest/` — runnable local folder host walkthrough.
 - `examples/hermes-operator-adapter/` and `examples/hermes-runtime-adapter/` — Hermes/Gary integration examples.
 - `docs/` — design docs, operations runbook, Quest catalog, command maps, and plans.
 - `quests/`, `recipes/`, `operators/`, `handoffs/` — bundled catalog content.
-- `scripts/` — smoke tests, package staging, built-import verification, FirmVault simulations.
+- `scripts/` — smoke tests, package staging, built-import verification, FirmVault simulations, and the Gas City runtime smoke harness.
 
 ## Code-KG repo map
 
@@ -87,6 +106,7 @@ pnpm smoke:firmvault-staged-guidance
 pnpm smoke:firmvault-existing-case-adoption
 pnpm smoke:waypoint-wizard-firmvault
 pnpm smoke:wpo-integration
+pnpm smoke:gascity-runtime
 pnpm build
 pnpm verify:built-imports
 ```
@@ -101,7 +121,7 @@ pnpm exec vitest run packages/waypoint-cli/src/commands
 
 ## Hard constraints
 
-1. Keep core host-agnostic. Do not import Mission Control, Hermes, FirmVault, filesystem, process, or CLI-only assumptions into core contracts unless the existing boundary already allows it.
+1. Keep core host-agnostic. Do not import Mission Control, Hermes, FirmVault, Gas City, Beads/Dolt, provider CLIs, filesystem, process, or CLI-only assumptions into core contracts unless the existing boundary already allows it.
 2. Preserve the standard error envelope: `{ "ok": false, "action": "error", "error": "...", "details": "optional" }` with validation details normalized to `{ code, path, message }`.
 3. Do not bypass route gates, approval gates, or review gates in tests or runtime code. Model the gate explicitly.
 4. Keep deterministic boundaries: use injected `IClock`, `IIdGenerator`, host store, and recipe runtime where the architecture expects them.
@@ -131,6 +151,7 @@ git branch --show-current
 During work:
 
 - Read the relevant docs and Code-KG sections before changing a subsystem.
+- For Gas City or Beads work, start with `docs/waypoint-folder-host.md`, `docs/plans/2026-05-27-waypoint-beads-runtime.md`, `docs/plans/2026-05-27-waypoint-gascity-runtime.md`, and the Code-KG `cross-cutting.gascity-runtime` / `cross-cutting.beads-read-models` sections.
 - Keep diffs small and scoped.
 - Add or update tests near the code you change.
 - Prefer interfaces/contracts over host-specific shortcuts.

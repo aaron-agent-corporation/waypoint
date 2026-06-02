@@ -96,6 +96,11 @@ Observed contract:
   `codex/post-claim-completion-reliability` at commit `8cd2efb0`; upstream PR
   `https://github.com/gastownhall/gascity/pull/2737` may remain open without
   blocking Waypoint's fork/patched-binary runtime path.
+- Local-main validation on 2026-06-01 passed under the current Codex account:
+  `--live-execute` claimed routed Bead `wpl-v4z.1`, and `--live-complete`
+  closed routed Bead `wpl-ksf.1`, read it back as Waypoint `done` with raw
+  Beads status `closed`, advanced the route to `initialize-roadmap`, and
+  dry-ran next dispatch to `wpl-ksf.2`.
 
 ## Beads Read Models For External Work
 <!-- code-kg:id cross-cutting.beads-read-models -->
@@ -123,6 +128,10 @@ Current behavior:
   `waypoint route-events`.
 - Gate and wait issues are not auto-completed by external comments or task
   completion; route/gate commands must model approvals explicitly.
+- This local checkout intentionally keeps Beads on embedded Dolt with
+  `sync.remote: file:///Users/aaronwhaley/.beads-remotes/waypoint` while
+  runtime modes are compared. That remote is local test configuration, not a
+  Waypoint product boundary.
 
 ## Cross-Community Imports
 

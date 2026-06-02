@@ -146,6 +146,35 @@ The Recipe runtime selector is independent of the route backend. Both backends
 use the safe null Recipe runtime unless `.waypoint/config.yaml` explicitly sets
 `runtime.recipe: local` and provides a command.
 
+### Current local Beads/Dolt setup
+
+The local `main` branch currently keeps the Gas City/Beads experiment merged so
+new local Codex sessions can test runtime modes against the same code. In this
+checkout, Beads uses embedded Dolt:
+
+```text
+database: .beads/embeddeddolt
+remote: file:///Users/aaronwhaley/.beads-remotes/waypoint
+```
+
+That remote is intentionally local for the current comparison work. It lets
+`bd dolt pull` and `bd dolt push` synchronize the project task graph without a
+network remote. It is not a product requirement for Waypoint, and a shared or
+production runtime should revisit the sync policy.
+
+For a new local agent session on this machine:
+
+```bash
+git switch main
+bd prime
+bd dolt pull
+bd dolt status
+bd dolt remote list
+```
+
+`bd dolt status` should report the embedded engine and
+`bd dolt remote list` should show `origin` at the local file remote above.
+
 ### Optional Gas City runtime over Beads
 
 Gas City is an optional execution supervisor for Beads-backed Waypoint routes.
@@ -463,6 +492,24 @@ Latest local evidence from May 29, 2026:
   or Dolt process remained. Raw proof:
   `/tmp/waypoint-gascity-global-proof.json`; summary:
   `/tmp/waypoint-gascity-global-proof-summary.json`.
+
+Latest local evidence from June 1, 2026:
+
+- Recovered the prior retained
+  `/tmp/waypoint-gascity-e2e-waypoint-n04/05-live-execute-240s.json` failure
+  and confirmed it was a provider/account claim failure, not a Waypoint
+  materialization or readback failure.
+- Reran `--live-execute` under the current Codex account with
+  `WAYPOINT_GASCITY_LIVE_EXECUTION_WAIT_MS=240000`. The run passed, routed
+  Bead `wpl-v4z.1` was claimed `in_progress`, diagnostics were empty, and
+  cleanup removed the temp runtime state. Proof:
+  `/tmp/waypoint-gascity-e2e-waypoint-n04/06-live-execute-240s-current.json`.
+- Reran `--live-complete` with
+  `WAYPOINT_GASCITY_LIVE_COMPLETION_WAIT_MS=420000`. The run passed, routed
+  Bead `wpl-ksf.1` closed, Waypoint task readback reported `done` with raw
+  Beads status `closed`, route readback advanced to `initialize-roadmap`, and
+  next-dispatch dry-run selected `wpl-ksf.2`. Proof:
+  `/tmp/waypoint-gascity-e2e-waypoint-n04/07-live-complete-420s-current.json`.
 
 Useful live timeout knobs:
 

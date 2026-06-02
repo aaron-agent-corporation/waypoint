@@ -64,6 +64,13 @@ Focused validation for the Gas City runtime and Beads read-model contracts:
   fork-patched Gas City binary from `Whaleylaw/gascity` commit `8cd2efb0`;
   upstream Gas City PR `https://github.com/gastownhall/gascity/pull/2737`
   remains external to Waypoint.
+- A June 1, 2026 local E2E pass under the current Codex account recorded
+  `--live-execute` proof at
+  `/tmp/waypoint-gascity-e2e-waypoint-n04/06-live-execute-240s-current.json`
+  and `--live-complete` proof at
+  `/tmp/waypoint-gascity-e2e-waypoint-n04/07-live-complete-420s-current.json`.
+  The completion run closed routed Bead `wpl-ksf.1`, read it back through
+  Waypoint as `done`, and dry-ran next dispatch to `wpl-ksf.2`.
 
 ## Source Test Highlights
 

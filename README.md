@@ -36,6 +36,29 @@ pnpm typecheck
 pnpm smoke:folder-host # temp-folder CLI smoke for the local folder host
 ```
 
+## Runtime modes
+
+Waypoint can run the same Quest and Recipe catalog through multiple host
+runtime paths:
+
+- `folder` is the default route backend. It stores route/task state under the
+  project-local `.waypoint/` directory.
+- `beads` is an explicit route backend. It materializes route work as Beads
+  issues and dependencies, with Dolt providing Beads' durable local database.
+- Gas City is an optional execution supervisor over Beads-backed routes. It is
+  not a third route backend and does not replace Waypoint's folder or Beads
+  modes. Waypoint owns Quest/Recipe manifests, gates, route materialization,
+  policy checks, and readback; Gas City owns city/rig/session/provider
+  supervision.
+
+The current local-main experiment keeps the Beads/Dolt remote configured in
+`.beads/config.yaml` so new local Codex sessions can resume against the same
+embedded Dolt-backed Beads graph. Treat that as local test configuration, not a
+portable product requirement.
+
+See [`docs/waypoint-folder-host.md`](docs/waypoint-folder-host.md) for the
+folder, Beads, Gas City, and live-smoke command details.
+
 
 ## Quest and Recipe catalog
 
