@@ -23,3 +23,5 @@ graphify-out/
 .dolt/
 *.db
 .beads-credential-key
+runs/
+mar.config.json
