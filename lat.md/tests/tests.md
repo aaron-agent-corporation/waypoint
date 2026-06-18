@@ -23,6 +23,7 @@ These paths looked test-related during local discovery.
 - packages/waypoint-cli/src/cli.test.ts
 - packages/waypoint-cli/src/commands/author.test.ts
 - packages/waypoint-cli/src/commands/auto.test.ts
+- packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts
 - packages/waypoint-cli/src/commands/catalog.test.ts
 - packages/waypoint-cli/src/commands/discuss.test.ts
 - packages/waypoint-cli/src/commands/doctor.test.ts
@@ -102,9 +103,9 @@ Test file `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.test.ts`
 
 ### examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts
 
-Test file `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts` contains tests and validation symbols. Key symbols: `repoRoot`, `waypointCli`.
+Test file `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts` contains tests and validation symbols. Key symbols: `repoRoot`, `waypointCli`, and 4 more.
 
-- Symbols: `repoRoot (const)`, `waypointCli (const)`
+- Symbols: `repoRoot (const)`, `waypointCli (const)`, `FakeBdIssue (interface)`, `FakeBdState (interface)`, `installFakeBd (function)`, `fakeBdScript (function)`
 - Imports: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts`, `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`
 - Imported by: none detected
 
@@ -204,6 +205,14 @@ Test file `packages/waypoint-cli/src/commands/auto.test.ts` contains tests and v
 - Imports: `packages/waypoint-cli/src/bin.ts`
 - Imported by: none detected
 
+### packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts
+
+Test file `packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts` contains tests and validation symbols. Key symbols: `realBdSmoke`, `FakeBdIssue`, and 6 more.
+
+- Symbols: `realBdSmoke (const)`, `FakeBdIssue (interface)`, `FakeBdState (interface)`, `silentIo (function)`, `makeIo (function)`, `realBdAvailable (function)`, `installFakeBd (function)`, `fakeBdScript (function)`
+- Imports: `packages/waypoint-cli/src/bin.ts`
+- Imported by: none detected
+
 ### packages/waypoint-cli/src/commands/catalog.test.ts
 
 Test file `packages/waypoint-cli/src/commands/catalog.test.ts` contains tests and validation symbols. Key symbols: `makeIo`.
@@ -234,6 +243,14 @@ Test file `packages/waypoint-cli/src/commands/firmvault.test.ts` contains tests 
 
 - Symbols: `tempProjectRoot (function)`, `captureIo (function)`
 - Imports: `packages/waypoint-cli/src/bin.ts`
+- Imported by: none detected
+
+### packages/waypoint-cli/src/commands/gascity.test.ts
+
+Test file `packages/waypoint-cli/src/commands/gascity.test.ts` contains tests and validation symbols. Key symbols: `tempProject`, `makeIo`, and 8 more.
+
+- Symbols: `tempProject (function)`, `makeIo (function)`, `createRecordingClient (function)`, `createMutableIssueReader (function)`, `createRouteIssueReader (function)`, `createMutableRouteIssueReader (function)`, `routeIssues (function)`, `waypointMetadata (function)`, and 2 more
+- Imports: `packages/waypoint-cli/src/commands/gascity.ts`
 - Imported by: none detected
 
 ### packages/waypoint-cli/src/commands/gate.test.ts
@@ -282,9 +299,9 @@ Test coverage links map inferred test relationships from test imports to source 
 
 ### packages/waypoint-cli/src/bin.ts
 
-Source file `packages/waypoint-cli/src/bin.ts` is covered by test imports from `packages/waypoint-cli/src/cli.test.ts`, `packages/waypoint-cli/src/commands/author.test.ts`, and 20 more.
+Source file `packages/waypoint-cli/src/bin.ts` is covered by test imports from `packages/waypoint-cli/src/cli.test.ts`, `packages/waypoint-cli/src/commands/author.test.ts`, and 21 more.
 
-- Tests: `packages/waypoint-cli/src/cli.test.ts`, `packages/waypoint-cli/src/commands/author.test.ts`, `packages/waypoint-cli/src/commands/auto.test.ts`, `packages/waypoint-cli/src/commands/catalog.test.ts`, `packages/waypoint-cli/src/commands/discuss.test.ts`, `packages/waypoint-cli/src/commands/doctor.test.ts`, and 16 more
+- Tests: `packages/waypoint-cli/src/cli.test.ts`, `packages/waypoint-cli/src/commands/author.test.ts`, `packages/waypoint-cli/src/commands/auto.test.ts`, `packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts`, `packages/waypoint-cli/src/commands/catalog.test.ts`, `packages/waypoint-cli/src/commands/discuss.test.ts`, and 17 more
 
 ### packages/waypoint-folder-host/src/project/init.ts
 

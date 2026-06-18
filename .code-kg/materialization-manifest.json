@@ -2,7 +2,7 @@
   "version": 1,
   "tool_version": "0.1.0",
   "project_root": ".",
-  "generated_at": "2026-06-02T14:02:38.842Z",
+  "generated_at": "2026-06-18T20:03:08.141Z",
   "sections": {
     "lat": {
       "stable_id": "lat",
@@ -15,8 +15,8 @@
       "source_anchor_policy": "coverage-only",
       "source_node_ids": [],
       "source_spans": [],
-      "generated_hash": "sha256:44c3fac2044faacb56f6dca6b49ef4baa53b37b5c95d457c6d79525d1b490360",
-      "current_hash": "sha256:44c3fac2044faacb56f6dca6b49ef4baa53b37b5c95d457c6d79525d1b490360",
+      "generated_hash": "sha256:4a5d8f2cc18198bf39dc541de540212ee362586a07ad9775b144fb93bcf029d0",
+      "current_hash": "sha256:4a5d8f2cc18198bf39dc541de540212ee362586a07ad9775b144fb93bcf029d0",
       "last_seen_graph_hash": "sha256:98d57aff04b05d0b3b6ba3393f745d04c198cfd5bfec123cee2a1ad5ca7ef5bf"
     },
     "architecture": {
@@ -1603,7 +1603,7 @@
       ],
       "source_spans": [],
       "generated_hash": "sha256:7e3e2610cb5b93bd2394b23587a34ef77625a943b8aac2a67bb592060304f462",
-      "current_hash": "sha256:4e9912c4350a899c0a299e67e3d2bb6eaeb891db1ac025d23789743fe3f25a73",
+      "current_hash": "sha256:4b86e71f7947a42ccdf09d2da2da47946708ca2d97b09821fa8c2f79aa000445",
       "last_seen_graph_hash": "sha256:bc2a86a324d96704eebbc9ae61e53e69f87073d9feee7848bf18edf1d902b6cc"
     },
     "cross-cutting": {
@@ -1629,7 +1629,7 @@
       ],
       "source_spans": [],
       "generated_hash": "sha256:bb1c9e5665baec89e69845dbe0aa0862a35736a9dc4a2315bf1a2bebe1d5b128",
-      "current_hash": "sha256:2ccff1920c9bae009e0552ba3f234162404550baea3662ed044b3cb4a4fa0b1e",
+      "current_hash": "sha256:67119c7a50472e8dc98aa6fb949cbc258de27e1e132757d521ed7daa15f60d53",
       "last_seen_graph_hash": "sha256:bfc7604d22caed6cdcf1bd68f9aac8ee71cf8b643dfb0dd3ff2ce52d8907adb4"
     },
     "confidence": {
@@ -1659,7 +1659,7 @@
       "source_node_ids": [],
       "source_spans": [],
       "generated_hash": "sha256:3372ec874c6b063c7f616dbb58d0ac0ada34f278adf7e0220973dab31ec5283e",
-      "current_hash": "sha256:74281457719fbf943d1503842bbd0be8fc904a8a6c266597eb5f159ee6a6070a",
+      "current_hash": "sha256:b2f9d2c86ad40b7b38c08685f8b060bae234165148096b2cd68e0e50b1a5ab6d",
       "last_seen_graph_hash": "sha256:bc2a86a324d96704eebbc9ae61e53e69f87073d9feee7848bf18edf1d902b6cc"
     }
   },
