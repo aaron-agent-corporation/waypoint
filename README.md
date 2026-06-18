@@ -59,6 +59,42 @@ portable product requirement.
 See [`docs/waypoint-folder-host.md`](docs/waypoint-folder-host.md) for the
 folder, Beads, Gas City, and live-smoke command details.
 
+## Engine host (resident run/watch/author API)
+
+`@waypoint/engine-host` (`packages/waypoint-engine-host`) wraps `@waypoint/core`
++ `@waypoint/folder-host` as a resident process exposing the run + watch +
+author command surface over a loopback HTTP + WebSocket API (the foundation for
+the Waypoint desktop app and its Pi-powered orchestrator). Folder and Beads/Dolt
+are both first-class. `pnpm smoke:engine-host` is the local check (run after
+`pnpm build`).
+
+Embed it in-process:
+
+```ts
+import { createEngineHost } from '@waypoint/engine-host'
+
+const host = createEngineHost()
+const { url, token } = await host.start() // loopback, ephemeral port, bearer token
+await host.dispatch('workspace.open', { root: '/path/to/project', backend: 'folder' })
+const run = await host.dispatch('run.start', { quest: 'waypoint' })
+```
+
+Or drive it over HTTP + WebSocket with the shipped client:
+
+```ts
+import { createEngineClient } from '@waypoint/engine-host'
+
+const client = createEngineClient({ url, token })
+await client.cmd('run.start', { quest: 'waypoint' })
+const unsubscribe = await client.subscribe(['*'], (event) => console.log(event))
+```
+
+Raw HTTP (every request carries the bearer token):
+
+```bash
+curl -s -X POST "$URL/cmd/routes.list" -H "authorization: Bearer $TOKEN"
+```
+
 
 ## Quest and Recipe catalog
 

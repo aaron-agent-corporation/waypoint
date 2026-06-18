@@ -77,3 +77,4 @@ async function stagePackageBuild(packagePath) {
 await rewriteRuntimeImportSpecifiers()
 await stagePackageBuild('packages/waypoint-folder-host')
 await stagePackageBuild('packages/waypoint-cli')
+await stagePackageBuild('packages/waypoint-engine-host')

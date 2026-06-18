@@ -21,8 +21,11 @@ export class RouteBroadcaster {
   private readonly broadcast = new Map<string, Set<string>>()
   private readonly locks = new Map<string, Promise<unknown>>()
   private pollTimer: ReturnType<typeof setInterval> | null = null
+  private readonly deps: RouteBroadcasterDeps
 
-  constructor(private readonly deps: RouteBroadcasterDeps) {}
+  constructor(deps: RouteBroadcasterDeps) {
+    this.deps = deps
+  }
 
   /** Read the durable log for a route and publish any not-yet-broadcast events. */
   async emit(routeId: string): Promise<void> {
