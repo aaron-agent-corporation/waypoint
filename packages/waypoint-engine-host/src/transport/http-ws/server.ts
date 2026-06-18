@@ -2,9 +2,12 @@ import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
 
+import type { WebSocketServer } from 'ws'
+
 import { fail } from '../../envelope.ts'
 import type { EngineHost } from '../../core/engine-host.ts'
 import type { Transport, TransportStartResult } from '../transport.ts'
+import { attachWebSocket } from './ws.ts'
 
 export interface HttpWsTransportOptions {
   readonly host?: string
@@ -20,6 +23,7 @@ export function createHttpWsTransport(host: EngineHost, opts: HttpWsTransportOpt
   const token = opts.token ?? randomBytes(24).toString('hex')
   const maxBody = opts.maxBodyBytes ?? DEFAULT_MAX_BODY
   let server: Server | null = null
+  let wss: WebSocketServer | null = null
 
   function tokenOk(header: string | undefined): boolean {
     const expected = `Bearer ${token}`
@@ -101,12 +105,17 @@ export function createHttpWsTransport(host: EngineHost, opts: HttpWsTransportOpt
         void handle(req, res)
       })
       server = srv
+      wss = attachWebSocket(srv, host, token)
       await new Promise<void>((resolve) => srv.listen(opts.port ?? 0, bindHost, resolve))
       const port = (srv.address() as AddressInfo).port
       return { port, token, url: `http://${bindHost}:${port}` }
     },
     async stop(): Promise<void> {
       const srv = server
+      if (wss) {
+        wss.close()
+        wss = null
+      }
       if (!srv) return
       await new Promise<void>((resolve, reject) => srv.close((err) => (err ? reject(err) : resolve())))
       server = null

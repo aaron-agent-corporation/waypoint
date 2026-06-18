@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { WebSocket } from 'ws'
 
 import { createEngineHost } from '../core/engine-host.ts'
 import { cleanup, makeTempDir } from './helpers/workspace.ts'
@@ -69,5 +70,47 @@ describe('engine-host HTTP transport', () => {
     })
     expect(res.status).toBe(400)
     expect(await res.json()).toMatchObject({ ok: false, details: { code: 'VALIDATION' } })
+  })
+
+  it('streams a snapshot then live deltas over WebSocket', async () => {
+    await fetch(`${started.url}/cmd/workspace.open`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${started.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ root: dir, backend: 'folder' }),
+    })
+    const wsUrl = `${started.url.replace('http', 'ws')}/ws`
+    const socket = new WebSocket(wsUrl, { headers: { authorization: `Bearer ${started.token}` } })
+    const messages: Array<{ type: string; apiVersion?: string }> = []
+    await new Promise<void>((resolve, reject) => {
+      socket.on('open', () => socket.send(JSON.stringify({ subscribe: { topics: ['*'] } })))
+      socket.on('message', (data) => {
+        const msg = JSON.parse(data.toString()) as { type: string; apiVersion?: string }
+        messages.push(msg)
+        if (msg.type === 'snapshot') {
+          void fetch(`${started.url}/cmd/run.start`, {
+            method: 'POST',
+            headers: { authorization: `Bearer ${started.token}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ quest: 'waypoint' }),
+          })
+        }
+        if (msg.type === 'event') resolve()
+      })
+      socket.on('error', reject)
+    })
+    socket.close()
+    expect(messages[0].type).toBe('snapshot')
+    expect(messages[0].apiVersion).toBe('1')
+    expect(messages.some((m) => m.type === 'event')).toBe(true)
+  })
+
+  it('rejects a WebSocket handshake without a valid token', async () => {
+    const socket = new WebSocket(`${started.url.replace('http', 'ws')}/ws`, {
+      headers: { authorization: 'Bearer wrong' },
+    })
+    await new Promise<void>((resolve) => {
+      socket.on('close', () => resolve())
+      socket.on('error', () => resolve())
+    })
+    expect(socket.readyState).toBe(WebSocket.CLOSED)
   })
 })
