@@ -48,6 +48,10 @@ This spec covers **slice 1 only**.
   migration path to **Tauri IPC** later.
 - **First slice:** engine host + local API, **full run + watch + author**
   contract.
+- **Backends:** both **folder** and **Beads/Dolt** are **first-class, fully
+  tested** in slice 1. Beads gives the simple issue/dependency graph; Dolt makes
+  it Git-backed, versioned, branchable SQL. Folder remains the zero-setup
+  default; the full lifecycle suite runs against **both**.
 
 ---
 
@@ -78,7 +82,8 @@ with a **loopback HTTP + WebSocket** adapter as the first transport.
   generators only.
 - No Tauri shell or web UI (slice 3) — but the command/event core is designed so
   Tauri IPC becomes a drop-in second adapter.
-- No new backend; folder is default, Beads optional, Gas City out of scope here.
+- No new backend type beyond what core already provides. Folder and Beads/Dolt
+  are both in scope and first-class; Gas City supervision is out of scope here.
 
 ---
 
@@ -223,11 +228,17 @@ __tests__/                # vitest: command bus, event hub, http+ws e2e
 
 - **Unit**: command-bus envelope behavior (success + error normalization),
   event-hub seq/snapshot/backpressure, workspace-session open/switch.
-- **Integration (headless)**: boot `createEngineHost` on an ephemeral port
-  against a temp folder workspace; drive the full lifecycle over real HTTP+WS —
-  `workspace.open → run.start → routes.list → watch deltas → gate.decide →
-  author.recipe → author.promote` — asserting envelopes and streamed events.
-  This is the slice's acceptance test; needs no Tauri/Pi.
+- **Integration (headless)**: boot `createEngineHost` on an ephemeral port and
+  drive the full lifecycle over real HTTP+WS — `workspace.open → run.start →
+  routes.list → watch deltas → gate.decide → author.recipe → author.promote` —
+  asserting envelopes and streamed events. **Run the full suite against both a
+  temp folder workspace and a temp Beads/Dolt workspace** (parameterized
+  backend), so the resident-process Beads path is proven equal to folder. Needs
+  no Tauri/Pi.
+- **Beads/Dolt resident-process check**: explicit assertions that a long-running
+  host holds the Beads/Dolt workspace without lock contention across many
+  sequential commands and concurrent reads (the concern formerly tracked as open
+  question #2).
 - **Smoke**: `scripts/engine-host-smoke.mjs` mirroring the existing `smoke:*`
   pattern, wired into `package.json`.
 - **Parity**: assert engine-host commands produce envelopes consistent with the
@@ -243,17 +254,27 @@ __tests__/                # vitest: command bus, event hub, http+ws e2e
 - [ ] `createEngineHost(config).start()` boots an HTTP+WS listener on
       `127.0.0.1` with a free port and a bearer token.
 - [ ] All commands in the surface above are registered and return correct
-      envelopes (success + normalized error) for a folder workspace.
+      envelopes (success + normalized error) for **both folder and Beads/Dolt**
+      workspaces.
 - [ ] WS clients receive a snapshot on subscribe, live deltas thereafter, and
       can resume from `lastSeq`.
 - [ ] `author.promote` deterministically writes a draft into the static catalog
       and returns its manifest path.
 - [ ] Headless integration test drives the full lifecycle and passes in
-      `vitest run`.
+      `vitest run` **against both folder and Beads/Dolt backends**.
+- [ ] Beads/Dolt resident-process test confirms no lock contention under many
+      sequential commands + concurrent reads.
 - [ ] `pnpm smoke:engine-host` runs green.
 - [ ] `src/boundaries.ts` guard still passes (no host leakage into core).
 
 ---
+
+## Resolved decisions
+
+- **Beads/Dolt is first-class in slice 1** (not optional). The full lifecycle
+  test suite runs against both folder and Beads/Dolt, and a dedicated test
+  confirms the resident-process path holds the Dolt-backed workspace without lock
+  contention. This closes the former "Beads backend in-process" open question.
 
 ## Open questions / assumptions to verify
 
@@ -261,11 +282,7 @@ __tests__/                # vitest: command bus, event hub, http+ws e2e
    programmatic **SDK/library** usable in a Node process. If Pi is only a CLI or
    hosted API, slice 2 adapts (spawn CLI / call hosted API); **slice 1 is
    unaffected** since it contains no Pi code. Verify before slice 2 planning.
-2. **Beads backend in-process.** Confirm the folder-host/Beads path can be
-   driven in a long-running process (vs. per-command CLI invocation) without
-   Dolt lock contention. Folder backend is the default and primary target for
-   this slice; Beads is optional.
-3. **Workspace switching semantics.** Whether `workspace.open` on an
+2. **Workspace switching semantics.** Whether `workspace.open` on an
    already-bound host should drain in-flight runs or hard-switch. Default: reject
    switch while runs are active unless `force` is set.
 
