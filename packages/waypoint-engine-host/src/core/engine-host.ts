@@ -2,6 +2,8 @@ import { listWaypointRuntimeRoutes, listWaypointRuntimeTasks } from '@waypoint/f
 import type { WaypointFolderRoute, WaypointFolderTask } from '@waypoint/folder-host'
 
 import type { EngineEnvelope } from '../types.ts'
+import { createHttpWsTransport, type HttpWsTransportOptions } from '../transport/http-ws/server.ts'
+import type { Transport, TransportStartResult } from '../transport/transport.ts'
 import { CommandBus } from './command-bus.ts'
 import { EventHub } from './event-hub.ts'
 import { RouteBroadcaster } from './route-broadcaster.ts'
@@ -28,6 +30,8 @@ export interface EngineHost {
   readonly broadcaster: RouteBroadcaster
   dispatch(name: string, payload: unknown): Promise<EngineEnvelope>
   snapshot(): Promise<{ routes: WaypointFolderRoute[]; tasks: WaypointFolderTask[] }>
+  start(opts?: HttpWsTransportOptions): Promise<TransportStartResult>
+  stop(): Promise<void>
 }
 
 export interface EngineHostConfig {
@@ -49,7 +53,9 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
   registerGateCommands(bus, ctx)
   registerAuthorCommands(bus, ctx)
 
-  return {
+  let transport: Transport | null = null
+
+  const engineHost: EngineHost = {
     bus,
     hub,
     session,
@@ -64,5 +70,20 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
       ])
       return { routes, tasks }
     },
+    async start(startOpts?: HttpWsTransportOptions) {
+      if (!transport) transport = createHttpWsTransport(engineHost, startOpts)
+      const result = await transport.start()
+      broadcaster.startPolling()
+      return result
+    },
+    async stop() {
+      broadcaster.stopPolling()
+      if (transport) {
+        await transport.stop()
+        transport = null
+      }
+    },
   }
+
+  return engineHost
 }
