@@ -6,6 +6,7 @@ import { CommandBus } from './command-bus.ts'
 import { EventHub } from './event-hub.ts'
 import { RouteBroadcaster } from './route-broadcaster.ts'
 import { WorkspaceSession } from './workspace-session.ts'
+import { registerAuthorCommands } from './commands/author.ts'
 import { registerCatalogCommands } from './commands/catalog.ts'
 import { registerGateCommands } from './commands/gate.ts'
 import { registerMetaCommands } from './commands/meta.ts'
@@ -46,7 +47,7 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
   registerCatalogCommands(bus, ctx)
   registerRunCommands(bus, ctx)
   registerGateCommands(bus, ctx)
-  // author command group is registered in a later task.
+  registerAuthorCommands(bus, ctx)
 
   return {
     bus,
