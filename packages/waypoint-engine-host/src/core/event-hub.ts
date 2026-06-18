@@ -31,6 +31,10 @@ export class EventHub {
     return this.seq
   }
 
+  hasSubscribers(): boolean {
+    return this.subscribers.size > 0
+  }
+
   publish(topic: string, record: WaypointFolderRouteEvent): EngineEvent {
     const event: EngineEvent = { seq: ++this.seq, topic, record }
     this.ring.push(event)
