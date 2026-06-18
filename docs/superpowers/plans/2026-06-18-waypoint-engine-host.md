@@ -2097,3 +2097,129 @@ git commit -m "chore(engine-host): add smoke script + wire package scripts + doc
 ## Execution Handoff
 
 (Plan saved; execution options offered after this document is written.)
+
+---
+
+## GSTACK REVIEW REPORT
+
+**Pipeline:** /autoplan — CEO → Eng → DX (Design skipped: no UI in slice 1). Dual voices per phase: Claude subagent + Codex 0.128.0. Date: 2026-06-18.
+
+### Consensus tables (CONFIRMED = both voices agree)
+
+**CEO (strategy/scope)**
+| Dimension | Claude | Codex | Consensus |
+|---|---|---|---|
+| Premises validated (resident process; Pi SDK)? | No | No | CONFIRMED — assumed, not validated |
+| Right problem first? | No | No | CONFIRMED — de-risk/vertical-proof first |
+| Scope calibrated? | No (Beads parity wide) | No (platform not product) | CONFIRMED — over-scoped |
+| Alternatives explored? | No | No | CONFIRMED — listed, not analyzed |
+| 6-month trajectory sound? | At risk | At risk | CONFIRMED — delete-WS / Pi-mismatch / Beads-contention regrets |
+
+**Eng (architecture/test/security)**
+| Dimension | Claude | Codex | Consensus |
+|---|---|---|---|
+| Architecture sound? | Core yes, pump no | Core yes, pump no | CONFIRMED — core good, **event-pump broken** |
+| Test coverage sufficient? | No | No | CONFIRMED — fake-bd gap, self-adjusting gate test |
+| Performance (Dolt locks)? | Unproven | Unproven | CONFIRMED — contention untested |
+| Security threats? | Low (loopback) | Underpowered | CONFIRMED — token/handshake/body hardening needed |
+| Error paths handled? | Gaps | Gaps | CONFIRMED — pump races, restart wedge |
+| Correctness/deploy? | catalog-shape + discuss bugs | **workspace.open missing catalog install → tests fail** | CONFIRMED — blocking bugs |
+
+**DX (developer experience)**
+| Dimension | Claude | Codex | Consensus |
+|---|---|---|---|
+| Getting started <5 min? | No | No | CONFIRMED — no shipped client/example |
+| Naming guessable? | Mostly, asymmetries | Mostly, asymmetries | CONFIRMED — run.* vs route.*, gateId vs node |
+| Error messages actionable? | No | No | CONFIRMED — bare strings, structured validation lost |
+| Docs findable/complete? | No | No | CONFIRMED — cmd() buried in tests |
+| Versioning/discoverability? | No apiVersion/meta | No meta endpoint | CONFIRMED — add meta.commands/health/version |
+
+### Blocking bugs (mechanical — one right answer, fix on approval)
+1. **`workspace.open` doesn't install the bundled catalog** — CLI `init` installs quests/recipes; `initWaypointProject` alone doesn't. `startQuestRoute` reads `.waypoint/quests/<quest>.yaml`, so every fresh-workspace lifecycle test (Tasks 6/7/13/14) would FAIL. Must call the CLI init sequence (init → catalog install → optional Beads init).
+2. **`catalog.quests` returns a registry, not an array** — supplied test asserts `.length` on a non-array; return `.list()`.
+3. **`discuss.post` wrong signature** — actual `appendTaskDiscussionMessage(root, taskId, { content, author })`; plan passes one object, wrong arity → won't compile.
+4. **Event pump incoherent for Beads** — Beads events are re-sorted with positional IDs; integer offset drops/dupes. Switch to **command-returned deltas** (the route op already returns what changed) or **broadcast event-ID set diff**; serialize the pump per route; document that out-of-band writes (autopilot/Gas City/external) are not live in slice 1.
+5. **EventHub resume wedges on restart** (`lastSeq > currentSeq` delivers nothing, no resnapshot) + **snapshot-before-subscribe race**. Subscribe→queue→snapshot(asOf)→flush.
+6. **`author.promote` path-safety + reachability** — `recipes/../config.yaml` escapes; whitelist `^(quests|recipes)/[a-z0-9-]+\.ya?ml$`, temp-file+rename, parse/validate manifest, and write where the runtime actually reads it.
+7. **Security hardening** — atomic handshake write (tmp+rename, 0600, pid/staleness), WS token via header not query string, `crypto.timingSafeEqual`, request-body size cap, wrap `sub.deliver` in try/catch.
+8. **DX** — add `meta.commands`/`meta.health`/`meta.version` (+apiVersion); ship a `cmd()`/typed client from the package + README hello-world; structured error `{code, field, details}` preserving `validation.errors`; normalize list envelopes; rename `gateId`→`node`; pin the gate test deterministically (no self-adjusting assertion).
+
+### Structural challenges (NOT auto-decided — both models challenge the stated direction; see final gate)
+- **UC1 Sequencing:** spike Pi SDK reachability + real-`bd`/Dolt contention BEFORE building slice 1.
+- **UC2 Transport:** build the in-process command/event core first; defer HTTP+WS (Tauri IPC is the end state).
+- **UC3 Beads scope:** downgrade slice-1 Beads to folder-first + opt-in **real-bd** smoke (fake-bd proves nothing about Dolt locks).
+- **UC4 author.promote:** make promotion emit a review/proposal artifact, not a direct catalog write.
+
+### Decision Audit Trail
+| # | Phase | Decision | Class | Principle | Rationale |
+|---|---|---|---|---|---|
+| 1 | Eng | Fix blocking bugs 1-3 | Mechanical | P5 explicit | Plan doesn't compile/tests fail as written |
+| 2 | Eng | Event-pump → command-returned deltas + serialize + document scope | Mechanical | P1 completeness | Offset pump provably wrong for Beads |
+| 3 | Eng | EventHub subscribe→queue→snapshot→flush; restart resnapshot | Mechanical | P1 | Closes missed-delta race + restart wedge |
+| 4 | Eng | author.promote whitelist + temp-rename + validate | Mechanical | P5 | Path-escape + corrupt-write risk |
+| 5 | Eng | Security hardening batch | Mechanical | P1 | Cheap, in blast radius |
+| 6 | DX | meta endpoints + shipped client + structured errors + naming | Mechanical | P1/P5 | Contract serves two clients; near-zero cost |
+| 7 | CEO | Sequencing / transport / Beads scope / promote model | USER CHALLENGE | — | Both models challenge stated direction; user decides |
+
+---
+
+## POST-REVIEW REVISIONS (authoritative — supersedes task bodies where they conflict)
+
+Outcome of /autoplan final gate. User decisions: UC1 **spike-first**, UC2 **keep HTTP+WS**, UC3 **Beads first-class with REAL bd (not fake)**, UC4 **promote emits a proposal artifact**.
+
+### NEW Task 0: De-risk spikes (GATE — do before any slice-1 task)
+
+Two throwaway spikes; slice-1 build is gated on both passing. Commit findings to `docs/superpowers/spikes/2026-06-18-engine-host-spikes.md`. Do NOT keep spike code.
+
+- [ ] **Spike A — Pi SDK reachability.** In a scratch Node script, authenticate to pi.dev and run ONE tool-calling agent loop: register a trivial tool, have the agent call it, capture the result. Record: is there a programmatic Node SDK? auth model? streaming? tool-loop ergonomics? If NO usable SDK → STOP and revisit slice 2's brain design (provider-neutral `BrainAdapter`) before proceeding; slice 1 continues but the spec's "in-process Pi" rationale is flagged.
+- [ ] **Spike B — real bd/Dolt resident-process contention.** With real `bd` + Dolt installed, boot a long-lived Node process, `init --backend beads`, start a route, then fire 25 sequential + 12 concurrent `bd`-backed operations (mixed read/write: routes.list, gate, pause/resume, route-events). Record any `database is locked`/timeout. If contention appears → adopt the per-workspace **serialized bd mutation queue** (see correction E) as a hard requirement, not optional.
+
+**Gate:** both spikes documented before Task 1.
+
+### Per-task corrections
+
+**A. Task 6 — `workspace.open` must mirror CLI init (BLOCKING).** `initWaypointProject` alone does not install the bundled catalog, so `startQuestRoute` (reads `.waypoint/quests/<quest>.yaml`) fails. On a fresh root, run the same sequence as `packages/waypoint-cli/src/commands/init.ts`: optional Beads init (when `initBeads`/`backend:'beads'`), `initWaypointProject`, then `installQuestCatalog`, then readiness check. For an existing workspace, derive backend from `readWaypointStatus` and reject a conflicting `backend` argument. Add a test that `run.start` succeeds on a freshly-opened workspace (this currently would fail).
+
+**B. Task 6 — catalog command shape (BLOCKING).** `catalog.quests`/`catalog.recipes` are registries, not arrays. Return `catalog.quests.list()` / `catalog.recipes.list()` and `resolveQuestRecipes(quest).recipes`. Update the Task 6 test to assert on the array from `.list()`.
+
+**C. Task 8 — `discuss.post` signature (BLOCKING).** Real signature is `appendTaskDiscussionMessage(root, taskId, { content, author })`. Replace the handler call with:
+```ts
+const message = await appendTaskDiscussionMessage(root, input.taskId, { content: input.message, author: input.author ?? 'user' })
+```
+Add `discuss.list` wrapping `readTaskDiscussionMessages` (read counterpart, DX).
+
+**D. Task 7 — event delivery via command-returned deltas (replaces integer-offset pump).** The offset pump is wrong for Beads (events re-sorted, positional IDs) and races under interleaving. Replace `pumpRouteEvents(routeId)` with delta emission driven by what each command already knows:
+- After a mutating command, read the route's events once and publish only events whose stable **event ID** has not been broadcast before (maintain `Set<string>` of broadcast IDs per route, not an integer offset). This is idempotent under interleaving and correct for both backends.
+- Serialize per-route emission with an async mutex keyed by routeId.
+- Wrap each `sub.deliver` in try/catch so one bad subscriber can't abort fan-out.
+- **Document the scope limit:** events from autopilot / Gas City / external writers are NOT live in slice 1. Add a periodic poll tick (every ~3s while a route has subscribers) that runs the same ID-diff emit, so out-of-band events eventually surface. Update the WS protocol doc and the spec's streaming section to state "deltas = events this host observes via poll+command; subscribe to re-snapshot for full truth."
+
+**E. Beads concurrency (from Spike B).** Add a per-workspace serialized mutation queue in `WorkspaceSession` (real lock, not the `inFlight` counter) so concurrent `bd`-backed mutations don't collide on Dolt. Reuse a single `WaypointBeadsCliIssueClient` per workspace rather than constructing one per call.
+
+**F. Task 11 — EventHub/WS correctness.** (1) Subscribe order: register subscriber with a temporary queue FIRST, then take the snapshot (`asOf = hub.currentSeq()`), then flush queued events with `seq > asOf` — eliminates the snapshot/subscribe missed-delta race. (2) On reconnect with `lastSeq > currentSeq` (process restarted, seq reset) → send `resnapshot`, never silently deliver nothing. (3) Move the WS token out of the query string into the `Sec-WebSocket-Protocol` or `Authorization` upgrade header.
+
+**G. Task 9 — `author.promote` emits a PROPOSAL artifact (UC4), not a direct catalog write.** Replace the direct write with: validate+parse the manifest (reject if `slug !== basename`), write to a reviewable proposal location `.waypoint/proposals/<kind>/<slug>.yaml` plus a `.waypoint/proposals/<kind>/<slug>.proposal.json` (source draft + target catalog path + diff-vs-existing + status `pending`). A separate explicit `author.approveProposal { id }` command (human/gate-driven) performs the validated catalog write via temp-file+`rename`, path-whitelisted to `^(quests|recipes)/[a-z0-9-]+\.ya?ml$`. Add tests: promote creates a pending proposal (catalog unchanged); approveProposal lands it and `run.start`/`resolveQuestRecipes` can then find it (proves reachability, not just bytes-on-disk).
+
+**H. Task 10/12 — security hardening.** `crypto.timingSafeEqual` for token compare; cap request body size (e.g. 1MB) in `readBody`; atomic handshake write (write `*.tmp`, `chmod 0600`, `rename`; include `{ schemaVersion, pid, url, token, createdAt, workspaceRoot }`; delete stale file at startup; unlink on clean shutdown). Direct-run stdout must print the full record (incl. token) or nothing — not a token-less line that disagrees with the file.
+
+**I. Task 6/12 — `meta` command group (DX).** Add `meta.commands` → `{ commands: bus.names() }`, `meta.health` → `{ ok, uptime, workspaceOpen, seq }`, `meta.version` → `{ apiVersion: '1', pkg }`. Include `apiVersion` in the WS `snapshot` message. Gives the sidecar a readiness probe and the Pi agent a discoverable surface.
+
+**J. Task 12 — ship a client + hello-world (DX).** Export `createEngineClient({ url, token })` with `.cmd(name, payload)` and `.subscribe(topics, onEvent)` from the package (promote `__tests__/helpers/client.ts`). README must include a copy-paste hello-world for both shapes (embed `createEngineHost`; drive over HTTP with `Authorization: Bearer`).
+
+**K. Errors structured (DX).** Use `makeErrorEnvelope`'s `details` to carry `{ code, field?, issues? }`. Codes: `UNKNOWN_COMMAND`, `NO_WORKSPACE`, `VALIDATION`, `NOT_FOUND`, `BACKEND_ERROR`, `CONFLICT`. For authoring, pass `validation.errors` through as `details.issues` instead of stringifying. Keep the helpful "next action" phrasing (`NO_WORKSPACE` already does).
+
+**L. Naming normalization (DX).** Rename `gate.decide` payload `gateId`→`node` (matches `current_node`/folder-host). Normalize all list envelopes to named arrays (drop the `{ page }` wrapper inconsistency on `route.events` — return `{ events, total, limit, offset }`). Keep `run.*` for lifecycle verbs but document that routes are read under `route.*`.
+
+**M. Task 13 — deterministic gate test.** Remove the self-adjusting "if the gate step fails, adjust the test" escape hatch. Read the quest manifest's first gate node from a known fixture quest and assert against it.
+
+### UC3 — Task 14 uses REAL bd (replaces fake-bd)
+
+Replace the fake-`bd` harness with a real-`bd`-gated suite. Keep the full parameterized lifecycle on both folder AND Beads, but the Beads lane runs only when `realBdAvailable()` (skipped locally without bd, **required in CI** with bd/Dolt installed). The resident-process contention test (25 sequential + 12 concurrent mixed read/write) must run against real bd/Dolt to actually validate the "no lock contention" claim. Drop `helpers/fake-bd.ts`; reuse the `realBdAvailable()` gate pattern from `packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts`. Acceptance: "Beads first-class" is only claimed once the real-bd CI lane is green.
+
+### Decision Audit Trail (gate outcomes)
+| # | Decision | Class | Outcome |
+|---|---|---|---|
+| UC1 | Spike Pi + real-bd/Dolt before build | User Challenge | ACCEPTED — new Task 0 gate |
+| UC2 | HTTP+WS now vs in-process-core-first | User Challenge | DECLINED change — keep HTTP+WS (user's direction) |
+| UC3 | Beads scope | User Challenge | MODIFIED — keep first-class, replace fake-bd with real-bd-gated suite |
+| UC4 | promote model | User Challenge | ACCEPTED — proposal artifact + explicit approveProposal |
