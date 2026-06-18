@@ -1,0 +1,30 @@
+{
+  "name": "@waypoint/engine-host",
+  "version": "0.1.2",
+  "private": false,
+  "description": "Resident engine host + local API for Waypoint (run/watch/author over loopback HTTP+WS).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "waypoint-engine-host": "./dist/bin.js"
+  },
+  "dependencies": {
+    "@waypoint/core": "workspace:*",
+    "@waypoint/folder-host": "workspace:*",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
+}
