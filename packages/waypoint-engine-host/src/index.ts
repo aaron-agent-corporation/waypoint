@@ -13,3 +13,20 @@ export function getEngineHostInfo(): EngineHostInfo {
     corePackage: WAYPOINT_CORE_PACKAGE,
   }
 }
+
+export { createEngineHost } from './core/engine-host.ts'
+export type { EngineHost, EngineHostConfig, EngineContext } from './core/engine-host.ts'
+export { createEngineClient } from './client.ts'
+export type { EngineClient, EngineClientConfig } from './client.ts'
+export { startEngineHostFromEnv } from './bin.ts'
+export type { EngineHostHandle } from './bin.ts'
+export { ok, fail, EngineError } from './envelope.ts'
+export type {
+  EngineBackend,
+  EngineEnvelope,
+  EngineSuccessEnvelope,
+  EngineErrorCode,
+  EngineErrorDetails,
+  EngineEvent,
+} from './types.ts'
+export type { Transport, TransportStartResult } from './transport/transport.ts'
