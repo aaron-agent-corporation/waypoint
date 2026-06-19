@@ -10,6 +10,7 @@ export type EngineErrorCode =
   | 'NOT_FOUND'
   | 'BACKEND_ERROR'
   | 'CONFLICT'
+  | 'FORBIDDEN'
 
 export interface EngineErrorDetails {
   readonly code: EngineErrorCode

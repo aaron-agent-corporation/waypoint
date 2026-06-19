@@ -4,7 +4,8 @@ import type { WaypointFolderRoute, WaypointFolderTask } from '@waypoint/folder-h
 import type { EngineEnvelope } from '../types.ts'
 import { createHttpWsTransport, type HttpWsTransportOptions } from '../transport/http-ws/server.ts'
 import type { Transport, TransportStartResult } from '../transport/transport.ts'
-import { CommandBus } from './command-bus.ts'
+import { CommandBus, type DispatchContext } from './command-bus.ts'
+import { TokenRegistry } from './token-registry.ts'
 import { EventHub } from './event-hub.ts'
 import { RouteBroadcaster } from './route-broadcaster.ts'
 import { WorkspaceSession } from './workspace-session.ts'
@@ -28,7 +29,8 @@ export interface EngineHost {
   readonly hub: EventHub
   readonly session: WorkspaceSession
   readonly broadcaster: RouteBroadcaster
-  dispatch(name: string, payload: unknown): Promise<EngineEnvelope>
+  readonly tokens: TokenRegistry
+  dispatch(name: string, payload: unknown, ctx?: DispatchContext): Promise<EngineEnvelope>
   snapshot(): Promise<{ routes: WaypointFolderRoute[]; tasks: WaypointFolderTask[] }>
   start(opts?: HttpWsTransportOptions): Promise<TransportStartResult>
   stop(): Promise<void>
@@ -43,6 +45,7 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
   const session = new WorkspaceSession()
   const hub = new EventHub()
   const bus = new CommandBus()
+  const tokens = new TokenRegistry()
   const broadcaster = new RouteBroadcaster({ hub, session, pollIntervalMs: config.pollIntervalMs })
   const ctx: EngineContext = { session, hub, broadcaster, startedAt: config.startedAt ?? Date.now() }
 
@@ -60,7 +63,8 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
     hub,
     session,
     broadcaster,
-    dispatch: (name, payload) => bus.dispatch(name, payload),
+    tokens,
+    dispatch: (name, payload, ctx) => bus.dispatch(name, payload, ctx),
     async snapshot() {
       const { root } = session.requireActive()
       const opts = session.beadsOptions()

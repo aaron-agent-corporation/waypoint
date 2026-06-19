@@ -1,4 +1,3 @@
-import { timingSafeEqual } from 'node:crypto'
 import type { Server } from 'node:http'
 
 import { WebSocketServer, type WebSocket } from 'ws'
@@ -13,10 +12,10 @@ interface SubscribeMessage {
   readonly subscribe?: { readonly topics?: string[]; readonly lastSeq?: number }
 }
 
-function tokenOk(header: string | undefined, token: string): boolean {
-  const expected = `Bearer ${token}`
-  if (!header || header.length !== expected.length) return false
-  return timingSafeEqual(Buffer.from(header), Buffer.from(expected))
+/** Any known token (global or scoped) may open a watch stream; unknown is rejected. */
+function tokenOk(header: string | undefined, host: EngineHost): boolean {
+  if (!header || !header.startsWith('Bearer ')) return false
+  return host.tokens.resolve(header.slice('Bearer '.length)).kind !== 'unknown'
 }
 
 /**
@@ -25,12 +24,12 @@ function tokenOk(header: string | undefined, token: string): boolean {
  * queueing subscriber FIRST, take the snapshot, then flush queued events newer
  * than the snapshot seq — closing the snapshot/subscribe missed-delta race.
  */
-export function attachWebSocket(server: Server, host: EngineHost, token: string): WebSocketServer {
+export function attachWebSocket(server: Server, host: EngineHost): WebSocketServer {
   const wss = new WebSocketServer({ noServer: true })
 
   server.on('upgrade', (req, socket, head) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1')
-    if (url.pathname !== '/ws' || !tokenOk(req.headers.authorization, token)) {
+    if (url.pathname !== '/ws' || !tokenOk(req.headers.authorization, host)) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
       socket.destroy()
       return

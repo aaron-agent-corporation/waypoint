@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
 
@@ -25,10 +25,9 @@ export function createHttpWsTransport(host: EngineHost, opts: HttpWsTransportOpt
   let server: Server | null = null
   let wss: WebSocketServer | null = null
 
-  function tokenOk(header: string | undefined): boolean {
-    const expected = `Bearer ${token}`
-    if (!header || header.length !== expected.length) return false
-    return timingSafeEqual(Buffer.from(header), Buffer.from(expected))
+  function bearerToken(header: string | undefined): string | null {
+    if (!header || !header.startsWith('Bearer ')) return null
+    return header.slice('Bearer '.length)
   }
 
   function send(res: ServerResponse, status: number, body: unknown): void {
@@ -62,10 +61,15 @@ export function createHttpWsTransport(host: EngineHost, opts: HttpWsTransportOpt
   }
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    if (!tokenOk(req.headers.authorization)) {
+    const presented = bearerToken(req.headers.authorization)
+    const scope = presented ? host.tokens.resolve(presented) : { kind: 'unknown' as const }
+    if (scope.kind === 'unknown') {
       send(res, 401, fail('Unauthorized', { code: 'VALIDATION' }))
       return
     }
+    // global → unrestricted; scoped → grant enforced at the bus, session from the token (Lock 3).
+    const ctx =
+      scope.kind === 'scoped' ? { allow: scope.allow, agentSessionId: scope.sessionId } : undefined
     const url = new URL(req.url ?? '/', `http://${bindHost}`)
     const match = url.pathname.match(/^\/cmd\/(.+)$/)
     if (req.method !== 'POST' || !match) {
@@ -95,17 +99,23 @@ export function createHttpWsTransport(host: EngineHost, opts: HttpWsTransportOpt
       }
     }
 
-    const envelope = await host.dispatch(decodeURIComponent(match[1]), payload)
-    send(res, 200, envelope)
+    const envelope = await host.dispatch(decodeURIComponent(match[1]), payload, ctx)
+    // FORBIDDEN (out-of-scope command) → HTTP 403, canonical envelope preserved (Lock 7).
+    const status =
+      envelope.ok === false && (envelope.details as { code?: string } | undefined)?.code === 'FORBIDDEN'
+        ? 403
+        : 200
+    send(res, status, envelope)
   }
 
   return {
     async start(): Promise<TransportStartResult> {
+      host.tokens.registerGlobal(token)
       const srv = createServer((req, res) => {
         void handle(req, res)
       })
       server = srv
-      wss = attachWebSocket(srv, host, token)
+      wss = attachWebSocket(srv, host)
       await new Promise<void>((resolve) => srv.listen(opts.port ?? 0, bindHost, resolve))
       const port = (srv.address() as AddressInfo).port
       return { port, token, url: `http://${bindHost}:${port}` }
