@@ -25,8 +25,22 @@ export interface EngineSuccessEnvelope {
 
 export type EngineEnvelope = EngineSuccessEnvelope | WaypointErrorEnvelope
 
+/**
+ * Agent turn/tool event republished onto the hub under an `agent:<sessionId>`
+ * topic. `idx` is the restart-stable, transcript-relative replay cursor; `seq`
+ * (on the wrapping EngineEvent) is the live hub cursor (MAR Contract Lock 4).
+ */
+export interface AgentEventRecord {
+  readonly id: string
+  readonly sessionId: string
+  readonly kind: string
+  readonly at: string
+  readonly idx?: number
+  readonly data?: Record<string, unknown>
+}
+
 export interface EngineEvent {
   readonly seq: number
   readonly topic: string
-  readonly record: WaypointFolderRouteEvent
+  readonly record: WaypointFolderRouteEvent | AgentEventRecord
 }

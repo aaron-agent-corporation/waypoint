@@ -1,6 +1,6 @@
 import type { WaypointFolderRouteEvent } from '@waypoint/folder-host'
 
-import type { EngineEvent } from '../types.ts'
+import type { AgentEventRecord, EngineEvent } from '../types.ts'
 
 export interface EventSubscriber {
   readonly topics: ReadonlySet<string> | '*'
@@ -12,19 +12,35 @@ function matches(sub: EventSubscriber, topic: string): boolean {
   return sub.topics === '*' || sub.topics.has(topic)
 }
 
+function wantsAgent(sub: EventSubscriber): boolean {
+  return sub.topics === '*' || [...sub.topics].some((t) => t.startsWith('agent:'))
+}
+
+function wantsRoute(sub: EventSubscriber): boolean {
+  return sub.topics === '*' || [...sub.topics].some((t) => !t.startsWith('agent:'))
+}
+
 /**
- * In-process event fan-out with monotonic seq + a bounded ring buffer for
- * reconnect replay. The durable event log (Task 7 RouteBroadcaster) is the
- * source of truth; this hub is a low-latency delivery + resume cache.
+ * In-process event fan-out with a monotonic seq shared across route and agent
+ * events, plus TWO independent ring buffers for reconnect replay. Route events
+ * and agent events get separate ring budgets so a chatty agent run cannot evict
+ * `route:*` deltas a reconnecting route subscriber still needs (MAR Contract
+ * Lock 8 / autoplan decision 15). The durable event log remains the source of
+ * truth; this hub is a low-latency delivery + resume cache.
  */
 export class EventHub {
   private seq = 0
-  private readonly ring: EngineEvent[] = []
-  private readonly maxRing: number
+  private readonly routeRing: EngineEvent[] = []
+  private readonly agentRing: EngineEvent[] = []
+  private routeEvicted = 0
+  private agentEvicted = 0
+  private readonly maxRoute: number
+  private readonly maxAgent: number
   private readonly subscribers = new Set<EventSubscriber>()
 
-  constructor(opts: { ringSize?: number } = {}) {
-    this.maxRing = opts.ringSize ?? 1000
+  constructor(opts: { ringSize?: number; agentRingSize?: number } = {}) {
+    this.maxRoute = opts.ringSize ?? 1000
+    this.maxAgent = opts.agentRingSize ?? 1000
   }
 
   currentSeq(): number {
@@ -36,9 +52,28 @@ export class EventHub {
   }
 
   publish(topic: string, record: WaypointFolderRouteEvent): EngineEvent {
+    return this.emit(topic, record, this.routeRing, this.maxRoute, 'route')
+  }
+
+  publishAgent(topic: string, record: AgentEventRecord): EngineEvent {
+    return this.emit(topic, record, this.agentRing, this.maxAgent, 'agent')
+  }
+
+  private emit(
+    topic: string,
+    record: WaypointFolderRouteEvent | AgentEventRecord,
+    ring: EngineEvent[],
+    max: number,
+    kind: 'route' | 'agent',
+  ): EngineEvent {
     const event: EngineEvent = { seq: ++this.seq, topic, record }
-    this.ring.push(event)
-    if (this.ring.length > this.maxRing) this.ring.shift()
+    ring.push(event)
+    while (ring.length > max) {
+      const dropped = ring.shift()
+      if (!dropped) break
+      if (kind === 'route') this.routeEvicted = Math.max(this.routeEvicted, dropped.seq)
+      else this.agentEvicted = Math.max(this.agentEvicted, dropped.seq)
+    }
     for (const sub of this.subscribers) {
       if (matches(sub, topic)) this.safeDeliver(sub, event)
     }
@@ -51,11 +86,15 @@ export class EventHub {
         // Process restarted / seq reset: the client is ahead of us. Re-snapshot.
         sub.requestResnapshot()
       } else {
-        const oldest = this.ring[0]?.seq
-        if (oldest !== undefined && lastSeq < oldest - 1) {
+        // Resnapshot only if a ring the subscriber cares about dropped an event
+        // it still needs (next-needed seq is lastSeq + 1, i.e. lastSeq < evicted).
+        const missedRoute = wantsRoute(sub) && lastSeq < this.routeEvicted
+        const missedAgent = wantsAgent(sub) && lastSeq < this.agentEvicted
+        if (missedRoute || missedAgent) {
           sub.requestResnapshot()
         } else {
-          for (const event of this.ring) {
+          const merged = [...this.routeRing, ...this.agentRing].sort((a, b) => a.seq - b.seq)
+          for (const event of merged) {
             if (event.seq > lastSeq && matches(sub, event.topic)) this.safeDeliver(sub, event)
           }
         }
