@@ -28,7 +28,7 @@ export class FakeBrainAdapter implements BrainAdapter, BrainAdapterFactory {
   }
 
   /** A FakeBrainAdapter is its own factory — the same script for any session. */
-  forSession(): BrainAdapter {
+  forSession(_conn?: { hostUrl: string; hostToken: string }): BrainAdapter {
     return this
   }
 
@@ -38,7 +38,17 @@ export class FakeBrainAdapter implements BrainAdapter, BrainAdapterFactory {
       if (input.signal?.aborted) return { status: 'cancelled' }
       input.onEvent(event)
     }
-    if (this.script.gate) await this.script.gate
+    if (this.script.gate) {
+      // Race the gate against abort so a cancel interrupts a still-blocked run
+      // (mirrors PiCliBrainAdapter killing the child on cancel).
+      await Promise.race([
+        this.script.gate,
+        new Promise<void>((resolve) => {
+          if (input.signal?.aborted) return resolve()
+          input.signal?.addEventListener('abort', () => resolve(), { once: true })
+        }),
+      ])
+    }
     if (input.signal?.aborted) return { status: 'cancelled' }
     return this.script.result
   }
