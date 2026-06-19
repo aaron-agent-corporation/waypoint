@@ -104,6 +104,21 @@ export class WorkspaceSession {
     }
   }
 
+  /**
+   * Manual in-flight lease for async work (e.g. a background agent session) that
+   * outlives a single dispatch. Holds the workspace open until released exactly
+   * once. Mirrors `runGuard`'s counter without wrapping a promise.
+   */
+  acquireLease(): () => void {
+    this.inFlight += 1
+    let released = false
+    return () => {
+      if (released) return
+      released = true
+      this.inFlight -= 1
+    }
+  }
+
   /** Per-workspace serial mutex: serializes bd-backed mutations (Task-0 Spike B remedy). */
   async mutate<T>(fn: () => Promise<T>): Promise<T> {
     const run = this.tail.then(fn, fn)
