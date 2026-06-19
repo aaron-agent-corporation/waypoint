@@ -63,6 +63,22 @@ Modified: `engine-host.ts` (owns `AgentRegistry` + `TokenRegistry`; async-aware)
 
 ---
 
+## MAR Cross-Task Contract Lock (authoritative)
+
+> Added after `/mar` (run `20260619-7uidef`, unanimous convergence — base `claude-1`, zero remaining disagreements; see `runs/20260619-7uidef/shared/resolved-decisions.md`). **These locks govern the task bodies below; where a task's prose differs in detail, the lock wins.** They close cross-task contract seams that would otherwise pass tests without enforcing the intended boundary.
+
+1. **Credential isolation — `BrainRunInput` stays provider-neutral.** It is exactly `{ intent, tools, systemPrompt, signal, onEvent }` — no `hostUrl`/`hostToken`/`sessionId`. The engine holds a **`BrainAdapterFactory`** (replacing the bare `{ current }` holder). `agent.author`, *after* minting the per-session scoped token, calls `factory.forSession({ hostUrl, hostToken })` to get a configured adapter for that one run. `PiCliBrainAdapter` captures `hostUrl` + the **scoped** token and injects them as the Pi child env (`WAYPOINT_HOST_URL`/`WAYPOINT_HOST_TOKEN`); `FakeBrainAdapter` ignores them. Session identity never enters the adapter — the host owns it via `AgentSession`. (Tasks 2/5/7)
+2. **Token registry binds session at mint.** `TokenRegistry.mintScoped(sessionId, allow)` (not `mint(scope)`); `resolve(token)` returns a discriminated union `{ kind: 'global' } | { kind: 'scoped'; sessionId; allow } | { kind: 'unknown' }` — **no `null`**. Transport: `global` → dispatch with no allow-set; `scoped` → dispatch with `{ allow, agentSessionId: sessionId }`; `unknown` → 401 before dispatch. (Task 4)
+3. **Session identity is authoritative from the token, never the payload.** `DispatchContext = { allow?, agentSessionId?, signal? }`; `agentSessionId` is populated by the transport **from the resolved scoped token**. `run.adhoc` uses `ctx.agentSessionId` as the authoritative overlay owner (`.waypoint/agent/<ctx.agentSessionId>/catalog/`) and abort-signal source (`ctx.agents.get(ctx.agentSessionId)`); a payload `sessionId` is ignored whenever a scoped token is present. Global/human callers (no agent session) get a server-minted ephemeral overlay id and must not collide with an active session's locked overlay. (Tasks 4/5/6)
+4. **Dual-cursor transcript replay.** Transcript record shape is `{ idx, seq, id, sessionId, kind, at, data? }`. `idx` is a restart-stable, transcript-relative monotonic index (0,1,2… assigned by `AgentSession` as it appends) used for **disk replay**; `seq` is the live `EventHub` seq used for the **WS tail**. `agent.watch { sinceSeq }` replays from `.waypoint/agent/<id>.jsonl` filtering `record.idx > sinceSeq`, then hands off to the live `agent:<id>` subscription. (Rationale: the hub `seq` resets to 0 on host restart, so a pre-restart cursor is incoherent against persisted hub seqs; `idx` survives.) (Tasks 3/5)
+5. **`AGENT_TOOL_GRANT` excludes the entire `agent.*` namespace** (prevents an agent spawning/forking sub-agent sessions — recursion / fork-bomb) **plus** `author.approveProposal` and `workspace.open`. (Task 5a)
+6. **Task 5 splits along the mutation boundary.** **5a (lifecycle/mutation):** `AGENT_TOOL_GRANT`, `agent.author`, `agent.run`, `agent.cancel`, the `WorkspaceSession` lease API, per-session token mint, and the `onTerminal` release+revoke wiring — owns session state transitions. **5b (observability, read-only):** `agent.watch`, `agent.list`, `agent.transcript`. 5b depends on 5a. (`cancel` is a lifecycle mutation, so it stays in 5a.)
+7. **`FORBIDDEN` is one canonical classifier across transports.** Command-level `FORBIDDEN` → HTTP **403** + the canonical envelope body on the HTTP path; over WS (no HTTP status) the same envelope carries `details.code === 'FORBIDDEN'`. The host-client uses one auth/scope classifier branching on status *and* `details.code` so both transports converge to the same actionable error. (Task 10)
+8. **Route-event seq is grounded in the durable log.** EventHub route sequencing derives from `readWaypointRuntimeRouteEvents` (the durable event log is the source of truth); command-returned deltas are only low-latency *hints* that trigger an immediate broadcaster read (no polling delay). (Consistent with slice-1 `RouteBroadcaster`; Task 1/7.)
+9. **Pi `--mode json` is pinned with an explicit Spike-1 GATE.** If json-mode cannot cleanly register a custom tool / stream tool-calls against the installed `pi` (e.g. registration is only exposed over RPC), **Spike 1 STOPS and surfaces for an explicit human decision** — it must never silently pivot Task 7's decoder/adapter to an RPC persistent-connection model. Task 7 carries zero speculative RPC complexity. (Task 0 / Task 7)
+
+---
+
 ## Task 0: Spikes (GATE — throwaway, document findings)
 
 **Files:** Create `docs/superpowers/spikes/2026-06-18-pi-agent-brain-spikes.md`; capture fixtures under `packages/waypoint-engine-host/src/brain/__fixtures__/pi-stream/`.
@@ -252,11 +268,11 @@ describe('AgentSession', () => {
 
 **Why (CEO+Eng CRITICAL):** today `CommandBus.dispatch(name,payload)` has no caller identity and the transport validates one global token. The Pi child would hold that global token and could call `author.approveProposal`/`workspace.open` directly. This task makes the grant a host-enforced boundary.
 
-**Produces:**
-- `TokenRegistry` — `mint(scope: ReadonlySet<string>): string` (random token), `resolve(token): { scope: ReadonlySet<string> } | null` (global host token resolves to `null` scope = unrestricted), `revoke(token)`.
-- `CommandBus.dispatch(name, payload, ctx?: DispatchContext)` where `DispatchContext = { allow?: ReadonlySet<string> }`; if `ctx.allow` is set and `!ctx.allow.has(name)` → return `fail('Command not in session grant: '+name, { code: 'FORBIDDEN', field: 'command' })` **before** handler lookup.
-- `EngineErrorCode` gains `'FORBIDDEN'`.
-- Transport: resolve the bearer token → scope; pass `{ allow: scope.scope }` (or nothing for the global token) into `dispatch`. WS upgrade enforces the same.
+**Produces (see Contract Locks 2, 3, 7):**
+- `TokenRegistry` — `mintScoped(sessionId: string, allow: ReadonlySet<string>): string` (random token bound to its session), a distinct global-token registration at `start()`, `resolve(token): { kind: 'global' } | { kind: 'scoped'; sessionId: string; allow: ReadonlySet<string> } | { kind: 'unknown' }`, `revoke(token)`. **No `null`** — `unknown` is explicit.
+- `CommandBus.dispatch(name, payload, ctx?: DispatchContext)` where `DispatchContext = { allow?: ReadonlySet<string>; agentSessionId?: string; signal?: AbortSignal }`; if `ctx.allow` is set and `!ctx.allow.has(name)` → return `fail('Command not in session grant: '+name, { code: 'FORBIDDEN', field: 'command' })` **before** handler lookup.
+- `EngineErrorCode` gains `'FORBIDDEN'`; the HTTP boundary maps `details.code === 'FORBIDDEN'` → **HTTP 403** (canonical envelope body preserved).
+- Transport: `resolve(token)` → branch on `kind`: `global` → dispatch with no `ctx`; `scoped` → dispatch with `{ allow, agentSessionId }` (sessionId from the token, never the payload); `unknown` → 401 before dispatch. WS upgrade enforces the same.
 
 - [ ] **Step 1: Failing test — TokenRegistry + bus scope:**
 
@@ -290,12 +306,14 @@ describe('CommandBus scope', () => {
 
 ---
 
-## Task 5: agent.* commands (async author, watch, run convenience, cancel, list, transcript)
+## Task 5: agent.* commands — split 5a (lifecycle) / 5b (observability)
+
+> **Per Contract Lock 6, this task splits into two reviewable units.** Task 5a (lifecycle/mutation): `AGENT_TOOL_GRANT`, `agent.author`, `agent.run`, `agent.cancel`, the `WorkspaceSession` lease API, per-session token mint, `onTerminal` release+revoke. Task 5b (observability, read-only, depends on 5a): `agent.watch`, `agent.list`, `agent.transcript`. `cancel` is a lifecycle mutation → 5a. Adapter credentials flow via the `BrainAdapterFactory.forSession({ hostUrl, hostToken })` seam (Contract Lock 1), NOT via `BrainRunInput`.
 
 **Files:** Create `src/core/commands/agent.ts`; Modify `src/core/engine-host.ts`, `src/core/workspace-session.ts`; Test `src/core/commands/agent.test.ts`.
 
 **Produces (all async-aware):**
-- `AGENT_TOOL_GRANT` (frozen) — excludes `author.approveProposal`, `workspace.open`; includes `run.adhoc`.
+- `AGENT_TOOL_GRANT` (frozen) — excludes the **entire `agent.*` namespace** (no agent-spawns-agent recursion), `author.approveProposal`, and `workspace.open`; includes `run.adhoc` (Contract Lock 5).
 - `agent.author { intent, kind?, tools? }` → **returns `{ sessionId, status:'running' }` immediately**; starts `void session.run()` in the background. Mints a per-session scoped token (allow-set = resolved grant) and passes it to the adapter (so the Pi child calls back with the *scoped* token). On terminal: release the in-flight lease, revoke the token, update registry.
 - `agent.run { intent, kind?, tools? }` → **convenience**: same as author but awaits the terminal state and returns the full result (`{ sessionId, status, summary?, proposalId?, adhocRouteId? }`). Progressive disclosure: simple one-call path.
 - `agent.watch { sessionId, sinceSeq? }` → returns a **replayable snapshot** (`{ sessionId, status, events }` from the transcript) and is the documented live-tail entry (over WS, subscribe to `agent:<sessionId>`; this command is the non-WS/replay path).
@@ -508,3 +526,28 @@ Reviewed via /autoplan on 2026-06-18 (CEO + Eng dual-voice with Codex + Claude s
 **Cross-phase themes:** per-session token + real execution/abort (CEO+Eng); Pi dependency hardening (CEO+Eng); silent fallback + observability (CEO+DX).
 
 **VERDICT:** Approved with decisions 2–22 integrated (premise held by user: unrestricted-by-default, now watchable + host-enforced scoping). Test-plan artifact: `~/.gstack/projects/aaron-agent-corporation-waypoint/aaron-main-test-plan-*.md`. Next: `/mar`.
+
+---
+
+# /mar Review Record
+
+Run `20260619-7uidef` (roster: claude-1, codex-1, gemini-1 — 3 distinct vendors). Phases: draft → review → response → evaluation → integration → validation.
+
+**Outcome: unanimous convergence; run marked `failed` on a reproducible tooling bug at the integration step only.** All three vendors' round-2 evaluations proposed **base = `claude-1`** with **`remainingDisagreements: []`** (`017-codex-1-evaluation-r1.md`, `018-gemini-1-evaluation-r1.md`, `convergence.json` status `agreed`). The integrator role is pinned to claude-1, whose integration invocation never received its payload (validation-failed in 16s, twice across two resumes); with no second vendor available for that phase the engine could not produce the merged artifact. The convergence itself is complete and recorded in `runs/20260619-7uidef/shared/resolved-decisions.md` (8 settled decisions with lineage). The driver integrated the converged result into this plan manually (repo doc, not a `runs/` artifact) as the **MAR Cross-Task Contract Lock** section above.
+
+**Settled decisions (lineage in `shared/resolved-decisions.md`):**
+- Credential isolation via `BrainAdapterFactory.forSession` — `BrainRunInput` stays provider-neutral (claude-1 issue-1 refine; codex-1 issue-2 concede). → Lock 1.
+- `mintScoped(sessionId, allow)` + tagged-union `resolve` (claude-1/codex-1). → Lock 2.
+- Session identity authoritative from the scoped token, never payload; global-caller overlay-collision guard (codex-1 issue-3). → Lock 3.
+- Dual-cursor transcript replay (`idx` disk / `seq` live tail) — restart-stable (claude-1 issue-3 refine). → Lock 4.
+- `AGENT_TOOL_GRANT` excludes the whole `agent.*` namespace (recursion/fork-bomb guard). → Lock 5.
+- Task 5 split along the mutation boundary into 5a (lifecycle) / 5b (observability) (claude-1 issue-6 refine). → Lock 6.
+- `FORBIDDEN` → HTTP 403 + one host-client classifier on `details.code` for WS (codex-1 issue-4). → Lock 7.
+- EventHub route seq grounded in the durable log; deltas are hints (gemini-1 issue-1). → Lock 8.
+- Pi `--mode json` pinned with an explicit Spike-1 STOP-and-surface gate; zero speculative RPC (claude-1 issue-7 refine). → Lock 9.
+
+**Product decisions never reopened:** unrestricted-by-default ad-hoc execution (user-held), human-gated promotion, folder-only ad-hoc (experimental). codex-1 explicitly declined to reopen them.
+
+**Process notes:** gemini-1 was dropped in round-1 review (validation-failed: lossy near-verbatim copy) and restored on the failed-run resume, contributing a full round-2 review/response/evaluation. The integration-dispatch bug is a `mar` CLI issue (claude integrator payload loss), not a convergence failure — worth filing upstream.
+
+**VERDICT:** Plan carries the autoplan decisions (2–22) + the 9 MAR contract locks. Ready for execution (TDD, bd issue per task, Task 0 spikes first).
