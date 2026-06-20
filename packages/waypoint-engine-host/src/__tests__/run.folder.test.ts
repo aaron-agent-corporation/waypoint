@@ -91,7 +91,7 @@ describe('engine-host run/watch commands (folder)', () => {
     expect(await host.dispatch('run.start', {})).toMatchObject({
       ok: false,
       action: 'error',
-      details: { code: 'VALIDATION', field: 'quest' },
+      details: { code: 'VALIDATION', path: 'quest' },
     })
   })
 })

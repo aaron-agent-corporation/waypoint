@@ -42,7 +42,7 @@ describe('engine-host gate + discussion commands (folder)', () => {
         node: started.route.current_node ?? 'x',
         decision: 'maybe',
       }),
-    ).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION', field: 'decision' } })
+    ).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION', path: 'decision' } })
   })
 
   it('posts and lists a task-scoped discussion message', async () => {
@@ -66,7 +66,7 @@ describe('engine-host gate + discussion commands (folder)', () => {
   it('requires a routeId and a valid decision for gate.decide', async () => {
     expect(await host.dispatch('gate.decide', { node: 'x', decision: 'approve' })).toMatchObject({
       ok: false,
-      details: { code: 'VALIDATION', field: 'routeId' },
+      details: { code: 'VALIDATION', path: 'routeId' },
     })
   })
 })

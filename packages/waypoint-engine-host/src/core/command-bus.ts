@@ -44,7 +44,8 @@ export class CommandBus {
     const handler = this.handlers.get(name)
     if (!handler) return fail(`Unknown command: ${name}`, { code: 'UNKNOWN_COMMAND' })
     if (ctx?.allow && !ctx.allow.has(name)) {
-      return fail(`Command not in session grant: ${name}`, { code: 'FORBIDDEN', field: 'command' })
+      // Carry the allowed list so the host-client can render an actionable 403.
+      return fail(`Command not in session grant: ${name}`, { code: 'FORBIDDEN', field: 'command', issues: [...ctx.allow].sort() })
     }
     try {
       return await handler(payload, ctx)

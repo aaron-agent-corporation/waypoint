@@ -10,9 +10,32 @@ export function ok(action: string, data: Record<string, unknown> = {}): EngineSu
   return { ok: true, action, ...data }
 }
 
-/** Build a coded error envelope: `{ ok: false, action: 'error', error, details }`. */
+/**
+ * Build a coded error envelope with the ONE canonical details shape every
+ * consumer (and the AI agent) can parse: `{ ok:false, action:'error', error,
+ * details: { code, path?, message, issues? } }`. Handlers still throw the
+ * ergonomic `{ code, field, issues }` (EngineErrorDetails); `field` is mapped to
+ * `path` and the human `message` is mirrored into details here (Task 10 / DX
+ * decisions 18-19).
+ */
 export function fail(message: string, details: EngineErrorDetails): WaypointErrorEnvelope {
-  return makeErrorEnvelope(message, details)
+  return makeErrorEnvelope(message, canonicalErrorDetails(message, details))
+}
+
+export interface CanonicalErrorDetails {
+  readonly code: string
+  readonly path?: string
+  readonly message: string
+  readonly issues?: readonly string[]
+}
+
+function canonicalErrorDetails(message: string, details: EngineErrorDetails): CanonicalErrorDetails {
+  return {
+    code: details.code,
+    ...(details.field !== undefined ? { path: details.field } : {}),
+    message,
+    ...(details.issues !== undefined ? { issues: details.issues } : {}),
+  }
 }
 
 /**

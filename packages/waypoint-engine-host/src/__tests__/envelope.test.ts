@@ -11,22 +11,22 @@ describe('engine envelopes', () => {
     expect(ok('workspace.status')).toEqual({ ok: true, action: 'workspace.status' })
   })
 
-  it('carries a structured error code in details', () => {
+  it('carries a structured error code + mirrored message in details', () => {
     expect(fail('No workspace open', { code: 'NO_WORKSPACE' })).toMatchObject({
       ok: false,
       action: 'error',
       error: 'No workspace open',
-      details: { code: 'NO_WORKSPACE' },
+      details: { code: 'NO_WORKSPACE', message: 'No workspace open' },
     })
   })
 
-  it('carries field + issues in error details when provided', () => {
+  it('maps field -> path and carries issues in canonical error details', () => {
     expect(fail('Authoring draft invalid', { code: 'VALIDATION', field: 'slug', issues: ['slug is required'] })).toMatchObject({
-      details: { code: 'VALIDATION', field: 'slug', issues: ['slug is required'] },
+      details: { code: 'VALIDATION', path: 'slug', message: 'Authoring draft invalid', issues: ['slug is required'] },
     })
   })
 
-  it('EngineError carries a code+details usable by fail()', () => {
+  it('EngineError keeps the ergonomic {code, field} input; fail() emits {code, path, message}', () => {
     const err = new EngineError('Route not found: route-001', { code: 'NOT_FOUND', field: 'routeId' })
     expect(err).toBeInstanceOf(Error)
     expect(err.message).toBe('Route not found: route-001')
@@ -35,7 +35,7 @@ describe('engine envelopes', () => {
       ok: false,
       action: 'error',
       error: 'Route not found: route-001',
-      details: { code: 'NOT_FOUND', field: 'routeId' },
+      details: { code: 'NOT_FOUND', path: 'routeId', message: 'Route not found: route-001' },
     })
   })
 })

@@ -47,7 +47,7 @@ describe('engine-host commands (folder)', () => {
       ok: false,
       action: 'error',
       error: 'No workspace open; call workspace.open first',
-      details: { code: 'NO_WORKSPACE' },
+      details: { code: 'NO_WORKSPACE', message: 'No workspace open; call workspace.open first' },
     })
   })
 

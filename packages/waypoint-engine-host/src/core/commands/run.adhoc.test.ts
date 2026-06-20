@@ -59,7 +59,7 @@ describe('run.adhoc', () => {
     const res = (await host.dispatch('run.adhoc', {})) as Record<string, unknown>
     expect(res.ok).toBe(false)
     expect((res.details as { code: string }).code).toBe('VALIDATION')
-    expect((res.details as { field?: string }).field).toBe('questYaml')
+    expect((res.details as { path?: string }).path).toBe('questYaml')
   })
 
   it('maps an invalid recipe manifest to a VALIDATION envelope', async () => {
@@ -99,6 +99,6 @@ describe('run.adhoc', () => {
     const res = (await host.dispatch('run.adhoc', { questYaml: QUEST })) as Record<string, unknown>
     expect(res.ok).toBe(false)
     expect((res.details as { code: string }).code).toBe('VALIDATION')
-    expect((res.details as { field?: string }).field).toBe('backend')
+    expect((res.details as { path?: string }).path).toBe('backend')
   }, 120_000)
 })

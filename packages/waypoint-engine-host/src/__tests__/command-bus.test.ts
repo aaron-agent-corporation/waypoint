@@ -22,7 +22,7 @@ describe('CommandBus', () => {
       ok: false,
       action: 'error',
       error: 'Unknown command: nope',
-      details: { code: 'UNKNOWN_COMMAND' },
+      details: { code: 'UNKNOWN_COMMAND', message: 'Unknown command: nope' },
     })
   })
 
@@ -35,7 +35,7 @@ describe('CommandBus', () => {
       ok: false,
       action: 'error',
       error: 'kaboom',
-      details: { code: 'BACKEND_ERROR' },
+      details: { code: 'BACKEND_ERROR', message: 'kaboom' },
     })
   })
 
@@ -48,7 +48,7 @@ describe('CommandBus', () => {
       ok: false,
       action: 'error',
       error: 'quest is required',
-      details: { code: 'VALIDATION', field: 'quest' },
+      details: { code: 'VALIDATION', path: 'quest', message: 'quest is required' },
     })
   })
 

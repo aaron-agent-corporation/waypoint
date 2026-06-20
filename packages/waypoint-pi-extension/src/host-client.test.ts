@@ -47,15 +47,18 @@ describe('createHostClient', () => {
     await expect(client.command('routes.list')).rejects.toMatchObject({ code: 'UNAUTHENTICATED', status: 401 })
   })
 
-  it('maps 403 to a "not in grant" error naming the tool', async () => {
-    const { fetchImpl } = recordingFetch(jsonResponse(403, { ok: false, details: { code: 'FORBIDDEN' } }))
+  it('maps 403 to a "not in grant" error naming the tool and the allowed list', async () => {
+    const { fetchImpl } = recordingFetch(
+      jsonResponse(403, { ok: false, details: { code: 'FORBIDDEN', path: 'command', issues: ['author.recipe', 'run.adhoc'] } }),
+    )
     const client = createHostClient({ url: 'http://x', token: 't', fetchImpl })
     await expect(client.command('author.approveProposal')).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 })
     await expect(client.command('author.approveProposal')).rejects.toThrow(/author\.approveProposal/)
+    await expect(client.command('author.approveProposal')).rejects.toThrow(/author\.recipe, run\.adhoc/)
   })
 
-  it('throws a coded HostCommandError on an ok:false envelope', async () => {
-    const { fetchImpl } = recordingFetch(jsonResponse(200, { ok: false, error: 'bad spec', details: { code: 'VALIDATION', field: 'spec' } }))
+  it('throws a coded HostCommandError reading details.path on an ok:false envelope', async () => {
+    const { fetchImpl } = recordingFetch(jsonResponse(200, { ok: false, error: 'bad spec', details: { code: 'VALIDATION', path: 'spec', message: 'bad spec' } }))
     const client = createHostClient({ url: 'http://x', token: 't', fetchImpl })
     const error = await client.command('author.recipe').catch((e: unknown) => e)
     expect(error).toBeInstanceOf(HostCommandError)

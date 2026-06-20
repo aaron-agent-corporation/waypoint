@@ -66,26 +66,33 @@ export function createHostClient(config: HostClientConfig): HostClient {
         body: JSON.stringify(payload ?? {}),
       })
 
+      let body: Record<string, unknown> = {}
+      try {
+        body = (await response.json()) as Record<string, unknown>
+      } catch {
+        body = {}
+      }
+      const details = isRecord(body.details) ? body.details : {}
+
       if (response.status === 401) {
-        throw new HostCommandError('Engine host rejected the token (authentication failed). Is WAYPOINT_HOST_TOKEN the current scoped token?', {
-          code: 'UNAUTHENTICATED',
-          status: 401,
-        })
+        throw new HostCommandError(
+          'authorization failed: WAYPOINT_HOST_TOKEN is missing or invalid (the engine host rejected the token).',
+          { code: 'UNAUTHENTICATED', status: 401 },
+        )
       }
       if (response.status === 403) {
-        throw new HostCommandError(`Tool '${name}' is not permitted by this agent session's grant.`, {
+        const allowed = Array.isArray(details.issues) ? (details.issues as string[]) : []
+        const suffix = allowed.length > 0 ? ` Allowed in this session: [${allowed.join(', ')}].` : ''
+        throw new HostCommandError(`tool '${name}' is not in this agent session's grant.${suffix}`, {
           code: 'FORBIDDEN',
           status: 403,
         })
       }
-
-      const body = (await response.json()) as Record<string, unknown>
-      if (body && body.ok === false) {
-        const details = isRecord(body.details) ? body.details : {}
+      if (body.ok === false) {
         throw new HostCommandError(typeof body.error === 'string' ? body.error : `Command failed: ${name}`, {
           code: typeof details.code === 'string' ? details.code : 'BACKEND_ERROR',
           status: response.status,
-          ...(typeof details.field === 'string' ? { field: details.field } : typeof details.path === 'string' ? { field: details.path } : {}),
+          ...(typeof details.path === 'string' ? { field: details.path } : {}),
         })
       }
       return body
