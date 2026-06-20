@@ -8,6 +8,7 @@ export default defineConfig({
       '@waypoint/folder-host': resolve(__dirname, 'packages/waypoint-folder-host/src/index.ts'),
       '@waypoint/cli': resolve(__dirname, 'packages/waypoint-cli/src/index.ts'),
       '@waypoint/engine-host': resolve(__dirname, 'packages/waypoint-engine-host/src/index.ts'),
+      '@waypoint/pi-extension': resolve(__dirname, 'packages/waypoint-pi-extension/src/index.ts'),
     },
   },
   test: {

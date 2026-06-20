@@ -16,6 +16,7 @@ export function getEngineHostInfo(): EngineHostInfo {
 
 export { createEngineHost } from './core/engine-host.ts'
 export type { EngineHost, EngineHostConfig, EngineContext } from './core/engine-host.ts'
+export { AGENT_TOOL_GRANT } from './core/commands/agent.ts'
 export { createEngineClient } from './client.ts'
 export type { EngineClient, EngineClientConfig } from './client.ts'
 export { startEngineHostFromEnv } from './bin.ts'

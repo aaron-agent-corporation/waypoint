@@ -9,4 +9,4 @@ This knowledge base was bootstrapped from local repository discovery and should 
 
 ## Repository Snapshot
 
-The first bootstrap found 185 code, 157 test, 99 document, 5 config, 0 asset files. Treat this as a starting map, not as final architecture.
+The first bootstrap found 188 code, 160 test, 100 document, 6 config, 0 asset files. Treat this as a starting map, not as final architecture.

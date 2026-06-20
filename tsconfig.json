@@ -27,7 +27,8 @@
       "@waypoint/core": ["./src/index.ts"],
       "@waypoint/folder-host": ["./packages/waypoint-folder-host/src/index.ts"],
       "@waypoint/cli": ["./packages/waypoint-cli/src/index.ts"],
-      "@waypoint/engine-host": ["./packages/waypoint-engine-host/src/index.ts"]
+      "@waypoint/engine-host": ["./packages/waypoint-engine-host/src/index.ts"],
+      "@waypoint/pi-extension": ["./packages/waypoint-pi-extension/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "examples/**/*.ts", "packages/**/*.ts"],
