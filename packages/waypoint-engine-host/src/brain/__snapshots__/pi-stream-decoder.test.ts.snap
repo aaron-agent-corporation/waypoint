@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PiStreamDecoder > decodes whole-line input and matches the committed snapshot (fails loud on Pi drift) 1`] = `
+[
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.session",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.agent_start",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.turn_start",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "data": {
+      "toolName": "waypoint_ping",
+    },
+    "kind": "agent.toolcall",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "data": {
+      "isError": false,
+      "text": "pong world url=http://127.0.0.1:9999/",
+      "toolName": "waypoint_ping",
+    },
+    "kind": "agent.tool_result",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.turn_end",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.turn_start",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "data": {
+      "text": "Done.",
+    },
+    "kind": "agent.message",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.turn_end",
+  },
+  {
+    "at": "2026-06-19T00:00:00.000Z",
+    "kind": "agent.end",
+  },
+]
+`;
