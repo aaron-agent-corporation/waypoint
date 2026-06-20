@@ -13,8 +13,17 @@ export function registerMetaCommands(bus: CommandBus, ctx: EngineContext): void 
       workspaceOpen: ctx.session.current() !== null,
       seq: ctx.hub.currentSeq(),
       uptime: Date.now() - ctx.startedAt,
+      brain: ctx.brainInfo.brain,
+      ...(ctx.brainInfo.version ? { brainVersion: ctx.brainInfo.version } : {}),
     }),
   )
 
-  bus.register('meta.version', () => ok('meta.version', { apiVersion: ENGINE_API_VERSION, pkg: pkg.version }))
+  bus.register('meta.version', () =>
+    ok('meta.version', {
+      apiVersion: ENGINE_API_VERSION,
+      pkg: pkg.version,
+      brain: ctx.brainInfo.brain,
+      ...(ctx.brainInfo.version ? { brainVersion: ctx.brainInfo.version } : {}),
+    }),
+  )
 }

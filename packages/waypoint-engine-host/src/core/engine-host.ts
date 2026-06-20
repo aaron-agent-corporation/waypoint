@@ -28,6 +28,8 @@ export interface EngineContext {
   readonly tokens: TokenRegistry
   readonly agents: AgentRegistry
   readonly brainFactory: BrainAdapterFactory
+  /** Which brain is active + its version, for meta reporting (Task 9). */
+  readonly brainInfo: { readonly brain: 'pi' | 'fake'; readonly version?: string }
   readonly startedAt: number
   nextAgentId(): string
   getHostUrl(): string
@@ -62,6 +64,10 @@ export interface EngineHostConfig {
   readonly brainAdapter?: BrainAdapter
   /** A factory that mints a per-session adapter with loopback callback creds (Task 9 wires Pi here). */
   readonly brainAdapterFactory?: BrainAdapterFactory
+  /** Active brain kind for meta reporting (default 'fake'). */
+  readonly brain?: 'pi' | 'fake'
+  /** Active brain version (e.g. the pi CLI version) for meta reporting. */
+  readonly brainVersion?: string
 }
 
 export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
@@ -80,6 +86,7 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
     tokens,
     agents,
     brainFactory: resolveBrainFactory(config),
+    brainInfo: { brain: config.brain ?? 'fake', ...(config.brainVersion ? { version: config.brainVersion } : {}) },
     startedAt: config.startedAt ?? Date.now(),
     nextAgentId: () => `agent-${String(++agentSeq).padStart(3, '0')}`,
     getHostUrl: () => hostUrl,
@@ -119,6 +126,7 @@ export function createEngineHost(config: EngineHostConfig = {}): EngineHost {
       return result
     },
     async stop() {
+      agents.cancelAll() // best-effort: stop in-flight agent sessions before teardown (decision 16)
       broadcaster.stopPolling()
       if (transport) {
         await transport.stop()

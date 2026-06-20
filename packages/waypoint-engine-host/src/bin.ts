@@ -1,6 +1,7 @@
 import { chmod, rename, rm, writeFile } from 'node:fs/promises'
 
 import { createEngineHost } from './core/engine-host.ts'
+import { selectBrain } from './brain/select.ts'
 import type { EngineBackend } from './types.ts'
 
 export interface EngineHostHandle {
@@ -33,7 +34,13 @@ export async function startEngineHostFromEnv(
   _argv: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<EngineHostHandle> {
-  const host = createEngineHost()
+  // Fail loud if WAYPOINT_BRAIN=pi but pi is missing/mismatched (never silently fake).
+  const selection = selectBrain({ brain: env.WAYPOINT_BRAIN, piExtensionPath: env.WAYPOINT_PI_EXTENSION })
+  const host = createEngineHost({
+    brainAdapterFactory: selection.factory,
+    brain: selection.brain,
+    ...(selection.version ? { brainVersion: selection.version } : {}),
+  })
   const started = await host.start()
   const workspaceRoot = env.WAYPOINT_ENGINE_ROOT ?? null
   if (workspaceRoot) {

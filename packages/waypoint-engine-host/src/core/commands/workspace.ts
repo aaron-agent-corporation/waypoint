@@ -11,6 +11,9 @@ export function registerWorkspaceCommands(bus: CommandBus, ctx: EngineContext): 
       initBeads?: boolean
       force?: boolean
     }
+    // A forced switch abandons the current workspace's in-flight agent sessions
+    // (decision 16) — cancel them before reopening so leases release + tokens revoke.
+    if (input.force) ctx.agents.cancelAll()
     const workspace = await ctx.session.open({
       root: input.root ?? '',
       backend: input.backend,
