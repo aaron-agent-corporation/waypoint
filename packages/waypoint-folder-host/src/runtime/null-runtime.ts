@@ -4,6 +4,7 @@ export interface NullRecipeRuntimeInput {
   readonly recipe: string
   readonly prompt?: string
   readonly projectRoot: string
+  readonly signal?: AbortSignal
 }
 
 export interface NullRecipeRuntimeOutput {

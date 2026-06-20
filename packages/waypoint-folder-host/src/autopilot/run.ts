@@ -50,6 +50,17 @@ export async function runWaypointAutopilot(
   let blockedNode: string | null = null
 
   while (iterations < maxIterations) {
+    if (options.signal?.aborted) {
+      status = 'cancelled'
+      await updateWaypointRoute(projectRoot, routeId, { status: 'cancelled', updated_at: timestampFor(options.now) })
+      await appendRouteEvent(projectRoot, routeId, {
+        kind: 'route.autopilot.cancelled',
+        now: options.now,
+        payload: { completed_tasks: completedTasks },
+      })
+      break
+    }
+
     const nextTask = await nextOpenTask(projectRoot, routeId)
     if (!nextTask) {
       status = 'complete'
@@ -135,14 +146,35 @@ export async function runWaypointAutopilot(
     }
 
     const recipeSlug = recipeSlugForTask(nextTask)
-    const recipe = runtime instanceof LocalRecipeRuntime ? await loadRecipeManifest(projectRoot, recipeSlug) : null
+    const recipe = runtime instanceof LocalRecipeRuntime ? await loadRecipeManifest(projectRoot, recipeSlug, options.catalogDir) : null
     const output = await runtime.runRecipe({
       routeId,
       taskId: nextTask.id,
       recipe: recipe?.slug ?? recipeSlug,
       prompt: recipe?.prompt ?? '',
       projectRoot,
+      signal: options.signal,
     })
+    if (output.status === 'cancelled') {
+      status = 'cancelled'
+      blockedNode = nextTask.plan_ref
+      await updateWaypointTask(projectRoot, nextTask.id, {
+        status: 'cancelled',
+        updated_at: timestampFor(options.now),
+        metadata: mergeTaskMetadata(nextTask.metadata, { autopilot: output }),
+      })
+      await updateWaypointRoute(projectRoot, routeId, {
+        status: 'cancelled',
+        current_node: nextTask.plan_ref,
+        updated_at: timestampFor(options.now),
+      })
+      await appendRouteEvent(projectRoot, routeId, {
+        kind: 'route.autopilot.cancelled',
+        now: options.now,
+        payload: { task_id: nextTask.id, node: nextTask.plan_ref, runtime: output },
+      })
+      break
+    }
     if (output.status === 'failed') {
       status = 'failed'
       await updateWaypointTask(projectRoot, nextTask.id, {
@@ -390,8 +422,10 @@ async function createRecipeRuntime(projectRoot: string): Promise<NullRecipeRunti
   return new LocalRecipeRuntime({ command: config.runtime.command, args: config.runtime.args ?? [] })
 }
 
-async function loadRecipeManifest(projectRoot: string, recipeSlug: string): Promise<RecipeManifest> {
-  const recipeDirectory = join(getWaypointProjectPaths(projectRoot).waypointDir, 'recipes')
+async function loadRecipeManifest(projectRoot: string, recipeSlug: string, catalogDir?: string): Promise<RecipeManifest> {
+  const recipeDirectory = catalogDir
+    ? join(catalogDir, 'recipes')
+    : join(getWaypointProjectPaths(projectRoot).waypointDir, 'recipes')
   for (const filePath of await walkYamlFiles(recipeDirectory)) {
     const parsed = parseRecipeManifest(await readFile(filePath, 'utf8'))
     if (parsed.ok && parsed.manifest.slug === recipeSlug) return parsed.manifest

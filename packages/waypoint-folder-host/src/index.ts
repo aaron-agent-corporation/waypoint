@@ -251,6 +251,8 @@ export { createWaypointRoute, getWaypointRoute, listWaypointRoutes, updateWaypoi
 export { approveRouteGate, pauseWaypointRoute, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './routes/state.ts'
 export { startQuestRoute } from './routes/start.ts'
 export type { StartQuestRouteOptions, StartedQuestRoute, StartedQuestRouteBeadsSummary } from './routes/start.ts'
+export { startAdhocRoute, AdhocManifestError } from './routes/start-adhoc.ts'
+export type { StartAdhocRouteOptions, StartedAdhocRoute } from './routes/start-adhoc.ts'
 export { getWaypointRuntimeRoute, getWaypointRuntimeTask, listWaypointRuntimeRoutes, listWaypointRuntimeTasks } from './routes/read-model.ts'
 export type { ListWaypointRuntimeTasksOptions, WaypointRuntimeReadOptions } from './routes/read-model.ts'
 export { applyQuestScaffold } from './quests/scaffold.ts'

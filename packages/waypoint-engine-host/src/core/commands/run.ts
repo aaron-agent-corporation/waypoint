@@ -1,10 +1,13 @@
 import {
+  AdhocManifestError,
   getWaypointRuntimeRoute,
   listWaypointRuntimeRoutes,
   listWaypointRuntimeTasks,
   pauseWaypointRoute,
   readWaypointRuntimeRouteEvents,
   resumeWaypointRoute,
+  runWaypointAutopilot,
+  startAdhocRoute,
   startQuestRoute,
 } from '@waypoint/folder-host'
 
@@ -21,6 +24,45 @@ export function registerRunCommands(bus: CommandBus, ctx: EngineContext): void {
     const route = await ctx.session.mutate(() => startQuestRoute(root, { quest, ...ctx.session.beadsOptions() }))
     await ctx.broadcaster.emit(route.id)
     return ok('run.start', { route })
+  })
+
+  // Ad-hoc execution from agent-authored drafts (folder backend only, slice 2).
+  // Materialize under the mutex; run the autopilot OUTSIDE it so a long recipe
+  // run never blocks other workspace mutations (Eng decision 16). The owning
+  // agent session's id (from the scoped token, never the payload — Lock 3) and
+  // its AbortSignal are threaded so agent.cancel can stop the run.
+  bus.register('run.adhoc', async (payload, dispatchCtx) => {
+    const { root, backend } = ctx.session.requireActive()
+    if (backend === 'beads') {
+      throw new EngineError('run.adhoc supports the folder backend only in slice 2', { code: 'VALIDATION', field: 'backend' })
+    }
+    const input = (payload ?? {}) as { questYaml?: string; recipeYamls?: readonly string[]; dryRun?: boolean }
+    if (!input.questYaml || typeof input.questYaml !== 'string') {
+      throw new EngineError('run.adhoc requires questYaml', { code: 'VALIDATION', field: 'questYaml' })
+    }
+    const questYaml = input.questYaml
+    const recipeYamls = input.recipeYamls ?? []
+    const sessionId = dispatchCtx?.agentSessionId ?? `adhoc-${Date.now().toString(36)}`
+
+    let started
+    try {
+      started = await ctx.session.mutate(() =>
+        startAdhocRoute(root, { sessionId, questYaml, recipeYamls, dryRun: true }),
+      )
+    } catch (error) {
+      if (error instanceof AdhocManifestError) {
+        throw new EngineError(error.message, { code: 'VALIDATION', field: error.field })
+      }
+      throw error
+    }
+
+    if (!input.dryRun) {
+      await runWaypointAutopilot(root, { routeId: started.id, catalogDir: started.overlay, signal: dispatchCtx?.signal })
+    }
+
+    const route = (await getWaypointRuntimeRoute(root, started.id, ctx.session.beadsOptions())) ?? started
+    await ctx.broadcaster.emit(route.id)
+    return ok('run.adhoc', { route })
   })
 
   bus.register('routes.list', async () => {

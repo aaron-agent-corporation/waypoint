@@ -2,7 +2,7 @@ import type { WaypointBeadsIssueMutationClient, WaypointBeadsIssueSnapshotReader
 import type { WaypointBeadsRecipeRuntimePolicy } from '../beads/execution.ts'
 import type { WaypointBeadsArtifactVerifier } from '../beads/verification.ts'
 
-export type WaypointAutopilotRunStatus = 'complete' | 'blocked' | 'iteration_cap' | 'failed'
+export type WaypointAutopilotRunStatus = 'complete' | 'blocked' | 'iteration_cap' | 'failed' | 'cancelled'
 
 export interface WaypointAutopilotRunRecord {
   readonly id: string
@@ -27,6 +27,10 @@ export interface RunWaypointAutopilotOptions {
   readonly routeId?: string
   readonly maxIterations?: number
   readonly now?: Date
+  /** Resolve recipe manifests from this catalog dir (session overlay) instead of `.waypoint/recipes`. */
+  readonly catalogDir?: string
+  /** Aborts the in-flight recipe child and ends the run `cancelled`. */
+  readonly signal?: AbortSignal
   readonly beadsReader?: WaypointBeadsIssueSnapshotReader
   readonly beadsMutator?: WaypointBeadsIssueMutationClient
   readonly artifactVerifier?: WaypointBeadsArtifactVerifier
