@@ -2,7 +2,7 @@
   "version": 1,
   "tool_version": "0.1.0",
   "project_root": ".",
-  "generated_at": "2026-06-20T18:50:08.017Z",
+  "generated_at": "2026-06-20T18:54:17.302Z",
   "sections": {
     "lat": {
       "stable_id": "lat",
@@ -15,8 +15,8 @@
       "source_anchor_policy": "coverage-only",
       "source_node_ids": [],
       "source_spans": [],
-      "generated_hash": "sha256:6737d0851620ab44251e4fbe4a13cea6be618aa9c50bcbce987b2879fc1d350e",
-      "current_hash": "sha256:6737d0851620ab44251e4fbe4a13cea6be618aa9c50bcbce987b2879fc1d350e",
+      "generated_hash": "sha256:a907b7d6a5d3bbec7f7f249d0bf63a228efc85b82a993c9fabdc0877e1e6e2f4",
+      "current_hash": "sha256:a907b7d6a5d3bbec7f7f249d0bf63a228efc85b82a993c9fabdc0877e1e6e2f4",
       "last_seen_graph_hash": "sha256:8e8ea3132aea88dfab4a730b5673d672e35631affe44634dea1df1b0df4b57e5"
     },
     "architecture": {

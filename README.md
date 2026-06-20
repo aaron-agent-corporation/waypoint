@@ -96,6 +96,88 @@ curl -s -X POST "$URL/cmd/routes.list" -H "authorization: Bearer $TOKEN"
 ```
 
 
+## Agent brain (Pi orchestrator)
+
+The engine host can drive an LLM **agent brain** that authors Waypoint workflows
+from natural language, runs them ad-hoc, and proposes promotion — all over the
+same scoped command surface. The first brain is the
+[`pi` coding agent](https://www.npmjs.com/package/@mariozechner/pi-coding-agent)
+driven headless as a child process; a `FakeBrainAdapter` backs the tests and the
+`pnpm smoke:agent-brain` check.
+
+Runs are **asynchronous and watchable**. Author returns immediately; events
+stream on an `agent:<sessionId>` topic:
+
+```ts
+const { sessionId } = await client.cmd('agent.author', { intent: 'Add a lint-fix recipe' })
+const unsubscribe = await client.subscribe([`agent:${sessionId}`], (event) => console.log(event))
+// or replay from a cursor: await client.cmd('agent.watch', { sessionId, sinceSeq: 0 })
+```
+
+One-call convenience (await the terminal result):
+
+```ts
+const result = await client.cmd('agent.run', { intent: 'Add a lint-fix recipe' })
+// { sessionId, status: 'completed', summary, proposalId }
+```
+
+Commands: `agent.author` (async), `agent.run` (await), `agent.watch`,
+`agent.list`, `agent.transcript`, `agent.cancel`. Cancel is **best-effort**:
+
+```ts
+await client.cmd('agent.cancel', { sessionId }) // SIGTERM→SIGKILL the run; cannot roll back committed side effects
+```
+
+### Environment
+
+| Variable               | Who sets it                        | Default | Required when            |
+| ---------------------- | ---------------------------------- | ------- | ------------------------ |
+| `WAYPOINT_BRAIN`       | operator                           | `fake`  | set to `pi` for real Pi  |
+| `WAYPOINT_PI_EXTENSION`| operator                           | —       | `WAYPOINT_BRAIN=pi`      |
+| `WAYPOINT_HOST_URL`    | host → injected into the Pi child  | —       | always (auto)            |
+| `WAYPOINT_HOST_TOKEN`  | host → injected into the Pi child  | —       | always (auto)            |
+
+`WAYPOINT_HOST_URL`/`WAYPOINT_HOST_TOKEN` are injected by the host into the Pi
+child; you do not set them. Selection is **fail-loud**: `WAYPOINT_BRAIN=pi` with
+a missing or out-of-range `pi` CLI throws (problem+cause+fix) — it never silently
+falls back to the fake. The active brain (`pi`|`fake` + version) is inspectable
+via `meta.health` / `meta.version`.
+
+### Real Pi
+
+```bash
+npm i -g @mariozechner/pi-coding-agent@0.55.x   # pinned range
+pnpm build                                        # produces packages/waypoint-pi-extension/dist
+export WAYPOINT_BRAIN=pi
+export WAYPOINT_PI_EXTENSION="$PWD/packages/waypoint-pi-extension/dist/index.js"
+```
+
+### Scoped-token model
+
+Each agent session gets a **per-session scoped token**; the host enforces its
+grant at the command bus. The agent may author and propose, run ad-hoc, and read
+routes/tasks — but it can **never** call `author.approveProposal` or
+`workspace.open`, even via direct loopback. Landing a proposal stays a human
+action (`author.approveProposal` with the unrestricted host token).
+
+### Blast radius
+
+Ad-hoc recipes execute as child processes **with the host process's privileges —
+there is no sandbox or side-effect policy**. Execution is intentionally
+*not* dry-run by default. Controls:
+
+- `run.adhoc { dryRun: true }` materializes a route + tasks **without executing** — a preview.
+- Recommended path: **author → inspect the proposal → run** (or dry-run first).
+- `agent.watch` for live observability; `agent.cancel` to stop (best-effort, no rollback); the `agent:<id>` event log is the audit trail.
+- Run the host as a low-privilege user, in a container, against a scratch workspace.
+
+Disk footprint per session: the transcript at `.waypoint/agent/<id>.jsonl` and
+the ad-hoc overlay catalog at `.waypoint/agent/<sessionId>/catalog/` (never the
+live `.waypoint/quests|recipes`).
+
+See [`packages/waypoint-pi-extension/src/README.md`](packages/waypoint-pi-extension/src/README.md)
+for the extension + tool list.
+
 ## Quest and Recipe catalog
 
 Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portability example and batteries-included workflow library:

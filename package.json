@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "smoke:folder-host": "node scripts/folder-host-smoke.mjs",
     "smoke:engine-host": "node scripts/engine-host-smoke.mjs",
+    "smoke:agent-brain": "node scripts/agent-brain-smoke.mjs",
     "smoke:firmvault-folder": "node scripts/firmvault-folder-smoke.mjs",
     "smoke:firmvault-bootstrap": "node scripts/firmvault-bootstrap-smoke.mjs",
     "smoke:firmvault-document-ingestion": "node scripts/firmvault-document-ingestion-smoke.mjs",
