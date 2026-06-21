@@ -30,22 +30,22 @@ Entry point `src/index.ts` imports first-hop local files including `src/authorin
 
 The initial inventory groups files by broad category so later extraction can focus on high-value paths.
 
-- Code files: 155
-- Test files: 131
-- Documentation files: 91
-- Config files: 4
+- Code files: 190
+- Test files: 165
+- Documentation files: 100
+- Config files: 6
 - Asset files: 0
-- Unsupported files: 187
+- Unsupported files: 190
 
 ## Structural Graph
 
-Code-KG extracted a deterministic structural graph with 2138 nodes, 2991 edges, 4 communities using the multi-language-directory-fallback analysis path.
+Code-KG extracted a deterministic structural graph with 2503 nodes, 3685 edges, 4 communities using the multi-language-directory-fallback analysis path.
 
 ## Communities
 
 Directory-based communities provide the first subsystem map until graph clustering is available.
 
-- packages: 141 files, 1146 symbols, cohesion 1
+- packages: 208 files, 1444 symbols, cohesion 1
 - src: 102 files, 501 symbols, cohesion 0.99
 - examples: 23 files, 220 symbols, cohesion 1
 - root: 1 files, 0 symbols, cohesion 1
@@ -62,8 +62,8 @@ High-degree nodes may deserve review as important entry points, bridges, or util
 - packages/waypoint-folder-host/src/firmvault/state.ts (file)
 - examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts (file)
 - packages/waypoint-folder-host/src/catalog/bundled.ts (file)
+- packages/waypoint-engine-host/src/core/engine-host.ts (file)
 - packages/waypoint-folder-host/src/beads/reconstruct.ts (file)
-- src/wizard/types.ts (file)
 
 ## Dependency Hotspots
 
@@ -80,6 +80,12 @@ Source file `packages/waypoint-cli/src/bin.ts` is imported by local files includ
 Source file `packages/waypoint-folder-host/src/catalog/bundled.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, and 25 more.
 
 - Imported by: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.ts`, `packages/waypoint-folder-host/src/beads/execution.test.ts`, `packages/waypoint-folder-host/src/beads/formula.test.ts`, `packages/waypoint-folder-host/src/beads/formula.ts`, and 21 more
+
+### packages/waypoint-engine-host/src/core/engine-host.ts
+
+Source file `packages/waypoint-engine-host/src/core/engine-host.ts` is imported by local files including `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, and 23 more.
+
+- Imported by: `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/gate.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/http-ws.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.beads.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.lifecycle.test.ts`, and 19 more
 
 ### packages/waypoint-folder-host/src/beads/cli-client.ts
 
@@ -101,9 +107,15 @@ Source file `src/wizard/types.ts` is imported by local files including `src/inde
 
 ### packages/waypoint-folder-host/src/project/init.ts
 
-Source file `packages/waypoint-folder-host/src/project/init.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, and 15 more.
+Source file `packages/waypoint-folder-host/src/project/init.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, and 16 more.
 
-- Imported by: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/beads/transitions.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, `packages/waypoint-folder-host/src/events/jsonl.test.ts`, `packages/waypoint-folder-host/src/events/read-model.test.ts`, and 11 more
+- Imported by: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/beads/transitions.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, `packages/waypoint-folder-host/src/events/jsonl.test.ts`, `packages/waypoint-folder-host/src/events/read-model.test.ts`, and 12 more
+
+### packages/waypoint-engine-host/src/types.ts
+
+Source file `packages/waypoint-engine-host/src/types.ts` is imported by local files including `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, `packages/waypoint-engine-host/src/__tests__/event-hub.test.ts`, and 14 more.
+
+- Imported by: `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, `packages/waypoint-engine-host/src/__tests__/event-hub.test.ts`, `packages/waypoint-engine-host/src/__tests__/run.folder.test.ts`, `packages/waypoint-engine-host/src/bin.ts`, `packages/waypoint-engine-host/src/brain/agent-session.test.ts`, `packages/waypoint-engine-host/src/brain/agent-session.ts`, and 10 more
 
 ### packages/waypoint-folder-host/src/beads/instantiate.ts
 
@@ -111,53 +123,41 @@ Source file `packages/waypoint-folder-host/src/beads/instantiate.ts` is imported
 
 - Imported by: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/cli-client.ts`, `packages/waypoint-folder-host/src/beads/execution.test.ts`, `packages/waypoint-folder-host/src/beads/instantiate.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/beads/reconstruct.test.ts`, and 10 more
 
-### packages/waypoint-folder-host/src/events/jsonl.ts
-
-Source file `packages/waypoint-folder-host/src/events/jsonl.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, and 12 more.
-
-- Imported by: `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/events/event-bus.ts`, `packages/waypoint-folder-host/src/events/jsonl.test.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, and 8 more
-
 ### packages/waypoint-folder-host/src/project/root.ts
 
-Source file `packages/waypoint-folder-host/src/project/root.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/catalog/install.ts`, and 12 more.
+Source file `packages/waypoint-folder-host/src/project/root.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/catalog/install.ts`, and 14 more.
 
-- Imported by: `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/catalog/install.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/events/jsonl.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/index.ts`, and 8 more
+- Imported by: `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/catalog/install.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/events/jsonl.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/index.ts`, and 10 more
 
-### packages/waypoint-folder-host/src/project/config.ts
+### packages/waypoint-folder-host/src/events/jsonl.ts
 
-Source file `packages/waypoint-folder-host/src/project/config.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, and 10 more.
+Source file `packages/waypoint-folder-host/src/events/jsonl.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, and 13 more.
 
-- Imported by: `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/firmvault/bootstrap.ts`, `packages/waypoint-folder-host/src/gascity/delegate.ts`, `packages/waypoint-folder-host/src/index.ts`, and 6 more
+- Imported by: `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/events/event-bus.ts`, `packages/waypoint-folder-host/src/events/jsonl.test.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, and 9 more
+
+### packages/waypoint-engine-host/src/envelope.ts
+
+Source file `packages/waypoint-engine-host/src/envelope.ts` is imported by local files including `packages/waypoint-engine-host/src/__tests__/command-bus.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, and 12 more.
+
+- Imported by: `packages/waypoint-engine-host/src/__tests__/command-bus.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.test.ts`, `packages/waypoint-engine-host/src/core/command-bus.ts`, `packages/waypoint-engine-host/src/core/commands/agent.ts`, `packages/waypoint-engine-host/src/core/commands/author.ts`, and 8 more
 
 ### packages/waypoint-folder-host/src/routes/store.ts
 
-Source file `packages/waypoint-folder-host/src/routes/store.ts` is imported by local files including `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 10 more.
+Source file `packages/waypoint-folder-host/src/routes/store.ts` is imported by local files including `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 12 more.
 
-- Imported by: `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.ts`, `packages/waypoint-folder-host/src/index.ts`, `packages/waypoint-folder-host/src/routes/read-model.test.ts`, and 6 more
+- Imported by: `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.ts`, `packages/waypoint-folder-host/src/index.ts`, `packages/waypoint-folder-host/src/routes/read-model.test.ts`, and 8 more
 
 ### packages/waypoint-folder-host/src/tasks/store.ts
 
-Source file `packages/waypoint-folder-host/src/tasks/store.ts` is imported by local files including `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 10 more.
+Source file `packages/waypoint-folder-host/src/tasks/store.ts` is imported by local files including `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 12 more.
 
-- Imported by: `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/index.ts`, and 6 more
+- Imported by: `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/index.ts`, and 8 more
 
-### examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts
+### packages/waypoint-folder-host/src/project/config.ts
 
-Source file `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts` is imported by local files including `examples/hermes-operator-adapter/src/discussion-loop.test.ts` and 10 more.
+Source file `packages/waypoint-folder-host/src/project/config.ts` is imported by local files including `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, and 11 more.
 
-- Imported by: `examples/hermes-operator-adapter/src/discussion-loop.test.ts`, `examples/hermes-operator-adapter/src/discussion-loop.ts`, `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts`, `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`, `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts`, `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts`, and 5 more
-
-### packages/waypoint-folder-host/src/beads/compiler.ts
-
-Source file `packages/waypoint-folder-host/src/beads/compiler.ts` is imported by local files including `packages/waypoint-folder-host/src/beads/cli-client.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, and 9 more.
-
-- Imported by: `packages/waypoint-folder-host/src/beads/cli-client.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, `packages/waypoint-folder-host/src/beads/descriptions.test.ts`, `packages/waypoint-folder-host/src/beads/descriptions.ts`, `packages/waypoint-folder-host/src/beads/execution.ts`, `packages/waypoint-folder-host/src/beads/formula.ts`, and 5 more
-
-### examples/hermes-operator-adapter/src/project-registry.ts
-
-Source file `examples/hermes-operator-adapter/src/project-registry.ts` is imported by local files including `examples/hermes-operator-adapter/src/discussion-loop.test.ts`, `examples/hermes-operator-adapter/src/discussion-loop.ts`, and 7 more.
-
-- Imported by: `examples/hermes-operator-adapter/src/discussion-loop.test.ts`, `examples/hermes-operator-adapter/src/discussion-loop.ts`, `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.test.ts`, `examples/hermes-operator-adapter/src/end-to-end-hermes-smoke.ts`, `examples/hermes-operator-adapter/src/project-registry.test.ts`, `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts`, and 3 more
+- Imported by: `packages/waypoint-folder-host/src/autopilot/run.ts`, `packages/waypoint-folder-host/src/discussion/store.ts`, `packages/waypoint-folder-host/src/events/read-model.ts`, `packages/waypoint-folder-host/src/firmvault/bootstrap.ts`, `packages/waypoint-folder-host/src/gascity/delegate.ts`, `packages/waypoint-folder-host/src/index.ts`, and 7 more
 
 ## Source File Highlights
 
@@ -219,6 +219,14 @@ Source file `packages/waypoint-folder-host/src/catalog/bundled.ts` contains sour
 - Imports: none detected
 - Imported by: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.ts`, `packages/waypoint-folder-host/src/beads/execution.test.ts`, `packages/waypoint-folder-host/src/beads/formula.test.ts`, `packages/waypoint-folder-host/src/beads/formula.ts`, and 21 more
 
+### packages/waypoint-engine-host/src/core/engine-host.ts
+
+Source file `packages/waypoint-engine-host/src/core/engine-host.ts` contains source symbols. Key symbols: `EngineContext`, `resolveBrainFactory`, and 3 more.
+
+- Symbols: `EngineContext (interface)`, `resolveBrainFactory (function)`, `EngineHost (interface)`, `EngineHostConfig (interface)`, `createEngineHost (function)`
+- Imports: `packages/waypoint-engine-host/src/brain/agent-registry.ts`, `packages/waypoint-engine-host/src/brain/brain-adapter.ts`, `packages/waypoint-engine-host/src/brain/fake-adapter.ts`, `packages/waypoint-engine-host/src/core/command-bus.ts`, `packages/waypoint-engine-host/src/core/commands/agent.ts`, `packages/waypoint-engine-host/src/core/commands/author.ts`, and 12 more
+- Imported by: `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/gate.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/http-ws.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.beads.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.lifecycle.test.ts`, and 19 more
+
 ### packages/waypoint-folder-host/src/beads/reconstruct.ts
 
 Source file `packages/waypoint-folder-host/src/beads/reconstruct.ts` contains source symbols. Key symbols: `WaypointBeadsSnapshotStatus`, `WaypointBeadsRunStatus`, and 25 more.
@@ -274,11 +282,3 @@ Source file `examples/hermes-operator-adapter/src/firmvault-document-pipeline.ts
 - Symbols: `FirmVaultDocumentPipelineStatus (type)`, `FirmVaultDocumentPipelineWorkflow (type)`, `FirmVaultDocumentPipelineRequest (interface)`, `FirmVaultDocumentPipelineSpec (interface)`, `FirmVaultDocumentPipelineRawResult (interface)`, `FirmVaultDocumentPipelineExecutor (type)`, `FirmVaultDocumentPipelineOptions (interface)`, `FirmVaultDocumentPipelineResult (interface)`, and 10 more
 - Imports: none detected
 - Imported by: `examples/hermes-operator-adapter/src/firmvault-document-flow.ts`, `examples/hermes-operator-adapter/src/firmvault-document-pipeline.test.ts`
-
-### examples/hermes-operator-adapter/src/firmvault-document-pr-sync.ts
-
-Source file `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.ts` contains source symbols. Key symbols: `FirmVaultDocumentPrState`, `FirmVaultDocumentPrLookup`, and 10 more.
-
-- Symbols: `FirmVaultDocumentPrState (type)`, `FirmVaultDocumentPrLookup (interface)`, `FirmVaultDocumentPrStatus (interface)`, `FirmVaultDocumentPrStatusClient (type)`, `FirmVaultDocumentPrSyncRequest (interface)`, `FirmVaultDocumentPrSyncOptions (interface)`, `FirmVaultDocumentPrSyncResult (interface)`, `syncFirmVaultDocumentPrStatusWithHermesOperator (function)`, and 4 more
-- Imports: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts`, `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts`
-- Imported by: `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.test.ts`
