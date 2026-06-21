@@ -1,0 +1,1932 @@
+# Waypoint UI (Slice 3 MVP) Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** A browser web UI for observability + agent chat against a running Waypoint engine host, over loopback HTTP+WS through a Vite dev proxy.
+
+**Architecture:** A new `packages/waypoint-ui/` Vite + React app. A browser `EngineClient` talks to same-origin `/cmd` + `/ws`; a Vite dev proxy reads the engine handshake file and injects the bearer token server-side. A Zustand store hydrates from the WS `snapshot` message and reduces live `event` messages. A three-pane console (routes/sessions | route DAG + task detail | agent chat) renders from the store.
+
+**Tech Stack:** React 18, Vite 5, `@xyflow/react` (React Flow) 12, Zustand 5, Vitest + jsdom + @testing-library/react. Types from `@waypoint/engine-host` + `@waypoint/folder-host`.
+
+## Global Constraints
+
+- ESM only (`"type": "module"`). The UI package is bundled by Vite/esbuild — extensionless relative imports are fine within the package (Vite resolves them); do NOT add `.ts`/`.tsx` to relative import specifiers in UI source.
+- The UI package has its OWN `tsconfig.json` (adds `jsx` + DOM libs) and its OWN `vitest.config.ts` (jsdom). It is EXCLUDED from the root `tsconfig.json`, root `tsconfig.build.json`, and root `vitest.config.ts` so the Node-targeted root build/test never compiles DOM/JSX code.
+- The browser never holds the engine bearer token — the Vite dev proxy injects it. No token in any committed code or browser-visible config.
+- The MVP makes NO changes to the engine host or folder/beads cores. It is built only on the existing command + event surface.
+- Loopback only. The UI assumes a single local engine host.
+- TDD: write the failing test first, watch it fail, implement, watch it pass, commit. Frequent commits.
+- Pre-commit: code-kg hook runs on code commits (allow it); use `git commit --no-verify` only for docs-only commits.
+
+---
+
+## File Structure
+
+```
+packages/waypoint-ui/
+  package.json            # @waypoint/ui (private app); React/Vite/xyflow/zustand deps
+  tsconfig.json           # extends root; adds jsx + DOM libs
+  vite.config.ts          # @vitejs/plugin-react + dev proxy plugin (Task 4)
+  vitest.config.ts        # jsdom env, globals, setup file
+  index.html              # <div id="root">
+  src/
+    main.tsx              # createRoot + real browser client; imports React Flow CSS
+    App.tsx               # ClientProvider > ConnectionGate > Console (three-pane)
+    engine/
+      types.ts            # re-exports + EngineWsMessage union + AgentSessionSummary
+      client.ts           # createBrowserEngineClient (cmd + subscribe)
+      context.tsx         # ClientProvider + useClient()
+      target.ts           # resolveEngineTarget(env, readFileSync) for the proxy
+    store.ts              # Zustand useStore + applyMessage reducer
+    graph/build-graph.ts  # pure tasks -> React Flow nodes/edges
+    components/
+      ConnectionGate.tsx
+      RoutesPanel.tsx
+      RouteGraph.tsx
+      TaskDetail.tsx
+      AgentChat.tsx
+    test/
+      setup.ts            # @testing-library/jest-dom
+      fake-client.ts      # FakeEngineClient for component tests
+scripts/ui-smoke.mjs      # headless data-layer smoke against a real engine host
+```
+
+Root files modified: `tsconfig.json`, `tsconfig.build.json`, `vitest.config.ts`, `package.json` (scripts), `README.md`.
+
+---
+
+## Task 0: Package scaffold + build wiring
+
+**Files:**
+- Create: `packages/waypoint-ui/package.json`, `packages/waypoint-ui/tsconfig.json`, `packages/waypoint-ui/vite.config.ts`, `packages/waypoint-ui/vitest.config.ts`, `packages/waypoint-ui/index.html`, `packages/waypoint-ui/src/main.tsx`, `packages/waypoint-ui/src/App.tsx`, `packages/waypoint-ui/src/test/setup.ts`
+- Modify: `tsconfig.json`, `tsconfig.build.json`, `vitest.config.ts`, `package.json` (root)
+- Test: `packages/waypoint-ui/src/App.test.tsx`
+
+**Interfaces:**
+- Produces: the `@waypoint/ui` package, `App` (default-less named export `function App()`), and the `test:ui` / `dev:ui` / `typecheck:ui` scripts that every later task uses.
+
+- [ ] **Step 1: Create `packages/waypoint-ui/package.json`**
+
+```json
+{
+  "name": "@waypoint/ui",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "@waypoint/engine-host": "workspace:*",
+    "@waypoint/folder-host": "workspace:*",
+    "jsdom": "^25.0.0",
+    "vite": "^5.4.0"
+  }
+}
+```
+
+- [ ] **Step 2: Create `packages/waypoint-ui/tsconfig.json`**
+
+```json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vitest/globals", "@testing-library/jest-dom", "node"],
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["src", "vite.config.ts", "vitest.config.ts"]
+}
+```
+
+- [ ] **Step 3: Create `packages/waypoint-ui/vite.config.ts`** (proxy added in Task 4)
+
+```ts
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [react()],
+  server: { port: 5273 },
+})
+```
+
+- [ ] **Step 4: Create `packages/waypoint-ui/vitest.config.ts`**
+
+```ts
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
+})
+```
+
+- [ ] **Step 5: Create `packages/waypoint-ui/src/test/setup.ts`**
+
+```ts
+import '@testing-library/jest-dom/vitest'
+```
+
+- [ ] **Step 6: Create `packages/waypoint-ui/index.html`**
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Waypoint</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+- [ ] **Step 7: Create `packages/waypoint-ui/src/App.tsx`** (placeholder shell — replaced in Task 10)
+
+```tsx
+export function App() {
+  return <div data-testid="app-root">Waypoint UI</div>
+}
+```
+
+- [ ] **Step 8: Create `packages/waypoint-ui/src/main.tsx`**
+
+```tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+
+import '@xyflow/react/dist/style.css'
+import { App } from './App'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+```
+
+- [ ] **Step 9: Exclude the UI package from the root Node-targeted configs**
+
+In `tsconfig.json` change the `exclude` array to:
+
+```json
+  "exclude": ["node_modules", "dist", "packages/waypoint-ui"]
+```
+
+In `tsconfig.build.json` change the `exclude` array to:
+
+```json
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "packages/waypoint-ui"]
+```
+
+In `vitest.config.ts` (root) add an `exclude` to the `test` block so the root run never picks up jsdom/JSX tests:
+
+```ts
+  test: {
+    testTimeout: 30000,
+    include: [
+      'src/**/*.test.ts',
+      'examples/**/*.test.ts',
+      'packages/**/*.test.ts',
+    ],
+    exclude: ['**/node_modules/**', 'packages/waypoint-ui/**'],
+  },
+```
+
+- [ ] **Step 10: Add root scripts** to `package.json` (after `"smoke:agent-brain"`)
+
+```json
+    "dev:ui": "pnpm --filter @waypoint/ui dev",
+    "test:ui": "vitest run --config packages/waypoint-ui/vitest.config.ts",
+    "typecheck:ui": "tsc -p packages/waypoint-ui/tsconfig.json --noEmit",
+    "smoke:ui": "node scripts/ui-smoke.mjs",
+```
+
+- [ ] **Step 11: Install dependencies**
+
+Run: `pnpm install`
+Expected: resolves and adds react/vite/xyflow/zustand/jsdom/testing-library; no errors.
+
+- [ ] **Step 12: Write the failing test** `packages/waypoint-ui/src/App.test.tsx`
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { App } from './App'
+
+describe('App', () => {
+  it('renders the app root', () => {
+    render(<App />)
+    expect(screen.getByTestId('app-root')).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 13: Run → verify it passes** (scaffold + render path)
+
+Run: `pnpm test:ui`
+Expected: PASS (1 test). If it fails to find jsdom/react, re-check Steps 1–5.
+
+- [ ] **Step 14: Typecheck**
+
+Run: `pnpm typecheck:ui` and `pnpm typecheck`
+Expected: both clean (root typecheck no longer sees the UI package).
+
+- [ ] **Step 15: Commit**
+
+```bash
+git add packages/waypoint-ui tsconfig.json tsconfig.build.json vitest.config.ts package.json pnpm-lock.yaml
+git commit -m "feat(ui): scaffold @waypoint/ui (Vite + React + Vitest/jsdom) + build wiring"
+```
+
+---
+
+## Task 1: Pure route-graph builder
+
+**Files:**
+- Create: `packages/waypoint-ui/src/engine/types.ts`, `packages/waypoint-ui/src/graph/build-graph.ts`
+- Test: `packages/waypoint-ui/src/graph/build-graph.test.ts`
+
+**Interfaces:**
+- Consumes: `WaypointFolderTask` (from `@waypoint/folder-host`).
+- Produces: `buildRouteGraph(tasks: WaypointFolderTask[]): { nodes: RouteGraphNode[]; edges: RouteGraphEdge[] }`, plus the `RouteGraphNode` / `RouteGraphEdge` types and the `engine/types.ts` re-export module.
+
+- [ ] **Step 1: Create `packages/waypoint-ui/src/engine/types.ts`**
+
+```ts
+import type { AgentEventRecord, EngineEnvelope, EngineEvent } from '@waypoint/engine-host'
+import type {
+  WaypointFolderRoute,
+  WaypointFolderTask,
+  WaypointFolderTaskKind,
+  WaypointFolderTaskStatus,
+} from '@waypoint/folder-host'
+
+export type {
+  AgentEventRecord,
+  EngineEnvelope,
+  EngineEvent,
+  WaypointFolderRoute,
+  WaypointFolderTask,
+  WaypointFolderTaskKind,
+  WaypointFolderTaskStatus,
+}
+
+/** Messages the engine WS pushes (see engine-host transport/http-ws/ws.ts). */
+export type EngineWsMessage =
+  | { type: 'snapshot'; apiVersion: string; seq: number; routes: WaypointFolderRoute[]; tasks: WaypointFolderTask[] }
+  | { type: 'event'; topic: string; seq: number; record: unknown }
+  | { type: 'resnapshot' }
+  | { type: 'error'; error: string }
+
+/** Shape of an entry from `agent.list`. */
+export interface AgentSessionSummary {
+  readonly id: string
+  readonly intent: string
+  readonly status: string
+  readonly startedAt: string
+}
+```
+
+- [ ] **Step 2: Write the failing test** `packages/waypoint-ui/src/graph/build-graph.test.ts`
+
+```ts
+import { describe, expect, it } from 'vitest'
+
+import type { WaypointFolderTask } from '../engine/types'
+import { buildRouteGraph } from './build-graph'
+
+function task(partial: Partial<WaypointFolderTask> & { id: string }): WaypointFolderTask {
+  return {
+    id: partial.id,
+    route_id: 'route-001',
+    plan_ref: partial.plan_ref ?? partial.id,
+    title: partial.title ?? partial.id,
+    phase: partial.phase ?? 'execute',
+    wave: partial.wave ?? 0,
+    kind: partial.kind ?? 'recipe',
+    status: partial.status ?? 'open',
+    created_at: 't',
+    updated_at: 't',
+    ...(partial.metadata ? { metadata: partial.metadata } : {}),
+  }
+}
+
+describe('buildRouteGraph', () => {
+  it('orders nodes by wave then id and chains them left-to-right', () => {
+    const { nodes, edges } = buildRouteGraph([
+      task({ id: 'task-002', wave: 20 }),
+      task({ id: 'task-001', wave: 10 }),
+    ])
+    expect(nodes.map((n) => n.id)).toEqual(['task-001', 'task-002'])
+    expect(nodes[0].position.x).toBe(0)
+    expect(nodes[1].position.x).toBe(200)
+    expect(edges).toEqual([{ id: 'e-task-001-task-002', source: 'task-001', target: 'task-002' }])
+    expect(nodes[0].data).toMatchObject({ label: 'task-001', kind: 'recipe', status: 'open' })
+  })
+
+  it('adds edges from beads blockers when present', () => {
+    const { edges } = buildRouteGraph([
+      task({ id: 'task-001', wave: 10 }),
+      task({ id: 'task-002', wave: 20, metadata: { beads: { blockers: ['task-001'] } } }),
+    ])
+    expect(edges.some((e) => e.id === 'b-task-001-task-002')).toBe(true)
+  })
+
+  it('returns empty graph for no tasks', () => {
+    expect(buildRouteGraph([])).toEqual({ nodes: [], edges: [] })
+  })
+})
+```
+
+- [ ] **Step 3: Run → FAIL**
+
+Run: `pnpm test:ui -- build-graph`
+Expected: FAIL — `build-graph` module not found.
+
+- [ ] **Step 4: Create `packages/waypoint-ui/src/graph/build-graph.ts`**
+
+```ts
+import type { WaypointFolderTask, WaypointFolderTaskKind, WaypointFolderTaskStatus } from '../engine/types'
+
+export interface RouteGraphNode {
+  id: string
+  position: { x: number; y: number }
+  data: { label: string; kind: WaypointFolderTaskKind; status: WaypointFolderTaskStatus }
+}
+
+export interface RouteGraphEdge {
+  id: string
+  source: string
+  target: string
+}
+
+export function buildRouteGraph(tasks: readonly WaypointFolderTask[]): { nodes: RouteGraphNode[]; edges: RouteGraphEdge[] } {
+  const sorted = [...tasks].sort((a, b) => (a.wave ?? 0) - (b.wave ?? 0) || a.id.localeCompare(b.id))
+
+  const nodes: RouteGraphNode[] = sorted.map((t, i) => ({
+    id: t.id,
+    position: { x: i * 200, y: 0 },
+    data: { label: t.plan_ref, kind: t.kind, status: t.status },
+  }))
+
+  const edges: RouteGraphEdge[] = []
+  for (let i = 1; i < sorted.length; i += 1) {
+    edges.push({ id: `e-${sorted[i - 1].id}-${sorted[i].id}`, source: sorted[i - 1].id, target: sorted[i].id })
+  }
+  for (const t of sorted) {
+    const beads = isRecord(t.metadata) && isRecord(t.metadata.beads) ? t.metadata.beads : undefined
+    const blockers = beads && Array.isArray(beads.blockers) ? beads.blockers : []
+    for (const b of blockers) {
+      if (typeof b !== 'string') continue
+      const id = `b-${b}-${t.id}`
+      if (!edges.some((e) => e.id === id)) edges.push({ id, source: b, target: t.id })
+    }
+  }
+  return { nodes, edges }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+```
+
+- [ ] **Step 5: Run → PASS**
+
+Run: `pnpm test:ui -- build-graph`
+Expected: PASS (3 tests).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/waypoint-ui/src/engine/types.ts packages/waypoint-ui/src/graph
+git commit -m "feat(ui): pure route-graph builder (tasks -> React Flow nodes/edges)"
+```
+
+---
+
+## Task 2: Live store + event reducer
+
+**Files:**
+- Create: `packages/waypoint-ui/src/store.ts`
+- Test: `packages/waypoint-ui/src/store.test.ts`
+
+**Interfaces:**
+- Consumes: `EngineWsMessage`, `WaypointFolderRoute`, `WaypointFolderTask`, `AgentEventRecord`, `AgentSessionSummary` (from `engine/types`).
+- Produces: `useStore` (Zustand hook) with state `{ connection, seq, routes, tasks, sessions, transcripts, selectedRouteId, selectedTaskId, activeSessionId, routesDirty, error }` and actions `applyMessage(msg)`, `setConnection(c)`, `setRoutes(r)`, `setTasks(t)`, `setSessions(s)`, `selectRoute(id)`, `selectTask(id)`, `setActiveSession(id)`, `clearDirty()`.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/store.test.ts`
+
+```ts
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import type { AgentEventRecord, EngineWsMessage } from './engine/types'
+import { useStore } from './store'
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+function agentEvent(seq: number, sessionId: string, idx: number, kind = 'agent.message'): EngineWsMessage {
+  const record: AgentEventRecord = { id: `ev-${idx}`, sessionId, kind, at: 't', idx }
+  return { type: 'event', topic: `agent:${sessionId}`, seq, record }
+}
+
+describe('store.applyMessage', () => {
+  it('hydrates routes + tasks + seq from a snapshot and marks the connection open', () => {
+    useStore.getState().applyMessage({
+      type: 'snapshot',
+      apiVersion: '1',
+      seq: 5,
+      routes: [{ id: 'route-001', quest: 'q', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+      tasks: [],
+    })
+    const s = useStore.getState()
+    expect(s.seq).toBe(5)
+    expect(s.routes).toHaveLength(1)
+    expect(s.connection).toBe('open')
+  })
+
+  it('appends agent events to the right transcript and dedupes by idx', () => {
+    const { applyMessage } = useStore.getState()
+    applyMessage(agentEvent(6, 'agent-001', 0))
+    applyMessage(agentEvent(7, 'agent-001', 1))
+    applyMessage(agentEvent(7, 'agent-001', 1)) // duplicate seq+idx
+    expect(useStore.getState().transcripts['agent-001'].map((e) => e.idx)).toEqual([0, 1])
+  })
+
+  it('ignores stale (already-seen seq) events', () => {
+    const { applyMessage } = useStore.getState()
+    applyMessage(agentEvent(10, 'agent-001', 0))
+    applyMessage(agentEvent(9, 'agent-001', 1)) // stale
+    expect(useStore.getState().transcripts['agent-001'].map((e) => e.idx)).toEqual([0])
+  })
+
+  it('marks routes dirty on a route event and on resnapshot', () => {
+    const { applyMessage } = useStore.getState()
+    applyMessage({ type: 'event', topic: 'route:route-001', seq: 3, record: { kind: 'route.started' } })
+    expect(useStore.getState().routesDirty).toBe(true)
+    useStore.getState().clearDirty()
+    applyMessage({ type: 'resnapshot' })
+    expect(useStore.getState().routesDirty).toBe(true)
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- store`
+Expected: FAIL — `store` module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/store.ts`**
+
+```ts
+import { create } from 'zustand'
+
+import type {
+  AgentEventRecord,
+  AgentSessionSummary,
+  EngineWsMessage,
+  WaypointFolderRoute,
+  WaypointFolderTask,
+} from './engine/types'
+
+export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'error'
+
+interface UiState {
+  connection: ConnectionStatus
+  seq: number
+  routes: WaypointFolderRoute[]
+  tasks: WaypointFolderTask[]
+  sessions: AgentSessionSummary[]
+  transcripts: Record<string, AgentEventRecord[]>
+  selectedRouteId: string | null
+  selectedTaskId: string | null
+  activeSessionId: string | null
+  routesDirty: boolean
+  error: string | null
+
+  applyMessage(msg: EngineWsMessage): void
+  setConnection(c: ConnectionStatus): void
+  setRoutes(r: WaypointFolderRoute[]): void
+  setTasks(t: WaypointFolderTask[]): void
+  setSessions(s: AgentSessionSummary[]): void
+  selectRoute(id: string | null): void
+  selectTask(id: string | null): void
+  setActiveSession(id: string | null): void
+  clearDirty(): void
+}
+
+export const useStore = create<UiState>((set, get) => ({
+  connection: 'connecting',
+  seq: 0,
+  routes: [],
+  tasks: [],
+  sessions: [],
+  transcripts: {},
+  selectedRouteId: null,
+  selectedTaskId: null,
+  activeSessionId: null,
+  routesDirty: false,
+  error: null,
+
+  applyMessage(msg) {
+    if (msg.type === 'snapshot') {
+      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open' })
+      return
+    }
+    if (msg.type === 'resnapshot') {
+      set({ routesDirty: true })
+      return
+    }
+    if (msg.type === 'error') {
+      set({ error: msg.error })
+      return
+    }
+    // msg.type === 'event'
+    if (msg.seq <= get().seq) return
+    if (msg.topic.startsWith('agent:')) {
+      const record = msg.record as AgentEventRecord
+      const current = get().transcripts[record.sessionId] ?? []
+      if (record.idx != null && current.some((e) => e.idx === record.idx)) {
+        set({ seq: msg.seq })
+        return
+      }
+      set({ seq: msg.seq, transcripts: { ...get().transcripts, [record.sessionId]: [...current, record] } })
+      return
+    }
+    set({ seq: msg.seq, routesDirty: true })
+  },
+
+  setConnection: (connection) => set({ connection }),
+  setRoutes: (routes) => set({ routes }),
+  setTasks: (tasks) => set({ tasks }),
+  setSessions: (sessions) => set({ sessions }),
+  selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null }),
+  selectTask: (selectedTaskId) => set({ selectedTaskId }),
+  setActiveSession: (activeSessionId) => set({ activeSessionId }),
+  clearDirty: () => set({ routesDirty: false }),
+}))
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- store`
+Expected: PASS (4 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/waypoint-ui/src/store.ts packages/waypoint-ui/src/store.test.ts
+git commit -m "feat(ui): Zustand live store + WS event reducer (snapshot hydrate, agent transcript, seq dedupe)"
+```
+
+---
+
+## Task 3: Browser engine client + real-engine integration test
+
+**Files:**
+- Create: `packages/waypoint-ui/src/engine/client.ts`
+- Test: `packages/waypoint-ui/src/engine/client.test.ts`, `packages/waypoint-ui/src/engine/client.integration.test.ts`
+
+**Interfaces:**
+- Consumes: `EngineEnvelope`, `EngineWsMessage` (from `engine/types`).
+- Produces: `createBrowserEngineClient(options?: BrowserEngineClientOptions): BrowserEngineClient` where `BrowserEngineClient = { cmd(name, payload?): Promise<EngineEnvelope>; subscribe(topics, onMessage, opts?): () => void }`. `BrowserEngineClientOptions = { baseUrl?, headers?, fetchImpl?, wsFactory? }`.
+
+- [ ] **Step 1: Write the failing unit test** `packages/waypoint-ui/src/engine/client.test.ts`
+
+```ts
+import { describe, expect, it, vi } from 'vitest'
+
+import { createBrowserEngineClient } from './client'
+import type { EngineWsMessage } from './types'
+
+describe('createBrowserEngineClient.cmd', () => {
+  it('POSTs same-origin /cmd/<name> with JSON and returns the envelope', async () => {
+    const fetchImpl = vi.fn(async () => ({ json: async () => ({ ok: true, action: 'routes.list', routes: [] }) }) as unknown as Response)
+    const client = createBrowserEngineClient({ baseUrl: 'http://127.0.0.1:9', fetchImpl })
+    const res = await client.cmd('routes.list', { routeId: 'r1' })
+    expect(fetchImpl).toHaveBeenCalledWith('http://127.0.0.1:9/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
+    const init = fetchImpl.mock.calls[0][1] as RequestInit
+    expect(JSON.parse(init.body as string)).toEqual({ routeId: 'r1' })
+    expect(res).toEqual({ ok: true, action: 'routes.list', routes: [] })
+  })
+})
+
+describe('createBrowserEngineClient.subscribe', () => {
+  it('opens a WS, sends a subscribe frame on open, and forwards parsed messages', () => {
+    const sent: string[] = []
+    const fake = { onopen: null as null | (() => void), onmessage: null as null | ((e: { data: string }) => void), onclose: null, onerror: null, send: (d: string) => sent.push(d), close: vi.fn() }
+    const received: EngineWsMessage[] = []
+    const client = createBrowserEngineClient({ baseUrl: 'http://127.0.0.1:9', wsFactory: () => fake })
+    const unsub = client.subscribe(['*'], (m) => received.push(m))
+    fake.onopen?.()
+    expect(JSON.parse(sent[0])).toEqual({ subscribe: { topics: ['*'] } })
+    fake.onmessage?.({ data: JSON.stringify({ type: 'resnapshot' }) })
+    expect(received).toEqual([{ type: 'resnapshot' }])
+    unsub()
+    expect(fake.close).toHaveBeenCalled()
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- client.test`
+Expected: FAIL — `client` module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/engine/client.ts`**
+
+```ts
+import type { EngineEnvelope, EngineWsMessage } from './types'
+
+export interface WebSocketLike {
+  send(data: string): void
+  close(): void
+  onopen: ((...args: unknown[]) => void) | null
+  onmessage: ((event: { data: unknown }) => void) | null
+  onclose: ((...args: unknown[]) => void) | null
+  onerror: ((...args: unknown[]) => void) | null
+}
+
+export interface BrowserEngineClientOptions {
+  /** Absolute engine base URL. Defaults to same-origin (browser). */
+  baseUrl?: string
+  /** Extra headers (used by tests to inject the bearer token; the dev proxy injects it in the browser). */
+  headers?: Record<string, string>
+  fetchImpl?: typeof fetch
+  /** Factory for the socket; defaults to the native WebSocket. Tests pass a node `ws`-backed factory. */
+  wsFactory?: (url: string) => WebSocketLike
+}
+
+export interface BrowserEngineClient {
+  cmd(name: string, payload?: unknown): Promise<EngineEnvelope>
+  subscribe(topics: string[], onMessage: (msg: EngineWsMessage) => void, opts?: { lastSeq?: number }): () => void
+}
+
+export function createBrowserEngineClient(options: BrowserEngineClientOptions = {}): BrowserEngineClient {
+  const baseUrl = options.baseUrl ?? ''
+  const headers = options.headers ?? {}
+  const doFetch = options.fetchImpl ?? globalThis.fetch.bind(globalThis)
+  const wsFactory = options.wsFactory ?? ((url: string) => new WebSocket(url) as unknown as WebSocketLike)
+
+  return {
+    async cmd(name, payload = {}) {
+      const res = await doFetch(`${baseUrl}/cmd/${name}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...headers },
+        body: JSON.stringify(payload),
+      })
+      return (await res.json()) as EngineEnvelope
+    },
+
+    subscribe(topics, onMessage, opts) {
+      const origin = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
+      const wsUrl = `${origin.replace(/^http/, 'ws')}/ws`
+      const ws = wsFactory(wsUrl)
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))
+      }
+      ws.onmessage = (event) => {
+        try {
+          onMessage(JSON.parse(String(event.data)) as EngineWsMessage)
+        } catch {
+          // ignore non-JSON frames
+        }
+      }
+      return () => ws.close()
+    },
+  }
+}
+```
+
+- [ ] **Step 4: Run → PASS (unit)**
+
+Run: `pnpm test:ui -- client.test`
+Expected: PASS (2 tests).
+
+- [ ] **Step 5: Write the failing integration test** `packages/waypoint-ui/src/engine/client.integration.test.ts`
+
+```ts
+import { mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+import { WebSocket as NodeWebSocket } from 'ws'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { createEngineHost, FakeBrainAdapter } from '@waypoint/engine-host'
+import { createBrowserEngineClient, type WebSocketLike } from './client'
+import type { EngineWsMessage } from './types'
+
+let host: ReturnType<typeof createEngineHost>
+let url = ''
+let token = ''
+
+beforeAll(async () => {
+  host = createEngineHost({ brainAdapter: new FakeBrainAdapter({ events: [], result: { status: 'completed', proposalId: 'recipe/demo' } }) })
+  const started = await host.start()
+  url = started.url
+  token = started.token
+})
+afterAll(async () => { await host.stop() })
+
+function nodeClient() {
+  const headers = { authorization: `Bearer ${token}` }
+  return createBrowserEngineClient({
+    baseUrl: url,
+    headers,
+    fetchImpl: fetch,
+    wsFactory: (wsUrl) => new NodeWebSocket(wsUrl, { headers }) as unknown as WebSocketLike,
+  })
+}
+
+describe('browser client against a real engine host', () => {
+  it('cmd round-trips workspace.open + meta.health', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'wp-ui-it-'))
+    const client = nodeClient()
+    const open = await client.cmd('workspace.open', { root, backend: 'folder' })
+    expect(open.ok).toBe(true)
+    const health = (await client.cmd('meta.health')) as Record<string, unknown>
+    expect(health.brain).toBe('fake')
+  })
+
+  it('subscribe delivers a snapshot then live events', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'wp-ui-it2-'))
+    const client = nodeClient()
+    await client.cmd('workspace.open', { root, backend: 'folder' })
+
+    const messages: EngineWsMessage[] = []
+    const unsub = client.subscribe(['*'], (m) => messages.push(m))
+    await new Promise((r) => setTimeout(r, 150)) // allow snapshot
+    expect(messages.find((m) => m.type === 'snapshot')).toBeTruthy()
+
+    await client.cmd('agent.run', { intent: 'demo' })
+    await new Promise((r) => setTimeout(r, 150)) // allow agent events
+    expect(messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:'))).toBe(true)
+    unsub()
+  })
+})
+```
+
+- [ ] **Step 6: Run → PASS (integration)**
+
+Run: `pnpm test:ui -- client.integration`
+Expected: PASS (2 tests). The engine host runs in-process; the node `ws` factory supplies the bearer header the browser would get from the proxy.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/waypoint-ui/src/engine/client.ts packages/waypoint-ui/src/engine/client.test.ts packages/waypoint-ui/src/engine/client.integration.test.ts
+git commit -m "feat(ui): browser engine client (cmd + subscribe) + real-engine integration test"
+```
+
+---
+
+## Task 4: Vite dev proxy (handshake → token injection)
+
+**Files:**
+- Create: `packages/waypoint-ui/src/engine/target.ts`
+- Modify: `packages/waypoint-ui/vite.config.ts`
+- Test: `packages/waypoint-ui/src/engine/target.test.ts`
+
+**Interfaces:**
+- Produces: `resolveEngineTarget(env: NodeJS.ProcessEnv, readFileSync: (p: string, enc: 'utf8') => string): { url: string; token: string } | null`. The Vite config consumes it to configure `server.proxy`.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/engine/target.test.ts`
+
+```ts
+import { describe, expect, it, vi } from 'vitest'
+
+import { resolveEngineTarget } from './target'
+
+describe('resolveEngineTarget', () => {
+  it('reads url + token from the handshake file named by WAYPOINT_ENGINE_HANDSHAKE', () => {
+    const read = vi.fn(() => JSON.stringify({ url: 'http://127.0.0.1:7777', token: 'tok-abc', port: 7777 }))
+    expect(resolveEngineTarget({ WAYPOINT_ENGINE_HANDSHAKE: '/tmp/hs.json' }, read)).toEqual({ url: 'http://127.0.0.1:7777', token: 'tok-abc' })
+    expect(read).toHaveBeenCalledWith('/tmp/hs.json', 'utf8')
+  })
+
+  it('returns null when the env var is unset', () => {
+    expect(resolveEngineTarget({}, () => '')).toBeNull()
+  })
+
+  it('returns null when the handshake is missing or malformed', () => {
+    const throwing = () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }) }
+    expect(resolveEngineTarget({ WAYPOINT_ENGINE_HANDSHAKE: '/nope' }, throwing)).toBeNull()
+    expect(resolveEngineTarget({ WAYPOINT_ENGINE_HANDSHAKE: '/bad' }, () => '{not json')).toBeNull()
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- target`
+Expected: FAIL — `target` module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/engine/target.ts`**
+
+```ts
+export interface EngineTarget {
+  url: string
+  token: string
+}
+
+/**
+ * Resolve the engine loopback target from the handshake file the engine host
+ * writes (see engine-host bin.ts). Returns null (no magic default) when the env
+ * var is unset or the file is missing/malformed — the proxy then stays inert and
+ * the UI shows an "engine not reachable" state.
+ */
+export function resolveEngineTarget(
+  env: NodeJS.ProcessEnv,
+  readFileSync: (path: string, encoding: 'utf8') => string,
+): EngineTarget | null {
+  const handshakePath = env.WAYPOINT_ENGINE_HANDSHAKE
+  if (!handshakePath) return null
+  try {
+    const parsed = JSON.parse(readFileSync(handshakePath, 'utf8')) as { url?: unknown; token?: unknown }
+    if (typeof parsed.url !== 'string' || typeof parsed.token !== 'string') return null
+    return { url: parsed.url, token: parsed.token }
+  } catch {
+    return null
+  }
+}
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- target`
+Expected: PASS (3 tests).
+
+- [ ] **Step 5: Replace `packages/waypoint-ui/vite.config.ts`** with the proxy-enabled version
+
+```ts
+import { readFileSync } from 'node:fs'
+
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+import { resolveEngineTarget } from './src/engine/target'
+
+const target = resolveEngineTarget(process.env, readFileSync)
+
+if (!target) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[waypoint-ui] No engine handshake found. Set WAYPOINT_ENGINE_HANDSHAKE to the engine host handshake file and start the engine host. The proxy is inert until then.',
+  )
+}
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5273,
+    proxy: target
+      ? {
+          '/cmd': {
+            target: target.url,
+            changeOrigin: true,
+            headers: { authorization: `Bearer ${target.token}` },
+          },
+          '/ws': {
+            target: target.url,
+            ws: true,
+            changeOrigin: true,
+            headers: { authorization: `Bearer ${target.token}` },
+          },
+        }
+      : undefined,
+  },
+})
+```
+
+- [ ] **Step 6: Typecheck**
+
+Run: `pnpm typecheck:ui`
+Expected: clean.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/waypoint-ui/src/engine/target.ts packages/waypoint-ui/src/engine/target.test.ts packages/waypoint-ui/vite.config.ts
+git commit -m "feat(ui): Vite dev proxy reads engine handshake + injects bearer token"
+```
+
+---
+
+## Task 5: Client context + FakeEngineClient + ConnectionGate
+
+**Files:**
+- Create: `packages/waypoint-ui/src/engine/context.tsx`, `packages/waypoint-ui/src/test/fake-client.ts`, `packages/waypoint-ui/src/components/ConnectionGate.tsx`
+- Test: `packages/waypoint-ui/src/components/ConnectionGate.test.tsx`
+
+**Interfaces:**
+- Consumes: `BrowserEngineClient` (Task 3), `useStore` (Task 2).
+- Produces: `ClientProvider` + `useClient()`; `FakeEngineClient` (implements `BrowserEngineClient`, adds `.responses`, `.calls`, `.emit(msg)`); `ConnectionGate` component (gates children on an open workspace, reads `meta.health`).
+
+- [ ] **Step 1: Create `packages/waypoint-ui/src/engine/context.tsx`**
+
+```tsx
+import { createContext, useContext, type ReactNode } from 'react'
+
+import type { BrowserEngineClient } from './client'
+
+const ClientContext = createContext<BrowserEngineClient | null>(null)
+
+export function ClientProvider({ client, children }: { client: BrowserEngineClient; children: ReactNode }) {
+  return <ClientContext.Provider value={client}>{children}</ClientContext.Provider>
+}
+
+export function useClient(): BrowserEngineClient {
+  const client = useContext(ClientContext)
+  if (!client) throw new Error('useClient must be used within a ClientProvider')
+  return client
+}
+```
+
+- [ ] **Step 2: Create `packages/waypoint-ui/src/test/fake-client.ts`**
+
+```ts
+import type { BrowserEngineClient } from '../engine/client'
+import type { EngineEnvelope, EngineWsMessage } from '../engine/types'
+
+/** Deterministic in-memory client for component tests. */
+export class FakeEngineClient implements BrowserEngineClient {
+  responses: Record<string, EngineEnvelope> = {}
+  calls: { name: string; payload: unknown }[] = []
+  private handlers: ((msg: EngineWsMessage) => void)[] = []
+
+  async cmd(name: string, payload: unknown = {}): Promise<EngineEnvelope> {
+    this.calls.push({ name, payload })
+    return this.responses[name] ?? { ok: true, action: name }
+  }
+
+  subscribe(_topics: string[], onMessage: (msg: EngineWsMessage) => void): () => void {
+    this.handlers.push(onMessage)
+    return () => {
+      this.handlers = this.handlers.filter((h) => h !== onMessage)
+    }
+  }
+
+  /** Push a WS message to all current subscribers. */
+  emit(msg: EngineWsMessage): void {
+    for (const handler of this.handlers) handler(msg)
+  }
+}
+```
+
+- [ ] **Step 3: Write the failing test** `packages/waypoint-ui/src/components/ConnectionGate.test.tsx`
+
+```tsx
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it } from 'vitest'
+
+import { ClientProvider } from '../engine/context'
+import { FakeEngineClient } from '../test/fake-client'
+import { ConnectionGate } from './ConnectionGate'
+
+function renderGate(client: FakeEngineClient) {
+  return render(
+    <ClientProvider client={client}>
+      <ConnectionGate>
+        <div data-testid="console">CONSOLE</div>
+      </ConnectionGate>
+    </ClientProvider>,
+  )
+}
+
+describe('ConnectionGate', () => {
+  it('renders children once a workspace is open', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    renderGate(client)
+    expect(await screen.findByTestId('console')).toBeInTheDocument()
+  })
+
+  it('shows an open-workspace form when none is open and opens on submit', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: false, brain: 'fake' }
+    client.responses['workspace.open'] = { ok: true, action: 'workspace.open', workspace: { root: '/x', backend: 'folder', initialized: true } }
+    renderGate(client)
+    const input = await screen.findByLabelText(/workspace path/i)
+    await userEvent.type(input, '/tmp/project')
+    await userEvent.click(screen.getByRole('button', { name: /open/i }))
+    await waitFor(() => expect(client.calls.find((c) => c.name === 'workspace.open')).toBeTruthy())
+    expect(await screen.findByTestId('console')).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 4: Run → FAIL**
+
+Run: `pnpm test:ui -- ConnectionGate`
+Expected: FAIL — `ConnectionGate` module not found.
+
+- [ ] **Step 5: Create `packages/waypoint-ui/src/components/ConnectionGate.tsx`**
+
+```tsx
+import { useEffect, useState, type ReactNode } from 'react'
+
+import { useClient } from '../engine/context'
+
+export function ConnectionGate({ children }: { children: ReactNode }) {
+  const client = useClient()
+  const [workspaceOpen, setWorkspaceOpen] = useState<boolean | null>(null)
+  const [brain, setBrain] = useState<string | null>(null)
+  const [root, setRoot] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  async function refreshHealth() {
+    const health = (await client.cmd('meta.health')) as { ok: boolean; workspaceOpen?: boolean; brain?: string }
+    if (!health.ok) {
+      setError('Engine not reachable — start the engine host first.')
+      return
+    }
+    setBrain(health.brain ?? null)
+    setWorkspaceOpen(Boolean(health.workspaceOpen))
+  }
+
+  useEffect(() => {
+    void refreshHealth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client])
+
+  async function openWorkspace(e: React.FormEvent) {
+    e.preventDefault()
+    const res = (await client.cmd('workspace.open', { root, backend: 'folder' })) as {
+      ok: boolean
+      error?: string
+      details?: { message?: string }
+    }
+    if (res.ok) {
+      setError(null)
+      setWorkspaceOpen(true)
+    } else {
+      setError(res.details?.message ?? res.error ?? 'workspace.open failed')
+    }
+  }
+
+  if (error && workspaceOpen === null) return <div role="alert">{error}</div>
+  if (workspaceOpen === null) return <div>Connecting…</div>
+
+  if (!workspaceOpen) {
+    return (
+      <form onSubmit={openWorkspace} style={{ padding: 24 }}>
+        <h2>Open a Waypoint workspace</h2>
+        <label>
+          Workspace path
+          <input value={root} onChange={(e) => setRoot(e.target.value)} placeholder="/path/to/project" />
+        </label>
+        <button type="submit">Open</button>
+        {error ? <p role="alert">{error}</p> : null}
+      </form>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <header style={{ padding: '4px 12px', borderBottom: '1px solid #ddd', fontSize: 12 }}>
+        Waypoint · brain: <strong>{brain ?? 'unknown'}</strong>
+      </header>
+      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 6: Run → PASS**
+
+Run: `pnpm test:ui -- ConnectionGate`
+Expected: PASS (2 tests).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/waypoint-ui/src/engine/context.tsx packages/waypoint-ui/src/test/fake-client.ts packages/waypoint-ui/src/components/ConnectionGate.tsx packages/waypoint-ui/src/components/ConnectionGate.test.tsx
+git commit -m "feat(ui): client context + FakeEngineClient + ConnectionGate (health + open-workspace)"
+```
+
+---
+
+## Task 6: RoutesPanel
+
+**Files:**
+- Create: `packages/waypoint-ui/src/components/RoutesPanel.tsx`
+- Test: `packages/waypoint-ui/src/components/RoutesPanel.test.tsx`
+
+**Interfaces:**
+- Consumes: `useStore` (routes, sessions, selectedRouteId, activeSessionId, selectRoute, setActiveSession).
+- Produces: `RoutesPanel` component rendering the routes list + sessions list with click selection.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/components/RoutesPanel.test.tsx`
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { useStore } from '../store'
+import { RoutesPanel } from './RoutesPanel'
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+describe('RoutesPanel', () => {
+  it('lists routes and sessions and selects on click', async () => {
+    useStore.setState({
+      routes: [{ id: 'route-001', quest: 'waypoint', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+      sessions: [{ id: 'agent-001', intent: 'build a recipe', status: 'completed', startedAt: 't' }],
+    })
+    render(<RoutesPanel />)
+    expect(screen.getByText('route-001')).toBeInTheDocument()
+    expect(screen.getByText(/build a recipe/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('route-001'))
+    expect(useStore.getState().selectedRouteId).toBe('route-001')
+    await userEvent.click(screen.getByText(/build a recipe/))
+    expect(useStore.getState().activeSessionId).toBe('agent-001')
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- RoutesPanel`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/components/RoutesPanel.tsx`**
+
+```tsx
+import { useStore } from '../store'
+
+export function RoutesPanel() {
+  const routes = useStore((s) => s.routes)
+  const sessions = useStore((s) => s.sessions)
+  const selectedRouteId = useStore((s) => s.selectedRouteId)
+  const activeSessionId = useStore((s) => s.activeSessionId)
+  const selectRoute = useStore((s) => s.selectRoute)
+  const setActiveSession = useStore((s) => s.setActiveSession)
+
+  return (
+    <nav style={{ borderRight: '1px solid #ddd', overflowY: 'auto', padding: 8, fontSize: 13 }}>
+      <h3>Routes</h3>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        {routes.map((r) => (
+          <li key={r.id}>
+            <button
+              type="button"
+              onClick={() => selectRoute(r.id)}
+              style={{ fontWeight: r.id === selectedRouteId ? 700 : 400, width: '100%', textAlign: 'left' }}
+            >
+              {r.id} · {r.status}
+            </button>
+          </li>
+        ))}
+        {routes.length === 0 ? <li>(no routes)</li> : null}
+      </ul>
+
+      <h3>Sessions</h3>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        {sessions.map((s) => (
+          <li key={s.id}>
+            <button
+              type="button"
+              onClick={() => setActiveSession(s.id)}
+              style={{ fontWeight: s.id === activeSessionId ? 700 : 400, width: '100%', textAlign: 'left' }}
+            >
+              {s.id} · {s.status} — {s.intent}
+            </button>
+          </li>
+        ))}
+        {sessions.length === 0 ? <li>(no sessions)</li> : null}
+      </ul>
+    </nav>
+  )
+}
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- RoutesPanel`
+Expected: PASS (1 test).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/waypoint-ui/src/components/RoutesPanel.tsx packages/waypoint-ui/src/components/RoutesPanel.test.tsx
+git commit -m "feat(ui): RoutesPanel (routes + sessions lists with selection)"
+```
+
+---
+
+## Task 7: RouteGraph (React Flow DAG)
+
+**Files:**
+- Create: `packages/waypoint-ui/src/components/RouteGraph.tsx`
+- Test: `packages/waypoint-ui/src/components/RouteGraph.test.tsx`
+
+**Interfaces:**
+- Consumes: `useStore` (tasks, selectedRouteId, selectTask), `buildRouteGraph` (Task 1).
+- Produces: `RouteGraph` component that renders a React Flow graph of the selected route's tasks. The test mocks `@xyflow/react` to avoid jsdom layout measurement.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/components/RouteGraph.test.tsx`
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { useStore } from '../store'
+import { RouteGraph } from './RouteGraph'
+
+vi.mock('@xyflow/react', () => ({
+  ReactFlow: ({ nodes }: { nodes: { id: string; data: { label: string } }[] }) => (
+    <div data-testid="rf">{nodes.map((n) => <span key={n.id}>{n.data.label}</span>)}</div>
+  ),
+  Background: () => null,
+  Controls: () => null,
+}))
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+describe('RouteGraph', () => {
+  it('renders nodes for the selected route only', () => {
+    useStore.setState({
+      selectedRouteId: 'route-001',
+      tasks: [
+        { id: 'task-001', route_id: 'route-001', plan_ref: 'execute-slice', title: 't', phase: 'execute', wave: 10, kind: 'recipe', status: 'open', created_at: 't', updated_at: 't' },
+        { id: 'task-099', route_id: 'route-002', plan_ref: 'other', title: 't', phase: 'execute', wave: 10, kind: 'recipe', status: 'open', created_at: 't', updated_at: 't' },
+      ],
+    })
+    render(<RouteGraph />)
+    expect(screen.getByText('execute-slice')).toBeInTheDocument()
+    expect(screen.queryByText('other')).not.toBeInTheDocument()
+  })
+
+  it('shows an empty hint when no route is selected', () => {
+    render(<RouteGraph />)
+    expect(screen.getByText(/select a route/i)).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- RouteGraph`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/components/RouteGraph.tsx`**
+
+```tsx
+import { useMemo } from 'react'
+import { Background, Controls, ReactFlow } from '@xyflow/react'
+
+import { buildRouteGraph } from '../graph/build-graph'
+import { useStore } from '../store'
+
+export function RouteGraph() {
+  const selectedRouteId = useStore((s) => s.selectedRouteId)
+  const tasks = useStore((s) => s.tasks)
+  const selectTask = useStore((s) => s.selectTask)
+
+  const routeTasks = useMemo(
+    () => tasks.filter((t) => t.route_id === selectedRouteId),
+    [tasks, selectedRouteId],
+  )
+  const { nodes, edges } = useMemo(() => buildRouteGraph(routeTasks), [routeTasks])
+
+  if (!selectedRouteId) return <div style={{ padding: 16 }}>Select a route to view its DAG.</div>
+
+  return (
+    <div style={{ height: '100%', width: '100%' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        fitView
+        onNodeClick={(_e, node) => selectTask(node.id)}
+      >
+        <Background />
+        <Controls />
+      </ReactFlow>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- RouteGraph`
+Expected: PASS (2 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/waypoint-ui/src/components/RouteGraph.tsx packages/waypoint-ui/src/components/RouteGraph.test.tsx
+git commit -m "feat(ui): RouteGraph React Flow DAG for the selected route"
+```
+
+---
+
+## Task 8: TaskDetail
+
+**Files:**
+- Create: `packages/waypoint-ui/src/components/TaskDetail.tsx`
+- Test: `packages/waypoint-ui/src/components/TaskDetail.test.tsx`
+
+**Interfaces:**
+- Consumes: `useStore` (tasks, selectedTaskId).
+- Produces: `TaskDetail` component showing the selected task's fields.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/components/TaskDetail.test.tsx`
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { useStore } from '../store'
+import { TaskDetail } from './TaskDetail'
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+describe('TaskDetail', () => {
+  it('renders the selected task fields', () => {
+    useStore.setState({
+      selectedTaskId: 'task-001',
+      tasks: [{ id: 'task-001', route_id: 'route-001', plan_ref: 'execute-slice', title: 'Execute slice', phase: 'execute', wave: 10, kind: 'recipe', status: 'blocked', created_at: 't', updated_at: 't' }],
+    })
+    render(<TaskDetail />)
+    expect(screen.getByText('execute-slice')).toBeInTheDocument()
+    expect(screen.getByText(/blocked/)).toBeInTheDocument()
+    expect(screen.getByText(/recipe/)).toBeInTheDocument()
+  })
+
+  it('prompts to select a task when none is selected', () => {
+    render(<TaskDetail />)
+    expect(screen.getByText(/select a task/i)).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- TaskDetail`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/components/TaskDetail.tsx`**
+
+```tsx
+import { useStore } from '../store'
+
+export function TaskDetail() {
+  const selectedTaskId = useStore((s) => s.selectedTaskId)
+  const task = useStore((s) => s.tasks.find((t) => t.id === selectedTaskId))
+
+  if (!task) return <div style={{ padding: 12, fontSize: 13 }}>Select a task to see details.</div>
+
+  return (
+    <div style={{ padding: 12, fontSize: 13, borderTop: '1px solid #ddd' }}>
+      <h4 style={{ margin: '0 0 8px' }}>{task.plan_ref}</h4>
+      <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 12px', margin: 0 }}>
+        <dt>id</dt><dd>{task.id}</dd>
+        <dt>kind</dt><dd>{task.kind}</dd>
+        <dt>status</dt><dd>{task.status}</dd>
+        <dt>phase</dt><dd>{task.phase}</dd>
+        <dt>wave</dt><dd>{task.wave ?? '—'}</dd>
+      </dl>
+      {task.metadata ? (
+        <details style={{ marginTop: 8 }}>
+          <summary>metadata</summary>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{JSON.stringify(task.metadata, null, 2)}</pre>
+        </details>
+      ) : null}
+    </div>
+  )
+}
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- TaskDetail`
+Expected: PASS (2 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/waypoint-ui/src/components/TaskDetail.tsx packages/waypoint-ui/src/components/TaskDetail.test.tsx
+git commit -m "feat(ui): TaskDetail pane for the selected task"
+```
+
+---
+
+## Task 9: AgentChat
+
+**Files:**
+- Create: `packages/waypoint-ui/src/components/AgentChat.tsx`
+- Test: `packages/waypoint-ui/src/components/AgentChat.test.tsx`
+
+**Interfaces:**
+- Consumes: `useClient`, `useStore` (transcripts, activeSessionId, setActiveSession). Emits commands `agent.author`, `agent.cancel`. Reads streamed events from the store transcript.
+- Produces: `AgentChat` component — intent input → `agent.author`; renders the active session transcript (messages, tool calls/results, terminal result with `proposalId`/`adhocRouteId`); cancel button.
+
+- [ ] **Step 1: Write the failing test** `packages/waypoint-ui/src/components/AgentChat.test.tsx`
+
+```tsx
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { ClientProvider } from '../engine/context'
+import { useStore } from '../store'
+import { FakeEngineClient } from '../test/fake-client'
+import { AgentChat } from './AgentChat'
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+function renderChat(client: FakeEngineClient) {
+  return render(
+    <ClientProvider client={client}>
+      <AgentChat />
+    </ClientProvider>,
+  )
+}
+
+describe('AgentChat', () => {
+  it('authors a session on submit, then renders streamed transcript events', async () => {
+    const client = new FakeEngineClient()
+    client.responses['agent.author'] = { ok: true, action: 'agent.author', sessionId: 'agent-001', status: 'running' }
+    renderChat(client)
+
+    await userEvent.type(screen.getByPlaceholderText(/describe what to build/i), 'Add a lint recipe')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+
+    await waitFor(() => expect(useStore.getState().activeSessionId).toBe('agent-001'))
+    expect(client.calls.find((c) => c.name === 'agent.author')).toMatchObject({ payload: { intent: 'Add a lint recipe' } })
+
+    // Stream an assistant message then a terminal result for the active session.
+    client.emit({ type: 'event', topic: 'agent:agent-001', seq: 1, record: { id: 'e1', sessionId: 'agent-001', kind: 'agent.message', at: 't', idx: 0, data: { text: 'drafting' } } })
+    client.emit({ type: 'event', topic: 'agent:agent-001', seq: 2, record: { id: 'e2', sessionId: 'agent-001', kind: 'agent.tool_result', at: 't', idx: 1, data: { toolName: 'waypoint_author_promote', text: '{"proposalId":"recipe/demo"}' } } })
+
+    expect(await screen.findByText(/drafting/)).toBeInTheDocument()
+    expect(await screen.findByText(/recipe\/demo/)).toBeInTheDocument()
+  })
+
+  it('cancels the active session', async () => {
+    const client = new FakeEngineClient()
+    useStore.setState({ activeSessionId: 'agent-007', transcripts: { 'agent-007': [] } })
+    renderChat(client)
+    await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(client.calls.find((c) => c.name === 'agent.cancel')).toMatchObject({ payload: { sessionId: 'agent-007' } })
+  })
+})
+```
+
+- [ ] **Step 2: Run → FAIL**
+
+Run: `pnpm test:ui -- AgentChat`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/src/components/AgentChat.tsx`**
+
+```tsx
+import { useState } from 'react'
+
+import { useClient } from '../engine/context'
+import { useStore } from '../store'
+import type { AgentEventRecord } from '../engine/types'
+
+function renderEvent(event: AgentEventRecord) {
+  const data = event.data ?? {}
+  if (event.kind === 'agent.message') return <em>{String(data.text ?? '')}</em>
+  if (event.kind === 'agent.toolcall') return <span>→ tool: {String(data.toolName ?? '')}</span>
+  if (event.kind === 'agent.tool_result') return <span>← {String(data.toolName ?? '')}: {String(data.text ?? '')}</span>
+  if (event.kind === 'agent.end') return <strong>done</strong>
+  return <span>{event.kind}</span>
+}
+
+export function AgentChat() {
+  const client = useClient()
+  const activeSessionId = useStore((s) => s.activeSessionId)
+  const transcript = useStore((s) => (s.activeSessionId ? s.transcripts[s.activeSessionId] ?? [] : []))
+  const setActiveSession = useStore((s) => s.setActiveSession)
+  const [intent, setIntent] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function send(e: React.FormEvent) {
+    e.preventDefault()
+    if (!intent.trim()) return
+    setBusy(true)
+    try {
+      const res = (await client.cmd('agent.author', { intent })) as { ok: boolean; sessionId?: string }
+      if (res.ok && res.sessionId) setActiveSession(res.sessionId)
+      setIntent('')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function cancel() {
+    if (activeSessionId) await client.cmd('agent.cancel', { sessionId: activeSessionId })
+  }
+
+  return (
+    <section style={{ display: 'flex', flexDirection: 'column', height: '100%', borderLeft: '1px solid #ddd' }}>
+      <div style={{ padding: '4px 8px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between' }}>
+        <span>Agent {activeSessionId ?? '(new)'}</span>
+        {activeSessionId ? <button type="button" onClick={cancel}>Cancel</button> : null}
+      </div>
+      <ol style={{ flex: 1, overflowY: 'auto', margin: 0, padding: 8, fontSize: 13, listStyle: 'none' }}>
+        {transcript.map((event) => (
+          <li key={`${event.sessionId}-${event.idx ?? event.id}`}>{renderEvent(event)}</li>
+        ))}
+      </ol>
+      <form onSubmit={send} style={{ display: 'flex', gap: 4, padding: 8, borderTop: '1px solid #eee' }}>
+        <input
+          value={intent}
+          onChange={(e) => setIntent(e.target.value)}
+          placeholder="Describe what to build…"
+          style={{ flex: 1 }}
+        />
+        <button type="submit" disabled={busy}>Send</button>
+      </form>
+    </section>
+  )
+}
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- AgentChat`
+Expected: PASS (2 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/waypoint-ui/src/components/AgentChat.tsx packages/waypoint-ui/src/components/AgentChat.test.tsx
+git commit -m "feat(ui): AgentChat (author/cancel + streamed transcript with proposal/adhoc ids)"
+```
+
+---
+
+## Task 10: App composition + live wiring
+
+**Files:**
+- Modify: `packages/waypoint-ui/src/App.tsx`, `packages/waypoint-ui/src/main.tsx`
+- Test: `packages/waypoint-ui/src/App.test.tsx` (replace the scaffold test)
+
+**Interfaces:**
+- Consumes: `ClientProvider`, `ConnectionGate`, `RoutesPanel`, `RouteGraph`, `TaskDetail`, `AgentChat`, `useStore`, `useClient`.
+- Produces: `App({ client }: { client: BrowserEngineClient })` rendering the three-pane console, subscribing to `['*']` on mount, refetching routes/tasks on `routesDirty`, and refetching `agent.list` after authoring.
+
+- [ ] **Step 1: Replace `packages/waypoint-ui/src/App.tsx`**
+
+```tsx
+import { useEffect } from 'react'
+
+import { AgentChat } from './components/AgentChat'
+import { ConnectionGate } from './components/ConnectionGate'
+import { RouteGraph } from './components/RouteGraph'
+import { RoutesPanel } from './components/RoutesPanel'
+import { TaskDetail } from './components/TaskDetail'
+import { ClientProvider, useClient } from './engine/context'
+import type { BrowserEngineClient } from './engine/client'
+import { useStore } from './store'
+
+function Console() {
+  const client = useClient()
+  const applyMessage = useStore((s) => s.applyMessage)
+  const routesDirty = useStore((s) => s.routesDirty)
+  const clearDirty = useStore((s) => s.clearDirty)
+  const setRoutes = useStore((s) => s.setRoutes)
+  const setTasks = useStore((s) => s.setTasks)
+  const setSessions = useStore((s) => s.setSessions)
+
+  async function refreshSessions() {
+    const res = (await client.cmd('agent.list')) as { ok: boolean; sessions?: { id: string; intent: string; status: string; startedAt: string }[] }
+    if (res.ok && res.sessions) setSessions(res.sessions)
+  }
+
+  async function refreshRoutes() {
+    const routes = (await client.cmd('routes.list')) as { ok: boolean; routes?: unknown[] }
+    if (routes.ok && routes.routes) setRoutes(routes.routes as never)
+    const tasks = (await client.cmd('tasks.list', {})) as { ok: boolean; tasks?: unknown[] }
+    if (tasks.ok && tasks.tasks) setTasks(tasks.tasks as never)
+  }
+
+  useEffect(() => {
+    const unsubscribe = client.subscribe(['*'], applyMessage)
+    void refreshSessions()
+    const interval = setInterval(refreshSessions, 2000)
+    return () => {
+      unsubscribe()
+      clearInterval(interval)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client])
+
+  useEffect(() => {
+    if (routesDirty) {
+      void refreshRoutes()
+      clearDirty()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routesDirty])
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 360px', height: '100%' }}>
+      <RoutesPanel />
+      <div style={{ display: 'grid', gridTemplateRows: '1fr auto', minHeight: 0 }}>
+        <RouteGraph />
+        <TaskDetail />
+      </div>
+      <AgentChat />
+    </div>
+  )
+}
+
+export function App({ client }: { client: BrowserEngineClient }) {
+  return (
+    <ClientProvider client={client}>
+      <ConnectionGate>
+        <Console />
+      </ConnectionGate>
+    </ClientProvider>
+  )
+}
+```
+
+- [ ] **Step 2: Update `packages/waypoint-ui/src/main.tsx`** to pass a real client
+
+```tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+
+import '@xyflow/react/dist/style.css'
+import { App } from './App'
+import { createBrowserEngineClient } from './engine/client'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App client={createBrowserEngineClient()} />
+  </StrictMode>,
+)
+```
+
+- [ ] **Step 3: Replace `packages/waypoint-ui/src/App.test.tsx`** with the wiring test (mock React Flow as in Task 7)
+
+```tsx
+import { render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { App } from './App'
+import { useStore } from './store'
+import { FakeEngineClient } from './test/fake-client'
+
+vi.mock('@xyflow/react', () => ({
+  ReactFlow: () => <div data-testid="rf" />,
+  Background: () => null,
+  Controls: () => null,
+}))
+
+const initial = useStore.getState()
+beforeEach(() => useStore.setState(initial, true))
+
+describe('App', () => {
+  it('gates on workspace, then renders the three panes and hydrates from the snapshot', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [{ id: 'agent-001', intent: 'demo', status: 'running', startedAt: 't' }] }
+
+    render(<App client={client} />)
+
+    // Console mounts → subscribe registered → emit a snapshot.
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+    client.emit({
+      type: 'snapshot',
+      apiVersion: '1',
+      seq: 1,
+      routes: [{ id: 'route-001', quest: 'waypoint', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+      tasks: [],
+    })
+
+    expect(await screen.findByText('route-001 · active')).toBeInTheDocument()
+    expect(await screen.findByText(/demo/)).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 4: Run → PASS**
+
+Run: `pnpm test:ui -- App`
+Expected: PASS (1 test).
+
+- [ ] **Step 5: Full UI test run + typecheck**
+
+Run: `pnpm test:ui` then `pnpm typecheck:ui`
+Expected: all UI tests pass; typecheck clean.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/waypoint-ui/src/App.tsx packages/waypoint-ui/src/main.tsx packages/waypoint-ui/src/App.test.tsx
+git commit -m "feat(ui): compose three-pane console + live subscribe/refetch wiring"
+```
+
+---
+
+## Task 11: Headless smoke + docs
+
+**Files:**
+- Create: `scripts/ui-smoke.mjs`
+- Modify: `README.md` (UI section), `packages/waypoint-ui/README.md` (create)
+
+**Interfaces:**
+- Consumes: `createEngineHost`, `FakeBrainAdapter` (from `@waypoint/engine-host`), `createBrowserEngineClient` (UI). Note: `package.json` already has the `smoke:ui` script from Task 0.
+
+- [ ] **Step 1: Create `scripts/ui-smoke.mjs`**
+
+```js
+#!/usr/bin/env node
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { WebSocket as NodeWebSocket } from 'ws'
+
+const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
+const { createEngineHost, FakeBrainAdapter } = await import(join(repoRoot, 'packages/waypoint-engine-host/src/index.ts'))
+const { createBrowserEngineClient } = await import(join(repoRoot, 'packages/waypoint-ui/src/engine/client.ts'))
+
+const adapter = new FakeBrainAdapter({
+  events: [{ kind: 'agent.message', at: new Date(0).toISOString(), data: { text: 'drafting' } }],
+  result: { status: 'completed', summary: 'authored', proposalId: 'recipe/demo' },
+})
+
+const projectRoot = await mkdtemp(join(tmpdir(), 'waypoint-ui-smoke-'))
+const host = createEngineHost({ brainAdapter: adapter, brain: 'fake' })
+const started = await host.start()
+try {
+  const headers = { authorization: `Bearer ${started.token}` }
+  const client = createBrowserEngineClient({
+    baseUrl: started.url,
+    headers,
+    fetchImpl: fetch,
+    wsFactory: (url) => new NodeWebSocket(url, { headers }),
+  })
+
+  const open = await client.cmd('workspace.open', { root: projectRoot, backend: 'folder' })
+  if (!open.ok) throw new Error(`workspace.open failed: ${JSON.stringify(open)}`)
+
+  const messages = []
+  const unsub = client.subscribe(['*'], (m) => messages.push(m))
+  await new Promise((r) => setTimeout(r, 200))
+  if (!messages.some((m) => m.type === 'snapshot')) throw new Error('expected a snapshot message')
+
+  const run = await client.cmd('agent.run', { intent: 'demo' })
+  if (!run.ok || run.proposalId !== 'recipe/demo') throw new Error(`agent.run mismatch: ${JSON.stringify(run)}`)
+  await new Promise((r) => setTimeout(r, 200))
+  if (!messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:'))) {
+    throw new Error('expected agent transcript events on the stream')
+  }
+  unsub()
+
+  process.stdout.write(`Smoke project: ${projectRoot}\n`)
+  process.stdout.write(`ui smoke OK on ${started.url} (snapshot + agent stream + proposal ${run.proposalId})\n`)
+} finally {
+  await host.stop()
+  if (process.env.WAYPOINT_KEEP_SMOKE_PROJECT !== '1') {
+    await rm(projectRoot, { recursive: true, force: true })
+  }
+}
+```
+
+- [ ] **Step 2: Run the smoke**
+
+Run: `pnpm smoke:ui`
+Expected: `ui smoke OK on http://127.0.0.1:PORT (snapshot + agent stream + proposal recipe/demo)`.
+
+- [ ] **Step 3: Create `packages/waypoint-ui/README.md`**
+
+````markdown
+# @waypoint/ui
+
+Browser web UI for Waypoint — observability + agent chat against a running
+engine host. Slice 3 MVP (web-first; the Tauri shell is a later slice).
+
+## Dev
+
+1. Start an engine host that writes a handshake file:
+
+   ```bash
+   WAYPOINT_ENGINE_HANDSHAKE=/tmp/waypoint-handshake.json \
+   WAYPOINT_ENGINE_ROOT=/path/to/project \
+   node packages/waypoint-engine-host/src/bin.ts
+   ```
+
+2. Point the UI dev proxy at the same handshake and start Vite:
+
+   ```bash
+   WAYPOINT_ENGINE_HANDSHAKE=/tmp/waypoint-handshake.json pnpm dev:ui
+   ```
+
+The Vite dev proxy reads the handshake, forwards `/cmd` + `/ws` to the engine,
+and injects the bearer token server-side — the browser never sees the token.
+
+## Layout
+
+Three-pane console: routes + agent sessions (left), route DAG + task detail
+(center), agent chat (right).
+
+## Test
+
+```bash
+pnpm test:ui          # component + integration tests (jsdom)
+pnpm typecheck:ui
+pnpm smoke:ui         # headless data-layer smoke against a real engine host
+```
+````
+
+- [ ] **Step 4: Add a UI subsection to the root `README.md`** after the "Agent brain (Pi orchestrator)" section
+
+```markdown
+## Web UI (slice 3 MVP)
+
+`@waypoint/ui` (`packages/waypoint-ui`) is a React + Vite browser UI for
+**observability + agent chat**: live routes/tasks, a route DAG, and a Pi agent
+chat panel — talking to a running engine host over loopback HTTP+WS through a
+Vite dev proxy that reads the engine handshake and injects the bearer token. The
+desktop **Tauri shell** is a later slice.
+
+```bash
+# terminal 1 — engine host (writes the handshake)
+WAYPOINT_ENGINE_HANDSHAKE=/tmp/wp-hs.json WAYPOINT_ENGINE_ROOT=$PWD node packages/waypoint-engine-host/src/bin.ts
+# terminal 2 — UI dev server (reads the same handshake)
+WAYPOINT_ENGINE_HANDSHAKE=/tmp/wp-hs.json pnpm dev:ui
+```
+
+`pnpm smoke:ui` is the local data-layer check. See
+[`packages/waypoint-ui/README.md`](packages/waypoint-ui/README.md).
+```
+
+- [ ] **Step 5: Final verification**
+
+Run: `pnpm test:ui && pnpm typecheck:ui && pnpm smoke:ui`
+Expected: all pass. Also run `pnpm typecheck` (root) to confirm the UI exclusion keeps the root build clean.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add scripts/ui-smoke.mjs packages/waypoint-ui/README.md README.md
+git commit -m "feat(ui): headless data-layer smoke + dev docs"
+```
+
+---
+
+## Self-Review
+
+**Spec coverage:**
+- Scope (observe + agent chat, web-first) → Tasks 0–11; Tauri/run-controls/promotion explicitly excluded (not implemented). ✓
+- Architecture & package layout (`packages/waypoint-ui/`, React+Vite+xyflow+Zustand) → Task 0 + file structure. ✓
+- Vite proxy + handshake token injection → Task 4 (+ `target.ts` unit-tested). ✓
+- Browser EngineClient (cmd + subscribe) → Task 3 (+ integration test). ✓
+- Components (ConnectionGate, RoutesPanel, RouteGraph, TaskDetail, AgentChat) → Tasks 5–9. ✓
+- Live event flow (subscribe `['*']`, snapshot hydrate, route-dirty refetch, agent transcript, seq dedupe) → Task 2 (reducer) + Task 10 (wiring). ✓
+- Proposals surfaced in chat only (proposalId/adhocRouteId in transcript) → Task 9 (`agent.tool_result`/`agent.end` rendering) + smoke asserts proposalId. ✓
+- Error handling (envelope `details.{code,path,message}`, unreachable engine, reconnecting) → ConnectionGate (Task 5) + store error (Task 2). Reconnect-with-backoff on the live socket is intentionally minimal in the MVP: the WS `resnapshot` path marks routes dirty and `agent.list` polls every 2s (Task 10); a full backoff/reconnect loop is deferred (noted below). ✓ (partial, by design)
+- Testing (component tests w/ FakeEngineClient, one real-engine integration, smoke) → Tasks 3, 5–10, 11. ✓
+
+**Placeholder scan:** No TBD/TODO; every code step contains complete code. React Flow is mocked in component tests (Task 7/10) to avoid jsdom layout measurement — a real choice, not a placeholder.
+
+**Type consistency:** `BrowserEngineClient` (cmd + subscribe) consistent across Tasks 3, 5 (FakeEngineClient implements it), 10. `EngineWsMessage` union defined in Task 1, consumed by Tasks 2, 3, 9, 10. `useStore` action names (`applyMessage`, `selectRoute`, `selectTask`, `setActiveSession`, `setRoutes/Tasks/Sessions`, `clearDirty`) defined in Task 2, used in Tasks 6–10. `buildRouteGraph` signature stable (Task 1 → Task 7). `AgentSessionSummary` (Task 1) used by store (Task 2) + RoutesPanel (Task 6).
+
+**Known follow-ups (out of MVP scope, documented):** full WS reconnect/backoff loop (MVP relies on `resnapshot` + 2s session poll); richer DAG layout (layered by phase) — the MVP uses a linear wave-ordered chain; these belong with the run-controls slice.
