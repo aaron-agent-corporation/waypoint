@@ -178,6 +178,24 @@ live `.waypoint/quests|recipes`).
 See [`packages/waypoint-pi-extension/src/README.md`](packages/waypoint-pi-extension/src/README.md)
 for the extension + tool list.
 
+## Web UI (slice 3 MVP)
+
+`@waypoint/ui` (`packages/waypoint-ui`) is a React + Vite browser UI for
+**observability + agent chat**: live routes/tasks, a route DAG, and a Pi agent
+chat panel — talking to a running engine host over loopback HTTP+WS through a
+Vite dev proxy that reads the engine handshake and injects the bearer token. The
+desktop **Tauri shell** is a later slice.
+
+```bash
+# terminal 1 — engine host (writes the handshake)
+WAYPOINT_ENGINE_HANDSHAKE=/tmp/wp-hs.json WAYPOINT_ENGINE_ROOT=$PWD node packages/waypoint-engine-host/src/bin.ts
+# terminal 2 — UI dev server (reads the same handshake)
+WAYPOINT_ENGINE_HANDSHAKE=/tmp/wp-hs.json pnpm dev:ui
+```
+
+`pnpm smoke:ui` is the local data-layer check. See
+[`packages/waypoint-ui/README.md`](packages/waypoint-ui/README.md).
+
 ## Quest and Recipe catalog
 
 Waypoint includes a bundled GSD-inspired Quest and Recipe catalog as a portability example and batteries-included workflow library:
