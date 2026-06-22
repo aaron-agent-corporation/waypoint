@@ -35,12 +35,18 @@ try {
 
   const messages = []
   const unsub = client.subscribe(['*'], (m) => messages.push(m))
-  await new Promise((r) => setTimeout(r, 200))
+  const snapshotDeadline = Date.now() + 3000
+  while (!messages.some((m) => m.type === 'snapshot') && Date.now() < snapshotDeadline) {
+    await new Promise((r) => setTimeout(r, 20))
+  }
   if (!messages.some((m) => m.type === 'snapshot')) throw new Error('expected a snapshot message')
 
   const run = await client.cmd('agent.run', { intent: 'demo' })
   if (!run.ok || run.proposalId !== 'recipe/demo') throw new Error(`agent.run mismatch: ${JSON.stringify(run)}`)
-  await new Promise((r) => setTimeout(r, 200))
+  const agentDeadline = Date.now() + 3000
+  while (!messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:')) && Date.now() < agentDeadline) {
+    await new Promise((r) => setTimeout(r, 20))
+  }
   if (!messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:'))) {
     throw new Error('expected agent transcript events on the stream')
   }
