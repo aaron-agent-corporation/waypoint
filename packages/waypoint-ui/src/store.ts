@@ -64,12 +64,13 @@ export const useStore = create<UiState>((set, get) => ({
     if (msg.seq <= get().seq) return
     if (msg.topic.startsWith('agent:')) {
       const record = msg.record as AgentEventRecord
-      const current = get().transcripts[record.sessionId] ?? []
+      const transcripts = get().transcripts
+      const current = transcripts[record.sessionId] ?? []
       if (record.idx != null && current.some((e) => e.idx === record.idx)) {
         set({ seq: msg.seq })
         return
       }
-      set({ seq: msg.seq, transcripts: { ...get().transcripts, [record.sessionId]: [...current, record] } })
+      set({ seq: msg.seq, transcripts: { ...transcripts, [record.sessionId]: [...current, record] } })
       return
     }
     set({ seq: msg.seq, routesDirty: true })
