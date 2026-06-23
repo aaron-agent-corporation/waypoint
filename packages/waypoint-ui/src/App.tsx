@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 
 import { AgentChat } from './components/AgentChat'
 import { ConnectionGate } from './components/ConnectionGate'
@@ -7,7 +7,12 @@ import { RoutesPanel } from './components/RoutesPanel'
 import { TaskDetail } from './components/TaskDetail'
 import { ClientProvider, useClient } from './engine/context'
 import type { BrowserEngineClient } from './engine/client'
+import type { AgentSessionSummary, WaypointFolderRoute, WaypointFolderTask } from './engine/types'
 import { useStore } from './store'
+
+function toMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
 
 function Console() {
   const client = useClient()
@@ -17,37 +22,37 @@ function Console() {
   const setRoutes = useStore((s) => s.setRoutes)
   const setTasks = useStore((s) => s.setTasks)
   const setSessions = useStore((s) => s.setSessions)
+  const setError = useStore((s) => s.setError)
 
-  async function refreshSessions() {
-    const res = (await client.cmd('agent.list')) as { ok: boolean; sessions?: { id: string; intent: string; status: string; startedAt: string }[] }
+  const refreshSessions = useCallback(async () => {
+    const res = (await client.cmd('agent.list')) as { ok: boolean; sessions?: AgentSessionSummary[] }
     if (res.ok && res.sessions) setSessions(res.sessions)
-  }
+  }, [client, setSessions])
 
-  async function refreshRoutes() {
-    const routes = (await client.cmd('routes.list')) as { ok: boolean; routes?: unknown[] }
-    if (routes.ok && routes.routes) setRoutes(routes.routes as never)
-    const tasks = (await client.cmd('tasks.list', {})) as { ok: boolean; tasks?: unknown[] }
-    if (tasks.ok && tasks.tasks) setTasks(tasks.tasks as never)
-  }
+  const refreshRoutes = useCallback(async () => {
+    const routes = (await client.cmd('routes.list')) as { ok: boolean; routes?: WaypointFolderRoute[] }
+    if (routes.ok && routes.routes) setRoutes(routes.routes)
+    const tasks = (await client.cmd('tasks.list', {})) as { ok: boolean; tasks?: WaypointFolderTask[] }
+    if (tasks.ok && tasks.tasks) setTasks(tasks.tasks)
+  }, [client, setRoutes, setTasks])
 
   useEffect(() => {
     const unsubscribe = client.subscribe(['*'], applyMessage)
-    void refreshSessions()
-    const interval = setInterval(refreshSessions, 2000)
+    const reportError = (err: unknown) => setError(toMessage(err))
+    void refreshSessions().catch(reportError)
+    const interval = setInterval(() => void refreshSessions().catch(reportError), 2000)
     return () => {
       unsubscribe()
       clearInterval(interval)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client])
+  }, [client, applyMessage, refreshSessions, setError])
 
   useEffect(() => {
-    if (routesDirty) {
-      void refreshRoutes()
-      clearDirty()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routesDirty])
+    if (!routesDirty) return
+    void refreshRoutes()
+      .then(() => clearDirty())
+      .catch((err) => setError(toMessage(err)))
+  }, [routesDirty, refreshRoutes, clearDirty, setError])
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 360px', height: '100%' }}>

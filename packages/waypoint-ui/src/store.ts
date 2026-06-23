@@ -28,6 +28,7 @@ interface UiState {
   setRoutes(r: WaypointFolderRoute[]): void
   setTasks(t: WaypointFolderTask[]): void
   setSessions(s: AgentSessionSummary[]): void
+  setError(e: string | null): void
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
@@ -49,7 +50,7 @@ export const useStore = create<UiState>((set, get) => ({
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
-      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open' })
+      set({ routes: msg.routes, tasks: msg.tasks, seq: Math.max(get().seq, msg.seq), connection: 'open' })
       return
     }
     if (msg.type === 'resnapshot') {
@@ -80,6 +81,7 @@ export const useStore = create<UiState>((set, get) => ({
   setRoutes: (routes) => set({ routes }),
   setTasks: (tasks) => set({ tasks }),
   setSessions: (sessions) => set({ sessions }),
+  setError: (error) => set({ error }),
   selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null }),
   selectTask: (selectedTaskId) => set({ selectedTaskId }),
   setActiveSession: (activeSessionId) => set({ activeSessionId }),

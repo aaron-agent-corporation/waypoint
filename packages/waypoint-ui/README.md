@@ -1,7 +1,7 @@
 # @waypoint/ui
 
 Browser web UI for Waypoint — observability + agent chat against a running
-engine host. Slice 3 MVP (web-first; the Tauri shell is a later slice).
+engine host. Web-first; the desktop Tauri shell is a later slice.
 
 ## Dev
 

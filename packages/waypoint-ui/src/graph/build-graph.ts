@@ -21,6 +21,7 @@ export function buildRouteGraph(tasks: readonly WaypointFolderTask[]): { nodes: 
     data: { label: t.plan_ref, kind: t.kind, status: t.status },
   }))
 
+  const nodeIds = new Set(sorted.map((t) => t.id))
   const edges: RouteGraphEdge[] = []
   for (let i = 1; i < sorted.length; i += 1) {
     edges.push({ id: `e-${sorted[i - 1].id}-${sorted[i].id}`, source: sorted[i - 1].id, target: sorted[i].id })
@@ -30,6 +31,7 @@ export function buildRouteGraph(tasks: readonly WaypointFolderTask[]): { nodes: 
     const blockers = beads && Array.isArray(beads.blockers) ? beads.blockers : []
     for (const b of blockers) {
       if (typeof b !== 'string') continue
+      if (!nodeIds.has(b)) continue // skip blockers that aren't tasks in this route
       const id = `b-${b}-${t.id}`
       if (!edges.some((e) => e.id === id)) edges.push({ id, source: b, target: t.id })
     }

@@ -41,8 +41,10 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
     },
 
     subscribe(topics, onMessage, opts) {
-      const origin = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
-      const wsUrl = `${origin.replace(/^http/, 'ws')}/ws`
+      const base = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
+      // Resolve `/ws` against the base so a path-bearing baseUrl can't produce a
+      // malformed URL; fall back to a relative path when there's no base (SSR/tests).
+      const wsUrl = base ? new URL('/ws', base.replace(/^http/, 'ws')).toString() : '/ws'
       const ws = wsFactory(wsUrl)
       ws.onopen = () => {
         ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))
