@@ -15,6 +15,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "packages/waypoint-ui"
   ]
 }

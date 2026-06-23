@@ -18,5 +18,6 @@ export default defineConfig({
       'examples/**/*.test.ts',
       'packages/**/*.test.ts',
     ],
+    exclude: ['**/node_modules/**', 'packages/waypoint-ui/**'],
   },
 })
