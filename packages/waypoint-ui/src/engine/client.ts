@@ -24,8 +24,18 @@ export interface BrowserEngineClient {
   subscribe(topics: string[], onMessage: (msg: EngineWsMessage) => void, opts?: { lastSeq?: number }): () => void
 }
 
+/** Swap only the `http:`/`https:` scheme (case-insensitively) to `ws:`/`wss:`, leaving other schemes untouched. */
+function toWsScheme(url: string): string {
+  const lower = url.toLowerCase()
+  if (lower.startsWith('https:')) return `wss:${url.slice('https:'.length)}`
+  if (lower.startsWith('http:')) return `ws:${url.slice('http:'.length)}`
+  return url
+}
+
 export function createBrowserEngineClient(options: BrowserEngineClientOptions = {}): BrowserEngineClient {
-  const baseUrl = options.baseUrl ?? ''
+  // Normalize once so cmd() (`${baseUrl}/cmd/...`) and subscribe() (`${baseUrl}/ws`)
+  // share identical base handling — a trailing slash would otherwise yield `//cmd`.
+  const baseUrl = (options.baseUrl ?? '').replace(/\/$/, '')
   const headers = options.headers ?? {}
   const doFetch = options.fetchImpl ?? globalThis.fetch.bind(globalThis)
   const wsFactory = options.wsFactory ?? ((url: string) => new WebSocket(url) as unknown as WebSocketLike)
@@ -41,8 +51,14 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
     },
 
     subscribe(topics, onMessage, opts) {
-      const origin = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
-      const wsUrl = `${origin.replace(/^http/, 'ws')}/ws`
+      const base = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
+      // Contract: the WebSocket connects under the SAME path prefix as HTTP
+      // commands. `cmd()` posts to `${baseUrl}/cmd/<name>`, so the socket is
+      // `${baseUrl}/ws` with the scheme swapped to ws/wss — a path-bearing
+      // baseUrl (e.g. http://host/prefix) yields ws://host/prefix/ws. With no
+      // base (SSR/tests) fall back to a relative `/ws`. (base is already
+      // trailing-slash-normalized at construction.)
+      const wsUrl = base ? `${toWsScheme(base)}/ws` : '/ws'
       const ws = wsFactory(wsUrl)
       ws.onopen = () => {
         ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))
@@ -54,7 +70,15 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
           // ignore non-JSON frames
         }
       }
-      return () => ws.close()
+      return () => {
+        // Detach handlers before closing so a frame already queued on the socket
+        // can't still invoke onMessage after the caller has unsubscribed.
+        ws.onopen = null
+        ws.onmessage = null
+        ws.onclose = null
+        ws.onerror = null
+        ws.close()
+      }
     },
   }
 }

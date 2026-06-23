@@ -21,6 +21,14 @@ beforeAll(async () => {
 })
 afterAll(async () => { await host.stop() })
 
+async function waitUntil(predicate: () => boolean, { timeout = 2000, interval = 25 } = {}): Promise<void> {
+  const start = Date.now()
+  while (!predicate()) {
+    if (Date.now() - start > timeout) throw new Error('waitUntil timed out')
+    await new Promise((r) => setTimeout(r, interval))
+  }
+}
+
 function nodeClient() {
   const headers = { authorization: `Bearer ${token}` }
   return createBrowserEngineClient({
@@ -48,11 +56,11 @@ describe('browser client against a real engine host', () => {
 
     const messages: EngineWsMessage[] = []
     const unsub = client.subscribe(['*'], (m) => messages.push(m))
-    await new Promise((r) => setTimeout(r, 150)) // allow snapshot
+    await waitUntil(() => messages.some((m) => m.type === 'snapshot'))
     expect(messages.find((m) => m.type === 'snapshot')).toBeTruthy()
 
     await client.cmd('agent.run', { intent: 'demo' })
-    await new Promise((r) => setTimeout(r, 150)) // allow agent events
+    await waitUntil(() => messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:')))
     expect(messages.some((m) => m.type === 'event' && m.topic.startsWith('agent:'))).toBe(true)
     unsub()
   })

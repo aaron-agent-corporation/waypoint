@@ -13,6 +13,22 @@ describe('createBrowserEngineClient.cmd', () => {
     expect(JSON.parse(init.body as string)).toEqual({ routeId: 'r1' })
     expect(res).toEqual({ ok: true, action: 'routes.list', routes: [] })
   })
+
+  // Pins the contract the ws URL relies on: cmd() preserves a path-bearing
+  // baseUrl prefix, so `${baseUrl}/cmd/...` and `${baseUrl}/ws` share a prefix.
+  it('preserves a path-bearing baseUrl prefix when posting commands', async () => {
+    const fetchImpl = vi.fn(async () => ({ json: async () => ({ ok: true, action: 'routes.list' }) }) as unknown as Response)
+    const client = createBrowserEngineClient({ baseUrl: 'http://host:8080/prefix', fetchImpl })
+    await client.cmd('routes.list')
+    expect(fetchImpl).toHaveBeenCalledWith('http://host:8080/prefix/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('normalizes a trailing-slash baseUrl so cmd() posts a single slash', async () => {
+    const fetchImpl = vi.fn(async () => ({ json: async () => ({ ok: true, action: 'routes.list' }) }) as unknown as Response)
+    const client = createBrowserEngineClient({ baseUrl: 'https://host/a/b/', fetchImpl })
+    await client.cmd('routes.list')
+    expect(fetchImpl).toHaveBeenCalledWith('https://host/a/b/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
+  })
 })
 
 describe('createBrowserEngineClient.subscribe', () => {
@@ -28,5 +44,37 @@ describe('createBrowserEngineClient.subscribe', () => {
     expect(received).toEqual([{ type: 'resnapshot' }])
     unsub()
     expect(fake.close).toHaveBeenCalled()
+    expect(fake.onmessage).toBeNull() // detached so a queued frame can't fire after unsubscribe
+  })
+
+  function captureWsUrl(baseUrl: string): string {
+    let captured = ''
+    const fake = { onopen: null, onmessage: null, onclose: null, onerror: null, send: vi.fn(), close: vi.fn() }
+    const client = createBrowserEngineClient({
+      baseUrl,
+      wsFactory: (url) => {
+        captured = url
+        return fake
+      },
+    })
+    client.subscribe(['*'], () => {})
+    return captured
+  }
+
+  // Contract: the socket connects under the SAME path prefix as `cmd()` (which
+  // posts to `${baseUrl}/cmd/...`), with the scheme swapped to ws/wss.
+  it('maps an origin-only baseUrl to <origin>/ws', () => {
+    expect(captureWsUrl('http://127.0.0.1:9')).toBe('ws://127.0.0.1:9/ws')
+    expect(captureWsUrl('https://example.com')).toBe('wss://example.com/ws')
+  })
+
+  it('preserves a path-bearing baseUrl prefix (same prefix cmd posts under)', () => {
+    expect(captureWsUrl('http://host:8080/prefix')).toBe('ws://host:8080/prefix/ws')
+    expect(captureWsUrl('https://host/a/b/')).toBe('wss://host/a/b/ws')
+  })
+
+  it('swaps a mixed-case http/https scheme', () => {
+    expect(captureWsUrl('HTTP://host:9')).toBe('ws://host:9/ws')
+    expect(captureWsUrl('HTTPS://host')).toBe('wss://host/ws')
   })
 })
