@@ -11,6 +11,16 @@ function agentEvent(seq: number, sessionId: string, idx: number, kind = 'agent.m
   return { type: 'event', topic: `agent:${sessionId}`, seq, record }
 }
 
+function snapshot(seq: number, routeIds: string[]): EngineWsMessage {
+  return {
+    type: 'snapshot',
+    apiVersion: '1',
+    seq,
+    routes: routeIds.map((id) => ({ id, quest: 'q', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' })),
+    tasks: [],
+  }
+}
+
 describe('store.applyMessage', () => {
   it('hydrates routes + tasks + seq from a snapshot and marks the connection open', () => {
     useStore.getState().applyMessage({
@@ -41,12 +51,27 @@ describe('store.applyMessage', () => {
     expect(useStore.getState().transcripts['agent-001'].map((e) => e.idx)).toEqual([0])
   })
 
-  it('marks routes dirty on a route event and on resnapshot', () => {
+  it('bumps routesEpoch on a route event and again on resnapshot (so each change retriggers a refetch)', () => {
     const { applyMessage } = useStore.getState()
+    const start = useStore.getState().routesEpoch
     applyMessage({ type: 'event', topic: 'route:route-001', seq: 3, record: { kind: 'route.started' } })
-    expect(useStore.getState().routesDirty).toBe(true)
-    useStore.getState().clearDirty()
+    expect(useStore.getState().routesEpoch).toBe(start + 1)
     applyMessage({ type: 'resnapshot' })
-    expect(useStore.getState().routesDirty).toBe(true)
+    expect(useStore.getState().routesEpoch).toBe(start + 2)
+  })
+
+  it('skips a stale snapshot whose seq is older than the current seq (no data rollback)', () => {
+    const { applyMessage } = useStore.getState()
+    applyMessage(snapshot(10, ['route-new']))
+    applyMessage(snapshot(4, [])) // stale: arrives after a newer snapshot
+    const s = useStore.getState()
+    expect(s.seq).toBe(10)
+    expect(s.routes.map((r) => r.id)).toEqual(['route-new'])
+    expect(s.connection).toBe('open') // still proves liveness
+  })
+
+  it('records an error frame into the store', () => {
+    useStore.getState().applyMessage({ type: 'error', error: 'engine exploded' })
+    expect(useStore.getState().error).toBe('engine exploded')
   })
 })

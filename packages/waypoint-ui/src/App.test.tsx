@@ -35,4 +35,15 @@ describe('App', () => {
     expect(await screen.findByText('route-001 · active')).toBeInTheDocument()
     expect(await screen.findByText(/demo/)).toBeInTheDocument()
   })
+
+  it('surfaces a refetch failure in a visible error banner', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: false, action: 'agent.list', error: 'engine unreachable' } as never
+
+    render(<App client={client} />)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('engine unreachable')
+  })
 })

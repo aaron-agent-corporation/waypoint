@@ -20,7 +20,13 @@ interface UiState {
   selectedRouteId: string | null
   selectedTaskId: string | null
   activeSessionId: string | null
-  routesDirty: boolean
+  /**
+   * Monotonic counter bumped whenever routes/tasks may have changed (route event
+   * or resnapshot). A counter rather than a boolean so every change retriggers a
+   * refetch even when one is already pending — a failed refetch isn't permanently
+   * dropped, since the next event advances the epoch again.
+   */
+  routesEpoch: number
   error: string | null
 
   applyMessage(msg: EngineWsMessage): void
@@ -32,7 +38,6 @@ interface UiState {
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
-  clearDirty(): void
 }
 
 export const useStore = create<UiState>((set, get) => ({
@@ -45,16 +50,23 @@ export const useStore = create<UiState>((set, get) => ({
   selectedRouteId: null,
   selectedTaskId: null,
   activeSessionId: null,
-  routesDirty: false,
+  routesEpoch: 0,
   error: null,
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
-      set({ routes: msg.routes, tasks: msg.tasks, seq: Math.max(get().seq, msg.seq), connection: 'open' })
+      // A stale snapshot still proves the connection is live, but applying its
+      // (older) routes/tasks would roll the UI back — so keep the data + seq and
+      // only update the connection state.
+      if (msg.seq < get().seq) {
+        set({ connection: 'open' })
+        return
+      }
+      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open' })
       return
     }
     if (msg.type === 'resnapshot') {
-      set({ routesDirty: true })
+      set({ routesEpoch: get().routesEpoch + 1 })
       return
     }
     if (msg.type === 'error') {
@@ -74,7 +86,7 @@ export const useStore = create<UiState>((set, get) => ({
       set({ seq: msg.seq, transcripts: { ...transcripts, [record.sessionId]: [...current, record] } })
       return
     }
-    set({ seq: msg.seq, routesDirty: true })
+    set({ seq: msg.seq, routesEpoch: get().routesEpoch + 1 })
   },
 
   setConnection: (connection) => set({ connection }),
@@ -85,5 +97,4 @@ export const useStore = create<UiState>((set, get) => ({
   selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null }),
   selectTask: (selectedTaskId) => set({ selectedTaskId }),
   setActiveSession: (activeSessionId) => set({ activeSessionId }),
-  clearDirty: () => set({ routesDirty: false }),
 }))

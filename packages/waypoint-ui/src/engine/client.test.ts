@@ -29,4 +29,30 @@ describe('createBrowserEngineClient.subscribe', () => {
     unsub()
     expect(fake.close).toHaveBeenCalled()
   })
+
+  function captureWsUrl(baseUrl: string): string {
+    let captured = ''
+    const fake = { onopen: null, onmessage: null, onclose: null, onerror: null, send: vi.fn(), close: vi.fn() }
+    const client = createBrowserEngineClient({
+      baseUrl,
+      wsFactory: (url) => {
+        captured = url
+        return fake
+      },
+    })
+    client.subscribe(['*'], () => {})
+    return captured
+  }
+
+  // Contract: the socket connects under the SAME path prefix as `cmd()` (which
+  // posts to `${baseUrl}/cmd/...`), with the scheme swapped to ws/wss.
+  it('maps an origin-only baseUrl to <origin>/ws', () => {
+    expect(captureWsUrl('http://127.0.0.1:9')).toBe('ws://127.0.0.1:9/ws')
+    expect(captureWsUrl('https://example.com')).toBe('wss://example.com/ws')
+  })
+
+  it('preserves a path-bearing baseUrl prefix (same prefix cmd posts under)', () => {
+    expect(captureWsUrl('http://host:8080/prefix')).toBe('ws://host:8080/prefix/ws')
+    expect(captureWsUrl('https://host/a/b/')).toBe('wss://host/a/b/ws')
+  })
 })

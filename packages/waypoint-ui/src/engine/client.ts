@@ -42,9 +42,12 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
 
     subscribe(topics, onMessage, opts) {
       const base = baseUrl || (typeof location !== 'undefined' ? location.origin : '')
-      // Resolve `/ws` against the base so a path-bearing baseUrl can't produce a
-      // malformed URL; fall back to a relative path when there's no base (SSR/tests).
-      const wsUrl = base ? new URL('/ws', base.replace(/^http/, 'ws')).toString() : '/ws'
+      // Contract: the WebSocket connects under the SAME path prefix as HTTP
+      // commands. `cmd()` posts to `${baseUrl}/cmd/<name>`, so the socket is
+      // `${baseUrl}/ws` with the scheme swapped to ws/wss — a path-bearing
+      // baseUrl (e.g. http://host/prefix) yields ws://host/prefix/ws. With no
+      // base (SSR/tests) fall back to a relative `/ws`.
+      const wsUrl = base ? `${base.replace(/^http/, 'ws').replace(/\/$/, '')}/ws` : '/ws'
       const ws = wsFactory(wsUrl)
       ws.onopen = () => {
         ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))
