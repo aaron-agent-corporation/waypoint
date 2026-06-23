@@ -44,6 +44,7 @@ describe('createBrowserEngineClient.subscribe', () => {
     expect(received).toEqual([{ type: 'resnapshot' }])
     unsub()
     expect(fake.close).toHaveBeenCalled()
+    expect(fake.onmessage).toBeNull() // detached so a queued frame can't fire after unsubscribe
   })
 
   function captureWsUrl(baseUrl: string): string {

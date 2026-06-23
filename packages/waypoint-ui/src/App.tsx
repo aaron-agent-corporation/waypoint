@@ -53,32 +53,36 @@ function Console() {
     return { routes, tasks }
   }, [client])
 
-  // 2s session poll. A monotonic poll id means only the latest in-flight tick may
-  // write — a slow/late completion can't clobber a newer one or its error state.
-  const latestSessionsPoll = useRef(0)
+  // Subscribe + single-flight session poll. The poll is a recursive setTimeout
+  // (not setInterval): the next agent.list starts only after the previous one
+  // *settles*, so a slow endpoint can't overlap itself and starve — and there's
+  // only ever one in-flight request, so no stale-completion race. The `active`
+  // flag also guards the WS callback: a late message from a closed/superseded
+  // socket is dropped before it can roll the store back (snapshots are now
+  // authoritative and re-base seq, so this guard is load-bearing).
   useEffect(() => {
-    const unsubscribe = client.subscribe(['*'], applyMessage)
-    let cancelled = false
-    const tick = () => {
-      const id = ++latestSessionsPoll.current
-      const isStale = () => cancelled || id !== latestSessionsPoll.current
-      void fetchSessions()
-        .then((sessions) => {
-          if (isStale()) return
-          if (sessions) setSessions(sessions)
-          setSessionsError(null) // recovered: clear under the freshness guard
-        })
-        .catch((err) => {
-          if (isStale()) return
-          setSessionsError(toMessage(err))
-        })
+    let active = true
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const unsubscribe = client.subscribe(['*'], (msg) => {
+      if (active) applyMessage(msg)
+    })
+    const poll = async () => {
+      try {
+        const sessions = await fetchSessions()
+        if (!active) return
+        if (sessions) setSessions(sessions)
+        setSessionsError(null) // recovered
+      } catch (err) {
+        if (active) setSessionsError(toMessage(err))
+      } finally {
+        if (active) timer = setTimeout(poll, 2000)
+      }
     }
-    tick()
-    const interval = setInterval(tick, 2000)
+    void poll()
     return () => {
-      cancelled = true
+      active = false
+      if (timer) clearTimeout(timer)
       unsubscribe()
-      clearInterval(interval)
     }
   }, [client, applyMessage, fetchSessions, setSessions, setSessionsError])
 

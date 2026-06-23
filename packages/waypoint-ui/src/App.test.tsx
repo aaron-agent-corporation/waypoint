@@ -2,10 +2,11 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
+import type { EngineWsMessage, WaypointFolderRoute } from './engine/types'
 import { useStore } from './store'
 import { FakeEngineClient } from './test/fake-client'
 
-const route = (id: string) => ({ id, quest: 'q', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' })
+const route = (id: string): WaypointFolderRoute => ({ id, quest: 'q', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' })
 
 vi.mock('@xyflow/react', () => ({
   ReactFlow: () => <div data-testid="rf" />,
@@ -122,6 +123,57 @@ describe('App', () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(0) })
       expect(screen.queryByRole('alert')).toBeNull()
       expect(useStore.getState().routes.map((r) => r.id)).toContain('route-ok')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not starve the session poll when agent.list is slower than the poll interval', async () => {
+    vi.useFakeTimers()
+    try {
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      const baseCmd = client.cmd.bind(client)
+      client.cmd = (async (name: string, payload?: unknown) => {
+        if (name === 'agent.list') {
+          await new Promise((r) => setTimeout(r, 3000)) // slower than the 2s poll cadence
+          return { ok: true, action: 'agent.list', sessions: [{ id: 'agent-slow', intent: 'x', status: 'running', startedAt: 't' }] }
+        }
+        return baseCmd(name, payload)
+      }) as never
+
+      render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // open the gate, start first poll
+      // With the old setInterval+id guard the response (resolving at 3s) would be
+      // discarded as stale by the 2s tick; the single-flight loop applies it.
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+      expect(useStore.getState().sessions.map((s) => s.id)).toContain('agent-slow')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('drops a late snapshot delivered after the subscription is cleaned up', async () => {
+    vi.useFakeTimers()
+    try {
+      let captured: ((m: EngineWsMessage) => void) | undefined
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+      client.subscribe = ((_topics: string[], onMessage: (m: EngineWsMessage) => void) => {
+        captured = onMessage
+        return () => {}
+      }) as typeof client.subscribe
+
+      const { unmount } = render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      act(() => captured!({ type: 'snapshot', apiVersion: '1', seq: 10, routes: [route('route-fresh')], tasks: [] }))
+      expect(useStore.getState().routes.map((r) => r.id)).toEqual(['route-fresh'])
+
+      unmount() // cleanup sets active = false
+      // A late lower-seq snapshot from the now-closed socket must not roll the store back.
+      act(() => captured!({ type: 'snapshot', apiVersion: '1', seq: 1, routes: [route('route-stale')], tasks: [] }))
+      expect(useStore.getState().routes.map((r) => r.id)).toEqual(['route-fresh'])
     } finally {
       vi.useRealTimers()
     }

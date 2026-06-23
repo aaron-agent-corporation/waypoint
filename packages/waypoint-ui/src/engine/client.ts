@@ -70,7 +70,15 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
           // ignore non-JSON frames
         }
       }
-      return () => ws.close()
+      return () => {
+        // Detach handlers before closing so a frame already queued on the socket
+        // can't still invoke onMessage after the caller has unsubscribed.
+        ws.onopen = null
+        ws.onmessage = null
+        ws.onclose = null
+        ws.onerror = null
+        ws.close()
+      }
     },
   }
 }
