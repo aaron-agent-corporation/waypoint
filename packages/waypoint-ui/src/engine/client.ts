@@ -24,10 +24,11 @@ export interface BrowserEngineClient {
   subscribe(topics: string[], onMessage: (msg: EngineWsMessage) => void, opts?: { lastSeq?: number }): () => void
 }
 
-/** Swap only the `http:`/`https:` scheme to `ws:`/`wss:`, leaving other schemes untouched. */
+/** Swap only the `http:`/`https:` scheme (case-insensitively) to `ws:`/`wss:`, leaving other schemes untouched. */
 function toWsScheme(url: string): string {
-  if (url.startsWith('https:')) return `wss:${url.slice('https:'.length)}`
-  if (url.startsWith('http:')) return `ws:${url.slice('http:'.length)}`
+  const lower = url.toLowerCase()
+  if (lower.startsWith('https:')) return `wss:${url.slice('https:'.length)}`
+  if (lower.startsWith('http:')) return `ws:${url.slice('http:'.length)}`
   return url
 }
 

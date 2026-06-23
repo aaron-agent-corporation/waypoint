@@ -71,4 +71,9 @@ describe('createBrowserEngineClient.subscribe', () => {
     expect(captureWsUrl('http://host:8080/prefix')).toBe('ws://host:8080/prefix/ws')
     expect(captureWsUrl('https://host/a/b/')).toBe('wss://host/a/b/ws')
   })
+
+  it('swaps a mixed-case http/https scheme', () => {
+    expect(captureWsUrl('HTTP://host:9')).toBe('ws://host:9/ws')
+    expect(captureWsUrl('HTTPS://host')).toBe('wss://host/ws')
+  })
 })
