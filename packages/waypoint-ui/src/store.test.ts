@@ -74,4 +74,12 @@ describe('store.applyMessage', () => {
     useStore.getState().applyMessage({ type: 'error', error: 'engine exploded' })
     expect(useStore.getState().error).toBe('engine exploded')
   })
+
+  it('clears a prior WS error frame when a fresh snapshot arrives (same-channel recovery)', () => {
+    const { applyMessage } = useStore.getState()
+    applyMessage({ type: 'error', error: 'engine exploded' })
+    expect(useStore.getState().error).toBe('engine exploded')
+    applyMessage(snapshot(1, ['route-001']))
+    expect(useStore.getState().error).toBeNull()
+  })
 })

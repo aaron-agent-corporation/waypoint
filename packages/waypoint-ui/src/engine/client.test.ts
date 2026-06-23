@@ -22,6 +22,13 @@ describe('createBrowserEngineClient.cmd', () => {
     await client.cmd('routes.list')
     expect(fetchImpl).toHaveBeenCalledWith('http://host:8080/prefix/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
   })
+
+  it('normalizes a trailing-slash baseUrl so cmd() posts a single slash', async () => {
+    const fetchImpl = vi.fn(async () => ({ json: async () => ({ ok: true, action: 'routes.list' }) }) as unknown as Response)
+    const client = createBrowserEngineClient({ baseUrl: 'https://host/a/b/', fetchImpl })
+    await client.cmd('routes.list')
+    expect(fetchImpl).toHaveBeenCalledWith('https://host/a/b/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
+  })
 })
 
 describe('createBrowserEngineClient.subscribe', () => {

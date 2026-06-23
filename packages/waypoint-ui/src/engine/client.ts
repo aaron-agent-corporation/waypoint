@@ -32,7 +32,9 @@ function toWsScheme(url: string): string {
 }
 
 export function createBrowserEngineClient(options: BrowserEngineClientOptions = {}): BrowserEngineClient {
-  const baseUrl = options.baseUrl ?? ''
+  // Normalize once so cmd() (`${baseUrl}/cmd/...`) and subscribe() (`${baseUrl}/ws`)
+  // share identical base handling — a trailing slash would otherwise yield `//cmd`.
+  const baseUrl = (options.baseUrl ?? '').replace(/\/$/, '')
   const headers = options.headers ?? {}
   const doFetch = options.fetchImpl ?? globalThis.fetch.bind(globalThis)
   const wsFactory = options.wsFactory ?? ((url: string) => new WebSocket(url) as unknown as WebSocketLike)
@@ -53,8 +55,9 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
       // commands. `cmd()` posts to `${baseUrl}/cmd/<name>`, so the socket is
       // `${baseUrl}/ws` with the scheme swapped to ws/wss — a path-bearing
       // baseUrl (e.g. http://host/prefix) yields ws://host/prefix/ws. With no
-      // base (SSR/tests) fall back to a relative `/ws`.
-      const wsUrl = base ? `${toWsScheme(base).replace(/\/$/, '')}/ws` : '/ws'
+      // base (SSR/tests) fall back to a relative `/ws`. (base is already
+      // trailing-slash-normalized at construction.)
+      const wsUrl = base ? `${toWsScheme(base)}/ws` : '/ws'
       const ws = wsFactory(wsUrl)
       ws.onopen = () => {
         ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))

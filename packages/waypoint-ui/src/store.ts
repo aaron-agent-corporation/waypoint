@@ -75,7 +75,9 @@ export const useStore = create<UiState>((set, get) => ({
         set({ connection: 'open' })
         return
       }
-      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open' })
+      // A fresh snapshot is same-channel evidence the engine recovered, so it
+      // clears any prior WS `error` frame (HTTP-poll errors clear independently).
+      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open', error: null })
       return
     }
     if (msg.type === 'resnapshot') {
