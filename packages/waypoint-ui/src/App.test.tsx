@@ -88,4 +88,42 @@ describe('App', () => {
       vi.useRealTimers()
     }
   })
+
+  it('clears a routes banner on a later epoch success after the prior epoch exhausted its retries', async () => {
+    vi.useFakeTimers()
+    try {
+      let routesOk = false
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+      const baseCmd = client.cmd.bind(client)
+      client.cmd = (async (name: string, payload?: unknown) => {
+        if (name === 'routes.list') {
+          return routesOk ? { ok: true, action: 'routes.list', routes: [route('route-ok')] } : { ok: false, action: 'routes.list', error: 'down' }
+        }
+        if (name === 'tasks.list') return { ok: true, action: 'tasks.list', tasks: [] }
+        return baseCmd(name, payload)
+      }) as never
+
+      render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // open the gate
+
+      // Epoch 1: routes fail through the entire bounded retry (4 attempts @ 0/2/4/6s).
+      act(() => client.emit({ type: 'event', topic: 'route:r', seq: 1, record: { kind: 'route.started' } }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      expect(screen.getByRole('alert')).toHaveTextContent('down')
+
+      // Epoch 2: routes now succeed → the next epoch's success clears the banner.
+      routesOk = true
+      act(() => client.emit({ type: 'event', topic: 'route:r', seq: 2, record: { kind: 'route.updated' } }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(useStore.getState().routes.map((r) => r.id)).toContain('route-ok')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

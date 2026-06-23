@@ -85,7 +85,11 @@ function Console() {
   // Refetch routes/tasks whenever the epoch advances. The epoch is marked applied
   // — and the data/error writes happen — only for the *live* attempt (`!cancelled`),
   // so a stale response from a superseded epoch can't roll the store back. A failed
-  // refetch retries (bounded) and is also retriggered by the next epoch bump.
+  // refetch retries (bounded). NOTE: once the bounded retry exhausts, routes/tasks
+  // are not re-fetched until the next epoch bump (a route event/resnapshot) — there
+  // is no independent routes poll. This is intended; a longer engine blip leaves the
+  // route panel stale (banner up) until the next event, while the session poll
+  // recovers on its own 2s cadence.
   const appliedEpochRef = useRef(0)
   useEffect(() => {
     if (routesEpoch === appliedEpochRef.current) return
@@ -114,26 +118,26 @@ function Console() {
     }
   }, [routesEpoch, fetchRoutes, setRoutes, setTasks, setRoutesError])
 
-  const banner = [routesError, sessionsError, error].filter(Boolean).join(' · ')
+  // Per-source rows so dismissing a recovered source can't hide a still-active
+  // outage on another (routesError has no independent poll, so a shared Dismiss
+  // would leave it silently hidden until the next route event).
+  const errors: { key: string; msg: string; clear: () => void }[] = []
+  if (routesError) errors.push({ key: 'routes', msg: routesError, clear: () => setRoutesError(null) })
+  if (sessionsError) errors.push({ key: 'sessions', msg: sessionsError, clear: () => setSessionsError(null) })
+  if (error) errors.push({ key: 'engine', msg: error, clear: () => setError(null) })
 
   return (
-    <div style={{ display: 'grid', gridTemplateRows: banner ? 'auto 1fr' : '1fr', height: '100%' }}>
-      {banner && (
-        <div
-          role="alert"
-          style={{ background: '#7f1d1d', color: '#fff', padding: '4px 8px', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}
-        >
-          <span>{banner}</span>
-          <button
-            onClick={() => {
-              setRoutesError(null)
-              setSessionsError(null)
-              setError(null)
-            }}
-            style={{ marginLeft: 8 }}
-          >
-            Dismiss
-          </button>
+    <div style={{ display: 'grid', gridTemplateRows: errors.length ? 'auto 1fr' : '1fr', height: '100%' }}>
+      {errors.length > 0 && (
+        <div role="alert" style={{ background: '#7f1d1d', color: '#fff', fontSize: 12 }}>
+          {errors.map((e) => (
+            <div key={e.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}>
+              <span>{e.msg}</span>
+              <button onClick={e.clear} style={{ marginLeft: 8 }}>
+                Dismiss
+              </button>
+            </div>
+          ))}
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 360px', minHeight: 0 }}>

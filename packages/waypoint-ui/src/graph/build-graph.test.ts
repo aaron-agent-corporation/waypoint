@@ -40,6 +40,13 @@ describe('buildRouteGraph', () => {
     expect(edges.some((e) => e.id === 'b-task-001-task-002')).toBe(true)
   })
 
+  it('drops a blocker edge whose source is not a task in this route', () => {
+    const { edges } = buildRouteGraph([
+      task({ id: 'task-001', wave: 10, metadata: { beads: { blockers: ['task-elsewhere'] } } }),
+    ])
+    expect(edges.some((e) => e.source === 'task-elsewhere')).toBe(false)
+  })
+
   it('returns empty graph for no tasks', () => {
     expect(buildRouteGraph([])).toEqual({ nodes: [], edges: [] })
   })

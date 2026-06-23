@@ -60,14 +60,24 @@ describe('store.applyMessage', () => {
     expect(useStore.getState().routesEpoch).toBe(start + 2)
   })
 
-  it('skips a stale snapshot whose seq is older than the current seq (no data rollback)', () => {
+  it('rehydrates from a lower-seq snapshot and re-bases seq (engine restart / seq-reset recovery)', () => {
     const { applyMessage } = useStore.getState()
-    applyMessage(snapshot(10, ['route-new']))
-    applyMessage(snapshot(4, [])) // stale: arrives after a newer snapshot
-    const s = useStore.getState()
-    expect(s.seq).toBe(10)
-    expect(s.routes.map((r) => r.id)).toEqual(['route-new'])
-    expect(s.connection).toBe('open') // still proves liveness
+    applyMessage(snapshot(10, ['route-old']))
+    expect(useStore.getState().seq).toBe(10)
+
+    // Engine restarts → fresh authoritative snapshot with a LOWER seq + new state.
+    applyMessage(snapshot(4, ['route-new']))
+    let s = useStore.getState()
+    expect(s.seq).toBe(4) // re-based to the new hub seq, not held at the stale 10
+    expect(s.routes.map((r) => r.id)).toEqual(['route-new']) // rehydrated, not stranded
+    expect(s.connection).toBe('open')
+
+    // A post-restart event (seq > the re-based mark) now flows and drives a refetch.
+    const epoch = useStore.getState().routesEpoch
+    applyMessage({ type: 'event', topic: 'route:route-new', seq: 5, record: { kind: 'route.updated' } })
+    s = useStore.getState()
+    expect(s.routesEpoch).toBe(epoch + 1)
+    expect(s.seq).toBe(5)
   })
 
   it('records an error frame into the store', () => {
@@ -75,11 +85,13 @@ describe('store.applyMessage', () => {
     expect(useStore.getState().error).toBe('engine exploded')
   })
 
-  it('clears a prior WS error frame when a fresh snapshot arrives (same-channel recovery)', () => {
-    const { applyMessage } = useStore.getState()
+  it('clears prior WS + routes errors when a fresh snapshot arrives (same-channel recovery)', () => {
+    const { applyMessage, setRoutesError } = useStore.getState()
     applyMessage({ type: 'error', error: 'engine exploded' })
-    expect(useStore.getState().error).toBe('engine exploded')
+    setRoutesError('routes.list failed')
     applyMessage(snapshot(1, ['route-001']))
-    expect(useStore.getState().error).toBeNull()
+    const s = useStore.getState()
+    expect(s.error).toBeNull()
+    expect(s.routesError).toBeNull()
   })
 })

@@ -66,18 +66,25 @@ export const useStore = create<UiState>((set, get) => ({
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
-      // A stale snapshot still proves the connection is live, but applying its
-      // (older) routes/tasks would roll the UI back — so keep the data + seq and
-      // only update the connection state. Safe because snapshot.seq and event.seq
-      // are the same monotonic hub counter (engine-host ws.ts: snapshot seq = the
-      // hub's currentSeq() at subscribe, events flushed only when seq > that).
-      if (msg.seq < get().seq) {
-        set({ connection: 'open' })
-        return
-      }
-      // A fresh snapshot is same-channel evidence the engine recovered, so it
-      // clears any prior WS `error` frame (HTTP-poll errors clear independently).
-      set({ routes: msg.routes, tasks: msg.tasks, seq: msg.seq, connection: 'open', error: null })
+      // A snapshot is the authoritative full state at its seq, so it is applied
+      // and *re-bases* the seq high-water mark — even when msg.seq is LOWER than
+      // the current mark. A lower-seq snapshot only arises on a (re)subscribe to
+      // a restarted / seq-reset engine (the host sends exactly one snapshot per
+      // fresh subscribe; resnapshot-on-reset is the documented recovery — see
+      // engine-host event-hub.ts / ws.ts). Re-basing seq lets the subsequent
+      // lower-seq events pass the event high-water guard below instead of
+      // stranding routes/tasks. A genuinely-stale *duplicate* snapshot can't
+      // occur on the protocol, so there is nothing to guard against here. The
+      // fresh full state is also same-channel recovery evidence, so it clears
+      // stale routes/WS errors.
+      set({
+        routes: msg.routes,
+        tasks: msg.tasks,
+        seq: msg.seq,
+        connection: 'open',
+        routesError: null,
+        error: null,
+      })
       return
     }
     if (msg.type === 'resnapshot') {
