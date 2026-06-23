@@ -27,6 +27,13 @@ interface UiState {
    * dropped, since the next event advances the epoch again.
    */
   routesEpoch: number
+  /**
+   * Errors are kept per-source so a healthy poll of one endpoint can't clear an
+   * outage on another: `sessionsError` ← agent.list poll, `routesError` ←
+   * routes/tasks refresh, `error` ← engine-pushed WS error frames.
+   */
+  sessionsError: string | null
+  routesError: string | null
   error: string | null
 
   applyMessage(msg: EngineWsMessage): void
@@ -34,6 +41,8 @@ interface UiState {
   setRoutes(r: WaypointFolderRoute[]): void
   setTasks(t: WaypointFolderTask[]): void
   setSessions(s: AgentSessionSummary[]): void
+  setSessionsError(e: string | null): void
+  setRoutesError(e: string | null): void
   setError(e: string | null): void
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
@@ -51,13 +60,17 @@ export const useStore = create<UiState>((set, get) => ({
   selectedTaskId: null,
   activeSessionId: null,
   routesEpoch: 0,
+  sessionsError: null,
+  routesError: null,
   error: null,
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
       // A stale snapshot still proves the connection is live, but applying its
       // (older) routes/tasks would roll the UI back — so keep the data + seq and
-      // only update the connection state.
+      // only update the connection state. Safe because snapshot.seq and event.seq
+      // are the same monotonic hub counter (engine-host ws.ts: snapshot seq = the
+      // hub's currentSeq() at subscribe, events flushed only when seq > that).
       if (msg.seq < get().seq) {
         set({ connection: 'open' })
         return
@@ -93,6 +106,8 @@ export const useStore = create<UiState>((set, get) => ({
   setRoutes: (routes) => set({ routes }),
   setTasks: (tasks) => set({ tasks }),
   setSessions: (sessions) => set({ sessions }),
+  setSessionsError: (sessionsError) => set({ sessionsError }),
+  setRoutesError: (routesError) => set({ routesError }),
   setError: (error) => set({ error }),
   selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null }),
   selectTask: (selectedTaskId) => set({ selectedTaskId }),

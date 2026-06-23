@@ -13,6 +13,15 @@ describe('createBrowserEngineClient.cmd', () => {
     expect(JSON.parse(init.body as string)).toEqual({ routeId: 'r1' })
     expect(res).toEqual({ ok: true, action: 'routes.list', routes: [] })
   })
+
+  // Pins the contract the ws URL relies on: cmd() preserves a path-bearing
+  // baseUrl prefix, so `${baseUrl}/cmd/...` and `${baseUrl}/ws` share a prefix.
+  it('preserves a path-bearing baseUrl prefix when posting commands', async () => {
+    const fetchImpl = vi.fn(async () => ({ json: async () => ({ ok: true, action: 'routes.list' }) }) as unknown as Response)
+    const client = createBrowserEngineClient({ baseUrl: 'http://host:8080/prefix', fetchImpl })
+    await client.cmd('routes.list')
+    expect(fetchImpl).toHaveBeenCalledWith('http://host:8080/prefix/cmd/routes.list', expect.objectContaining({ method: 'POST' }))
+  })
 })
 
 describe('createBrowserEngineClient.subscribe', () => {

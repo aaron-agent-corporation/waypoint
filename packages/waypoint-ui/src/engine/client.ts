@@ -24,6 +24,13 @@ export interface BrowserEngineClient {
   subscribe(topics: string[], onMessage: (msg: EngineWsMessage) => void, opts?: { lastSeq?: number }): () => void
 }
 
+/** Swap only the `http:`/`https:` scheme to `ws:`/`wss:`, leaving other schemes untouched. */
+function toWsScheme(url: string): string {
+  if (url.startsWith('https:')) return `wss:${url.slice('https:'.length)}`
+  if (url.startsWith('http:')) return `ws:${url.slice('http:'.length)}`
+  return url
+}
+
 export function createBrowserEngineClient(options: BrowserEngineClientOptions = {}): BrowserEngineClient {
   const baseUrl = options.baseUrl ?? ''
   const headers = options.headers ?? {}
@@ -47,7 +54,7 @@ export function createBrowserEngineClient(options: BrowserEngineClientOptions = 
       // `${baseUrl}/ws` with the scheme swapped to ws/wss — a path-bearing
       // baseUrl (e.g. http://host/prefix) yields ws://host/prefix/ws. With no
       // base (SSR/tests) fall back to a relative `/ws`.
-      const wsUrl = base ? `${base.replace(/^http/, 'ws').replace(/\/$/, '')}/ws` : '/ws'
+      const wsUrl = base ? `${toWsScheme(base).replace(/\/$/, '')}/ws` : '/ws'
       const ws = wsFactory(wsUrl)
       ws.onopen = () => {
         ws.send(JSON.stringify({ subscribe: { topics, ...(opts?.lastSeq != null ? { lastSeq: opts.lastSeq } : {}) } }))

@@ -1,9 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
 import { useStore } from './store'
 import { FakeEngineClient } from './test/fake-client'
+
+const route = (id: string) => ({ id, quest: 'q', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' })
 
 vi.mock('@xyflow/react', () => ({
   ReactFlow: () => <div data-testid="rf" />,
@@ -45,5 +47,45 @@ describe('App', () => {
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('engine unreachable')
+  })
+
+  it('retries a failing routes refresh (bounded) and applies + clears the banner on eventual success', async () => {
+    vi.useFakeTimers()
+    try {
+      let routesCalls = 0
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+      const baseCmd = client.cmd.bind(client)
+      client.cmd = (async (name: string, payload?: unknown) => {
+        if (name === 'routes.list') {
+          routesCalls += 1
+          return routesCalls <= 2
+            ? { ok: false, action: 'routes.list', error: 'flaky' }
+            : { ok: true, action: 'routes.list', routes: [route('route-xyz')] }
+        }
+        if (name === 'tasks.list') return { ok: true, action: 'tasks.list', tasks: [] }
+        return baseCmd(name, payload)
+      }) as never
+
+      render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // open the gate
+
+      // A route event bumps the epoch → routes refetch begins (and fails twice).
+      act(() => client.emit({ type: 'event', topic: 'route:route-xyz', seq: 1, record: { kind: 'route.started' } }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      expect(routesCalls).toBe(1)
+      expect(screen.getByRole('alert')).toHaveTextContent('flaky')
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) }) // retry 1 — still fails
+      expect(routesCalls).toBe(2)
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) }) // retry 2 — succeeds
+      expect(routesCalls).toBe(3)
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(useStore.getState().routes.map((r) => r.id)).toContain('route-xyz')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
