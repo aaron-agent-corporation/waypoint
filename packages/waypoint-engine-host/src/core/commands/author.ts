@@ -128,7 +128,11 @@ export function registerAuthorCommands(bus: CommandBus, ctx: EngineContext): voi
     // written into recipes/ (or vice-versa) and shadow a bundled entry of the same
     // slug in the overlay merge. Enforce that kind agrees with the target directory.
     const expectedDir = kind === 'quest' ? 'quests' : 'recipes'
-    if (target.split('/')[0] !== expectedDir) {
+    // Derive the directory from TARGET_PATH's own capture group rather than
+    // re-splitting the string, so the check stays correct independent of any
+    // leading-`./`, leading-`/`, or empty-segment edge cases (P3-3).
+    const targetDir = TARGET_PATH.exec(target)?.[1]
+    if (targetDir !== expectedDir) {
       throw new EngineError(`Proposal kind '${kind}' does not match target directory: ${target}`, {
         code: 'VALIDATION',
         field: 'id',

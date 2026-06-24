@@ -58,15 +58,27 @@ export interface LoadEntriesResult<TManifest> {
   readonly errors: CatalogEntryError[]
 }
 
+export interface LoadEntriesOptions {
+  /**
+   * Throw on the first collected parse error instead of returning it as data.
+   * Used by the curated, immutable bundled catalog where a malformed manifest is
+   * a packaging defect that must fail loud at load. Workspace loading omits it.
+   */
+  readonly strict?: boolean
+}
+
 /** Render a parse error as a one-line skip-and-warn message for listing surfaces. */
 export function formatCatalogEntryWarning(error: CatalogEntryError): string {
   return `skipped malformed manifest ${error.relativePath}: ${error.message}`
 }
 
 /**
- * Find the parse error for a requested slug. Prefer the leniently-read slug, but
- * fall back to the file basename (`<slug>.ya?ml`) so a file too malformed to yield
- * a slug still scopes to the requested entry instead of degrading to "unknown".
+ * Find the parse error for a requested slug, for MESSAGE scoping only (it never
+ * decides what executes — tombstoning lives in the workspace overlay and keys on
+ * exact relativePath). Prefer the leniently-read slug; fall back to the file
+ * basename so a brand-new authored file too malformed to yield a slug still gets
+ * a parse-specific message instead of degrading to "unknown". A best-effort
+ * basename mismatch here is harmless: it only changes wording, never resolution.
  */
 function findEntryError(errors: readonly CatalogEntryError[], slug: string): CatalogEntryError | undefined {
   return (
@@ -109,8 +121,10 @@ export async function loadBundledWaypointCatalog(
   const questsDir = join(root, 'quests')
   const recipesDir = join(root, 'recipes')
 
-  const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir)
-  const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir)
+  // strict: the bundle is curated and immutable — a malformed manifest is a build
+  // defect and must fail loud at load, not degrade to a skip-and-warn (P2-1).
+  const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir, { strict: true })
+  const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir, { strict: true })
 
   return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors })
 }
@@ -242,48 +256,54 @@ async function hasYamlFile(path: string): Promise<boolean> {
   }
 }
 
-export async function loadQuestEntries(root: string): Promise<LoadEntriesResult<CatalogQuestManifest>> {
+export function loadQuestEntries(
+  root: string,
+  options: LoadEntriesOptions = {},
+): Promise<LoadEntriesResult<CatalogQuestManifest>> {
+  return loadEntries(root, parseCatalogQuestManifest, 'Quest', options)
+}
+
+export function loadRecipeEntries(
+  root: string,
+  options: LoadEntriesOptions = {},
+): Promise<LoadEntriesResult<CatalogRecipeManifest>> {
+  return loadEntries(root, parseCatalogRecipeManifest, 'Recipe', options)
+}
+
+async function loadEntries<TManifest extends { readonly slug: string }>(
+  root: string,
+  parse: (text: string) => TManifest,
+  kind: 'Quest' | 'Recipe',
+  options: LoadEntriesOptions,
+): Promise<LoadEntriesResult<TManifest>> {
   const files = await walkYamlFiles(root)
-  const entries: WaypointCatalogEntry<CatalogQuestManifest>[] = []
+  const entries: WaypointCatalogEntry<TManifest>[] = []
   const errors: CatalogEntryError[] = []
   for (const file of files) {
-    const text = await readFile(file, 'utf8')
+    const relativePath = relative(root, file)
+    let text: string
     try {
-      const manifest = parseCatalogQuestManifest(text)
-      entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
+      // readFile is inside the try so an IO race (a half-saved file renamed/deleted
+      // mid-load) is collected as data rather than aborting the whole load (P3-1).
+      text = await readFile(file, 'utf8')
     } catch (err) {
-      errors.push(toCatalogEntryError(err, text, file, root))
+      errors.push({ path: file, relativePath, message: err instanceof Error ? err.message : String(err) })
+      continue
+    }
+    try {
+      const manifest = parse(text)
+      entries.push({ slug: manifest.slug, manifest, path: file, relativePath })
+    } catch (err) {
+      errors.push({ path: file, relativePath, slug: readSlugLenient(text), message: err instanceof Error ? err.message : String(err) })
     }
   }
   entries.sort((a, b) => a.slug.localeCompare(b.slug))
-  return { entries, errors }
-}
-
-export async function loadRecipeEntries(root: string): Promise<LoadEntriesResult<CatalogRecipeManifest>> {
-  const files = await walkYamlFiles(root)
-  const entries: WaypointCatalogEntry<CatalogRecipeManifest>[] = []
-  const errors: CatalogEntryError[] = []
-  for (const file of files) {
-    const text = await readFile(file, 'utf8')
-    try {
-      const manifest = parseCatalogRecipeManifest(text)
-      entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
-    } catch (err) {
-      errors.push(toCatalogEntryError(err, text, file, root))
-    }
+  if (options.strict && errors.length > 0) {
+    // The curated, immutable bundle must fail loud: a malformed manifest there is a
+    // packaging defect, not an authoring mistake. Workspace loading stays tolerant.
+    throw new Error(`invalid ${kind} manifest: ${errors[0].relativePath}: ${errors[0].message}`)
   }
-  entries.sort((a, b) => a.slug.localeCompare(b.slug))
   return { entries, errors }
-}
-
-/** Build a CatalogEntryError, reading the slug leniently for best-effort scoping. */
-function toCatalogEntryError(err: unknown, text: string, file: string, root: string): CatalogEntryError {
-  return {
-    path: file,
-    relativePath: relative(root, file),
-    slug: readSlugLenient(text),
-    message: err instanceof Error ? err.message : String(err),
-  }
 }
 
 function readSlugLenient(text: string): string | undefined {

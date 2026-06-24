@@ -1,9 +1,9 @@
-import { mkdtemp } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { loadBundledWaypointCatalog } from './bundled.ts'
+import { loadBundledWaypointCatalog, loadRecipeEntries } from './bundled.ts'
 import { installQuestCatalog } from './install.ts'
 
 async function makeTempProject(): Promise<string> {
@@ -43,5 +43,20 @@ describe('bundled Waypoint catalog', () => {
     expect(result.installedQuestPaths).toEqual(['.waypoint/quests/waypoint.yaml'])
     expect(result.installedRecipePaths).toContain('.waypoint/recipes/waypoint/doc-writer.yaml')
     expect(result.installedRecipePaths).toHaveLength(result.recipes.length)
+  })
+
+  // P2-1: the curated, immutable bundle must fail loud on a malformed manifest
+  // (a packaging defect), unlike the tolerant collect-and-warn workspace load.
+  it('strict loading throws on a malformed manifest; tolerant loading collects it', async () => {
+    const dir = await makeTempProject()
+    await mkdir(dir, { recursive: true })
+    await writeFile(join(dir, 'good.yaml'), 'schema_version: 1\nslug: good\nname: Good\nprompt: Do it.\n', 'utf8')
+    await writeFile(join(dir, 'bad.yaml'), 'schema_version: 2\nslug: bad\nname: Bad\n', 'utf8')
+
+    await expect(loadRecipeEntries(dir, { strict: true })).rejects.toThrow(/invalid Recipe manifest: bad\.yaml/)
+
+    const tolerant = await loadRecipeEntries(dir)
+    expect(tolerant.entries.map((e) => e.slug)).toEqual(['good'])
+    expect(tolerant.errors).toHaveLength(1)
   })
 })
