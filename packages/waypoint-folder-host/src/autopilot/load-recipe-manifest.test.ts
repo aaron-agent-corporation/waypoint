@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -15,5 +15,19 @@ describe('autopilot loadRecipeManifest default path', () => {
 
     const manifest = await loadRecipeManifest(root, someBundledSlug)
     expect(manifest.slug).toBe(someBundledSlug)
+  })
+
+  it('loads an authored recipe (with prompt) from .waypoint/recipes via the autopilot execution path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'wp-authored-recipe-'))
+    const recipesDir = join(root, '.waypoint', 'recipes')
+    await mkdir(recipesDir, { recursive: true })
+    const slug = 'authored-do-work'
+    const yaml = `schema_version: 1\nslug: ${slug}\nname: Authored Do Work\nprompt: Do the work.\n`
+    await writeFile(join(recipesDir, `${slug}.yaml`), yaml, 'utf8')
+
+    const manifest = await loadRecipeManifest(root, slug)
+    expect(manifest.slug).toBe(slug)
+    expect(manifest.prompt).toBeTruthy()
+    expect(manifest.prompt.trim().length).toBeGreaterThan(0)
   })
 })

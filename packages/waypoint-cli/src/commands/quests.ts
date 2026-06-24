@@ -25,7 +25,7 @@ export async function runQuestsCommand(args: readonly string[], io: WaypointCliI
   }
 
   if (additional.length > 0) {
-    io.stdout('Additional bundled Quests')
+    io.stdout('Additional Quests')
     for (const quest of additional) {
       io.stdout(`- ${quest.slug}: ${quest.name}`)
     }

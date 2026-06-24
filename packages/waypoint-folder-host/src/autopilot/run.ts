@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readFile, readdir, stat } from 'node:fs/promises'
 import { isAbsolute, join, normalize } from 'node:path'
 
-import { parseRecipeManifest } from '@waypoint/core'
+import { isRecipeManifest, parseRecipeManifest } from '@waypoint/core'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { readWaypointProjectConfig, type WaypointProjectConfig } from '../project/config.ts'
 import { getWaypointProjectPaths } from '../project/root.ts'
@@ -435,13 +435,13 @@ export async function loadRecipeManifest(projectRoot: string, recipeSlug: string
   }
 
   // Default path (D5): locate the winning recipe file via the workspace overlay
-  // (workspace > bundled), then parse it with the existing parser.
+  // (workspace > bundled). The catalog already has the parsed manifest in memory;
+  // validate via type guard to avoid a second disk read (N2 fix).
   const catalog = await loadWorkspaceWaypointCatalog(projectRoot)
   const entry = catalog.recipeEntries.find((candidate) => candidate.slug === recipeSlug)
   if (!entry) throw new Error(`Recipe not found in local catalog: ${recipeSlug}`)
-  const parsed = parseRecipeManifest(await readFile(entry.path, 'utf8'))
-  if (!parsed.ok) throw new Error(`invalid Recipe manifest: ${entry.path}`)
-  return parsed.manifest
+  if (!isRecipeManifest(entry.manifest)) throw new Error(`invalid Recipe manifest: ${entry.path}`)
+  return entry.manifest
 }
 
 async function walkYamlFiles(root: string): Promise<string[]> {

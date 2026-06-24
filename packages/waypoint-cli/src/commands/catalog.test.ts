@@ -44,7 +44,7 @@ describe('catalog commands', () => {
     expect(output).toContain(
       '  Best for: attorney referral handoff package assembly with safe document review and QC',
     )
-    expect(output).toContain('Additional bundled Quests')
+    expect(output).toContain('Additional Quests')
   })
 
   it('lists Recipes referenced by a bundled Quest', async () => {

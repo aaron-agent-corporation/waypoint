@@ -6,6 +6,7 @@ import { cleanup, makeTempDir } from './helpers/workspace.ts'
 const RECIPE_YAML = `schema_version: 1
 slug: authored-recipe
 name: Authored Recipe
+prompt: Do the work.
 `
 
 const QUEST_YAML = `schema_version: 1
