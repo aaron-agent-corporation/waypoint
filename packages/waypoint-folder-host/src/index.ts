@@ -34,6 +34,7 @@ export type {
   WaypointRouteBackendMode,
 } from './project/config.ts'
 export { loadBundledWaypointCatalog } from './catalog/bundled.ts'
+export { loadWorkspaceWaypointCatalog } from './catalog/workspace.ts'
 export type {
   BundledWaypointCatalog,
   ResolveCatalogQuestRecipesResult,
