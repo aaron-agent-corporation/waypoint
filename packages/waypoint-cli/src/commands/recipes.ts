@@ -13,6 +13,9 @@ export async function runRecipesCommand(args: readonly string[], io: WaypointCli
   const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
 
   if (quest) {
+    // Resolution-only surface: lists the recipe winners THIS quest references.
+    // Unrelated malformed files are out of scope; a malformed file the quest does
+    // reference fails loud below. Skip-and-warn is for the unscoped listing only.
     const resolved = catalog.resolveQuestRecipes(quest)
     if (!resolved.ok) {
       io.stderr(resolved.message)

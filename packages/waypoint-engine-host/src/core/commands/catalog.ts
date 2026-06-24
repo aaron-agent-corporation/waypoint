@@ -24,7 +24,10 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
       if (resolved.ok === false) {
         throw new EngineError(resolved.message, { code: 'NOT_FOUND', field: 'quest' })
       }
-      // Keep the payload shape stable across both branches (B4): always include warnings.
+      // The quest-scoped branch is resolution-only: it lists the recipe winners
+      // THIS quest references. Unrelated malformed files are out of scope (a
+      // malformed file the quest *does* reference already fails loud above), so
+      // warnings is always empty here — kept for payload-shape stability (B4/P3-1).
       return ok('catalog.recipes', { quest: input.quest, recipes: resolved.recipes, warnings: [] })
     }
     return ok('catalog.recipes', {

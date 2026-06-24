@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 
 import { getWaypointProjectPaths } from '../project/root.ts'
 import {
@@ -48,10 +48,19 @@ export async function loadWorkspaceWaypointCatalog(projectRoot: string): Promise
   })
 }
 
-/** The leniently-read slugs of the workspace files that failed to parse. */
+/**
+ * The identities of the workspace files that failed to parse — keyed by the
+ * leniently-read slug AND the file basename. This MUST match findEntryError's
+ * keying (slug → basename): a file too malformed to yield a slug still tombstones
+ * its bundled twin by filename, so the slug-less case fails loud on resolve
+ * instead of silently running the bundled implementation.
+ */
 function erroredSlugs(errors: readonly CatalogEntryError[]): ReadonlySet<string> {
   const slugs = new Set<string>()
-  for (const error of errors) if (error.slug) slugs.add(error.slug)
+  for (const error of errors) {
+    if (error.slug) slugs.add(error.slug)
+    slugs.add(basename(error.relativePath).replace(/\.ya?ml$/, ''))
+  }
   return slugs
 }
 

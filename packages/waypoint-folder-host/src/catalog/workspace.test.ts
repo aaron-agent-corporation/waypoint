@@ -170,6 +170,39 @@ describe('loadWorkspaceWaypointCatalog', () => {
     if (!resolved.ok) expect(resolved.message).toMatch(/failed to parse/)
   })
 
+  it('B0 (slug-less): a malformed recipe override with no parseable slug still tombstones its bundled twin', async () => {
+    const root = await tempProject()
+    const bundled = await loadBundledWaypointCatalog()
+    const bundledSlug = bundled.recipes.list()[0].slug
+    await writeWorkspaceQuest(root, 'override-quest', [bundledSlug])
+    const dir = join(root, '.waypoint', 'recipes')
+    await mkdir(dir, { recursive: true })
+    // `slug:` is null → readSlugLenient undefined; only the filename names the slug.
+    await writeFile(join(dir, `${bundledSlug}.yaml`), 'schema_version: 1\nslug:\nname: Broken\n', 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    // Tombstone fired despite the missing slug — the bundled twin is gone.
+    expect(catalog.recipes.get(bundledSlug)).toBeUndefined()
+    const resolved = catalog.resolveQuestRecipes('override-quest')
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.message).toMatch(/failed to parse/)
+  })
+
+  it('B0 (slug-less): a malformed quest override with no parseable slug still tombstones its bundled twin', async () => {
+    const root = await tempProject()
+    const bundled = await loadBundledWaypointCatalog()
+    const bundledQuestSlug = bundled.quests.list()[0].slug
+    const dir = join(root, '.waypoint', 'quests')
+    await mkdir(dir, { recursive: true })
+    await writeFile(join(dir, `${bundledQuestSlug}.yaml`), 'schema_version: 1\nslug:\nname: Broken\nworkflow: w.md\n', 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    expect(catalog.quests.get(bundledQuestSlug)).toBeUndefined()
+    const resolved = catalog.resolveQuestRecipes(bundledQuestSlug)
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.message).toMatch(/Quest '.*' failed to parse/)
+  })
+
   it('B1: a started quest too malformed to yield a slug still fails loud with a parse message (filename fallback)', async () => {
     const root = await tempProject()
     const dir = join(root, '.waypoint', 'quests')
