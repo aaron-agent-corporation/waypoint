@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { parse as parseYaml } from 'yaml'
@@ -61,6 +61,18 @@ export interface LoadEntriesResult<TManifest> {
 /** Render a parse error as a one-line skip-and-warn message for listing surfaces. */
 export function formatCatalogEntryWarning(error: CatalogEntryError): string {
   return `skipped malformed manifest ${error.relativePath}: ${error.message}`
+}
+
+/**
+ * Find the parse error for a requested slug. Prefer the leniently-read slug, but
+ * fall back to the file basename (`<slug>.ya?ml`) so a file too malformed to yield
+ * a slug still scopes to the requested entry instead of degrading to "unknown".
+ */
+function findEntryError(errors: readonly CatalogEntryError[], slug: string): CatalogEntryError | undefined {
+  return (
+    errors.find((error) => error.slug === slug) ??
+    errors.find((error) => basename(error.relativePath).replace(/\.ya?ml$/, '') === slug)
+  )
 }
 
 export interface BundledWaypointCatalog {
@@ -139,7 +151,7 @@ export function buildWaypointCatalog(params: {
       if (!quest || !questEntry) {
         // Fail loud, but only for the requested quest: if its own file failed to
         // parse, say so precisely; otherwise it is genuinely unknown.
-        const errored = questErrors.find((error) => error.slug === questSlug)
+        const errored = findEntryError(questErrors, questSlug)
         if (errored) {
           return { ok: false, message: `Quest '${questSlug}' failed to parse: ${errored.relativePath}: ${errored.message}` }
         }
@@ -158,7 +170,7 @@ export function buildWaypointCatalog(params: {
           // A winner that failed to parse surfaces as unresolved (still fail-loud
           // for this quest) — annotate it so the cause is the parse error, not a
           // missing file.
-          const errored = recipeErrors.find((error) => error.slug === slug)
+          const errored = findEntryError(recipeErrors, slug)
           unresolved.push(errored ? `${slug} (failed to parse: ${errored.relativePath}: ${errored.message})` : slug)
         } else {
           resolvedRecipes.push(recipe)
@@ -237,7 +249,7 @@ export async function loadQuestEntries(root: string): Promise<LoadEntriesResult<
   for (const file of files) {
     const text = await readFile(file, 'utf8')
     try {
-      const manifest = parseCatalogQuestManifest(text, file)
+      const manifest = parseCatalogQuestManifest(text)
       entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
     } catch (err) {
       errors.push(toCatalogEntryError(err, text, file, root))
@@ -254,7 +266,7 @@ export async function loadRecipeEntries(root: string): Promise<LoadEntriesResult
   for (const file of files) {
     const text = await readFile(file, 'utf8')
     try {
-      const manifest = parseCatalogRecipeManifest(text, file)
+      const manifest = parseCatalogRecipeManifest(text)
       entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
     } catch (err) {
       errors.push(toCatalogEntryError(err, text, file, root))
@@ -302,15 +314,17 @@ async function walkYamlFiles(root: string): Promise<string[]> {
   return out.sort()
 }
 
-function parseCatalogQuestManifest(text: string, path: string): CatalogQuestManifest {
+function parseCatalogQuestManifest(text: string): CatalogQuestManifest {
   const value = parseYaml(text) as Record<string, unknown> | null
-  if (!value || typeof value !== 'object') throw new Error(`invalid Quest manifest: ${path}`)
+  // The path is owned by the caller (CatalogEntryError.relativePath); keep the
+  // message path-free so warnings don't leak the absolute host filesystem layout.
+  if (!value || typeof value !== 'object') throw new Error('invalid Quest manifest')
   const schemaVersion = value.schema_version
   const slug = value.slug
   const name = value.name
   const workflow = value.workflow
   if (schemaVersion !== 1 || typeof slug !== 'string' || typeof name !== 'string' || typeof workflow !== 'string') {
-    throw new Error(`invalid Quest manifest: ${path}`)
+    throw new Error('invalid Quest manifest')
   }
   const recipes = Array.isArray(value.recipes) ? value.recipes.filter((item): item is string => typeof item === 'string') : undefined
   const handoffManifests = Array.isArray(value.handoff_manifests)
@@ -329,14 +343,14 @@ function parseCatalogQuestManifest(text: string, path: string): CatalogQuestMani
   }
 }
 
-function parseCatalogRecipeManifest(text: string, path: string): CatalogRecipeManifest {
+function parseCatalogRecipeManifest(text: string): CatalogRecipeManifest {
   const value = parseYaml(text) as Record<string, unknown> | null
-  if (!value || typeof value !== 'object') throw new Error(`invalid Recipe manifest: ${path}`)
+  if (!value || typeof value !== 'object') throw new Error('invalid Recipe manifest')
   const schemaVersion = value.schema_version
   const slug = value.slug
   const name = value.name
   if (schemaVersion !== 1 || typeof slug !== 'string' || typeof name !== 'string') {
-    throw new Error(`invalid Recipe manifest: ${path}`)
+    throw new Error('invalid Recipe manifest')
   }
   const tools = Array.isArray(value.tools) ? value.tools.filter((item): item is string => typeof item === 'string') : undefined
   return {

@@ -133,6 +133,56 @@ describe('loadWorkspaceWaypointCatalog', () => {
     if (!resolved.ok) expect(resolved.message).toMatch(/Quest 'broken-quest' failed to parse/)
   })
 
+  it('B0: a malformed workspace recipe colliding with a bundled slug fails loud, not silently running the bundled twin', async () => {
+    const root = await tempProject()
+    const bundled = await loadBundledWaypointCatalog()
+    const bundledSlug = bundled.recipes.list()[0].slug // a real bundled recipe slug
+    await writeWorkspaceQuest(root, 'override-quest', [bundledSlug])
+    const dir = join(root, '.waypoint', 'recipes')
+    await mkdir(dir, { recursive: true })
+    // Malformed override claiming the bundled slug (wrong schema_version).
+    await writeFile(join(dir, `${bundledSlug}.yaml`), `schema_version: 2\nslug: ${bundledSlug}\nname: Broken Override\n`, 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    // The bundled twin must NOT silently win the merged registry.
+    expect(catalog.recipes.get(bundledSlug)).toBeUndefined()
+    const resolved = catalog.resolveQuestRecipes('override-quest')
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.message).toMatch(/failed to parse/)
+  })
+
+  it('B0: a malformed workspace quest colliding with a bundled quest slug fails loud, not resolving the bundled twin', async () => {
+    const root = await tempProject()
+    const bundled = await loadBundledWaypointCatalog()
+    const bundledQuestSlug = bundled.quests.list()[0].slug
+    const dir = join(root, '.waypoint', 'quests')
+    await mkdir(dir, { recursive: true })
+    await writeFile(
+      join(dir, `${bundledQuestSlug}.yaml`),
+      `schema_version: 2\nslug: ${bundledQuestSlug}\nname: Broken\nworkflow: w.md\n`,
+      'utf8',
+    )
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    expect(catalog.quests.get(bundledQuestSlug)).toBeUndefined()
+    const resolved = catalog.resolveQuestRecipes(bundledQuestSlug)
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.message).toMatch(/failed to parse/)
+  })
+
+  it('B1: a started quest too malformed to yield a slug still fails loud with a parse message (filename fallback)', async () => {
+    const root = await tempProject()
+    const dir = join(root, '.waypoint', 'quests')
+    await mkdir(dir, { recursive: true })
+    // `slug:` parses to null, so readSlugLenient yields undefined — only the filename scopes it.
+    await writeFile(join(dir, 'halfwritten.yaml'), 'schema_version: 1\nslug:\nname: Half\n', 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    const resolved = catalog.resolveQuestRecipes('halfwritten')
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.message).toMatch(/Quest 'halfwritten' failed to parse/)
+  })
+
   it('produces slug-sorted merged quest entries including authored + bundled', async () => {
     const root = await tempProject()
     await writeWorkspaceQuest(root, 'zzz-authored', [])

@@ -24,7 +24,8 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
       if (resolved.ok === false) {
         throw new EngineError(resolved.message, { code: 'NOT_FOUND', field: 'quest' })
       }
-      return ok('catalog.recipes', { quest: input.quest, recipes: resolved.recipes })
+      // Keep the payload shape stable across both branches (B4): always include warnings.
+      return ok('catalog.recipes', { quest: input.quest, recipes: resolved.recipes, warnings: [] })
     }
     return ok('catalog.recipes', {
       recipes: catalog.recipes.list(),

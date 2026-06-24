@@ -8,6 +8,7 @@ import {
   loadQuestEntries,
   loadRecipeEntries,
   type BundledWaypointCatalog,
+  type CatalogEntryError,
   type WaypointCatalogEntry,
 } from './bundled.ts'
 
@@ -23,13 +24,17 @@ export async function loadWorkspaceWaypointCatalog(projectRoot: string): Promise
     ? await loadRecipeEntries(recipesDir)
     : { entries: [], errors: [] }
 
-  const questEntries = mergeEntries(bundled.questEntries, workspaceQuests.entries)
-  const recipeEntries = mergeEntries(bundled.recipeEntries, workspaceRecipes.entries)
   // A malformed authored manifest is collected (not thrown) so it can no longer
   // break resolution/discovery of every other entry. Errors flow to the catalog
   // for listing surfaces to warn on; the start path stays fail-loud per-quest.
   const questErrors = [...bundled.questErrors, ...workspaceQuests.errors]
   const recipeErrors = [...bundled.recipeErrors, ...workspaceRecipes.errors]
+
+  // B0: a workspace override that errored is the intended winner (workspace-wins).
+  // Tombstone its bundled twin so resolve/run fails loud on the parse error instead
+  // of silently falling back to — and running — the bundled implementation.
+  const questEntries = mergeEntries(bundled.questEntries, workspaceQuests.entries, erroredSlugs(workspaceQuests.errors))
+  const recipeEntries = mergeEntries(bundled.recipeEntries, workspaceRecipes.entries, erroredSlugs(workspaceRecipes.errors))
 
   // root/questsDir/recipesDir reflect the workspace overlay's home.
   return buildWaypointCatalog({
@@ -43,13 +48,28 @@ export async function loadWorkspaceWaypointCatalog(projectRoot: string): Promise
   })
 }
 
-/** Merge entries by slug — workspace (second arg) wins — then slug-sort for determinism. */
+/** The leniently-read slugs of the workspace files that failed to parse. */
+function erroredSlugs(errors: readonly CatalogEntryError[]): ReadonlySet<string> {
+  const slugs = new Set<string>()
+  for (const error of errors) if (error.slug) slugs.add(error.slug)
+  return slugs
+}
+
+/**
+ * Merge entries by slug — workspace (second arg) wins — then slug-sort for
+ * determinism. A bundled entry is dropped when its slug names a workspace file
+ * that errored, so a failed override cannot fall back to the bundled twin.
+ */
 function mergeEntries<TManifest>(
   bundled: readonly WaypointCatalogEntry<TManifest>[],
   workspace: readonly WaypointCatalogEntry<TManifest>[],
+  erroredWorkspaceSlugs: ReadonlySet<string>,
 ): WaypointCatalogEntry<TManifest>[] {
   const bySlug = new Map<string, WaypointCatalogEntry<TManifest>>()
-  for (const entry of bundled) bySlug.set(entry.slug, entry)
+  for (const entry of bundled) {
+    if (erroredWorkspaceSlugs.has(entry.slug)) continue
+    bySlug.set(entry.slug, entry)
+  }
   for (const entry of workspace) bySlug.set(entry.slug, entry)
   return [...bySlug.values()].sort((a, b) => a.slug.localeCompare(b.slug))
 }
