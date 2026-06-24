@@ -18,14 +18,29 @@ export async function loadWorkspaceWaypointCatalog(projectRoot: string): Promise
   const questsDir = join(waypointDir, 'quests')
   const recipesDir = join(waypointDir, 'recipes')
 
-  const workspaceQuestEntries = (await isDirectory(questsDir)) ? await loadQuestEntries(questsDir) : []
-  const workspaceRecipeEntries = (await isDirectory(recipesDir)) ? await loadRecipeEntries(recipesDir) : []
+  const workspaceQuests = (await isDirectory(questsDir)) ? await loadQuestEntries(questsDir) : { entries: [], errors: [] }
+  const workspaceRecipes = (await isDirectory(recipesDir))
+    ? await loadRecipeEntries(recipesDir)
+    : { entries: [], errors: [] }
 
-  const questEntries = mergeEntries(bundled.questEntries, workspaceQuestEntries)
-  const recipeEntries = mergeEntries(bundled.recipeEntries, workspaceRecipeEntries)
+  const questEntries = mergeEntries(bundled.questEntries, workspaceQuests.entries)
+  const recipeEntries = mergeEntries(bundled.recipeEntries, workspaceRecipes.entries)
+  // A malformed authored manifest is collected (not thrown) so it can no longer
+  // break resolution/discovery of every other entry. Errors flow to the catalog
+  // for listing surfaces to warn on; the start path stays fail-loud per-quest.
+  const questErrors = [...bundled.questErrors, ...workspaceQuests.errors]
+  const recipeErrors = [...bundled.recipeErrors, ...workspaceRecipes.errors]
 
   // root/questsDir/recipesDir reflect the workspace overlay's home.
-  return buildWaypointCatalog({ root: waypointDir, questsDir, recipesDir, questEntries, recipeEntries })
+  return buildWaypointCatalog({
+    root: waypointDir,
+    questsDir,
+    recipesDir,
+    questEntries,
+    recipeEntries,
+    questErrors,
+    recipeErrors,
+  })
 }
 
 /** Merge entries by slug — workspace (second arg) wins — then slug-sort for determinism. */

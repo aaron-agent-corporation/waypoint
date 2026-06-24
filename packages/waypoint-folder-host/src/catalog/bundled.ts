@@ -41,6 +41,28 @@ export interface WaypointCatalogEntry<TManifest> {
   readonly relativePath: string
 }
 
+/**
+ * A catalog file that failed to parse. Collected rather than thrown so a single
+ * malformed authored manifest can no longer break resolution/discovery of every
+ * other entry. `slug` is best-effort (leniently read) and may be absent.
+ */
+export interface CatalogEntryError {
+  readonly path: string
+  readonly relativePath: string
+  readonly slug?: string
+  readonly message: string
+}
+
+export interface LoadEntriesResult<TManifest> {
+  readonly entries: WaypointCatalogEntry<TManifest>[]
+  readonly errors: CatalogEntryError[]
+}
+
+/** Render a parse error as a one-line skip-and-warn message for listing surfaces. */
+export function formatCatalogEntryWarning(error: CatalogEntryError): string {
+  return `skipped malformed manifest ${error.relativePath}: ${error.message}`
+}
+
 export interface BundledWaypointCatalog {
   readonly root: string
   readonly questsDir: string
@@ -49,6 +71,8 @@ export interface BundledWaypointCatalog {
   readonly recipes: CatalogRegistry<CatalogRecipeManifest>
   readonly questEntries: readonly WaypointCatalogEntry<CatalogQuestManifest>[]
   readonly recipeEntries: readonly WaypointCatalogEntry<CatalogRecipeManifest>[]
+  readonly questErrors: readonly CatalogEntryError[]
+  readonly recipeErrors: readonly CatalogEntryError[]
   resolveQuestRecipes(questSlug: string): ResolveCatalogQuestRecipesResult
 }
 
@@ -73,10 +97,10 @@ export async function loadBundledWaypointCatalog(
   const questsDir = join(root, 'quests')
   const recipesDir = join(root, 'recipes')
 
-  const questEntries = await loadQuestEntries(questsDir)
-  const recipeEntries = await loadRecipeEntries(recipesDir)
+  const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir)
+  const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir)
 
-  return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries })
+  return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors })
 }
 
 /**
@@ -90,8 +114,12 @@ export function buildWaypointCatalog(params: {
   readonly recipesDir: string
   readonly questEntries: readonly WaypointCatalogEntry<CatalogQuestManifest>[]
   readonly recipeEntries: readonly WaypointCatalogEntry<CatalogRecipeManifest>[]
+  readonly questErrors?: readonly CatalogEntryError[]
+  readonly recipeErrors?: readonly CatalogEntryError[]
 }): BundledWaypointCatalog {
   const { root, questsDir, recipesDir, questEntries, recipeEntries } = params
+  const questErrors = params.questErrors ?? []
+  const recipeErrors = params.recipeErrors ?? []
   const quests = createCatalogRegistry(questEntries.map((entry) => entry.manifest))
   const recipes = createCatalogRegistry(recipeEntries.map((entry) => entry.manifest))
 
@@ -103,10 +131,18 @@ export function buildWaypointCatalog(params: {
     recipes,
     questEntries,
     recipeEntries,
+    questErrors,
+    recipeErrors,
     resolveQuestRecipes(questSlug) {
       const quest = quests.get(questSlug)
       const questEntry = questEntries.find((entry) => entry.slug === questSlug)
       if (!quest || !questEntry) {
+        // Fail loud, but only for the requested quest: if its own file failed to
+        // parse, say so precisely; otherwise it is genuinely unknown.
+        const errored = questErrors.find((error) => error.slug === questSlug)
+        if (errored) {
+          return { ok: false, message: `Quest '${questSlug}' failed to parse: ${errored.relativePath}: ${errored.message}` }
+        }
         return { ok: false, message: `unknown Quest: ${questSlug}` }
       }
 
@@ -119,7 +155,11 @@ export function buildWaypointCatalog(params: {
         const recipe = recipes.get(slug)
         const entry = recipeEntries.find((candidate) => candidate.slug === slug)
         if (!recipe || !entry) {
-          unresolved.push(slug)
+          // A winner that failed to parse surfaces as unresolved (still fail-loud
+          // for this quest) — annotate it so the cause is the parse error, not a
+          // missing file.
+          const errored = recipeErrors.find((error) => error.slug === slug)
+          unresolved.push(errored ? `${slug} (failed to parse: ${errored.relativePath}: ${errored.message})` : slug)
         } else {
           resolvedRecipes.push(recipe)
           resolvedEntries.push(entry)
@@ -190,24 +230,58 @@ async function hasYamlFile(path: string): Promise<boolean> {
   }
 }
 
-export async function loadQuestEntries(root: string): Promise<WaypointCatalogEntry<CatalogQuestManifest>[]> {
+export async function loadQuestEntries(root: string): Promise<LoadEntriesResult<CatalogQuestManifest>> {
   const files = await walkYamlFiles(root)
   const entries: WaypointCatalogEntry<CatalogQuestManifest>[] = []
+  const errors: CatalogEntryError[] = []
   for (const file of files) {
-    const manifest = parseCatalogQuestManifest(await readFile(file, 'utf8'), file)
-    entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
+    const text = await readFile(file, 'utf8')
+    try {
+      const manifest = parseCatalogQuestManifest(text, file)
+      entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
+    } catch (err) {
+      errors.push(toCatalogEntryError(err, text, file, root))
+    }
   }
-  return entries.sort((a, b) => a.slug.localeCompare(b.slug))
+  entries.sort((a, b) => a.slug.localeCompare(b.slug))
+  return { entries, errors }
 }
 
-export async function loadRecipeEntries(root: string): Promise<WaypointCatalogEntry<CatalogRecipeManifest>[]> {
+export async function loadRecipeEntries(root: string): Promise<LoadEntriesResult<CatalogRecipeManifest>> {
   const files = await walkYamlFiles(root)
   const entries: WaypointCatalogEntry<CatalogRecipeManifest>[] = []
+  const errors: CatalogEntryError[] = []
   for (const file of files) {
-    const manifest = parseCatalogRecipeManifest(await readFile(file, 'utf8'), file)
-    entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
+    const text = await readFile(file, 'utf8')
+    try {
+      const manifest = parseCatalogRecipeManifest(text, file)
+      entries.push({ slug: manifest.slug, manifest, path: file, relativePath: relative(root, file) })
+    } catch (err) {
+      errors.push(toCatalogEntryError(err, text, file, root))
+    }
   }
-  return entries.sort((a, b) => a.slug.localeCompare(b.slug))
+  entries.sort((a, b) => a.slug.localeCompare(b.slug))
+  return { entries, errors }
+}
+
+/** Build a CatalogEntryError, reading the slug leniently for best-effort scoping. */
+function toCatalogEntryError(err: unknown, text: string, file: string, root: string): CatalogEntryError {
+  return {
+    path: file,
+    relativePath: relative(root, file),
+    slug: readSlugLenient(text),
+    message: err instanceof Error ? err.message : String(err),
+  }
+}
+
+function readSlugLenient(text: string): string | undefined {
+  try {
+    const value = parseYaml(text) as Record<string, unknown> | null
+    const slug = value?.slug
+    return typeof slug === 'string' ? slug : undefined
+  } catch {
+    return undefined
+  }
 }
 
 async function walkYamlFiles(root: string): Promise<string[]> {

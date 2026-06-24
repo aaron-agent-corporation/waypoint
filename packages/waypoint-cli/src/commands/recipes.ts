@@ -1,4 +1,9 @@
-import { findWaypointProjectRoot, loadBundledWaypointCatalog, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
+import {
+  findWaypointProjectRoot,
+  formatCatalogEntryWarning,
+  loadBundledWaypointCatalog,
+  loadWorkspaceWaypointCatalog,
+} from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -21,6 +26,8 @@ export async function runRecipesCommand(args: readonly string[], io: WaypointCli
     return 0
   }
 
+  // Skip-and-warn: a malformed authored manifest is reported, not fatal to the list.
+  for (const error of catalog.recipeErrors) io.stderr(formatCatalogEntryWarning(error))
   io.stdout('Waypoint Recipes')
   for (const recipe of catalog.recipes.list()) {
     io.stdout(`- ${recipe.slug}: ${recipe.name}`)

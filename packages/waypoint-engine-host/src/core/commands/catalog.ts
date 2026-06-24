@@ -1,4 +1,4 @@
-import { loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
+import { formatCatalogEntryWarning, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
 
 import { EngineError, ok } from '../../envelope.ts'
 import type { CommandBus } from '../command-bus.ts'
@@ -8,7 +8,11 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
   bus.register('catalog.quests', async () => {
     const { root } = ctx.session.requireActive()
     const catalog = await loadWorkspaceWaypointCatalog(root)
-    return ok('catalog.quests', { quests: catalog.quests.list() })
+    // Skip-and-warn: one malformed authored manifest must not blank the listing.
+    return ok('catalog.quests', {
+      quests: catalog.quests.list(),
+      warnings: catalog.questErrors.map(formatCatalogEntryWarning),
+    })
   })
 
   bus.register('catalog.recipes', async (payload) => {
@@ -22,6 +26,9 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
       }
       return ok('catalog.recipes', { quest: input.quest, recipes: resolved.recipes })
     }
-    return ok('catalog.recipes', { recipes: catalog.recipes.list() })
+    return ok('catalog.recipes', {
+      recipes: catalog.recipes.list(),
+      warnings: catalog.recipeErrors.map(formatCatalogEntryWarning),
+    })
   })
 }
