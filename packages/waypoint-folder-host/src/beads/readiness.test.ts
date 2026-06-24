@@ -94,6 +94,8 @@ function malformedCatalogFixture(): BundledWaypointCatalog {
     recipeEntries: [
       { slug: recipe.slug, manifest: recipe, path: '/fixture/recipes/broken-recipe.yaml', relativePath: 'broken-recipe.yaml' },
     ],
+    questErrors: [],
+    recipeErrors: [],
     resolveQuestRecipes: () => ({
       ok: true,
       quest,

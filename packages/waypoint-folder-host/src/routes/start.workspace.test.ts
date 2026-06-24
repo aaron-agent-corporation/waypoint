@@ -37,6 +37,20 @@ describe('startQuestRoute with an authored quest', () => {
     expect(route.quest).toBe('authored-quest')
   })
 
+  // N1: a single malformed, unrelated authored manifest must not abort the start
+  // of a valid quest that never references it.
+  it('starts a valid quest even when an unrelated authored recipe is malformed', async () => {
+    const root = await initFolderProject()
+    await writeAuthored(root, 'authored-quest', 'authored-recipe')
+    // A half-written recipe the quest does not reference.
+    await writeFile(join(root, '.waypoint', 'recipes', 'half-written.yaml'), 'schema_version: 1\nslug:', 'utf8')
+
+    const route = await startQuestRoute(root, { quest: 'authored-quest' })
+
+    expect(route.backend).toBe('folder')
+    expect(route.quest).toBe('authored-quest')
+  })
+
   it('throws when a quest references a prompt-less recipe (start-time validation)', async () => {
     const root = await initFolderProject()
     const qDir = join(root, '.waypoint', 'quests')

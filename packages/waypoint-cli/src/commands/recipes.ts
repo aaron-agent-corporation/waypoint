@@ -1,4 +1,9 @@
-import { findWaypointProjectRoot, loadBundledWaypointCatalog, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
+import {
+  findWaypointProjectRoot,
+  formatCatalogEntryWarning,
+  loadBundledWaypointCatalog,
+  loadWorkspaceWaypointCatalog,
+} from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -8,6 +13,9 @@ export async function runRecipesCommand(args: readonly string[], io: WaypointCli
   const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
 
   if (quest) {
+    // Resolution-only surface: lists the recipe winners THIS quest references.
+    // Unrelated malformed files are out of scope; a malformed file the quest does
+    // reference fails loud below. Skip-and-warn is for the unscoped listing only.
     const resolved = catalog.resolveQuestRecipes(quest)
     if (!resolved.ok) {
       io.stderr(resolved.message)
@@ -21,6 +29,8 @@ export async function runRecipesCommand(args: readonly string[], io: WaypointCli
     return 0
   }
 
+  // Skip-and-warn: a malformed authored manifest is reported, not fatal to the list.
+  for (const error of catalog.recipeErrors) io.stderr(formatCatalogEntryWarning(error))
   io.stdout('Waypoint Recipes')
   for (const recipe of catalog.recipes.list()) {
     io.stdout(`- ${recipe.slug}: ${recipe.name}`)

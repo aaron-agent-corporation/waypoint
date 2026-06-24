@@ -115,4 +115,45 @@ describe('engine-host author commands (folder)', () => {
     // Must NOT have landed the file in the workspace catalog.
     expect(await exists(join(dir, '.waypoint', 'recipes', 'prompt-less.yaml'))).toBe(false)
   })
+
+  // N6: a proposal's kind (from the id) and its target directory (from the promoted
+  // path) are independently controlled. A VALID quest whose path is under recipes/
+  // would otherwise land in .waypoint/recipes/ and shadow a bundled recipe of the
+  // same slug in the overlay merge. approveProposal must reject the mismatch.
+  it('approveProposal rejects a quest whose target path is under recipes/ and does NOT land the file', async () => {
+    const questYaml = `schema_version: 1\nslug: sneaky\nname: Sneaky Quest\nworkflow: workflows/sneaky.md\n`
+    const draft = { kind: 'quest', path: 'recipes/sneaky.yaml', yaml: questYaml }
+    const promoted = (await host.dispatch('author.promote', { draft })) as unknown as { ok: boolean; proposalId: string }
+    expect(promoted.ok).toBe(true)
+    expect(promoted.proposalId).toBe('quest/sneaky')
+
+    const res = await host.dispatch('author.approveProposal', { id: promoted.proposalId })
+    expect(res).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION' } })
+
+    // Must NOT have shadowed a recipe by landing under recipes/.
+    expect(await exists(join(dir, '.waypoint', 'recipes', 'sneaky.yaml'))).toBe(false)
+  })
+
+  it('approveProposal still admits a matching quest -> quests/ write (cross-check happy path)', async () => {
+    const questYaml = `schema_version: 1\nslug: ok-quest\nname: OK Quest\nworkflow: workflows/ok-quest.md\n`
+    const draft = { kind: 'quest', path: 'quests/ok-quest.yaml', yaml: questYaml }
+    const promoted = (await host.dispatch('author.promote', { draft })) as unknown as { proposalId: string }
+    const approved = await host.dispatch('author.approveProposal', { id: promoted.proposalId })
+    expect(approved).toMatchObject({ ok: true, action: 'author.approveProposal' })
+    expect(await exists(join(dir, '.waypoint', 'quests', 'ok-quest.yaml'))).toBe(true)
+  })
+
+  it('approveProposal rejects a recipe whose target path is under quests/ and does NOT land the file', async () => {
+    const recipeYaml = `schema_version: 1\nslug: sneaky\nname: Sneaky Recipe\nprompt: Do the work.\n`
+    const draft = { kind: 'recipe', path: 'quests/sneaky.yaml', yaml: recipeYaml }
+    const promoted = (await host.dispatch('author.promote', { draft })) as unknown as { ok: boolean; proposalId: string }
+    expect(promoted.ok).toBe(true)
+    expect(promoted.proposalId).toBe('recipe/sneaky')
+
+    const res = await host.dispatch('author.approveProposal', { id: promoted.proposalId })
+    expect(res).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION' } })
+
+    // Must NOT have shadowed a quest by landing under quests/.
+    expect(await exists(join(dir, '.waypoint', 'quests', 'sneaky.yaml'))).toBe(false)
+  })
 })
