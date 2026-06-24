@@ -14,6 +14,7 @@ import { getWaypointRoute, listWaypointRoutes, updateWaypointRoute } from '../ro
 import { listWaypointTasks, updateWaypointTask } from '../tasks/store.ts'
 import { LocalRecipeRuntime } from '../runtime/local-runtime.ts'
 import { NullRecipeRuntime } from '../runtime/null-runtime.ts'
+import { loadWorkspaceWaypointCatalog } from '../catalog/workspace.ts'
 
 import type { RecipeManifest } from '@waypoint/core'
 import type {
@@ -422,15 +423,25 @@ async function createRecipeRuntime(projectRoot: string): Promise<NullRecipeRunti
   return new LocalRecipeRuntime({ command: config.runtime.command, args: config.runtime.args ?? [] })
 }
 
-async function loadRecipeManifest(projectRoot: string, recipeSlug: string, catalogDir?: string): Promise<RecipeManifest> {
-  const recipeDirectory = catalogDir
-    ? join(catalogDir, 'recipes')
-    : join(getWaypointProjectPaths(projectRoot).waypointDir, 'recipes')
-  for (const filePath of await walkYamlFiles(recipeDirectory)) {
-    const parsed = parseRecipeManifest(await readFile(filePath, 'utf8'))
-    if (parsed.ok && parsed.manifest.slug === recipeSlug) return parsed.manifest
+export async function loadRecipeManifest(projectRoot: string, recipeSlug: string, catalogDir?: string): Promise<RecipeManifest> {
+  if (catalogDir) {
+    // Ad-hoc overlay path — unchanged: scan the supplied catalogDir only (D5).
+    const recipeDirectory = join(catalogDir, 'recipes')
+    for (const filePath of await walkYamlFiles(recipeDirectory)) {
+      const parsed = parseRecipeManifest(await readFile(filePath, 'utf8'))
+      if (parsed.ok && parsed.manifest.slug === recipeSlug) return parsed.manifest
+    }
+    throw new Error(`Recipe not found in local catalog: ${recipeSlug}`)
   }
-  throw new Error(`Recipe not found in local catalog: ${recipeSlug}`)
+
+  // Default path (D5): locate the winning recipe file via the workspace overlay
+  // (workspace > bundled), then parse it with the existing parser.
+  const catalog = await loadWorkspaceWaypointCatalog(projectRoot)
+  const entry = catalog.recipeEntries.find((candidate) => candidate.slug === recipeSlug)
+  if (!entry) throw new Error(`Recipe not found in local catalog: ${recipeSlug}`)
+  const parsed = parseRecipeManifest(await readFile(entry.path, 'utf8'))
+  if (!parsed.ok) throw new Error(`invalid Recipe manifest: ${entry.path}`)
+  return parsed.manifest
 }
 
 async function walkYamlFiles(root: string): Promise<string[]> {
