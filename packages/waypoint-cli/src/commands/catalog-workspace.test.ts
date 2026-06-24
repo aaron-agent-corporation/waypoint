@@ -19,6 +19,18 @@ async function projectWithAuthoredQuest(): Promise<string> {
   return root
 }
 
+async function projectWithAuthoredRecipe(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'wp-cli-ws-rcp-'))
+  const rDir = join(root, '.waypoint', 'recipes')
+  await mkdir(rDir, { recursive: true })
+  await writeFile(
+    join(rDir, 'authored-recipe.yaml'),
+    'schema_version: 1\nslug: authored-recipe\nname: Authored Recipe\nprompt: Do it.\n',
+    'utf8',
+  )
+  return root
+}
+
 describe('waypoint quests CLI with workspace entries', () => {
   it('lists workspace-approved quests when run from a project subdirectory', async () => {
     const root = await projectWithAuthoredQuest()
@@ -30,6 +42,18 @@ describe('waypoint quests CLI with workspace entries', () => {
 
     expect(code).toBe(0)
     expect(out.join('\n')).toContain('authored-quest')
+  })
+
+  it('lists workspace-approved recipes when run from a project subdirectory (upward discovery)', async () => {
+    const root = await projectWithAuthoredRecipe()
+    const sub = join(root, 'nested', 'dir')
+    await mkdir(sub, { recursive: true })
+
+    const out: string[] = []
+    const code = await runRecipesCommand([], { stdout: (l) => out.push(l), stderr: () => {}, cwd: sub })
+
+    expect(code).toBe(0)
+    expect(out.join('\n')).toContain('authored-recipe')
   })
 
   // P2-1: the CLI skip-and-warn branch (io.stderr) is distinct from the engine e2e.

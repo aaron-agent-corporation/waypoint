@@ -114,10 +114,36 @@ export interface LoadBundledWaypointCatalogOptions {
   readonly root?: string
 }
 
-export async function loadBundledWaypointCatalog(
+/**
+ * Memoized default load. The bundled catalog is curated and immutable per process,
+ * and the autopilot route runner resolves it once per recipe via the workspace
+ * overlay — so re-walking + re-parsing it every call is pure waste. An explicit
+ * `root` (tests/fixtures) always loads fresh and is never cached.
+ */
+let bundledCatalogPromise: Promise<BundledWaypointCatalog> | undefined
+
+export function loadBundledWaypointCatalog(
   options: LoadBundledWaypointCatalogOptions = {},
 ): Promise<BundledWaypointCatalog> {
-  const root = options.root ?? (await findBundledCatalogRoot())
+  if (options.root !== undefined) return loadBundledCatalogUncached(options.root)
+  if (!bundledCatalogPromise) {
+    const promise = loadBundledCatalogUncached(undefined)
+    bundledCatalogPromise = promise
+    // Never cache a failed load (e.g. a transient FS error) — let the next call retry.
+    promise.catch(() => {
+      if (bundledCatalogPromise === promise) bundledCatalogPromise = undefined
+    })
+  }
+  return bundledCatalogPromise
+}
+
+/** Test-only: drop the memoized bundled catalog so a fixture change is re-read. */
+export function clearBundledWaypointCatalogCache(): void {
+  bundledCatalogPromise = undefined
+}
+
+async function loadBundledCatalogUncached(rootOption: string | undefined): Promise<BundledWaypointCatalog> {
+  const root = rootOption ?? (await findBundledCatalogRoot())
   const questsDir = join(root, 'quests')
   const recipesDir = join(root, 'recipes')
 

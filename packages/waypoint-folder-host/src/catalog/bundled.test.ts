@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { loadBundledWaypointCatalog, loadRecipeEntries } from './bundled.ts'
+import { clearBundledWaypointCatalogCache, loadBundledWaypointCatalog, loadRecipeEntries } from './bundled.ts'
 import { installQuestCatalog } from './install.ts'
 
 async function makeTempProject(): Promise<string> {
@@ -58,5 +58,19 @@ describe('bundled Waypoint catalog', () => {
     const tolerant = await loadRecipeEntries(dir)
     expect(tolerant.entries.map((e) => e.slug)).toEqual(['good'])
     expect(tolerant.errors).toHaveLength(1)
+  })
+
+  // Memoization: the immutable bundle is loaded once per process (the autopilot
+  // route runner resolves it once per recipe). The cache is reset for the next test.
+  it('memoizes the default bundled catalog and re-loads after a cache clear', async () => {
+    clearBundledWaypointCatalogCache()
+    const a = await loadBundledWaypointCatalog()
+    const b = await loadBundledWaypointCatalog()
+    expect(a).toBe(b) // same object — no re-walk
+
+    clearBundledWaypointCatalogCache()
+    const c = await loadBundledWaypointCatalog()
+    expect(c).not.toBe(a) // fresh load after clear
+    expect(c.quests.has('waypoint')).toBe(true)
   })
 })
