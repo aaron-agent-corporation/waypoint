@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -19,5 +19,24 @@ describe('findWaypointProjectRoot', () => {
   it('returns null when no .waypoint/ ancestor exists', async () => {
     const root = await mkdtemp(join(tmpdir(), 'wp-find-none-'))
     expect(await findWaypointProjectRoot(root)).toBeNull()
+  })
+
+  it('ignores a stray FILE named .waypoint (only a directory counts as a root)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'wp-find-file-'))
+    // A regular file named `.waypoint` must NOT be treated as a project root.
+    await writeFile(join(root, '.waypoint'), 'not a dir', 'utf8')
+
+    expect(await findWaypointProjectRoot(root)).toBeNull()
+  })
+
+  it('walks past a file-named .waypoint to a real .waypoint/ ancestor', async () => {
+    const ancestor = await mkdtemp(join(tmpdir(), 'wp-find-mixed-'))
+    await mkdir(join(ancestor, '.waypoint'), { recursive: true })
+    const child = join(ancestor, 'child')
+    await mkdir(child, { recursive: true })
+    await writeFile(join(child, '.waypoint'), 'stray file', 'utf8')
+
+    // From child, the stray file is skipped and the real ancestor dir is found.
+    expect(await findWaypointProjectRoot(child)).toBe(ancestor)
   })
 })

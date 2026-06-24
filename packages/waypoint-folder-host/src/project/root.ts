@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises'
+import { access, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 
 export const WAYPOINT_DIR_NAME = '.waypoint'
@@ -24,14 +24,21 @@ export function getWaypointProjectPaths(projectRoot: string): WaypointProjectPat
 export async function findWaypointProjectRoot(startDir: string): Promise<string | null> {
   let current = resolve(startDir)
   for (;;) {
-    try {
-      await access(join(current, WAYPOINT_DIR_NAME))
-      return current
-    } catch {
-      const parent = dirname(current)
-      if (parent === current) return null
-      current = parent
-    }
+    // Require a directory: a stray FILE named `.waypoint` must not be treated as a
+    // project root (getWaypointProjectPaths would then join quests/recipes under a
+    // non-directory).
+    if (await isDirectory(join(current, WAYPOINT_DIR_NAME))) return current
+    const parent = dirname(current)
+    if (parent === current) return null
+    current = parent
+  }
+}
+
+async function isDirectory(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory()
+  } catch {
+    return false
   }
 }
 

@@ -1,13 +1,16 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { startQuestRoute } from './start.ts'
 
+const createdRoots: string[] = []
+
 async function initFolderProject(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'wp-start-ws-'))
+  createdRoots.push(root)
   await mkdir(join(root, '.waypoint'), { recursive: true })
   await writeFile(join(root, '.waypoint', 'config.yaml'), 'schema_version: 1\nquest: authored-quest\nbackend:\n  route: folder\n', 'utf8')
   return root
@@ -27,6 +30,12 @@ async function writeAuthored(root: string, questSlug: string, recipeSlug: string
 }
 
 describe('startQuestRoute with an authored quest', () => {
+  afterEach(async () => {
+    while (createdRoots.length > 0) {
+      await rm(createdRoots.pop()!, { recursive: true, force: true })
+    }
+  })
+
   it('starts a folder route for a workspace-authored quest not in the bundle', async () => {
     const root = await initFolderProject()
     await writeAuthored(root, 'authored-quest', 'authored-recipe')
@@ -35,6 +44,9 @@ describe('startQuestRoute with an authored quest', () => {
 
     expect(route.backend).toBe('folder')
     expect(route.quest).toBe('authored-quest')
+    // A real route was materialized (id assigned) with its scaffold summary.
+    expect(route.id).toBeTruthy()
+    expect(route.scaffold).toBeDefined()
   })
 
   // N1: a single malformed, unrelated authored manifest must not abort the start
