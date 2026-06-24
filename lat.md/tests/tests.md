@@ -24,9 +24,9 @@ These paths looked test-related during local discovery.
 - packages/waypoint-cli/src/commands/author.test.ts
 - packages/waypoint-cli/src/commands/auto.test.ts
 - packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts
+- packages/waypoint-cli/src/commands/catalog-workspace.test.ts
 - packages/waypoint-cli/src/commands/catalog.test.ts
 - packages/waypoint-cli/src/commands/discuss.test.ts
-- packages/waypoint-cli/src/commands/doctor.test.ts
 
 ## Gas City And Beads Runtime Tests
 <!-- code-kg:id tests.gascity-beads-runtime -->
@@ -212,6 +212,14 @@ Test file `packages/waypoint-cli/src/commands/beads-backend-smoke.test.ts` conta
 - Imports: `packages/waypoint-cli/src/bin.ts`
 - Imported by: none detected
 
+### packages/waypoint-cli/src/commands/catalog-workspace.test.ts
+
+Test file `packages/waypoint-cli/src/commands/catalog-workspace.test.ts` contains tests and validation symbols. Key symbols: `projectWithAuthoredQuest`.
+
+- Symbols: `projectWithAuthoredQuest (function)`
+- Imports: `packages/waypoint-cli/src/commands/quests.ts`
+- Imported by: none detected
+
 ### packages/waypoint-cli/src/commands/catalog.test.ts
 
 Test file `packages/waypoint-cli/src/commands/catalog.test.ts` contains tests and validation symbols. Key symbols: `makeIo`.
@@ -268,14 +276,6 @@ Test file `packages/waypoint-cli/src/commands/handoffs.test.ts` contains tests a
 - Imports: `packages/waypoint-cli/src/bin.ts`
 - Imported by: none detected
 
-### packages/waypoint-cli/src/commands/init-status.test.ts
-
-Test file `packages/waypoint-cli/src/commands/init-status.test.ts` contains tests and validation symbols. Key symbols: `tempProject`.
-
-- Symbols: `tempProject (function)`
-- Imports: `packages/waypoint-cli/src/bin.ts`
-- Imported by: none detected
-
 ## Test Coverage Links
 
 Test coverage links map inferred test relationships from test imports to source files so agents can find validation paths.
@@ -288,9 +288,9 @@ Source file `packages/waypoint-cli/src/bin.ts` is covered by test imports from `
 
 ### packages/waypoint-folder-host/src/catalog/bundled.ts
 
-Source file `packages/waypoint-folder-host/src/catalog/bundled.ts` is covered by test imports from `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, and 16 more.
+Source file `packages/waypoint-folder-host/src/catalog/bundled.ts` is covered by test imports from `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/load-recipe-manifest.test.ts`, and 18 more.
 
-- Tests: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, `packages/waypoint-folder-host/src/beads/execution.test.ts`, `packages/waypoint-folder-host/src/beads/formula.test.ts`, `packages/waypoint-folder-host/src/beads/instantiate.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`, and 12 more
+- Tests: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/load-recipe-manifest.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, `packages/waypoint-folder-host/src/beads/execution.test.ts`, `packages/waypoint-folder-host/src/beads/formula.test.ts`, `packages/waypoint-folder-host/src/beads/instantiate.test.ts`, and 14 more
 
 ### packages/waypoint-folder-host/src/project/init.ts
 
@@ -300,9 +300,9 @@ Source file `packages/waypoint-folder-host/src/project/init.ts` is covered by te
 
 ### packages/waypoint-engine-host/src/core/engine-host.ts
 
-Source file `packages/waypoint-engine-host/src/core/engine-host.ts` is covered by test imports from `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, and 12 more.
+Source file `packages/waypoint-engine-host/src/core/engine-host.ts` is covered by test imports from `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, and 13 more.
 
-- Tests: `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/gate.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/http-ws.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.beads.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.lifecycle.test.ts`, and 8 more
+- Tests: `packages/waypoint-engine-host/src/__tests__/author.test.ts`, `packages/waypoint-engine-host/src/__tests__/commands.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/gate.folder.test.ts`, `packages/waypoint-engine-host/src/__tests__/http-ws.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.beads.test.ts`, `packages/waypoint-engine-host/src/__tests__/integration.lifecycle.test.ts`, and 9 more
 
 ### packages/waypoint-folder-host/src/beads/instantiate.ts
 
@@ -328,6 +328,12 @@ Source file `packages/waypoint-folder-host/src/catalog/install.ts` is covered by
 
 - Tests: `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/catalog/bundled.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.test.ts`, `packages/waypoint-folder-host/src/routes/start.test.ts`, and 1 more
 
+### packages/waypoint-folder-host/src/routes/start.ts
+
+Source file `packages/waypoint-folder-host/src/routes/start.ts` is covered by test imports from `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, and 5 more.
+
+- Tests: `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.test.ts`, `packages/waypoint-folder-host/src/routes/start.test.ts`, `packages/waypoint-folder-host/src/routes/start.workspace.test.ts`, and 1 more
+
 ### packages/waypoint-folder-host/src/routes/store.ts
 
 Source file `packages/waypoint-folder-host/src/routes/store.ts` is covered by test imports from `packages/waypoint-cli/src/commands/resume.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 5 more.
@@ -352,11 +358,11 @@ Source file `packages/waypoint-folder-host/src/events/jsonl.ts` is covered by te
 
 - Tests: `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/events/jsonl.test.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.test.ts`, `packages/waypoint-folder-host/src/routes/start.test.ts`, `packages/waypoint-folder-host/src/routes/state.test.ts`
 
-### packages/waypoint-folder-host/src/routes/start.ts
+### packages/waypoint-ui/src/store.ts
 
-Source file `packages/waypoint-folder-host/src/routes/start.ts` is covered by test imports from `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, and 4 more.
+Source file `packages/waypoint-ui/src/store.ts` is covered by test imports from `packages/waypoint-ui/src/App.test.tsx`, `packages/waypoint-ui/src/components/AgentChat.test.tsx`, and 4 more.
 
-- Tests: `packages/waypoint-folder-host/src/beads/parity.test.ts`, `packages/waypoint-folder-host/src/discussion/store.test.ts`, `packages/waypoint-folder-host/src/gascity/delegate.test.ts`, `packages/waypoint-folder-host/src/gascity/diagnostics.test.ts`, `packages/waypoint-folder-host/src/routes/start.test.ts`, `packages/waypoint-folder-host/src/tasks/store.test.ts`
+- Tests: `packages/waypoint-ui/src/App.test.tsx`, `packages/waypoint-ui/src/components/AgentChat.test.tsx`, `packages/waypoint-ui/src/components/RouteGraph.test.tsx`, `packages/waypoint-ui/src/components/RoutesPanel.test.tsx`, `packages/waypoint-ui/src/components/TaskDetail.test.tsx`, `packages/waypoint-ui/src/store.test.ts`
 
 ### examples/hermes-operator-adapter/src/project-registry.ts
 
@@ -366,7 +372,7 @@ Source file `examples/hermes-operator-adapter/src/project-registry.ts` is covere
 
 ### examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts
 
-Source file `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts` is covered by discussion-loop, firmvault-case-bootstrap, and 3 more test imports.
+Source file `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.ts` is covered by test imports from `examples/hermes-operator-adapter/src/discussion-loop.test.ts`, `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`, and 3 more.
 
 - Tests: `examples/hermes-operator-adapter/src/discussion-loop.test.ts`, `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`, `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts`, `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.test.ts`, `examples/hermes-operator-adapter/src/safe-waypoint-command-runner.test.ts`
 
@@ -382,6 +388,18 @@ Source file `packages/waypoint-engine-host/src/types.ts` is covered by test impo
 
 - Tests: `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, `packages/waypoint-engine-host/src/__tests__/event-hub.test.ts`, `packages/waypoint-engine-host/src/__tests__/run.folder.test.ts`, `packages/waypoint-engine-host/src/brain/agent-session.test.ts`, `packages/waypoint-engine-host/src/core/event-hub.agent.test.ts`
 
+### packages/waypoint-ui/src/engine/types.ts
+
+Source file `packages/waypoint-ui/src/engine/types.ts` is covered by test imports from `packages/waypoint-ui/src/App.test.tsx`, `packages/waypoint-ui/src/engine/client.integration.test.ts`, and 3 more.
+
+- Tests: `packages/waypoint-ui/src/App.test.tsx`, `packages/waypoint-ui/src/engine/client.integration.test.ts`, `packages/waypoint-ui/src/engine/client.test.ts`, `packages/waypoint-ui/src/graph/build-graph.test.ts`, `packages/waypoint-ui/src/store.test.ts`
+
+### packages/waypoint-folder-host/src/autopilot/run.ts
+
+Source file `packages/waypoint-folder-host/src/autopilot/run.ts` is covered by test imports from `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/load-recipe-manifest.test.ts`, and 2 more.
+
+- Tests: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/load-recipe-manifest.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`
+
 ### packages/waypoint-folder-host/src/beads/compiler.ts
 
 Source file `packages/waypoint-folder-host/src/beads/compiler.ts` is covered by test imports from `packages/waypoint-folder-host/src/beads/cli-client.test.ts`, `packages/waypoint-folder-host/src/beads/compiler.test.ts`, and 2 more.
@@ -396,7 +414,7 @@ Source file `src/index.ts` is covered by test imports from `src/__tests__/route.
 
 ### examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts
 
-Source file `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts` is covered by firmvault-case-bootstrap, firmvault-document-flow, and 1 more test import.
+Source file `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.ts` is covered by test imports from `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`, `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts`, and 1 more.
 
 - Tests: `examples/hermes-operator-adapter/src/firmvault-case-bootstrap.test.ts`, `examples/hermes-operator-adapter/src/firmvault-document-flow.test.ts`, `examples/hermes-operator-adapter/src/firmvault-document-pr-sync.test.ts`
 
@@ -411,24 +429,6 @@ Source file `packages/waypoint-engine-host/src/brain/pi-version.ts` is covered b
 Source file `packages/waypoint-engine-host/src/core/event-hub.ts` is covered by test imports from `packages/waypoint-engine-host/src/__tests__/event-hub.test.ts`, `packages/waypoint-engine-host/src/brain/agent-session.test.ts`, and 1 more.
 
 - Tests: `packages/waypoint-engine-host/src/__tests__/event-hub.test.ts`, `packages/waypoint-engine-host/src/brain/agent-session.test.ts`, `packages/waypoint-engine-host/src/core/event-hub.agent.test.ts`
-
-### packages/waypoint-engine-host/src/envelope.ts
-
-Source file `packages/waypoint-engine-host/src/envelope.ts` is covered by test imports from `packages/waypoint-engine-host/src/__tests__/command-bus.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, and 1 more.
-
-- Tests: `packages/waypoint-engine-host/src/__tests__/command-bus.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.shape.test.ts`, `packages/waypoint-engine-host/src/__tests__/envelope.test.ts`
-
-### packages/waypoint-folder-host/src/autopilot/run.ts
-
-Source file `packages/waypoint-folder-host/src/autopilot/run.ts` is covered by test imports from `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, and 1 more.
-
-- Tests: `packages/waypoint-folder-host/src/autopilot/beads-run.test.ts`, `packages/waypoint-folder-host/src/autopilot/run.test.ts`, `packages/waypoint-folder-host/src/beads/parity.test.ts`
-
-### packages/waypoint-folder-host/src/firmvault/state.ts
-
-Source file `packages/waypoint-folder-host/src/firmvault/state.ts` is covered by test imports from `packages/waypoint-folder-host/src/firmvault/adoption.test.ts`, `packages/waypoint-folder-host/src/firmvault/documents.test.ts`, and 1 more.
-
-- Tests: `packages/waypoint-folder-host/src/firmvault/adoption.test.ts`, `packages/waypoint-folder-host/src/firmvault/documents.test.ts`, `packages/waypoint-folder-host/src/firmvault/state.test.ts`
 
 ## Generated Test Specs
 

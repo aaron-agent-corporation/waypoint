@@ -6,6 +6,8 @@ import {
   generateAuthoringHandoffDraft,
   generateAuthoringQuestDraft,
   generateAuthoringRecipeDraft,
+  parseQuestManifest,
+  parseRecipeManifest,
 } from '@waypoint/core'
 import { getWaypointProjectPaths } from '@waypoint/folder-host'
 
@@ -122,6 +124,28 @@ export function registerAuthorCommands(bus: CommandBus, ctx: EngineContext): voi
       throw new EngineError(`Proposal has an unsafe target path: ${String(target)}`, { code: 'VALIDATION', field: 'id' })
     }
     const manifest = await readFile(join(proposalDir, `${slug}.yaml`), 'utf8')
+
+    if (kind === 'recipe') {
+      const parsed = parseRecipeManifest(manifest)
+      if (!parsed.ok) {
+        throw new EngineError(parsed.error.message, {
+          code: 'VALIDATION',
+          field: 'prompt',
+          issues: [parsed.error.message],
+        })
+      }
+    }
+
+    if (kind === 'quest') {
+      const parsed = parseQuestManifest(manifest)
+      if (!parsed.ok) {
+        throw new EngineError(parsed.error.message, {
+          code: 'VALIDATION',
+          field: 'quest',
+          issues: [parsed.error.message],
+        })
+      }
+    }
 
     const dest = join(waypointDir, target)
     await ctx.session.mutate(async () => {

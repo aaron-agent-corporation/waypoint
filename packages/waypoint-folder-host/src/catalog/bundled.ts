@@ -75,6 +75,23 @@ export async function loadBundledWaypointCatalog(
 
   const questEntries = await loadQuestEntries(questsDir)
   const recipeEntries = await loadRecipeEntries(recipesDir)
+
+  return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries })
+}
+
+/**
+ * Build a BundledWaypointCatalog value from already-loaded entries. Shared by
+ * the bundled loader and the workspace-overlay loader so resolveQuestRecipes
+ * lives in exactly one place.
+ */
+export function buildWaypointCatalog(params: {
+  readonly root: string
+  readonly questsDir: string
+  readonly recipesDir: string
+  readonly questEntries: readonly WaypointCatalogEntry<CatalogQuestManifest>[]
+  readonly recipeEntries: readonly WaypointCatalogEntry<CatalogRecipeManifest>[]
+}): BundledWaypointCatalog {
+  const { root, questsDir, recipesDir, questEntries, recipeEntries } = params
   const quests = createCatalogRegistry(questEntries.map((entry) => entry.manifest))
   const recipes = createCatalogRegistry(recipeEntries.map((entry) => entry.manifest))
 
@@ -149,7 +166,7 @@ async function findBundledCatalogRoot(): Promise<string> {
   throw new Error('could not locate bundled Waypoint catalog root')
 }
 
-async function isDirectory(path: string): Promise<boolean> {
+export async function isDirectory(path: string): Promise<boolean> {
   try {
     return (await stat(path)).isDirectory()
   } catch {
@@ -173,7 +190,7 @@ async function hasYamlFile(path: string): Promise<boolean> {
   }
 }
 
-async function loadQuestEntries(root: string): Promise<WaypointCatalogEntry<CatalogQuestManifest>[]> {
+export async function loadQuestEntries(root: string): Promise<WaypointCatalogEntry<CatalogQuestManifest>[]> {
   const files = await walkYamlFiles(root)
   const entries: WaypointCatalogEntry<CatalogQuestManifest>[] = []
   for (const file of files) {
@@ -183,7 +200,7 @@ async function loadQuestEntries(root: string): Promise<WaypointCatalogEntry<Cata
   return entries.sort((a, b) => a.slug.localeCompare(b.slug))
 }
 
-async function loadRecipeEntries(root: string): Promise<WaypointCatalogEntry<CatalogRecipeManifest>[]> {
+export async function loadRecipeEntries(root: string): Promise<WaypointCatalogEntry<CatalogRecipeManifest>[]> {
   const files = await walkYamlFiles(root)
   const entries: WaypointCatalogEntry<CatalogRecipeManifest>[] = []
   for (const file of files) {

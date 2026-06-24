@@ -1,5 +1,5 @@
 import { access } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 export const WAYPOINT_DIR_NAME = '.waypoint'
 
@@ -17,6 +17,21 @@ export function getWaypointProjectPaths(projectRoot: string): WaypointProjectPat
     projectRoot: resolvedRoot,
     waypointDir,
     configPath: join(waypointDir, 'config.yaml'),
+  }
+}
+
+/** Walk up from startDir (inclusive) to the nearest ancestor containing a `.waypoint/` dir; null if none. */
+export async function findWaypointProjectRoot(startDir: string): Promise<string | null> {
+  let current = resolve(startDir)
+  for (;;) {
+    try {
+      await access(join(current, WAYPOINT_DIR_NAME))
+      return current
+    } catch {
+      const parent = dirname(current)
+      if (parent === current) return null
+      current = parent
+    }
   }
 }
 

@@ -25,3 +25,4 @@ graphify-out/
 .beads-credential-key
 runs/
 mar.config.json
+.mar/

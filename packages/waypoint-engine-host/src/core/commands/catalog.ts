@@ -1,4 +1,4 @@
-import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
+import { loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
 
 import { EngineError, ok } from '../../envelope.ts'
 import type { CommandBus } from '../command-bus.ts'
@@ -6,15 +6,15 @@ import type { EngineContext } from '../engine-host.ts'
 
 export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): void {
   bus.register('catalog.quests', async () => {
-    ctx.session.requireActive()
-    const catalog = await loadBundledWaypointCatalog()
+    const { root } = ctx.session.requireActive()
+    const catalog = await loadWorkspaceWaypointCatalog(root)
     return ok('catalog.quests', { quests: catalog.quests.list() })
   })
 
   bus.register('catalog.recipes', async (payload) => {
-    ctx.session.requireActive()
+    const { root } = ctx.session.requireActive()
     const input = (payload ?? {}) as { quest?: string }
-    const catalog = await loadBundledWaypointCatalog()
+    const catalog = await loadWorkspaceWaypointCatalog(root)
     if (input.quest) {
       const resolved = catalog.resolveQuestRecipes(input.quest)
       if (resolved.ok === false) {

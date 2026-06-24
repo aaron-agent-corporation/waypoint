@@ -86,4 +86,33 @@ describe('engine-host author commands (folder)', () => {
     }
     expect(await exists(join(dir, '.waypoint', 'config.yaml.yaml'))).toBe(false)
   })
+
+  it('approveProposal rejects a malformed quest (recipes: not-an-array) with VALIDATION and does NOT land the file', async () => {
+    // Quest YAML where `recipes` is a scalar string, not an array — invalid for parseQuestManifest
+    const malformedYaml = `schema_version: 1\nslug: bad-quest\nname: Bad Quest\nworkflow: workflows/bad-quest.md\nrecipes: not-an-array\n`
+    const draft = { kind: 'quest', path: 'quests/bad-quest.yaml', yaml: malformedYaml }
+    const promoted = (await host.dispatch('author.promote', { draft })) as unknown as { ok: boolean; proposalId: string }
+    expect(promoted.ok).toBe(true)
+
+    const res = await host.dispatch('author.approveProposal', { id: promoted.proposalId })
+    expect(res).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION' } })
+
+    // Must NOT have landed the file in the workspace catalog.
+    expect(await exists(join(dir, '.waypoint', 'quests', 'bad-quest.yaml'))).toBe(false)
+  })
+
+  it('approveProposal rejects a prompt-less recipe with VALIDATION and does NOT land the file', async () => {
+    // Promote a recipe YAML that has no prompt — valid for the catalog schema but
+    // invalid for the runtime schema (parseRecipeManifest requires a non-empty prompt).
+    const promptlessYaml = `schema_version: 1\nslug: prompt-less\nname: Prompt Less Recipe\n`
+    const draft = { kind: 'recipe', path: 'recipes/prompt-less.yaml', yaml: promptlessYaml }
+    const promoted = (await host.dispatch('author.promote', { draft })) as unknown as { ok: boolean; proposalId: string }
+    expect(promoted.ok).toBe(true)
+
+    const res = await host.dispatch('author.approveProposal', { id: promoted.proposalId })
+    expect(res).toMatchObject({ ok: false, action: 'error', details: { code: 'VALIDATION' } })
+
+    // Must NOT have landed the file in the workspace catalog.
+    expect(await exists(join(dir, '.waypoint', 'recipes', 'prompt-less.yaml'))).toBe(false)
+  })
 })

@@ -15,8 +15,8 @@ Use this section for auth, persistence, configuration, background work, observab
 - packages/waypoint-folder-host/src/catalog/bundled.ts (file)
 - packages/waypoint-engine-host/src/core/engine-host.ts (file)
 - packages/waypoint-folder-host/src/beads/reconstruct.ts (file)
+- packages/waypoint-folder-host/src/autopilot/run.ts (file)
 - src/wizard/types.ts (file)
-- packages/waypoint-folder-host/src/beads/compiler.ts (file)
 
 ## Gas City Runtime Over Beads
 <!-- code-kg:id cross-cutting.gascity-runtime -->
