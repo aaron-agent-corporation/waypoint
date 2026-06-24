@@ -8,8 +8,6 @@ import {
   loadQuestEntries,
   loadRecipeEntries,
   type BundledWaypointCatalog,
-  type CatalogQuestManifest,
-  type CatalogRecipeManifest,
   type WaypointCatalogEntry,
 } from './bundled.ts'
 
