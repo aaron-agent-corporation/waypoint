@@ -1,10 +1,11 @@
-import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
+import { findWaypointProjectRoot, loadBundledWaypointCatalog, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
 export async function runRecipesCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const quest = readStringOption(args, '--quest')
-  const catalog = await loadBundledWaypointCatalog()
+  const projectRoot = await findWaypointProjectRoot(io.cwd ?? process.cwd())
+  const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
 
   if (quest) {
     const resolved = catalog.resolveQuestRecipes(quest)

@@ -18,7 +18,7 @@ export { initWaypointProject } from './project/init.ts'
 export type { InitWaypointProjectOptions, InitWaypointProjectResult } from './project/init.ts'
 export { readWaypointStatus } from './project/status.ts'
 export type { WaypointProjectStatus } from './project/status.ts'
-export { getWaypointProjectPaths, waypointConfigExists, WAYPOINT_DIR_NAME } from './project/root.ts'
+export { findWaypointProjectRoot, getWaypointProjectPaths, waypointConfigExists, WAYPOINT_DIR_NAME } from './project/root.ts'
 export type { WaypointProjectPaths } from './project/root.ts'
 export {
   createWaypointProjectConfig,

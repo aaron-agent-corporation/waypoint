@@ -1,4 +1,4 @@
-import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
+import { findWaypointProjectRoot, loadBundledWaypointCatalog, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -8,7 +8,8 @@ export async function runQuestsCommand(args: readonly string[], io: WaypointCliI
     return 1
   }
 
-  const catalog = await loadBundledWaypointCatalog()
+  const projectRoot = await findWaypointProjectRoot(io.cwd ?? process.cwd())
+  const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
   const quests = catalog.quests.list()
   const primary = quests.filter((quest) => isPrimaryStarterQuest(quest.metadata))
   const additional = quests.filter((quest) => !isPrimaryStarterQuest(quest.metadata))
