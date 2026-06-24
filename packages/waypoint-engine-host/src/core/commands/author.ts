@@ -123,6 +123,17 @@ export function registerAuthorCommands(bus: CommandBus, ctx: EngineContext): voi
     if (!target || !TARGET_PATH.test(target)) {
       throw new EngineError(`Proposal has an unsafe target path: ${String(target)}`, { code: 'VALIDATION', field: 'id' })
     }
+    // N6: the proposal's kind (id-derived) and its target directory (promoted path)
+    // are independently controlled. Without this cross-check, a valid quest could be
+    // written into recipes/ (or vice-versa) and shadow a bundled entry of the same
+    // slug in the overlay merge. Enforce that kind agrees with the target directory.
+    const expectedDir = kind === 'quest' ? 'quests' : 'recipes'
+    if (target.split('/')[0] !== expectedDir) {
+      throw new EngineError(`Proposal kind '${kind}' does not match target directory: ${target}`, {
+        code: 'VALIDATION',
+        field: 'id',
+      })
+    }
     const manifest = await readFile(join(proposalDir, `${slug}.yaml`), 'utf8')
 
     if (kind === 'recipe') {
