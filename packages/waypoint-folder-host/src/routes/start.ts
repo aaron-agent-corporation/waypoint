@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 import { parse as yamlParse } from 'yaml'
 
+import { parseRecipeManifest } from '@waypoint/core'
 import { loadWorkspaceWaypointCatalog } from '../catalog/workspace.ts'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { WaypointBeadsCliIssueClient } from '../beads/cli-client.ts'
@@ -46,6 +47,17 @@ export async function startQuestRoute(projectRoot: string, options: StartQuestRo
   const resolved = catalog.resolveQuestRecipes(options.quest)
   if (resolved.ok === false) {
     throw new Error(resolved.message)
+  }
+
+  // Validate that every referenced recipe is runtime-valid before materializing
+  // the route — catches prompt-less recipes at start time, not at autopilot run.
+  for (const entry of resolved.recipeEntries) {
+    const parsedRecipe = parseRecipeManifest(await readFile(entry.path, 'utf8'))
+    if (!parsedRecipe.ok) {
+      throw new Error(
+        `Quest '${options.quest}' references a recipe that is not runtime-valid: ${entry.path}: ${parsedRecipe.error.message}`,
+      )
+    }
   }
 
   if (config.backend.route === 'beads' && !options.beadsClient) {

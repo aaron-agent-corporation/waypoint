@@ -6,6 +6,7 @@ import {
   generateAuthoringHandoffDraft,
   generateAuthoringQuestDraft,
   generateAuthoringRecipeDraft,
+  parseQuestManifest,
   parseRecipeManifest,
 } from '@waypoint/core'
 import { getWaypointProjectPaths } from '@waypoint/folder-host'
@@ -129,7 +130,18 @@ export function registerAuthorCommands(bus: CommandBus, ctx: EngineContext): voi
       if (!parsed.ok) {
         throw new EngineError(parsed.error.message, {
           code: 'VALIDATION',
-          field: 'id',
+          field: 'prompt',
+          issues: [parsed.error.message],
+        })
+      }
+    }
+
+    if (kind === 'quest') {
+      const parsed = parseQuestManifest(manifest)
+      if (!parsed.ok) {
+        throw new EngineError(parsed.error.message, {
+          code: 'VALIDATION',
+          field: 'quest',
           issues: [parsed.error.message],
         })
       }

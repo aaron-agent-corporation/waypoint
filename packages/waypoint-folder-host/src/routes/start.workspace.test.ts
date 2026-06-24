@@ -23,7 +23,7 @@ async function writeAuthored(root: string, questSlug: string, recipeSlug: string
     `schema_version: 1\nslug: ${questSlug}\nname: ${questSlug}\nworkflow: workflows/${questSlug}.md\nrecipes:\n  - ${recipeSlug}\n`,
     'utf8',
   )
-  await writeFile(join(rDir, `${recipeSlug}.yaml`), `schema_version: 1\nslug: ${recipeSlug}\nname: ${recipeSlug}\n`, 'utf8')
+  await writeFile(join(rDir, `${recipeSlug}.yaml`), `schema_version: 1\nslug: ${recipeSlug}\nname: ${recipeSlug}\nprompt: Do the work.\n`, 'utf8')
 }
 
 describe('startQuestRoute with an authored quest', () => {
@@ -35,5 +35,30 @@ describe('startQuestRoute with an authored quest', () => {
 
     expect(route.backend).toBe('folder')
     expect(route.quest).toBe('authored-quest')
+  })
+
+  it('throws when a quest references a prompt-less recipe (start-time validation)', async () => {
+    const root = await initFolderProject()
+    const qDir = join(root, '.waypoint', 'quests')
+    const rDir = join(root, '.waypoint', 'recipes')
+    await mkdir(qDir, { recursive: true })
+    await mkdir(rDir, { recursive: true })
+    // Quest with a prompt-less recipe reference
+    const questSlug = 'promptless-quest'
+    const recipeSlug = 'promptless-recipe'
+    await writeFile(
+      join(qDir, `${questSlug}.yaml`),
+      `schema_version: 1\nslug: ${questSlug}\nname: ${questSlug}\nworkflow: workflows/${questSlug}.md\nrecipes:\n  - ${recipeSlug}\n`,
+      'utf8',
+    )
+    await writeFile(
+      join(rDir, `${recipeSlug}.yaml`),
+      `schema_version: 1\nslug: ${recipeSlug}\nname: ${recipeSlug}\n`,
+      'utf8',
+    )
+
+    await expect(startQuestRoute(root, { quest: questSlug })).rejects.toThrow(
+      /references a recipe that is not runtime-valid/,
+    )
   })
 })
