@@ -239,6 +239,57 @@ describe('loadWorkspaceWaypointCatalog', () => {
     if (!resolved.ok) expect(resolved.message).toMatch(/Quest 'halfwritten' failed to parse/)
   })
 
+  it('within-workspace duplicate slug: a valid entry wins even when another file declares the same slug malformed', async () => {
+    const root = await tempProject()
+    await writeWorkspaceQuest(root, 'needs-x', ['dup-x'])
+    await writeWorkspaceRecipe(root, 'dup-x') // valid recipe, slug dup-x
+    // A second file ALSO declaring slug dup-x, but malformed.
+    const dir = join(root, '.waypoint', 'recipes')
+    await writeFile(join(dir, 'dup-x-broken.yaml'), 'schema_version: 2\nslug: dup-x\nname: Broken\n', 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    const resolved = catalog.resolveQuestRecipes('needs-x')
+
+    // Valid-wins (slug last-wins merge): dup-x resolves to the valid file, NOT unresolved.
+    expect(resolved.ok).toBe(true)
+    if (resolved.ok) expect(resolved.recipes.map((r) => r.slug)).toEqual(['dup-x'])
+    // The malformed file is surfaced as a warning naming the FILE — it does not imply
+    // the (resolved) slug dup-x is unresolved.
+    expect(catalog.recipeErrors.some((e) => e.relativePath.includes('dup-x-broken.yaml'))).toBe(true)
+  })
+
+  it('a malformed override of a bundled recipe makes a BUNDLED quest referencing it fail loud, naming the override file', async () => {
+    const root = await tempProject()
+    const bundled = await loadBundledWaypointCatalog()
+    // Find a bundled quest that references at least one bundled recipe.
+    let questSlug: string | undefined
+    let recipe: { slug: string; relativePath: string } | undefined
+    for (const q of bundled.questEntries) {
+      const r = bundled.resolveQuestRecipes(q.slug)
+      if (r.ok && r.recipeEntries.length > 0) {
+        questSlug = q.slug
+        recipe = { slug: r.recipeEntries[0].slug, relativePath: r.recipeEntries[0].relativePath }
+        break
+      }
+    }
+    if (!questSlug || !recipe) throw new Error('no bundled quest with a referenced recipe found')
+
+    // Malformed workspace override at the bundled recipe's exact relative path.
+    const dest = join(root, '.waypoint', 'recipes', recipe.relativePath)
+    await mkdir(dirname(dest), { recursive: true })
+    await writeFile(dest, `schema_version: 2\nslug: ${recipe.slug}\nname: Broken\n`, 'utf8')
+
+    const catalog = await loadWorkspaceWaypointCatalog(root)
+    const resolved = catalog.resolveQuestRecipes(questSlug)
+
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) {
+      expect(resolved.message).toMatch(/failed to parse/)
+      // Attributes the failure to the authored override file, not the bundled quest.
+      expect(resolved.message).toContain(recipe.relativePath)
+    }
+  })
+
   it('produces slug-sorted merged quest entries including authored + bundled', async () => {
     const root = await tempProject()
     await writeWorkspaceQuest(root, 'zzz-authored', [])

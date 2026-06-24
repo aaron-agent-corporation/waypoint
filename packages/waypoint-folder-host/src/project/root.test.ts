@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -38,5 +38,17 @@ describe('findWaypointProjectRoot', () => {
 
     // From child, the stray file is skipped and the real ancestor dir is found.
     expect(await findWaypointProjectRoot(child)).toBe(ancestor)
+  })
+
+  it('honors a symlinked .waypoint pointing at a directory (stat resolves symlinks)', async () => {
+    // Contract: isDirectory() uses stat(), which follows symlinks — so a symlink
+    // named .waypoint that targets a directory IS treated as a project root. This
+    // pins that behavior so a future stat→lstat change can't silently flip it.
+    const root = await mkdtemp(join(tmpdir(), 'wp-find-symlink-'))
+    const realDir = join(root, 'real-waypoint-dir')
+    await mkdir(realDir, { recursive: true })
+    await symlink(realDir, join(root, '.waypoint'), 'dir')
+
+    expect(await findWaypointProjectRoot(root)).toBe(root)
   })
 })

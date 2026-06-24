@@ -6,6 +6,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { startQuestRoute } from './start.ts'
 
+// Single tracked tmpdir factory: every root this file creates MUST be obtained via
+// initFolderProject so afterEach can reclaim it. Do not call mkdtemp directly in a
+// test — route it through here to keep cleanup correct by construction (waypoint-7ok N2).
 const createdRoots: string[] = []
 
 async function initFolderProject(): Promise<string> {

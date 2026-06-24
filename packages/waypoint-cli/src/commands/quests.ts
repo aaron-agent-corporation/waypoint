@@ -1,11 +1,7 @@
-import {
-  findWaypointProjectRoot,
-  formatCatalogEntryWarning,
-  loadBundledWaypointCatalog,
-  loadWorkspaceWaypointCatalog,
-} from '@waypoint/folder-host'
+import { formatCatalogEntryWarning } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
+import { loadCliCatalog } from './catalog-io.ts'
 
 export async function runQuestsCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   if (args.length > 0) {
@@ -13,8 +9,8 @@ export async function runQuestsCommand(args: readonly string[], io: WaypointCliI
     return 1
   }
 
-  const projectRoot = await findWaypointProjectRoot(io.cwd ?? process.cwd())
-  const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
+  const catalog = await loadCliCatalog(io)
+  if (!catalog) return 1
   // Skip-and-warn: a malformed authored manifest is reported, not fatal to the list.
   for (const error of catalog.questErrors) io.stderr(formatCatalogEntryWarning(error))
   const quests = catalog.quests.list()

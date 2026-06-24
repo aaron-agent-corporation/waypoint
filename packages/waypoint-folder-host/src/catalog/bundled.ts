@@ -113,6 +113,10 @@ export type ResolveCatalogQuestRecipesResult =
 export interface LoadBundledWaypointCatalogOptions {
   readonly root?: string
 }
+// NOTE: only `root` participates in the memoization key (an explicit root is never
+// cached; the default load is). If this interface ever gains another field that
+// affects what is loaded, the default cache must account for it — otherwise it
+// would silently serve a result built under different options (waypoint-7ok N4).
 
 /**
  * Memoized default load. The bundled catalog is curated and immutable per process,
@@ -175,7 +179,7 @@ export function buildWaypointCatalog(params: {
   const quests = createCatalogRegistry(questEntries.map((entry) => entry.manifest))
   const recipes = createCatalogRegistry(recipeEntries.map((entry) => entry.manifest))
 
-  return {
+  const catalog: BundledWaypointCatalog = {
     root,
     questsDir,
     recipesDir,
@@ -231,6 +235,18 @@ export function buildWaypointCatalog(params: {
       }
     },
   }
+
+  // Enforce the immutable contract at the boundary (waypoint-7ok H1): the default
+  // bundled catalog is memoized and shared process-wide, so a consumer mutating it
+  // in place would silently poison every other caller. Freeze the catalog, its
+  // registries, and its entry/error lists so such a regression fails loudly.
+  Object.freeze(catalog.questEntries)
+  Object.freeze(catalog.recipeEntries)
+  Object.freeze(catalog.questErrors)
+  Object.freeze(catalog.recipeErrors)
+  Object.freeze(catalog.quests)
+  Object.freeze(catalog.recipes)
+  return Object.freeze(catalog)
 }
 
 async function findBundledCatalogRoot(): Promise<string> {

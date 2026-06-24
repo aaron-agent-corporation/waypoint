@@ -1,16 +1,12 @@
-import {
-  findWaypointProjectRoot,
-  formatCatalogEntryWarning,
-  loadBundledWaypointCatalog,
-  loadWorkspaceWaypointCatalog,
-} from '@waypoint/folder-host'
+import { formatCatalogEntryWarning } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
+import { loadCliCatalog } from './catalog-io.ts'
 
 export async function runRecipesCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const quest = readStringOption(args, '--quest')
-  const projectRoot = await findWaypointProjectRoot(io.cwd ?? process.cwd())
-  const catalog = projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
+  const catalog = await loadCliCatalog(io)
+  if (!catalog) return 1
 
   if (quest) {
     // Resolution-only surface: lists the recipe winners THIS quest references.

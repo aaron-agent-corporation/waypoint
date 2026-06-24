@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { clearBundledWaypointCatalogCache, loadBundledWaypointCatalog, loadRecipeEntries } from './bundled.ts'
 import { installQuestCatalog } from './install.ts'
@@ -9,6 +9,12 @@ import { installQuestCatalog } from './install.ts'
 async function makeTempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-catalog-test-'))
 }
+
+// The bundled catalog cache is module-level state; clear it after each test so the
+// memoized instance can't leak across tests within this file (waypoint-7ok N1).
+afterEach(() => {
+  clearBundledWaypointCatalogCache()
+})
 
 describe('bundled Waypoint catalog', () => {
   it('loads bundled Quests and Waypoint Recipes from the repo root', async () => {
