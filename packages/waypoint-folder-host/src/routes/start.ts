@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { parse as yamlParse } from 'yaml'
 
-import { loadBundledWaypointCatalog } from '../catalog/bundled.ts'
+import { loadWorkspaceWaypointCatalog } from '../catalog/workspace.ts'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { WaypointBeadsCliIssueClient } from '../beads/cli-client.ts'
 import { instantiateWaypointRouteInBeads, type WaypointBeadsIssueClient } from '../beads/instantiate.ts'
@@ -41,7 +41,8 @@ export interface StartedQuestRouteBeadsSummary {
 export async function startQuestRoute(projectRoot: string, options: StartQuestRouteOptions): Promise<StartedQuestRoute> {
   const paths = getWaypointProjectPaths(projectRoot)
   const config = await readWaypointProjectConfig(paths.configPath)
-  const catalog = await loadBundledWaypointCatalog()
+  // Resolve once; reuse for both recipe resolution and beads instantiation.
+  const catalog = await loadWorkspaceWaypointCatalog(projectRoot)
   const resolved = catalog.resolveQuestRecipes(options.quest)
   if (resolved.ok === false) {
     throw new Error(resolved.message)
