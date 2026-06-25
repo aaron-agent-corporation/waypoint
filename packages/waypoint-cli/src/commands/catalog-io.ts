@@ -1,4 +1,5 @@
 import {
+  CatalogLoadError,
   findWaypointProjectRoot,
   loadBundledWaypointCatalog,
   loadWorkspaceWaypointCatalog,
@@ -18,6 +19,12 @@ export async function loadCliCatalog(io: WaypointCliIo): Promise<BundledWaypoint
   try {
     return projectRoot ? await loadWorkspaceWaypointCatalog(projectRoot) : await loadBundledWaypointCatalog()
   } catch (err) {
+    // An expected corrupt-catalog failure gets a clean one-line message. An
+    // unexpected internal error (a real bug, not a malformed manifest) also keeps
+    // its stack so it isn't masked as routine (waypoint-sga F4).
+    if (!(err instanceof CatalogLoadError) && err instanceof Error && err.stack) {
+      io.stderr(err.stack)
+    }
     io.stderr(`Failed to load the Waypoint catalog: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }

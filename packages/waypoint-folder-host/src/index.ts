@@ -33,7 +33,7 @@ export type {
   WaypointRecipeRuntimeMode,
   WaypointRouteBackendMode,
 } from './project/config.ts'
-export { loadBundledWaypointCatalog, formatCatalogEntryWarning } from './catalog/bundled.ts'
+export { loadBundledWaypointCatalog, formatCatalogEntryWarning, CatalogLoadError } from './catalog/bundled.ts'
 export { loadWorkspaceWaypointCatalog } from './catalog/workspace.ts'
 export type {
   BundledWaypointCatalog,

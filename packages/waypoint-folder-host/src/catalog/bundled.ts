@@ -58,6 +58,23 @@ export interface LoadEntriesResult<TManifest> {
   readonly errors: CatalogEntryError[]
 }
 
+/**
+ * Thrown by a strict catalog load when a manifest fails to parse. A distinct type
+ * so callers can tell an EXPECTED corrupt-catalog failure (clean one-line message)
+ * apart from an unexpected internal error (keep the stack) — see the CLI helper.
+ */
+export class CatalogLoadError extends Error {
+  readonly kind: 'Quest' | 'Recipe'
+  readonly relativePath: string
+
+  constructor(kind: 'Quest' | 'Recipe', relativePath: string, reason: string) {
+    super(`invalid ${kind} manifest: ${relativePath}: ${reason}`)
+    this.name = 'CatalogLoadError'
+    this.kind = kind
+    this.relativePath = relativePath
+  }
+}
+
 export interface LoadEntriesOptions {
   /**
    * Throw on the first collected parse error instead of returning it as data.
@@ -354,7 +371,7 @@ async function loadEntries<TManifest extends { readonly slug: string }>(
   if (options.strict && errors.length > 0) {
     // The curated, immutable bundle must fail loud: a malformed manifest there is a
     // packaging defect, not an authoring mistake. Workspace loading stays tolerant.
-    throw new Error(`invalid ${kind} manifest: ${errors[0].relativePath}: ${errors[0].message}`)
+    throw new CatalogLoadError(kind, errors[0].relativePath, errors[0].message)
   }
   return { entries, errors }
 }

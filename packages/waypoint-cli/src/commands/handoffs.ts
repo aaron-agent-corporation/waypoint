@@ -1,7 +1,7 @@
 import { loadBundledHandoffManifests, type HandoffManifest } from '@waypoint/core'
-import { loadBundledWaypointCatalog } from '@waypoint/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
+import { loadCliCatalog } from './catalog-io.ts'
 
 const usage = `Waypoint handoffs
 
@@ -47,7 +47,11 @@ async function runList(args: readonly string[], io: WaypointCliIo): Promise<numb
 
   let manifests = loaded.manifests
   if (parsedArgs.quest) {
-    const catalog = await loadBundledWaypointCatalog()
+    // Workspace-aware + clean-error, consistent with quests/recipes (waypoint-sga NB6):
+    // a workspace-authored quest can list its handoffs, and a catalog-load failure
+    // surfaces as a clean message rather than an unhandled rejection.
+    const catalog = await loadCliCatalog(io)
+    if (!catalog) return 1
     const quest = catalog.quests.get(parsedArgs.quest)
     if (!quest) {
       io.stderr(`Unknown quest: ${parsedArgs.quest}`)
