@@ -4,7 +4,7 @@ import { basename, dirname, join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { loadBundledWaypointCatalog } from './bundled.ts'
+import { formatCatalogEntryWarning, loadBundledWaypointCatalog } from './bundled.ts'
 import { loadWorkspaceWaypointCatalog } from './workspace.ts'
 
 async function tempProject(): Promise<string> {
@@ -239,23 +239,30 @@ describe('loadWorkspaceWaypointCatalog', () => {
     if (!resolved.ok) expect(resolved.message).toMatch(/Quest 'halfwritten' failed to parse/)
   })
 
-  it('within-workspace duplicate slug: a valid entry wins even when another file declares the same slug malformed', async () => {
+  it('within-workspace duplicate slug resolves valid-wins regardless of read order, and the warning names the file', async () => {
     const root = await tempProject()
     await writeWorkspaceQuest(root, 'needs-x', ['dup-x'])
-    await writeWorkspaceRecipe(root, 'dup-x') // valid recipe, slug dup-x
-    // A second file ALSO declaring slug dup-x, but malformed.
+    await writeWorkspaceRecipe(root, 'dup-x', 'VALID dup-x recipe') // valid recipe, slug dup-x
+    // A malformed file ALSO declaring slug dup-x, named so it sorts AFTER dup-x.yaml —
+    // i.e. it is read LAST. A last-wins-by-order merge would let it clobber the valid
+    // entry; valid-wins must hold regardless, because a malformed file never enters the
+    // registry (it goes to errors[], so it can only tombstone a *bundled* twin).
     const dir = join(root, '.waypoint', 'recipes')
-    await writeFile(join(dir, 'dup-x-broken.yaml'), 'schema_version: 2\nslug: dup-x\nname: Broken\n', 'utf8')
+    await writeFile(join(dir, 'dup-x9-broken.yaml'), 'schema_version: 2\nslug: dup-x\nname: Broken\n', 'utf8')
 
     const catalog = await loadWorkspaceWaypointCatalog(root)
-    const resolved = catalog.resolveQuestRecipes('needs-x')
 
-    // Valid-wins (slug last-wins merge): dup-x resolves to the valid file, NOT unresolved.
+    // Identity check: the registry entry is the VALID manifest, not the malformed one.
+    expect(catalog.recipes.get('dup-x')?.name).toBe('VALID dup-x recipe')
+    const resolved = catalog.resolveQuestRecipes('needs-x')
     expect(resolved.ok).toBe(true)
     if (resolved.ok) expect(resolved.recipes.map((r) => r.slug)).toEqual(['dup-x'])
-    // The malformed file is surfaced as a warning naming the FILE — it does not imply
-    // the (resolved) slug dup-x is unresolved.
-    expect(catalog.recipeErrors.some((e) => e.relativePath.includes('dup-x-broken.yaml'))).toBe(true)
+
+    // The operator-facing warning names the FILE, not the (resolved) slug — so it does
+    // not imply dup-x is unresolved.
+    const errored = catalog.recipeErrors.find((e) => e.relativePath.includes('dup-x9-broken.yaml'))
+    expect(errored).toBeDefined()
+    expect(formatCatalogEntryWarning(errored!)).toContain('dup-x9-broken.yaml')
   })
 
   it('a malformed override of a bundled recipe makes a BUNDLED quest referencing it fail loud, naming the override file', async () => {

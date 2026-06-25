@@ -156,8 +156,9 @@ async function loadBundledCatalogUncached(rootOption: string | undefined): Promi
   const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir, { strict: true })
   const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir, { strict: true })
 
-  // Freeze only the bundled catalog: it is memoized and shared process-wide, so a
-  // consumer mutating it in place would poison every other caller (waypoint-7ok H1).
+  // Immutability contract (waypoint-7ok H1): every bundled catalog is frozen on load
+  // — both the memoized default (shared process-wide, the real poison-the-singleton
+  // hazard) and explicit-root loads (the curated bundle is immutable regardless).
   // Workspace overlays are built fresh per call and are intentionally left mutable.
   return freezeCatalog(buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors }))
 }
