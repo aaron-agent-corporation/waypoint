@@ -50,7 +50,7 @@ tools:
 metadata:
   source_port:
     status: ported_from_waypoint
-    source_repository: /Users/aaronwhaley/Github/Active Projects/waypoint
+    source_repository: /Users/aaronwhaley/Agent-Corporation/waypoint
     source_workflow: workflows/firmvault-request-medical-records.yaml
     source_node: adversarial_chronology_qc
     source_files:
