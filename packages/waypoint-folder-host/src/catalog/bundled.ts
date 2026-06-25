@@ -156,7 +156,10 @@ async function loadBundledCatalogUncached(rootOption: string | undefined): Promi
   const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir, { strict: true })
   const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir, { strict: true })
 
-  return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors })
+  // Freeze only the bundled catalog: it is memoized and shared process-wide, so a
+  // consumer mutating it in place would poison every other caller (waypoint-7ok H1).
+  // Workspace overlays are built fresh per call and are intentionally left mutable.
+  return freezeCatalog(buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors }))
 }
 
 /**
@@ -236,10 +239,17 @@ export function buildWaypointCatalog(params: {
     },
   }
 
-  // Enforce the immutable contract at the boundary (waypoint-7ok H1): the default
-  // bundled catalog is memoized and shared process-wide, so a consumer mutating it
-  // in place would silently poison every other caller. Freeze the catalog, its
-  // registries, and its entry/error lists so such a regression fails loudly.
+  return catalog
+}
+
+/**
+ * Shallow-freeze the catalog container, its registries, and its entry/error lists
+ * (waypoint-7ok H1). Applied ONLY to the memoized bundled catalog — the actual
+ * shared-singleton hazard — not to fresh per-call workspace overlays. The freeze is
+ * top-level: it stops slot reassignment / `push` on the shared lists; it does not
+ * deep-freeze manifest fields, so it guards container shape, not deep immutability.
+ */
+function freezeCatalog(catalog: BundledWaypointCatalog): BundledWaypointCatalog {
   Object.freeze(catalog.questEntries)
   Object.freeze(catalog.recipeEntries)
   Object.freeze(catalog.questErrors)

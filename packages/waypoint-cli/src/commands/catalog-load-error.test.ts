@@ -1,8 +1,8 @@
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // Force the no-project (bundled) path and make the bundled load fail, simulating a
 // corrupt bundled manifest reaching the CLI via strict loading (waypoint-bae #4).
@@ -21,8 +21,18 @@ import { runQuestsCommand } from './quests.ts'
 import { runRecipesCommand } from './recipes.ts'
 
 describe('CLI surfaces a clean error when the catalog fails to load', () => {
+  const createdDirs: string[] = []
+
+  afterEach(async () => {
+    while (createdDirs.length > 0) {
+      await rm(createdDirs.pop()!, { recursive: true, force: true })
+    }
+  })
+
   async function noProjectCwd(): Promise<string> {
-    return mkdtemp(join(tmpdir(), 'wp-noproj-'))
+    const dir = await mkdtemp(join(tmpdir(), 'wp-noproj-'))
+    createdDirs.push(dir)
+    return dir
   }
 
   it('quests returns 1 with a stderr message, not an unhandled rejection', async () => {

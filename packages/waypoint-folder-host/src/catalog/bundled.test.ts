@@ -79,4 +79,14 @@ describe('bundled Waypoint catalog', () => {
     expect(c).not.toBe(a) // fresh load after clear
     expect(c.quests.has('waypoint')).toBe(true)
   })
+
+  // H1 is scoped to the shared bundled singleton: it is frozen so a consumer that
+  // mutates it in place fails loudly. (Fresh workspace overlays are left mutable.)
+  it('freezes the shared bundled catalog container and its lists', async () => {
+    const catalog = await loadBundledWaypointCatalog()
+    expect(Object.isFrozen(catalog)).toBe(true)
+    expect(Object.isFrozen(catalog.questEntries)).toBe(true)
+    expect(Object.isFrozen(catalog.recipeEntries)).toBe(true)
+    expect(() => (catalog.questEntries as unknown as unknown[]).push({})).toThrow()
+  })
 })
