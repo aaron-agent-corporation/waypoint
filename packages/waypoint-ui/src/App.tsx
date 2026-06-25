@@ -27,6 +27,7 @@ function Console() {
   const client = useClient()
   const applyMessage = useStore((s) => s.applyMessage)
   const routesEpoch = useStore((s) => s.routesEpoch)
+  const bumpRoutesEpoch = useStore((s) => s.bumpRoutesEpoch)
   const setRoutes = useStore((s) => s.setRoutes)
   const setTasks = useStore((s) => s.setTasks)
   const setSessions = useStore((s) => s.setSessions)
@@ -60,6 +61,10 @@ function Console() {
   // flag also guards the WS callback: a late message from a closed/superseded
   // socket is dropped before it can roll the store back (snapshots are now
   // authoritative and re-base seq, so this guard is load-bearing).
+  // Tracks whether the previous session poll errored, so a success can detect the
+  // error→ok transition (the engine became reachable again) and nudge a stale
+  // routes refetch — closing the idle-recovery gap below.
+  const sessionsHadErrorRef = useRef(false)
   useEffect(() => {
     let active = true
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -72,8 +77,20 @@ function Console() {
         if (!active) return
         if (sessions) setSessions(sessions)
         setSessionsError(null) // recovered
+        // The session poll is the only self-recovering cadence. When it recovers
+        // from an outage, the engine is reachable again — so re-attempt routes if
+        // they were stranded (banner up) by an exhausted refetch retry. Gated on a
+        // live routesError (read fresh, not subscribed) so a flapping session poll
+        // can't amplify into repeated routes refetches when routes are fine.
+        if (sessionsHadErrorRef.current && useStore.getState().routesError !== null) {
+          bumpRoutesEpoch()
+        }
+        sessionsHadErrorRef.current = false
       } catch (err) {
-        if (active) setSessionsError(toMessage(err))
+        if (active) {
+          setSessionsError(toMessage(err))
+          sessionsHadErrorRef.current = true
+        }
       } finally {
         if (active) timer = setTimeout(poll, 2000)
       }
@@ -84,16 +101,17 @@ function Console() {
       if (timer) clearTimeout(timer)
       unsubscribe()
     }
-  }, [client, applyMessage, fetchSessions, setSessions, setSessionsError])
+  }, [client, applyMessage, fetchSessions, setSessions, setSessionsError, bumpRoutesEpoch])
 
   // Refetch routes/tasks whenever the epoch advances. The epoch is marked applied
   // — and the data/error writes happen — only for the *live* attempt (`!cancelled`),
   // so a stale response from a superseded epoch can't roll the store back. A failed
-  // refetch retries (bounded). NOTE: once the bounded retry exhausts, routes/tasks
-  // are not re-fetched until the next epoch bump (a route event/resnapshot) — there
-  // is no independent routes poll. This is intended; a longer engine blip leaves the
-  // route panel stale (banner up) until the next event, while the session poll
-  // recovers on its own 2s cadence.
+  // refetch retries (bounded). Once the bounded retry exhausts, routes/tasks are not
+  // re-fetched by this effect until the epoch advances again. Three things advance
+  // it: a route event/resnapshot (the normal path), the session poll recovering from
+  // an outage (engine-reachable-again nudge, above), and the operator pressing Retry
+  // on the routes banner (below) — so a silent engine recovery no longer strands the
+  // panel.
   const appliedEpochRef = useRef(0)
   useEffect(() => {
     if (routesEpoch === appliedEpochRef.current) return
@@ -124,9 +142,12 @@ function Console() {
 
   // Per-source rows so dismissing a recovered source can't hide a still-active
   // outage on another (routesError has no independent poll, so a shared Dismiss
-  // would leave it silently hidden until the next route event).
-  const errors: { key: string; msg: string; clear: () => void }[] = []
-  if (routesError) errors.push({ key: 'routes', msg: routesError, clear: () => setRoutesError(null) })
+  // would leave it silently hidden until the next route event). The routes row also
+  // offers Retry — a manual epoch bump — so an operator can re-attempt immediately
+  // after the bounded retry exhausts rather than waiting for the next event.
+  const errors: { key: string; msg: string; clear: () => void; retry?: () => void }[] = []
+  if (routesError)
+    errors.push({ key: 'routes', msg: routesError, clear: () => setRoutesError(null), retry: () => bumpRoutesEpoch() })
   if (sessionsError) errors.push({ key: 'sessions', msg: sessionsError, clear: () => setSessionsError(null) })
   if (error) errors.push({ key: 'engine', msg: error, clear: () => setError(null) })
 
@@ -137,9 +158,12 @@ function Console() {
           {errors.map((e) => (
             <div key={e.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}>
               <span>{e.msg}</span>
-              <button onClick={e.clear} style={{ marginLeft: 8 }}>
-                Dismiss
-              </button>
+              <span style={{ marginLeft: 8, whiteSpace: 'nowrap' }}>
+                {e.retry && <button onClick={e.retry}>Retry</button>}
+                <button onClick={e.clear} style={{ marginLeft: 8 }}>
+                  Dismiss
+                </button>
+              </span>
             </div>
           ))}
         </div>

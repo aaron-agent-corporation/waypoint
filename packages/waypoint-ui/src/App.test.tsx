@@ -128,6 +128,86 @@ describe('App', () => {
     }
   })
 
+  it('re-attempts and clears the routes banner when the operator presses Retry after exhaustion', async () => {
+    vi.useFakeTimers()
+    try {
+      let routesOk = false
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+      const baseCmd = client.cmd.bind(client)
+      client.cmd = (async (name: string, payload?: unknown) => {
+        if (name === 'routes.list')
+          return routesOk ? { ok: true, action: 'routes.list', routes: [route('route-retry')] } : { ok: false, action: 'routes.list', error: 'down' }
+        if (name === 'tasks.list') return { ok: true, action: 'tasks.list', tasks: [] }
+        return baseCmd(name, payload)
+      }) as never
+
+      render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // open the gate
+
+      // Epoch 1: routes fail through the entire bounded retry → banner up.
+      act(() => client.emit({ type: 'event', topic: 'route:r', seq: 1, record: { kind: 'route.started' } }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      expect(screen.getByRole('alert')).toHaveTextContent('down')
+
+      // The engine recovers silently (no event). The operator presses Retry → a manual
+      // epoch bump → the refetch now succeeds and the banner clears.
+      routesOk = true
+      act(() => { screen.getByRole('button', { name: 'Retry' }).click() })
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(useStore.getState().routes.map((r) => r.id)).toContain('route-retry')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('nudges a stale routes refetch when the session poll recovers (idle recovery, no route event)', async () => {
+    vi.useFakeTimers()
+    try {
+      let agentOk = false
+      let routesOk = false
+      const client = new FakeEngineClient()
+      client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+      const baseCmd = client.cmd.bind(client)
+      client.cmd = (async (name: string, payload?: unknown) => {
+        if (name === 'agent.list')
+          return agentOk ? { ok: true, action: 'agent.list', sessions: [] } : { ok: false, action: 'agent.list', error: 'engine down' }
+        if (name === 'routes.list')
+          return routesOk ? { ok: true, action: 'routes.list', routes: [route('route-idle')] } : { ok: false, action: 'routes.list', error: 'down' }
+        if (name === 'tasks.list') return { ok: true, action: 'tasks.list', tasks: [] }
+        return baseCmd(name, payload)
+      }) as never
+
+      render(<App client={client} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // gate opens; first session poll FAILS
+
+      // Epoch 1: routes also fail through the bounded retry → routes banner up.
+      act(() => client.emit({ type: 'event', topic: 'route:r', seq: 1, record: { kind: 'route.started' } }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      expect(screen.getByText('down')).toBeInTheDocument()
+
+      // The engine recovers but emits NO route event. The next session poll succeeds
+      // (error→ok), which nudges the stale routes refetch — which now succeeds.
+      agentOk = true
+      routesOk = true
+      await act(async () => { await vi.advanceTimersByTimeAsync(2000) }) // session poll recovers → epoch bump
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) }) // settle the nudged refetch
+
+      expect(useStore.getState().routes.map((r) => r.id)).toContain('route-idle')
+      expect(screen.queryByText('down')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('does not starve the session poll when agent.list is slower than the poll interval', async () => {
     vi.useFakeTimers()
     try {
