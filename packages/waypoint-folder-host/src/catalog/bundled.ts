@@ -113,6 +113,10 @@ export type ResolveCatalogQuestRecipesResult =
 export interface LoadBundledWaypointCatalogOptions {
   readonly root?: string
 }
+// NOTE: only `root` participates in the memoization key (an explicit root is never
+// cached; the default load is). If this interface ever gains another field that
+// affects what is loaded, the default cache must account for it — otherwise it
+// would silently serve a result built under different options (waypoint-7ok N4).
 
 /**
  * Memoized default load. The bundled catalog is curated and immutable per process,
@@ -152,7 +156,11 @@ async function loadBundledCatalogUncached(rootOption: string | undefined): Promi
   const { entries: questEntries, errors: questErrors } = await loadQuestEntries(questsDir, { strict: true })
   const { entries: recipeEntries, errors: recipeErrors } = await loadRecipeEntries(recipesDir, { strict: true })
 
-  return buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors })
+  // Immutability contract (waypoint-7ok H1): every bundled catalog is frozen on load
+  // — both the memoized default (shared process-wide, the real poison-the-singleton
+  // hazard) and explicit-root loads (the curated bundle is immutable regardless).
+  // Workspace overlays are built fresh per call and are intentionally left mutable.
+  return freezeCatalog(buildWaypointCatalog({ root, questsDir, recipesDir, questEntries, recipeEntries, questErrors, recipeErrors }))
 }
 
 /**
@@ -175,7 +183,7 @@ export function buildWaypointCatalog(params: {
   const quests = createCatalogRegistry(questEntries.map((entry) => entry.manifest))
   const recipes = createCatalogRegistry(recipeEntries.map((entry) => entry.manifest))
 
-  return {
+  const catalog: BundledWaypointCatalog = {
     root,
     questsDir,
     recipesDir,
@@ -231,6 +239,25 @@ export function buildWaypointCatalog(params: {
       }
     },
   }
+
+  return catalog
+}
+
+/**
+ * Shallow-freeze the catalog container, its registries, and its entry/error lists
+ * (waypoint-7ok H1). Applied ONLY to the memoized bundled catalog — the actual
+ * shared-singleton hazard — not to fresh per-call workspace overlays. The freeze is
+ * top-level: it stops slot reassignment / `push` on the shared lists; it does not
+ * deep-freeze manifest fields, so it guards container shape, not deep immutability.
+ */
+function freezeCatalog(catalog: BundledWaypointCatalog): BundledWaypointCatalog {
+  Object.freeze(catalog.questEntries)
+  Object.freeze(catalog.recipeEntries)
+  Object.freeze(catalog.questErrors)
+  Object.freeze(catalog.recipeErrors)
+  Object.freeze(catalog.quests)
+  Object.freeze(catalog.recipes)
+  return Object.freeze(catalog)
 }
 
 async function findBundledCatalogRoot(): Promise<string> {

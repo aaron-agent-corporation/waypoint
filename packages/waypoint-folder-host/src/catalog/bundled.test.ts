@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { clearBundledWaypointCatalogCache, loadBundledWaypointCatalog, loadRecipeEntries } from './bundled.ts'
 import { installQuestCatalog } from './install.ts'
@@ -9,6 +9,12 @@ import { installQuestCatalog } from './install.ts'
 async function makeTempProject(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'waypoint-catalog-test-'))
 }
+
+// The bundled catalog cache is module-level state; clear it after each test so the
+// memoized instance can't leak across tests within this file (waypoint-7ok N1).
+afterEach(() => {
+  clearBundledWaypointCatalogCache()
+})
 
 describe('bundled Waypoint catalog', () => {
   it('loads bundled Quests and Waypoint Recipes from the repo root', async () => {
@@ -72,5 +78,19 @@ describe('bundled Waypoint catalog', () => {
     const c = await loadBundledWaypointCatalog()
     expect(c).not.toBe(a) // fresh load after clear
     expect(c.quests.has('waypoint')).toBe(true)
+  })
+
+  // H1 is scoped to the shared bundled singleton: it is frozen so a consumer that
+  // mutates it in place fails loudly. (Fresh workspace overlays are left mutable.)
+  it('freezes the bundled catalog container, its registries, and all its lists', async () => {
+    const catalog = await loadBundledWaypointCatalog()
+    expect(Object.isFrozen(catalog)).toBe(true)
+    expect(Object.isFrozen(catalog.questEntries)).toBe(true)
+    expect(Object.isFrozen(catalog.recipeEntries)).toBe(true)
+    expect(Object.isFrozen(catalog.questErrors)).toBe(true)
+    expect(Object.isFrozen(catalog.recipeErrors)).toBe(true)
+    expect(Object.isFrozen(catalog.quests)).toBe(true)
+    expect(Object.isFrozen(catalog.recipes)).toBe(true)
+    expect(() => (catalog.questEntries as unknown as unknown[]).push({})).toThrow()
   })
 })
