@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import { loadCliCatalog } from './catalog-io.ts'
 import { runQuestsCommand } from './quests.ts'
 import { runRecipesCommand } from './recipes.ts'
 
@@ -84,6 +85,22 @@ describe('waypoint quests CLI with workspace entries', () => {
     expect(code).toBe(0)
     expect(out.join('\n')).toContain('good')
     expect(err.join('\n')).toMatch(/skipped malformed manifest .*broken\.yaml/)
+  })
+
+  // NB-2: the try/catch in loadCliCatalog must NOT turn a soft skip-and-warn (a
+  // malformed AUTHORED manifest) into a hard fail-loud — the load resolves and the
+  // bad file is collected into errors[], not raised.
+  it('loadCliCatalog skip-and-warns on a malformed authored manifest (load resolves, not fail-loud)', async () => {
+    const root = await projectWithAuthoredRecipe()
+    await writeFile(join(root, '.waypoint', 'recipes', 'broken.yaml'), 'schema_version: 2\nslug: broken\n', 'utf8')
+
+    const stderr: string[] = []
+    const catalog = await loadCliCatalog({ stdout: () => {}, stderr: (l) => stderr.push(l), cwd: root })
+
+    expect(catalog).not.toBeNull() // resolved — did NOT throw / return null
+    expect(catalog!.recipeErrors.some((e) => e.relativePath.includes('broken.yaml'))).toBe(true)
+    expect(catalog!.recipes.get('authored-recipe')).toBeDefined() // valid entry still present
+    expect(stderr.join('\n')).not.toMatch(/Failed to load the Waypoint catalog/) // no fail-loud line
   })
 
   // P3-1: the quest-scoped recipes surface is resolution-only — it must stay silent

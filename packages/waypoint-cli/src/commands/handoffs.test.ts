@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import { runWaypointCli } from '../bin'
@@ -48,6 +52,38 @@ describe('waypoint handoffs command', () => {
     }
     expect(parsed.quest).toBe('firmvault')
     expect(parsed.handoffs.map((manifest) => manifest.slug)).toEqual(['firmvault-paralegal-handoffs'])
+  })
+
+  it('resolves a WORKSPACE-authored quest for handoffs (workspace-aware, NB6)', async () => {
+    // A workspace-authored quest (not in the bundle) that references a bundled
+    // handoff manifest — only resolvable now that handoffs routes through the
+    // workspace-aware loadCliCatalog.
+    const root = await mkdtemp(join(tmpdir(), 'wp-handoffs-ws-'))
+    try {
+      const qDir = join(root, '.waypoint', 'quests')
+      await mkdir(qDir, { recursive: true })
+      await writeFile(
+        join(qDir, 'authored-q.yaml'),
+        'schema_version: 1\nslug: authored-q\nname: Authored Q\nworkflow: workflows/authored-q.md\nhandoff_manifests:\n  - firmvault-paralegal-handoffs\n',
+        'utf8',
+      )
+
+      const stdout: string[] = []
+      const stderr: string[] = []
+      const code = await runWaypointCli(['handoffs', 'list', '--quest', 'authored-q', '--json'], {
+        stdout: (l) => stdout.push(l),
+        stderr: (l) => stderr.push(l),
+        cwd: root,
+      })
+
+      expect(code).toBe(0)
+      expect(stderr).toEqual([])
+      const parsed = JSON.parse(stdout.join('\n')) as { quest: string; handoffs: Array<{ slug: string }> }
+      expect(parsed.quest).toBe('authored-q')
+      expect(parsed.handoffs.map((m) => m.slug)).toEqual(['firmvault-paralegal-handoffs'])
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
   })
 
   it('prints a human-readable handoff manifest list', async () => {
