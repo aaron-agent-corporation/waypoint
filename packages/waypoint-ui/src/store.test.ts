@@ -60,6 +60,14 @@ describe('store.applyMessage', () => {
     expect(useStore.getState().routesEpoch).toBe(start + 2)
   })
 
+  it('bumpRoutesEpoch advances the epoch (manual Retry / session-recovery nudge path)', () => {
+    const start = useStore.getState().routesEpoch
+    useStore.getState().bumpRoutesEpoch()
+    expect(useStore.getState().routesEpoch).toBe(start + 1)
+    useStore.getState().bumpRoutesEpoch()
+    expect(useStore.getState().routesEpoch).toBe(start + 2)
+  })
+
   it('rehydrates from a lower-seq snapshot and re-bases seq (engine restart / seq-reset recovery)', () => {
     const { applyMessage } = useStore.getState()
     applyMessage(snapshot(10, ['route-old']))

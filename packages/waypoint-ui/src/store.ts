@@ -37,6 +37,13 @@ interface UiState {
   error: string | null
 
   applyMessage(msg: EngineWsMessage): void
+  /**
+   * Advance the routes epoch to force a routes/tasks refetch. Used for recovery
+   * paths that aren't driven by a route event: an operator 'Retry' on the routes
+   * banner, and the session-poll's engine-reachable-again signal — both re-attempt
+   * after the bounded refetch retry has exhausted and left the panel stale.
+   */
+  bumpRoutesEpoch(): void
   setConnection(c: ConnectionStatus): void
   setRoutes(r: WaypointFolderRoute[]): void
   setTasks(t: WaypointFolderTask[]): void
@@ -111,6 +118,7 @@ export const useStore = create<UiState>((set, get) => ({
     set({ seq: msg.seq, routesEpoch: get().routesEpoch + 1 })
   },
 
+  bumpRoutesEpoch: () => set({ routesEpoch: get().routesEpoch + 1 }),
   setConnection: (connection) => set({ connection }),
   setRoutes: (routes) => set({ routes }),
   setTasks: (tasks) => set({ tasks }),
