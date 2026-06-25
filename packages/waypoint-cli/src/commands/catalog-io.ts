@@ -21,11 +21,12 @@ export async function loadCliCatalog(io: WaypointCliIo): Promise<BundledWaypoint
   } catch (err) {
     // An expected corrupt-catalog failure gets a clean one-line message. An
     // unexpected internal error (a real bug, not a malformed manifest) also keeps
-    // its stack so it isn't masked as routine (waypoint-sga F4).
+    // its stack so it isn't masked as routine (waypoint-sga F4). Summary first,
+    // then the stack detail.
+    io.stderr(`Failed to load the Waypoint catalog: ${err instanceof Error ? err.message : String(err)}`)
     if (!(err instanceof CatalogLoadError) && err instanceof Error && err.stack) {
       io.stderr(err.stack)
     }
-    io.stderr(`Failed to load the Waypoint catalog: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }

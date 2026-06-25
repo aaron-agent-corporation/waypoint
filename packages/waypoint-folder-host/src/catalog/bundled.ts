@@ -66,12 +66,14 @@ export interface LoadEntriesResult<TManifest> {
 export class CatalogLoadError extends Error {
   readonly kind: 'Quest' | 'Recipe'
   readonly relativePath: string
+  readonly reason: string
 
   constructor(kind: 'Quest' | 'Recipe', relativePath: string, reason: string) {
     super(`invalid ${kind} manifest: ${relativePath}: ${reason}`)
     this.name = 'CatalogLoadError'
     this.kind = kind
     this.relativePath = relativePath
+    this.reason = reason
   }
 }
 
