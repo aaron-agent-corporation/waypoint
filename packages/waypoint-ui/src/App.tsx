@@ -61,6 +61,12 @@ function Console() {
   // flag also guards the WS callback: a late message from a closed/superseded
   // socket is dropped before it can roll the store back (snapshots are now
   // authoritative and re-base seq, so this guard is load-bearing).
+  // The last routes epoch successfully applied by the refetch effect below. When it
+  // lags `routesEpoch`, routes/tasks are stale (a refetch is pending or its bounded
+  // retry exhausted). Declared here so the session poll can read it as the recovery
+  // gate — staleness, NOT the `routesError` banner flag, so dismissing the banner
+  // hides the noise without disabling auto-recovery (D1).
+  const appliedEpochRef = useRef(0)
   // Tracks whether the previous session poll errored, so a success can detect the
   // error→ok transition (the engine became reachable again) and nudge a stale
   // routes refetch — closing the idle-recovery gap below.
@@ -79,10 +85,13 @@ function Console() {
         setSessionsError(null) // recovered
         // The session poll is the only self-recovering cadence. When it recovers
         // from an outage, the engine is reachable again — so re-attempt routes if
-        // they were stranded (banner up) by an exhausted refetch retry. Gated on a
-        // live routesError (read fresh, not subscribed) so a flapping session poll
-        // can't amplify into repeated routes refetches when routes are fine.
-        if (sessionsHadErrorRef.current && useStore.getState().routesError !== null) {
+        // they are actually stale (epoch not yet applied), read fresh rather than
+        // subscribed. Gating on staleness (not the routesError banner) means a
+        // flapping poll can't amplify a refetch when routes are current, AND a
+        // dismissed banner still auto-recovers (D1). NOTE: this fires only when the
+        // SESSION poll errored — a routes-only outage with a healthy session poll
+        // won't auto-recover here; the operator's Retry covers that case (N1).
+        if (sessionsHadErrorRef.current && useStore.getState().routesEpoch !== appliedEpochRef.current) {
           bumpRoutesEpoch()
         }
         sessionsHadErrorRef.current = false
@@ -111,8 +120,7 @@ function Console() {
   // it: a route event/resnapshot (the normal path), the session poll recovering from
   // an outage (engine-reachable-again nudge, above), and the operator pressing Retry
   // on the routes banner (below) — so a silent engine recovery no longer strands the
-  // panel.
-  const appliedEpochRef = useRef(0)
+  // panel. (appliedEpochRef is declared above so the session poll can read it.)
   useEffect(() => {
     if (routesEpoch === appliedEpochRef.current) return
     const target = routesEpoch
@@ -159,10 +167,12 @@ function Console() {
             <div key={e.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}>
               <span>{e.msg}</span>
               <span style={{ marginLeft: 8, whiteSpace: 'nowrap' }}>
-                {e.retry && <button onClick={e.retry}>Retry</button>}
-                <button onClick={e.clear} style={{ marginLeft: 8 }}>
-                  Dismiss
-                </button>
+                {e.retry && (
+                  <button onClick={e.retry} style={{ marginRight: 8 }}>
+                    Retry
+                  </button>
+                )}
+                <button onClick={e.clear}>Dismiss</button>
               </span>
             </div>
           ))}
