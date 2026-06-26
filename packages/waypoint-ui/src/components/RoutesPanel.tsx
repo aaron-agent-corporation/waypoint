@@ -23,6 +23,7 @@ export function RoutesPanel() {
   const recipeBody = () => {
     if (recipeScope === 'route' && !activeQuest) return <li>Select a route to see its recipes.</li>
     if (recipeScope === 'all' && recipesAll === null) return <li>Loading catalog…</li>
+    if (recipeScope === 'route' && activeQuest && recipesByQuest[activeQuest] === undefined) return <li>Loading…</li>
     if (!recipeList || recipeList.length === 0) return <li>{recipeScope === 'all' ? 'No recipes in the catalog.' : 'No recipes for this quest.'}</li>
     return recipeList.map((r) => (
       <li key={r.slug}>

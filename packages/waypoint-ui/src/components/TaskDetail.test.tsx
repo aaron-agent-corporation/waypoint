@@ -49,4 +49,16 @@ describe('TaskDetail dispatcher', () => {
     render(<TaskDetail />)
     expect(screen.getByText('run-reviewer')).toBeInTheDocument()
   })
+
+  it('clears the prior task header when a rail recipe is selected after a node', () => {
+    const recipeTaskFixture: WaypointFolderTask = { id: 'task-1', route_id: 'route-001', plan_ref: 'run-reviewer', title: 't', phase: 'x', wave: 0, kind: 'recipe', status: 'open', created_at: 't', updated_at: 't', metadata: { waypoint: { recipe: { slug: 'reviewer' } } } }
+    useStore.setState({ routes: [route], selectedRouteId: 'route-001', recipesByQuest: { 'code-review': [reviewer, { slug: 'fixer', name: 'Code Fixer' }] }, tasks: [recipeTaskFixture] })
+    useStore.getState().selectTask('task-1')
+    const { rerender } = render(<TaskDetail />)
+    expect(screen.getByText('run-reviewer')).toBeInTheDocument()
+    useStore.getState().selectRecipe('fixer')
+    rerender(<TaskDetail />)
+    expect(screen.queryByText('run-reviewer')).not.toBeInTheDocument()
+    expect(screen.getByText('Code Fixer')).toBeInTheDocument()
+  })
 })

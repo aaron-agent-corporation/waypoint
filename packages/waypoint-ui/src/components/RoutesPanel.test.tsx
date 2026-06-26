@@ -63,6 +63,12 @@ describe('RoutesPanel recipes section', () => {
     render(<RoutesPanel />)
     expect(screen.getByText('No recipes in the catalog.')).toBeInTheDocument()
   })
+
+  it('shows a route-scope loading state while the quest fetch is pending', () => {
+    useStore.setState({ routes: [route('route-001', 'code-review')], selectedRouteId: 'route-001', recipesByQuest: {} })
+    render(<RoutesPanel />)
+    expect(screen.getByText('Loading…')).toBeInTheDocument()
+  })
 })
 
 describe('RoutesPanel routes/sessions', () => {

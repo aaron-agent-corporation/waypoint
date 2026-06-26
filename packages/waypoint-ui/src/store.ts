@@ -144,7 +144,7 @@ export const useStore = create<UiState>((set, get) => ({
   setSessionsError: (sessionsError) => set({ sessionsError }),
   setRoutesError: (routesError) => set({ routesError }),
   setError: (error) => set({ error }),
-  selectRecipe: (selectedRecipeSlug) => set({ selectedRecipeSlug }),
+  selectRecipe: (selectedRecipeSlug) => set({ selectedRecipeSlug, selectedTaskId: null }),
   setRecipeScope: (recipeScope) => set({ recipeScope }),
   setQuestRecipes: (quest, recipes) => set({ recipesByQuest: { ...get().recipesByQuest, [quest]: recipes } }),
   setAllRecipes: (recipesAll, recipesWarningsAll) => set({ recipesAll, recipesWarningsAll }),

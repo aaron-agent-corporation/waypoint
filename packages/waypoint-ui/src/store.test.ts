@@ -149,6 +149,13 @@ describe('store recipe state', () => {
     expect(useStore.getState().selectedRecipeSlug).toBeNull()
   })
 
+  it('selectRecipe clears selectedTaskId (rail selection is not task-scoped)', () => {
+    useStore.setState({ selectedTaskId: 'task-1', selectedRecipeSlug: null })
+    useStore.getState().selectRecipe('reviewer')
+    expect(useStore.getState().selectedRecipeSlug).toBe('reviewer')
+    expect(useStore.getState().selectedTaskId).toBeNull()
+  })
+
   it('selectRoute clears both selectedTaskId and selectedRecipeSlug', () => {
     useStore.setState({ selectedTaskId: 'task-1', selectedRecipeSlug: 'reviewer' })
     useStore.getState().selectRoute('route-002')
