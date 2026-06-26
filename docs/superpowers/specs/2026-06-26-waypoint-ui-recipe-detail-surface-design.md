@@ -147,8 +147,14 @@ non-recipe node badges its verbatim `kind` value — so the exhaustiveness of
 | --- | --- | --- |
 | Click a node with a recipe slug | the task id | `recipeSlugOf(task)` |
 | Click any node **without** a recipe slug | the task id | `null` (cleared) |
-| Click a **rail recipe** | unchanged | the rail recipe's slug |
+| Click a **rail recipe** | `null` (cleared) | the rail recipe's slug |
 | Select a **different route** (`selectRoute`) | `null` (cleared) | `null` (cleared) |
+
+`selectRecipe(slug)` is a rail selection, **not** task-scoped — it sets
+`selectedRecipeSlug` and **clears `selectedTaskId`**. Otherwise a stale task
+header from a previously-clicked graph node would render above the newly-selected
+recipe's card, mislabeling one recipe's metadata as another's. (Corrected after
+MAR review B2 — an earlier draft left `selectedTaskId` unchanged on rail click.)
 
 `selectRoute(routeId)` clears **both** `selectedTaskId` and `selectedRecipeSlug`,
 resetting the detail view for the new route context (extending today's behavior,
@@ -158,7 +164,9 @@ route lingering in the center pane after a route switch.
 Center-pane render priority:
 
 1. `selectedRecipeSlug` set → render `RecipeCard` for that slug. If the selection
-   also came from a task, show compact task fields **above** the card.
+   also came from a task (a recipe-node click, where `selectedTaskId` is the
+   node's task), show compact task fields **above** the card. A rail selection
+   has no task, so only the card renders.
 2. else `selectedTaskId` set → today's task fields.
 3. else → placeholder ("Select a node or recipe.").
 
