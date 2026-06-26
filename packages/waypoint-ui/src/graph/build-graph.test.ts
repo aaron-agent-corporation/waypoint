@@ -51,3 +51,29 @@ describe('buildRouteGraph', () => {
     expect(buildRouteGraph([])).toEqual({ nodes: [], edges: [] })
   })
 })
+
+const base = { route_id: 'route-001', title: 't', phase: 'x', created_at: 't', updated_at: 't' }
+const recipeTask: WaypointFolderTask = { ...base, id: 'task-1', plan_ref: 'run-reviewer', wave: 0, kind: 'recipe', status: 'open', metadata: { waypoint: { recipe: { slug: 'reviewer' } } } }
+const checkpointTask: WaypointFolderTask = { ...base, id: 'task-2', plan_ref: 'intake', wave: 1, kind: 'checkpoint', status: 'open', metadata: {} }
+
+describe('buildRouteGraph enrichment', () => {
+  it('badges a recipe node "recipe" and resolves its name subtitle', () => {
+    const { nodes } = buildRouteGraph([recipeTask], (slug) => (slug === 'reviewer' ? 'Code Reviewer' : undefined))
+    const n = nodes.find((x) => x.id === 'task-1')!
+    expect(n.data.badge).toBe('recipe')
+    expect(n.data.recipeName).toBe('Code Reviewer')
+    expect(n.type).toBe('recipeAware')
+  })
+
+  it('falls back to the slug when the resolver returns undefined', () => {
+    const { nodes } = buildRouteGraph([recipeTask])
+    expect(nodes.find((x) => x.id === 'task-1')!.data.recipeName).toBe('reviewer')
+  })
+
+  it('badges a non-recipe node with its verbatim kind and no recipe name', () => {
+    const { nodes } = buildRouteGraph([checkpointTask])
+    const n = nodes.find((x) => x.id === 'task-2')!
+    expect(n.data.badge).toBe('checkpoint')
+    expect(n.data.recipeName).toBeUndefined()
+  })
+})

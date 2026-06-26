@@ -1,9 +1,17 @@
 import type { WaypointFolderTask, WaypointFolderTaskKind, WaypointFolderTaskStatus } from '../engine/types'
+import { recipeSlugOf } from '../recipe'
 
 export interface RouteGraphNode {
   id: string
+  type: 'recipeAware'
   position: { x: number; y: number }
-  data: { label: string; kind: WaypointFolderTaskKind; status: WaypointFolderTaskStatus }
+  data: {
+    label: string
+    kind: WaypointFolderTaskKind
+    status: WaypointFolderTaskStatus
+    badge: string
+    recipeName?: string
+  }
 }
 
 export interface RouteGraphEdge {
@@ -12,14 +20,27 @@ export interface RouteGraphEdge {
   target: string
 }
 
-export function buildRouteGraph(tasks: readonly WaypointFolderTask[]): { nodes: RouteGraphNode[]; edges: RouteGraphEdge[] } {
+export function buildRouteGraph(
+  tasks: readonly WaypointFolderTask[],
+  recipeNameResolver: (slug: string) => string | undefined = () => undefined,
+): { nodes: RouteGraphNode[]; edges: RouteGraphEdge[] } {
   const sorted = [...tasks].sort((a, b) => (a.wave ?? 0) - (b.wave ?? 0) || a.id.localeCompare(b.id))
 
-  const nodes: RouteGraphNode[] = sorted.map((t, i) => ({
-    id: t.id,
-    position: { x: i * 200, y: 0 },
-    data: { label: t.plan_ref, kind: t.kind, status: t.status },
-  }))
+  const nodes: RouteGraphNode[] = sorted.map((t, i) => {
+    const slug = recipeSlugOf(t)
+    return {
+      id: t.id,
+      type: 'recipeAware',
+      position: { x: i * 200, y: 0 },
+      data: {
+        label: t.plan_ref,
+        kind: t.kind,
+        status: t.status,
+        badge: slug ? 'recipe' : t.kind,
+        recipeName: slug ? recipeNameResolver(slug) ?? slug : undefined,
+      },
+    }
+  })
 
   const nodeIds = new Set(sorted.map((t) => t.id))
   const edges: RouteGraphEdge[] = []
