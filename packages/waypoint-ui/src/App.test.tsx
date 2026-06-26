@@ -314,6 +314,43 @@ describe('App', () => {
     }
   })
 
+  it('fetches quest recipes once on route select, refetches once on All toggle, and surfaces fetch errors', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+    client.responses['routes.list'] = { ok: true, action: 'routes.list', routes: [{ id: 'route-001', quest: 'code-review', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }] }
+    client.responses['tasks.list'] = { ok: true, action: 'tasks.list', tasks: [] }
+    client.responses['catalog.recipes'] = { ok: true, action: 'catalog.recipes', recipes: [{ slug: 'reviewer', name: 'Code Reviewer' }], warnings: [] } as never
+
+    render(<App client={client} />)
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+
+    // Populate the store routes (so activeQuest can resolve) via an authoritative snapshot.
+    act(() => {
+      client.emit({
+        type: 'snapshot', apiVersion: '1', seq: 1,
+        routes: [{ id: 'route-001', quest: 'code-review', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+        tasks: [],
+      })
+    })
+
+    // Select the route → exactly one quest-scoped catalog.recipes for code-review.
+    act(() => { useStore.getState().selectRoute('route-001') })
+    await waitFor(() => expect(useStore.getState().recipesByQuest['code-review']).toBeDefined())
+    const questCalls = client.calls.filter((c) => c.name === 'catalog.recipes' && (c.payload as { quest?: string })?.quest === 'code-review')
+    expect(questCalls).toHaveLength(1)
+
+    // Re-selecting the same route does not refetch (cache hit).
+    act(() => { useStore.getState().selectRoute('route-001') })
+    expect(client.calls.filter((c) => c.name === 'catalog.recipes' && (c.payload as { quest?: string })?.quest === 'code-review')).toHaveLength(1)
+
+    // Toggle to All → exactly one global catalog.recipes (no quest payload).
+    act(() => { useStore.getState().setRecipeScope('all') })
+    await waitFor(() => expect(useStore.getState().recipesAll).toBeDefined())
+    const allCalls = client.calls.filter((c) => c.name === 'catalog.recipes' && !(c.payload as { quest?: string })?.quest)
+    expect(allCalls).toHaveLength(1)
+  })
+
   it('drops a late snapshot delivered after the subscription is cleaned up', async () => {
     vi.useFakeTimers()
     try {
