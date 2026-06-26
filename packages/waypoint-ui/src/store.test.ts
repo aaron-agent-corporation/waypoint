@@ -103,3 +103,57 @@ describe('store.applyMessage', () => {
     expect(s.routesError).toBeNull()
   })
 })
+
+import type { WaypointFolderTask } from './engine/types'
+import type { Recipe } from './recipe'
+
+const recipeTask = (id: string, slug: string): WaypointFolderTask => ({
+  id, route_id: 'route-001', plan_ref: 'p', title: 't', phase: 'x', wave: 0,
+  kind: 'recipe', status: 'open', created_at: 't', updated_at: 't',
+  metadata: { waypoint: { recipe: { slug } } },
+})
+const checkpointTask = (id: string): WaypointFolderTask => ({
+  id, route_id: 'route-001', plan_ref: 'p', title: 't', phase: 'x', wave: 0,
+  kind: 'checkpoint', status: 'open', created_at: 't', updated_at: 't', metadata: {},
+})
+
+describe('store recipe state', () => {
+  it('selectRecipe sets and clears the slug', () => {
+    useStore.getState().selectRecipe('reviewer')
+    expect(useStore.getState().selectedRecipeSlug).toBe('reviewer')
+    useStore.getState().selectRecipe(null)
+    expect(useStore.getState().selectedRecipeSlug).toBeNull()
+  })
+
+  it('setRecipeScope flips the scope', () => {
+    expect(useStore.getState().recipeScope).toBe('route')
+    useStore.getState().setRecipeScope('all')
+    expect(useStore.getState().recipeScope).toBe('all')
+  })
+
+  it('cache setters populate quest, global, and warnings', () => {
+    const r: Recipe = { slug: 'reviewer', name: 'Reviewer' }
+    useStore.getState().setQuestRecipes('waypoint', [r])
+    expect(useStore.getState().recipesByQuest.waypoint).toEqual([r])
+    useStore.getState().setAllRecipes([r], ['half-written.yaml: invalid Recipe manifest'])
+    expect(useStore.getState().recipesAll).toEqual([r])
+    expect(useStore.getState().recipesWarningsAll).toEqual(['half-written.yaml: invalid Recipe manifest'])
+  })
+
+  it('selectTask sets the recipe slug for a recipe node and clears it for a non-recipe node', () => {
+    useStore.setState({ tasks: [recipeTask('task-1', 'reviewer'), checkpointTask('task-2')] })
+    useStore.getState().selectTask('task-1')
+    expect(useStore.getState().selectedTaskId).toBe('task-1')
+    expect(useStore.getState().selectedRecipeSlug).toBe('reviewer')
+    useStore.getState().selectTask('task-2')
+    expect(useStore.getState().selectedRecipeSlug).toBeNull()
+  })
+
+  it('selectRoute clears both selectedTaskId and selectedRecipeSlug', () => {
+    useStore.setState({ selectedTaskId: 'task-1', selectedRecipeSlug: 'reviewer' })
+    useStore.getState().selectRoute('route-002')
+    expect(useStore.getState().selectedRouteId).toBe('route-002')
+    expect(useStore.getState().selectedTaskId).toBeNull()
+    expect(useStore.getState().selectedRecipeSlug).toBeNull()
+  })
+})
