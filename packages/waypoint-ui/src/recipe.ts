@@ -26,7 +26,7 @@ export function recipeSlugOf(task: Pick<WaypointFolderTask, 'metadata'>): string
   const nestedSlug = typeof nested === 'object' && nested !== null ? (nested as Record<string, unknown>).slug : undefined
   const flatSlug = wp.recipe_slug
   const slug = typeof nestedSlug === 'string' ? nestedSlug : typeof flatSlug === 'string' ? flatSlug : undefined
-  return slug && slug.length > 0 ? slug : null
+  return slug != null && slug.length > 0 ? slug : null
 }
 
 export interface RecipeCaches {

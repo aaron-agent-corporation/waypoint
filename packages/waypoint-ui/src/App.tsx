@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 
 import { AgentChat } from './components/AgentChat'
-import type { Recipe } from './recipe'
 import { ConnectionGate } from './components/ConnectionGate'
 import { RouteGraph } from './components/RouteGraph'
 import { RoutesPanel } from './components/RoutesPanel'
@@ -9,6 +8,7 @@ import { TaskDetail } from './components/TaskDetail'
 import { ClientProvider, useClient } from './engine/context'
 import type { BrowserEngineClient } from './engine/client'
 import type { AgentSessionSummary, WaypointFolderRoute, WaypointFolderTask } from './engine/types'
+import type { Recipe } from './recipe'
 import { useStore } from './store'
 
 function toMessage(err: unknown): string {

@@ -57,6 +57,12 @@ describe('RoutesPanel recipes section', () => {
     render(<RoutesPanel />)
     expect(screen.getByText('Select a route to see its recipes.')).toBeInTheDocument()
   })
+
+  it('shows "No recipes in the catalog." in All scope when recipesAll is empty', () => {
+    useStore.setState({ recipeScope: 'all', recipesAll: [] })
+    render(<RoutesPanel />)
+    expect(screen.getByText('No recipes in the catalog.')).toBeInTheDocument()
+  })
 })
 
 describe('RoutesPanel routes/sessions', () => {
