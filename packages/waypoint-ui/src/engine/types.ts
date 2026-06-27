@@ -2,11 +2,13 @@ import type { AgentEventRecord, EngineEnvelope, EngineEvent } from '@waypoint/en
 import type {
   CatalogRecipeManifest,
   RouteEventPage,
+  TaskDiscussionMessagePage,
   WaypointFolderRoute,
   WaypointFolderRouteEvent,
   WaypointFolderTask,
   WaypointFolderTaskKind,
   WaypointFolderTaskStatus,
+  WaypointTaskDiscussionMessage,
 } from '@waypoint/folder-host'
 
 export type {
@@ -15,11 +17,13 @@ export type {
   EngineEnvelope,
   EngineEvent,
   RouteEventPage,
+  TaskDiscussionMessagePage,
   WaypointFolderRoute,
   WaypointFolderRouteEvent,
   WaypointFolderTask,
   WaypointFolderTaskKind,
   WaypointFolderTaskStatus,
+  WaypointTaskDiscussionMessage,
 }
 
 /** Messages the engine WS pushes (see engine-host transport/http-ws/ws.ts). */

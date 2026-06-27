@@ -1,3 +1,4 @@
+import { DiscussionThread } from './DiscussionThread'
 import { RecipeCard } from './RecipeCard'
 import { ConfirmAction } from './ConfirmAction'
 import { resolveRecipe } from '../recipe'
@@ -56,6 +57,7 @@ export function TaskDetail() {
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{JSON.stringify(task.metadata, null, 2)}</pre>
         </details>
       ) : null}
+      {task.kind === 'discussion' ? <DiscussionThread taskId={task.id} /> : null}
       {task.kind === 'gate' ? (
         <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
           {(() => {
