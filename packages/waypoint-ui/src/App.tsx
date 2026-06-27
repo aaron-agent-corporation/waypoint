@@ -8,6 +8,7 @@ import { TaskDetail } from './components/TaskDetail'
 import { ClientProvider, useClient } from './engine/context'
 import type { BrowserEngineClient } from './engine/client'
 import type { AgentSessionSummary, WaypointFolderRoute, WaypointFolderTask } from './engine/types'
+import { listField } from './lib/engine'
 import type { Recipe } from './recipe'
 import { useStore } from './store'
 
@@ -17,12 +18,6 @@ function toMessage(err: unknown): string {
 
 const ROUTE_REFRESH_RETRIES = 3
 const ROUTE_REFRESH_RETRY_MS = 2000
-
-/** Throws (instead of silently no-op'ing) on a non-ok command envelope. */
-function listField<K extends string, T>(env: { ok: boolean; error?: string }, action: string, key: K): T | undefined {
-  if (!env.ok) throw new Error(env.error ?? `${action} failed`)
-  return (env as unknown as Record<K, T>)[key]
-}
 
 function Console() {
   const client = useClient()
