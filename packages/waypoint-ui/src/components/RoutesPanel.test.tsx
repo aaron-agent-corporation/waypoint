@@ -69,6 +69,13 @@ describe('RoutesPanel recipes section', () => {
     render(<RoutesPanel />)
     expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
+
+  it('shows a recovery prompt (not a stuck "Loading…") when the fetch errored and the cache is empty', () => {
+    useStore.setState({ routes: [route('route-001', 'code-review')], selectedRouteId: 'route-001', recipesByQuest: {}, recipesError: 'catalog blew up' })
+    render(<RoutesPanel />)
+    expect(screen.getByText(/Couldn't load recipes/)).toBeInTheDocument()
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
+  })
 })
 
 describe('RoutesPanel routes/sessions', () => {

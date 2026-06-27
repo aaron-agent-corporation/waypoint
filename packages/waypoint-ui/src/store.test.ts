@@ -163,4 +163,12 @@ describe('store recipe state', () => {
     expect(useStore.getState().selectedTaskId).toBeNull()
     expect(useStore.getState().selectedRecipeSlug).toBeNull()
   })
+
+  it('bumpRecipesEpoch advances the epoch (recipes banner Retry path)', () => {
+    const start = useStore.getState().recipesEpoch
+    useStore.getState().bumpRecipesEpoch()
+    expect(useStore.getState().recipesEpoch).toBe(start + 1)
+    useStore.getState().bumpRecipesEpoch()
+    expect(useStore.getState().recipesEpoch).toBe(start + 2)
+  })
 })

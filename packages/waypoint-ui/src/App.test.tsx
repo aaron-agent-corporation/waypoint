@@ -1,4 +1,5 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
@@ -358,6 +359,41 @@ describe('App', () => {
 
     // The previously-cached quest list is NOT blanked by the error.
     expect(useStore.getState().recipesByQuest['code-review']).toBeDefined()
+  })
+
+  it('recovers the recipes banner when the operator presses Retry (epoch re-drives the fetch)', async () => {
+    let allCalls = 0
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+    client.responses['routes.list'] = { ok: true, action: 'routes.list', routes: [] }
+    client.responses['tasks.list'] = { ok: true, action: 'tasks.list', tasks: [] }
+    const baseCmd = client.cmd.bind(client)
+    client.cmd = (async (name: string, payload?: unknown) => {
+      if (name === 'catalog.recipes') {
+        allCalls += 1
+        // First global fetch fails, the retry succeeds.
+        return allCalls <= 1
+          ? { ok: false, action: 'catalog.recipes', error: 'catalog blew up' }
+          : { ok: true, action: 'catalog.recipes', recipes: [{ slug: 'global-1', name: 'Global One' }], warnings: [] }
+      }
+      return baseCmd(name, payload)
+    }) as never
+
+    render(<App client={client} />)
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+
+    // Toggle to All → first global fetch fails → banner.
+    act(() => { useStore.getState().setRecipeScope('all') })
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('catalog blew up')
+    expect(useStore.getState().recipesAll).toBeNull()
+
+    // Press Retry → epoch bump re-drives the fetch → succeeds → banner clears, cache fills.
+    await userEvent.click(within(alert).getByRole('button', { name: 'Retry' }))
+    await waitFor(() => expect(useStore.getState().recipesAll).toEqual([{ slug: 'global-1', name: 'Global One' }]))
+    expect(useStore.getState().recipesError).toBeNull()
+    expect(allCalls).toBe(2)
   })
 
   it('fetches quest recipes once on route select and refetches once on All scope toggle (cache/dedup)', async () => {

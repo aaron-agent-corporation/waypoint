@@ -42,6 +42,12 @@ interface UiState {
   recipesAll: Recipe[] | null
   recipesWarningsAll: string[] | null
   recipesError: string | null
+  /**
+   * Monotonic counter to force a recipe refetch on a path not driven by a
+   * scope/quest change — the operator pressing 'Retry' on the recipes banner
+   * after a failed fetch left the cache empty. Mirrors `routesEpoch`.
+   */
+  recipesEpoch: number
 
   applyMessage(msg: EngineWsMessage): void
   /**
@@ -63,6 +69,7 @@ interface UiState {
   setQuestRecipes(quest: string, recipes: Recipe[]): void
   setAllRecipes(recipes: Recipe[], warnings: string[]): void
   setRecipesError(e: string | null): void
+  bumpRecipesEpoch(): void
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
@@ -88,6 +95,7 @@ export const useStore = create<UiState>((set, get) => ({
   recipesAll: null,
   recipesWarningsAll: null,
   recipesError: null,
+  recipesEpoch: 0,
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
@@ -149,6 +157,7 @@ export const useStore = create<UiState>((set, get) => ({
   setQuestRecipes: (quest, recipes) => set({ recipesByQuest: { ...get().recipesByQuest, [quest]: recipes } }),
   setAllRecipes: (recipesAll, recipesWarningsAll) => set({ recipesAll, recipesWarningsAll }),
   setRecipesError: (recipesError) => set({ recipesError }),
+  bumpRecipesEpoch: () => set({ recipesEpoch: get().recipesEpoch + 1 }),
   selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null, selectedRecipeSlug: null }),
   selectTask: (selectedTaskId) => {
     const task = get().tasks.find((t) => t.id === selectedTaskId)

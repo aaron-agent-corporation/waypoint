@@ -45,6 +45,8 @@ function Console() {
   const setAllRecipes = useStore((s) => s.setAllRecipes)
   const setRecipesError = useStore((s) => s.setRecipesError)
   const recipesError = useStore((s) => s.recipesError)
+  const recipesEpoch = useStore((s) => s.recipesEpoch)
+  const bumpRecipesEpoch = useStore((s) => s.bumpRecipesEpoch)
   const activeQuest = routesList.find((r) => r.id === selectedRouteId)?.quest
 
   // Pure fetchers: they never touch the store. The caller applies the result
@@ -160,21 +162,31 @@ function Console() {
   // Fetch recipes once per scope and cache. Route scope fetches the selected
   // route's quest recipes; All scope fetches the global catalog. The cache check
   // reads getState() (not the subscribed cache objects) so this effect depends
-  // only on (client, recipeScope, activeQuest) and never re-runs just because the
-  // cache it just wrote changed. cancelled guards a stale in-flight response.
+  // only on (client, recipeScope, activeQuest, recipesEpoch) and never re-runs
+  // just because the cache it just wrote changed. cancelled guards a stale
+  // in-flight response. A cache hit clears any stale recipesError (navigating to
+  // an already-loaded scope is recovery evidence). recipesEpoch lets the banner
+  // 'Retry' force a re-attempt after a failed fetch left the cache empty.
   useEffect(() => {
     let cancelled = false
     const run = async () => {
       try {
         if (recipeScope === 'all') {
-          if (useStore.getState().recipesAll) return
+          if (useStore.getState().recipesAll) {
+            setRecipesError(null)
+            return
+          }
           const env = (await client.cmd('catalog.recipes')) as { ok: boolean; error?: string; recipes?: Recipe[]; warnings?: string[] }
           const recipes = listField<'recipes', Recipe[]>(env, 'catalog.recipes', 'recipes')
           if (cancelled || !recipes) return
           setAllRecipes(recipes, env.warnings ?? [])
           setRecipesError(null)
         } else {
-          if (!activeQuest || useStore.getState().recipesByQuest[activeQuest]) return
+          if (!activeQuest) return
+          if (useStore.getState().recipesByQuest[activeQuest]) {
+            setRecipesError(null)
+            return
+          }
           const env = (await client.cmd('catalog.recipes', { quest: activeQuest })) as { ok: boolean; error?: string; recipes?: Recipe[] }
           const recipes = listField<'recipes', Recipe[]>(env, 'catalog.recipes', 'recipes')
           if (cancelled || !recipes) return
@@ -189,7 +201,7 @@ function Console() {
     return () => {
       cancelled = true
     }
-  }, [client, recipeScope, activeQuest, setQuestRecipes, setAllRecipes, setRecipesError])
+  }, [client, recipeScope, activeQuest, recipesEpoch, setQuestRecipes, setAllRecipes, setRecipesError])
 
   // Per-source rows so dismissing a recovered source can't hide a still-active
   // outage on another (routesError has no independent poll, so a shared Dismiss
@@ -199,7 +211,8 @@ function Console() {
   const errors: { key: string; msg: string; clear: () => void; retry?: () => void }[] = []
   if (routesError)
     errors.push({ key: 'routes', msg: routesError, clear: () => setRoutesError(null), retry: () => bumpRoutesEpoch() })
-  if (recipesError) errors.push({ key: 'recipes', msg: recipesError, clear: () => setRecipesError(null) })
+  if (recipesError)
+    errors.push({ key: 'recipes', msg: recipesError, clear: () => setRecipesError(null), retry: () => bumpRecipesEpoch() })
   if (sessionsError) errors.push({ key: 'sessions', msg: sessionsError, clear: () => setSessionsError(null) })
   if (error) errors.push({ key: 'engine', msg: error, clear: () => setError(null) })
 
