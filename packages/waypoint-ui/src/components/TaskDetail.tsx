@@ -14,6 +14,13 @@ export function TaskDetail() {
   if (selectedRecipeSlug) {
     const quest = routes.find((r) => r.id === selectedRouteId)?.quest
     const recipe = resolveRecipe(selectedRecipeSlug, quest, { recipesByQuest, recipesAll })
+    // Distinguish "not fetched yet" (show Loading…) from "fetched, genuinely
+    // absent" (show not-found). A node-selected recipe belongs to the active
+    // route's quest, so with a route selected the quest cache is the authoritative
+    // source — gate on IT, not on recipesAll. Otherwise a loaded global list would
+    // declare a quest recipe "not found" during the window before its quest cache
+    // arrives (P2 flash). With no active quest, fall back to the global list.
+    const cacheResolved = quest != null ? recipesByQuest[quest] !== undefined : recipesAll !== null
     return (
       <div style={{ borderTop: '1px solid #ddd', overflow: 'auto' }}>
         {task ? (
@@ -22,7 +29,7 @@ export function TaskDetail() {
             <dt>status</dt><dd>{task.status}</dd>
           </dl>
         ) : null}
-        <RecipeCard recipe={recipe} slug={selectedRecipeSlug} />
+        <RecipeCard recipe={recipe} slug={selectedRecipeSlug} loading={!recipe && !cacheResolved} />
       </div>
     )
   }

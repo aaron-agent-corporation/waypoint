@@ -13,15 +13,20 @@ export function RoutesPanel() {
   const recipesByQuest = useStore((s) => s.recipesByQuest)
   const recipesAll = useStore((s) => s.recipesAll)
   const recipesWarningsAll = useStore((s) => s.recipesWarningsAll)
+  const recipesError = useStore((s) => s.recipesError)
   const selectedRecipeSlug = useStore((s) => s.selectedRecipeSlug)
   const selectRecipe = useStore((s) => s.selectRecipe)
 
   const activeQuest = routes.find((r) => r.id === selectedRouteId)?.quest
   const recipeList = recipeScope === 'all' ? recipesAll : activeQuest ? recipesByQuest[activeQuest] : undefined
   const warnCount = recipeScope === 'all' ? recipesWarningsAll?.length ?? 0 : 0
+  const unloaded = recipeScope === 'all' ? recipesAll === null : activeQuest != null && recipesByQuest[activeQuest] === undefined
 
   const recipeBody = () => {
     if (recipeScope === 'route' && !activeQuest) return <li>Select a route to see its recipes.</li>
+    // A failed fetch leaves the cache unloaded; show a recovery prompt (banner has
+    // the Retry) instead of spinning on "Loading…" forever (B1-followup).
+    if (unloaded && recipesError) return <li>Couldn't load recipes — Retry from the banner above.</li>
     if (recipeScope === 'all' && recipesAll === null) return <li>Loading catalog…</li>
     if (recipeScope === 'route' && activeQuest && recipesByQuest[activeQuest] === undefined) return <li>Loading…</li>
     if (!recipeList || recipeList.length === 0) return <li>{recipeScope === 'all' ? 'No recipes in the catalog.' : 'No recipes for this quest.'}</li>

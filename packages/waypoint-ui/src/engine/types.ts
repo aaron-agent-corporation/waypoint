@@ -1,5 +1,6 @@
 import type { AgentEventRecord, EngineEnvelope, EngineEvent } from '@waypoint/engine-host'
 import type {
+  CatalogRecipeManifest,
   WaypointFolderRoute,
   WaypointFolderTask,
   WaypointFolderTaskKind,
@@ -8,6 +9,7 @@ import type {
 
 export type {
   AgentEventRecord,
+  CatalogRecipeManifest,
   EngineEnvelope,
   EngineEvent,
   WaypointFolderRoute,

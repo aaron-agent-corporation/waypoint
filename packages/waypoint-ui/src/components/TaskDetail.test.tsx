@@ -50,6 +50,30 @@ describe('TaskDetail dispatcher', () => {
     expect(screen.getByText('run-reviewer')).toBeInTheDocument()
   })
 
+  it('shows Loading… (not not-found) when a slug is selected before its cache resolves', () => {
+    // Recipe-node slug selected, but the quest cache is not yet populated and the
+    // global cache is null → pre-load, so the card must not flash "not found".
+    useStore.setState({ routes: [route], selectedRouteId: 'route-001', recipesByQuest: {}, recipesAll: null, selectedRecipeSlug: 'reviewer' })
+    render(<TaskDetail />)
+    expect(screen.getByText(/Loading recipe/)).toBeInTheDocument()
+    expect(screen.queryByText(/not found in the loaded catalog/)).not.toBeInTheDocument()
+  })
+
+  it('shows not-found once the cache has resolved without the slug', () => {
+    useStore.setState({ routes: [route], selectedRouteId: 'route-001', recipesByQuest: { 'code-review': [] }, selectedRecipeSlug: 'ghost' })
+    render(<TaskDetail />)
+    expect(screen.getByText(/not found in the loaded catalog/)).toBeInTheDocument()
+  })
+
+  it('does not flash not-found for a quest recipe while only the global list has loaded (P2)', () => {
+    // Route selected (quest cache NOT yet loaded) but recipesAll IS loaded. A
+    // quest recipe must show Loading, not a premature "not found".
+    useStore.setState({ routes: [route], selectedRouteId: 'route-001', recipesByQuest: {}, recipesAll: [], selectedRecipeSlug: 'reviewer' })
+    render(<TaskDetail />)
+    expect(screen.getByText(/Loading recipe/)).toBeInTheDocument()
+    expect(screen.queryByText(/not found in the loaded catalog/)).not.toBeInTheDocument()
+  })
+
   it('clears the prior task header when a rail recipe is selected after a node', () => {
     const recipeTaskFixture: WaypointFolderTask = { id: 'task-1', route_id: 'route-001', plan_ref: 'run-reviewer', title: 't', phase: 'x', wave: 0, kind: 'recipe', status: 'open', created_at: 't', updated_at: 't', metadata: { waypoint: { recipe: { slug: 'reviewer' } } } }
     useStore.setState({ routes: [route], selectedRouteId: 'route-001', recipesByQuest: { 'code-review': [reviewer, { slug: 'fixer', name: 'Code Fixer' }] }, tasks: [recipeTaskFixture] })
