@@ -171,4 +171,11 @@ describe('store recipe state', () => {
     useStore.getState().bumpRecipesEpoch()
     expect(useStore.getState().recipesEpoch).toBe(start + 2)
   })
+
+  it('setControlError sets and clears the control error', () => {
+    useStore.getState().setControlError('run.start failed')
+    expect(useStore.getState().controlError).toBe('run.start failed')
+    useStore.getState().setControlError(null)
+    expect(useStore.getState().controlError).toBeNull()
+  })
 })

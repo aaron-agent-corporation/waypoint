@@ -48,6 +48,7 @@ interface UiState {
    * after a failed fetch left the cache empty. Mirrors `routesEpoch`.
    */
   recipesEpoch: number
+  controlError: string | null
 
   applyMessage(msg: EngineWsMessage): void
   /**
@@ -70,6 +71,7 @@ interface UiState {
   setAllRecipes(recipes: Recipe[], warnings: string[]): void
   setRecipesError(e: string | null): void
   bumpRecipesEpoch(): void
+  setControlError(e: string | null): void
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
@@ -96,6 +98,7 @@ export const useStore = create<UiState>((set, get) => ({
   recipesWarningsAll: null,
   recipesError: null,
   recipesEpoch: 0,
+  controlError: null,
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
@@ -158,6 +161,7 @@ export const useStore = create<UiState>((set, get) => ({
   setAllRecipes: (recipesAll, recipesWarningsAll) => set({ recipesAll, recipesWarningsAll }),
   setRecipesError: (recipesError) => set({ recipesError }),
   bumpRecipesEpoch: () => set({ recipesEpoch: get().recipesEpoch + 1 }),
+  setControlError: (controlError) => set({ controlError }),
   selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null, selectedRecipeSlug: null }),
   selectTask: (selectedTaskId) => {
     const task = get().tasks.find((t) => t.id === selectedTaskId)

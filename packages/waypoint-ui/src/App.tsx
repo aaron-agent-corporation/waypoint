@@ -42,6 +42,8 @@ function Console() {
   const recipesError = useStore((s) => s.recipesError)
   const recipesEpoch = useStore((s) => s.recipesEpoch)
   const bumpRecipesEpoch = useStore((s) => s.bumpRecipesEpoch)
+  const controlError = useStore((s) => s.controlError)
+  const setControlError = useStore((s) => s.setControlError)
   const activeQuest = routesList.find((r) => r.id === selectedRouteId)?.quest
 
   // Pure fetchers: they never touch the store. The caller applies the result
@@ -208,6 +210,7 @@ function Console() {
     errors.push({ key: 'routes', msg: routesError, clear: () => setRoutesError(null), retry: () => bumpRoutesEpoch() })
   if (recipesError)
     errors.push({ key: 'recipes', msg: recipesError, clear: () => setRecipesError(null), retry: () => bumpRecipesEpoch() })
+  if (controlError) errors.push({ key: 'control', msg: controlError, clear: () => setControlError(null) })
   if (sessionsError) errors.push({ key: 'sessions', msg: sessionsError, clear: () => setSessionsError(null) })
   if (error) errors.push({ key: 'engine', msg: error, clear: () => setError(null) })
 
