@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ClientProvider } from '../engine/context'
@@ -104,5 +104,34 @@ describe('StartQuest', () => {
 
     expect(await screen.findByText(/Failed to load quests: quests boom/)).toBeInTheDocument()
     expect(screen.queryByText('No quests.')).toBeNull()
+  })
+
+  it('re-fetches catalog.quests after recipesEpoch advances (cache invalidation on approval)', async () => {
+    const client = new FakeEngineClient()
+    // First fetch: one quest; second fetch (after epoch bump): two quests
+    client.responses['catalog.quests'] = { ok: true, action: 'catalog.quests', quests: [{ slug: 'quest-a', name: 'Quest A' }], warnings: [] } as never
+
+    renderWith(client)
+    // Open picker — triggers first fetch
+    fireEvent.click(screen.getByRole('button', { name: /start quest/i }))
+    await screen.findByText('Quest A')
+    const firstFetchCount = client.calls.filter((c) => c.name === 'catalog.quests').length
+    expect(firstFetchCount).toBe(1)
+
+    // Close picker
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    // Simulate approval adding a new quest to the catalog
+    client.responses['catalog.quests'] = { ok: true, action: 'catalog.quests', quests: [{ slug: 'quest-a', name: 'Quest A' }, { slug: 'quest-b', name: 'Quest B' }], warnings: [] } as never
+
+    // Bump recipesEpoch (what author.approveProposal now does)
+    act(() => { useStore.getState().bumpRecipesEpoch() })
+
+    // Re-open picker — must trigger a fresh fetch
+    fireEvent.click(screen.getByRole('button', { name: /start quest/i }))
+    await screen.findByText('Quest B')
+
+    const secondFetchCount = client.calls.filter((c) => c.name === 'catalog.quests').length
+    expect(secondFetchCount).toBe(2)
   })
 })

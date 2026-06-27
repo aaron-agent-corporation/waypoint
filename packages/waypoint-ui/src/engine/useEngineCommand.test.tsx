@@ -38,4 +38,26 @@ describe('useEngineCommand', () => {
     expect(useStore.getState().controlError).toBe('nope')
     expect(useStore.getState().routesEpoch).toBe(initial.routesEpoch)
   })
+
+  it('bumps recipesEpoch (and routesEpoch) on author.approveProposal success', async () => {
+    const client = new FakeEngineClient()
+    client.responses['author.approveProposal'] = { ok: true, action: 'author.approveProposal' } as never
+    let api!: ReturnType<typeof useEngineCommand>
+    render(<ClientProvider client={client}><Harness client={client} onReady={(a) => (api = a)} /></ClientProvider>)
+    const routesEpoch = useStore.getState().routesEpoch
+    const recipesEpoch = useStore.getState().recipesEpoch
+    await act(async () => { await api.run('author.approveProposal', { proposalId: 'p1' }) })
+    expect(useStore.getState().routesEpoch).toBe(routesEpoch + 1)
+    expect(useStore.getState().recipesEpoch).toBe(recipesEpoch + 1)
+  })
+
+  it('does NOT bump recipesEpoch for non-authoring commands (e.g. gate.decide)', async () => {
+    const client = new FakeEngineClient()
+    client.responses['gate.decide'] = { ok: true, action: 'gate.decide' } as never
+    let api!: ReturnType<typeof useEngineCommand>
+    render(<ClientProvider client={client}><Harness client={client} onReady={(a) => (api = a)} /></ClientProvider>)
+    const recipesEpoch = useStore.getState().recipesEpoch
+    await act(async () => { await api.run('gate.decide', { routeId: 'r1', node: 'g', decision: 'approve' }) })
+    expect(useStore.getState().recipesEpoch).toBe(recipesEpoch)
+  })
 })

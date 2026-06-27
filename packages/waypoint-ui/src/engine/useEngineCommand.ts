@@ -22,6 +22,9 @@ export function useEngineCommand(): {
         const env = (await client.cmd(name, payload)) as { ok: boolean; error?: string }
         const value = opts?.field ? listField(env, name, opts.field) : (assertOk(env, name), env)
         useStore.getState().bumpRoutesEpoch()
+        if (name === 'author.approveProposal') {
+          useStore.getState().bumpRecipesEpoch()
+        }
         useStore.getState().setControlError(null)
         return value
       } catch (err) {

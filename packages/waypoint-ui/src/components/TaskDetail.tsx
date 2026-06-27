@@ -6,6 +6,16 @@ import { useStore } from '../store'
 import { useEngineCommand } from '../engine/useEngineCommand'
 import type { WaypointFolderTask, WaypointFolderRoute } from '../engine/types'
 
+/**
+ * Returns true only when the route is actually blocked at this gate task.
+ *
+ * Intentional asymmetry with the engine: the B3 engine fix allows
+ * `assertDecidesCurrentGate` to accept a gate decision on an `active` route
+ * that has an open gate task (permissive for CLI callers and replay safety).
+ * The UI is deliberately stricter — it only surfaces gate controls when the
+ * route is in `blocked` status, preventing premature controls while a route
+ * is still executing. Do not "reconcile" this by loosening the UI predicate.
+ */
 const isCurrentBlockedGate = (
   t: Pick<WaypointFolderTask, 'kind' | 'plan_ref' | 'id'>,
   r: Pick<WaypointFolderRoute, 'status' | 'current_node'> | undefined,

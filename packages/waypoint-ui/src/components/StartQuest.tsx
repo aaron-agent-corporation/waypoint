@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useClient } from '../engine/context'
 import { useEngineCommand } from '../engine/useEngineCommand'
@@ -15,10 +15,19 @@ interface CatalogQuest {
 export function StartQuest() {
   const client = useClient()
   const { run, pending } = useEngineCommand()
+  const recipesEpoch = useStore((s) => s.recipesEpoch)
   const [open, setOpen] = useState(false)
   const [quests, setQuests] = useState<CatalogQuest[] | null>(null)
   const [questsError, setQuestsError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+
+  // Reset the local quest cache whenever the catalog changes (e.g. after
+  // author.approveProposal authors a new quest). The null state is the
+  // unfetched state; openPicker re-fetches on next open.
+  useEffect(() => {
+    setQuests(null)
+    setSelected(null)
+  }, [recipesEpoch])
 
   const openPicker = async () => {
     setOpen(true)
