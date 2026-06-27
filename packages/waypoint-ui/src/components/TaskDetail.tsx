@@ -4,6 +4,17 @@ import { ConfirmAction } from './ConfirmAction'
 import { resolveRecipe } from '../recipe'
 import { useStore } from '../store'
 import { useEngineCommand } from '../engine/useEngineCommand'
+import type { WaypointFolderTask, WaypointFolderRoute } from '../engine/types'
+
+const isCurrentBlockedGate = (
+  t: Pick<WaypointFolderTask, 'kind' | 'plan_ref' | 'id'>,
+  r: Pick<WaypointFolderRoute, 'status' | 'current_node'> | undefined,
+): boolean =>
+  r != null &&
+  r.status === 'blocked' &&
+  t.kind === 'gate' &&
+  r.current_node != null &&
+  (r.current_node === t.plan_ref || r.current_node === t.id)
 
 export function TaskDetail() {
   const selectedRecipeSlug = useStore((s) => s.selectedRecipeSlug)
@@ -58,10 +69,10 @@ export function TaskDetail() {
         </details>
       ) : null}
       {task.kind === 'discussion' ? <DiscussionThread taskId={task.id} /> : null}
-      {task.kind === 'gate' ? (
+      {isCurrentBlockedGate(task, route) ? (
         <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
           {(() => {
-            const node = route?.current_node ?? task.plan_ref ?? task.id
+            const node = task.plan_ref ?? task.id
             return (
               <>
                 <button type="button" disabled={pending} onClick={() => void run('gate.decide', { routeId: task.route_id, node, decision: 'approve' })}>

@@ -89,7 +89,7 @@ describe('TaskDetail dispatcher', () => {
   })
 
   it('renders gate Approve/Reject for a gate task and issues gate.decide', async () => {
-    const gateRoute = { ...route, current_node: 'human_plan_gate' }
+    const gateRoute = { ...route, status: 'blocked' as const, current_node: 'human_plan_gate' }
     const gateTask: WaypointFolderTask = { id: 'task-g', route_id: 'route-001', plan_ref: 'human_plan_gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'blocked', created_at: 't', updated_at: 't' }
     const client = new FakeEngineClient()
     useStore.setState({ routes: [gateRoute], selectedRouteId: 'route-001', tasks: [gateTask], selectedTaskId: 'task-g', selectedRecipeSlug: null })
@@ -102,7 +102,7 @@ describe('TaskDetail dispatcher', () => {
   })
 
   it('gate Reject requires confirm and threads the note', async () => {
-    const gateRoute = { ...route, current_node: 'human_plan_gate' }
+    const gateRoute = { ...route, status: 'blocked' as const, current_node: 'human_plan_gate' }
     const gateTask: WaypointFolderTask = { id: 'task-g', route_id: 'route-001', plan_ref: 'human_plan_gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'blocked', created_at: 't', updated_at: 't' }
     const client = new FakeEngineClient()
     useStore.setState({ routes: [gateRoute], selectedRouteId: 'route-001', tasks: [gateTask], selectedTaskId: 'task-g', selectedRecipeSlug: null })
@@ -114,5 +114,29 @@ describe('TaskDetail dispatcher', () => {
       const c = client.calls.find((x) => x.name === 'gate.decide')
       expect(c?.payload).toEqual({ routeId: 'route-001', node: 'human_plan_gate', decision: 'reject', note: 'no' })
     })
+  })
+
+  it('targets the selected gate by its own plan_ref, not route.current_node', async () => {
+    // current_node matches the gate via its id (so controls render), but plan_ref differs:
+    // the payload must use plan_ref, proving we no longer lead with current_node.
+    const gateRoute = { ...route, status: 'blocked' as const, current_node: 'task-g' }
+    const gateTask: WaypointFolderTask = { id: 'task-g', route_id: 'route-001', plan_ref: 'run-gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'blocked', created_at: 't', updated_at: 't' }
+    const client = new FakeEngineClient()
+    useStore.setState({ routes: [gateRoute], selectedRouteId: 'route-001', tasks: [gateTask], selectedTaskId: 'task-g', selectedRecipeSlug: null })
+    render(<ClientProvider client={client}><TaskDetail /></ClientProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
+    await waitFor(() => {
+      const c = client.calls.find((x) => x.name === 'gate.decide')
+      expect(c?.payload).toEqual({ routeId: 'route-001', node: 'run-gate', decision: 'approve' })
+    })
+  })
+
+  it('does not render gate controls for a gate that is not the route current blocked gate', () => {
+    const gateRoute = { ...route, status: 'blocked' as const, current_node: 'other-gate' }
+    const historicalGate: WaypointFolderTask = { id: 'task-h', route_id: 'route-001', plan_ref: 'old-gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'complete' as any, created_at: 't', updated_at: 't' }
+    useStore.setState({ routes: [gateRoute], selectedRouteId: 'route-001', tasks: [historicalGate], selectedTaskId: 'task-h', selectedRecipeSlug: null })
+    render(<ClientProvider client={new FakeEngineClient()}><TaskDetail /></ClientProvider>)
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
   })
 })
