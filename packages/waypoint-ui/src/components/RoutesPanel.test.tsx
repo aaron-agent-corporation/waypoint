@@ -3,9 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { RoutesPanel } from './RoutesPanel'
+import { ClientProvider } from '../engine/context'
+import { FakeEngineClient } from '../test/fake-client'
 import type { WaypointFolderRoute } from '../engine/types'
 import type { Recipe } from '../recipe'
 import { useStore } from '../store'
+
+function renderPanel() {
+  return render(<ClientProvider client={new FakeEngineClient()}><RoutesPanel /></ClientProvider>)
+}
 
 const route = (id: string, quest: string): WaypointFolderRoute => ({
   id, quest, status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't',
@@ -24,14 +30,14 @@ describe('RoutesPanel recipes section', () => {
       selectedRouteId: 'route-001',
       recipesByQuest: { 'code-review': [reviewer, fixer] },
     })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText('Code Reviewer')).toBeInTheDocument()
     expect(screen.getByText('Code Fixer')).toBeInTheDocument()
   })
 
   it('toggling to All switches the scope and lists the global recipes', () => {
     useStore.setState({ recipesAll: [global1] })
-    render(<RoutesPanel />)
+    renderPanel()
     fireEvent.click(screen.getByRole('button', { name: 'All' }))
     expect(useStore.getState().recipeScope).toBe('all')
     expect(screen.getByText('Global One')).toBeInTheDocument()
@@ -42,37 +48,37 @@ describe('RoutesPanel recipes section', () => {
       routes: [route('route-001', 'code-review')], selectedRouteId: 'route-001',
       recipesByQuest: { 'code-review': [reviewer] },
     })
-    render(<RoutesPanel />)
+    renderPanel()
     fireEvent.click(screen.getByText('Code Reviewer'))
     expect(useStore.getState().selectedRecipeSlug).toBe('reviewer')
   })
 
   it('shows the unreadable warning note only in All scope', () => {
     useStore.setState({ recipeScope: 'all', recipesAll: [global1], recipesWarningsAll: ['a.yaml: invalid', 'b.yaml: invalid'] })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText('⚠ 2 unreadable')).toBeInTheDocument()
   })
 
   it('shows the no-route empty state in route scope with no route selected', () => {
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText('Select a route to see its recipes.')).toBeInTheDocument()
   })
 
   it('shows "No recipes in the catalog." in All scope when recipesAll is empty', () => {
     useStore.setState({ recipeScope: 'all', recipesAll: [] })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText('No recipes in the catalog.')).toBeInTheDocument()
   })
 
   it('shows a route-scope loading state while the quest fetch is pending', () => {
     useStore.setState({ routes: [route('route-001', 'code-review')], selectedRouteId: 'route-001', recipesByQuest: {} })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
 
   it('shows a recovery prompt (not a stuck "Loading…") when the fetch errored and the cache is empty', () => {
     useStore.setState({ routes: [route('route-001', 'code-review')], selectedRouteId: 'route-001', recipesByQuest: {}, recipesError: 'catalog blew up' })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText(/Couldn't load recipes/)).toBeInTheDocument()
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
   })
@@ -84,7 +90,7 @@ describe('RoutesPanel routes/sessions', () => {
       routes: [{ id: 'route-001', quest: 'waypoint', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
       sessions: [{ id: 'agent-001', intent: 'build a recipe', status: 'completed', startedAt: 't' }],
     })
-    render(<RoutesPanel />)
+    renderPanel()
     expect(screen.getByText(/route-001/)).toBeInTheDocument()
     expect(screen.getByText(/build a recipe/)).toBeInTheDocument()
 

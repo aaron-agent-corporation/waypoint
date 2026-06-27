@@ -1,4 +1,5 @@
 import { useStore } from '../store'
+import { StartQuest } from './StartQuest'
 
 export function RoutesPanel() {
   const routes = useStore((s) => s.routes)
@@ -45,7 +46,10 @@ export function RoutesPanel() {
 
   return (
     <nav style={{ borderRight: '1px solid #ddd', overflowY: 'auto', padding: 8, fontSize: 13 }}>
-      <h3>Routes</h3>
+      <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>Routes</span>
+        <StartQuest />
+      </h3>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {routes.map((r) => (
           <li key={r.id}>
