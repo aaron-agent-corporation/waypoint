@@ -113,7 +113,7 @@ describe('route state controls', () => {
         note: 'Stale click',
         now: new Date('2026-05-07T16:31:00.000Z'),
       }),
-    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current blocked gate/)
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
 
     // Route must remain untouched
     const current = await getWaypointRoute(projectRoot, route.id)
@@ -134,7 +134,7 @@ describe('route state controls', () => {
         note: 'Stale click',
         now: new Date('2026-05-07T16:32:00.000Z'),
       }),
-    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current blocked gate/)
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
 
     // Route must remain untouched
     const current = await getWaypointRoute(projectRoot, route.id)
@@ -142,6 +142,63 @@ describe('route state controls', () => {
     // No events appended
     const events = await readRouteEvents(projectRoot, route.id)
     expect(events.items.filter((e) => e.kind === 'route.gate.rejected')).toHaveLength(0)
+  })
+
+  it('approveRouteGate on active route (open gate task) throws for wrong node, approves for current node', async () => {
+    // This test pins the strengthened guard: under the old implementation, when the route
+    // is active and the gate task is still 'open' (not 'blocked'), assertDecidesCurrentGate
+    // would no-op and the wrong-node call would silently succeed. With the fix it must throw.
+    const projectRoot = await tempProject()
+    // Create an active route (status defaults to 'active') with current_node set.
+    const route = await createWaypointRoute(projectRoot, {
+      quest: 'waypoint',
+      current_node: 'human_plan_gate',
+      subject: { type: 'project', id: 'local' },
+      now: new Date('2026-05-07T16:30:00.000Z'),
+    })
+    // Gate task is 'open' (not 'blocked') — the engine is still running.
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-gate-open-001',
+        route_id: route.id,
+        plan_ref: 'human_plan_gate',
+        title: 'Human plan gate',
+        phase: 'planning',
+        wave: 1,
+        kind: 'gate',
+        status: 'open',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+      },
+    ])
+
+    // Wrong node must throw even though the gate task is still 'open'.
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click on non-current gate',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched.
+    const afterWrong = await getWaypointRoute(projectRoot, route.id)
+    expect(afterWrong).toMatchObject({ status: 'active', current_node: 'human_plan_gate' })
+    const eventsAfterWrong = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterWrong.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(0)
+
+    // Happy path: correct node (current_node) must succeed even with the gate task 'open'.
+    const updated = await approveRouteGate(projectRoot, {
+      routeId: route.id,
+      node: 'human_plan_gate',
+      note: 'Plan approved while still active',
+      nextNode: 'execute',
+      now: new Date('2026-05-07T16:31:30.000Z'),
+    })
+    expect(updated).toMatchObject({ status: 'active', current_node: 'execute' })
+    const eventsAfterApprove = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterApprove.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(1)
   })
 
   it('pauses and resumes a route with append-only events', async () => {

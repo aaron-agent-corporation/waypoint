@@ -184,35 +184,27 @@ async function requireRoute(projectRoot: string, routeId: string): Promise<Waypo
 }
 
 /**
- * The engine is the source of truth for gate decisions: a decision must target
- * the route's CURRENT blocked gate. A stale UI render, a replayed command, or a
- * non-UI caller must not decide a non-current gate (which would unblock the live
- * route or block at the wrong node). Throws when `node` does not identify the
- * current blocked gate; the caller has not mutated anything yet, so the route
- * stays in its prior (blocked) state.
- *
- * When there is no blocked gate task (e.g. the route is active and tasks are
- * open), the check is a no-op — the route is not in a gate-blocked state and
- * the decision is allowed to proceed normally.
+ * The engine is the source of truth for gate decisions: the decision must target
+ * the route's CURRENT node. A stale render, a replayed command, or a non-UI caller
+ * must not decide a non-current gate (which would unblock the live route or block at
+ * the wrong node). We validate against route.current_node — which startRoute sets and
+ * gate transitions advance — independent of whether the gate task has reached
+ * 'blocked' status yet (a gate can be decided while the route is still active).
  */
 async function assertDecidesCurrentGate(
   projectRoot: string,
   route: WaypointFolderRoute,
   node: string,
 ): Promise<void> {
-  const currentGate = await currentBlockedTask(projectRoot, route)
-  // No blocked gate task → route is not gate-blocked; allow the decision.
-  if (currentGate == null) return
-  // Route is gate-blocked: the decision must target the current blocked gate.
-  const decidesCurrent =
-    route.current_node != null &&
-    currentGate.plan_ref === route.current_node &&
-    (node === currentGate.plan_ref || node === currentGate.id)
-  if (!decidesCurrent) {
-    throw new Error(
-      `gate.decide: node "${node}" is not the current blocked gate of route ${route.id}`,
-    )
-  }
+  // No current node → nothing to enforce against.
+  if (route.current_node == null) return
+  // Fast path: node matches current_node directly.
+  if (node === route.current_node) return
+  // Accept the id of the task sitting at current_node as an alternate identity.
+  const tasks = await listWaypointTasks(projectRoot)
+  const currentTask = tasks.find((t) => t.route_id === route.id && t.plan_ref === route.current_node)
+  if (currentTask && node === currentTask.id) return
+  throw new Error(`gate.decide: node "${node}" is not the current gate of route ${route.id}`)
 }
 
 async function currentBlockedTask(projectRoot: string, route: WaypointFolderRoute): Promise<WaypointFolderTask | null> {
