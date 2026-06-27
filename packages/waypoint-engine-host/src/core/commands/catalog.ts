@@ -1,4 +1,6 @@
-import { formatCatalogEntryWarning, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
+import { formatCatalogEntryWarning, installQuestCatalog, loadBundledWaypointCatalog, loadWorkspaceWaypointCatalog } from '@waypoint/folder-host'
+import { access } from 'node:fs/promises'
+import { join } from 'node:path'
 
 import { EngineError, ok } from '../../envelope.ts'
 import type { CommandBus } from '../command-bus.ts'
@@ -33,6 +35,33 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
     return ok('catalog.recipes', {
       recipes: catalog.recipes.list(),
       warnings: catalog.recipeErrors.map(formatCatalogEntryWarning),
+    })
+  })
+
+  bus.register('catalog.install', async (payload) => {
+    const { root } = ctx.session.requireActive()
+    const input = (payload ?? {}) as { quest?: string }
+    if (!input.quest) {
+      throw new EngineError('catalog.install requires a quest slug', { code: 'VALIDATION', field: 'quest' })
+    }
+    const quest = input.quest
+    // workspace-wins: preserve an authored quest manifest rather than clobbering it.
+    const questPath = join(root, '.waypoint', 'quests', `${quest}.yaml`)
+    const questAlreadyAuthored = await access(questPath).then(() => true).catch(() => false)
+    const catalog = await loadBundledWaypointCatalog()
+    // Validate the quest exists in the bundled catalog before attempting install.
+    const resolved = catalog.resolveQuestRecipes(quest)
+    if (!resolved.ok) {
+      throw new EngineError(resolved.message, { code: 'NOT_FOUND', field: 'quest' })
+    }
+    const result = await ctx.session.mutate(() =>
+      installQuestCatalog(root, catalog, { quest, preserveExistingQuest: questAlreadyAuthored }),
+    )
+    return ok('catalog.install', {
+      quest: result.quest,
+      recipes: result.recipes,
+      installedQuestPaths: result.installedQuestPaths,
+      installedRecipePaths: result.installedRecipePaths,
     })
   })
 }

@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from 'node:fs/promises'
+import { access, copyFile, mkdir } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 
 import { getWaypointProjectPaths } from '../project/root.ts'
@@ -6,6 +6,7 @@ import type { BundledWaypointCatalog } from './bundled.ts'
 
 export interface InstallQuestCatalogOptions {
   readonly quest: string
+  readonly preserveExistingQuest?: boolean
 }
 
 export interface InstallQuestCatalogResult {
@@ -27,7 +28,11 @@ export async function installQuestCatalog(
 
   const paths = getWaypointProjectPaths(projectRoot)
   const questTarget = join(paths.waypointDir, 'quests', resolved.questEntry.relativePath)
-  await copyCatalogFile(resolved.questEntry.path, questTarget)
+  const questExists = await access(questTarget).then(() => true).catch(() => false)
+  const preserveQuest = options.preserveExistingQuest === true && questExists
+  if (!preserveQuest) {
+    await copyCatalogFile(resolved.questEntry.path, questTarget)
+  }
 
   const installedRecipePaths: string[] = []
   for (const entry of resolved.recipeEntries) {
