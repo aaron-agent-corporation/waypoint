@@ -45,17 +45,30 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
       throw new EngineError('catalog.install requires a quest slug', { code: 'VALIDATION', field: 'quest' })
     }
     const quest = input.quest
-    // workspace-wins: preserve an authored quest manifest rather than clobbering it.
+    const bundled = await loadBundledWaypointCatalog()
+    const bundledResolved = bundled.resolveQuestRecipes(quest)
+
+    if (!bundledResolved.ok) {
+      // Not a bundled quest. If it already exists in the workspace (authored/overlay),
+      // installation is a no-op success — the quest is already present to start.
+      const workspace = await loadWorkspaceWaypointCatalog(root)
+      const wsResolved = workspace.resolveQuestRecipes(quest)
+      if (!wsResolved.ok) {
+        throw new EngineError(bundledResolved.message, { code: 'NOT_FOUND', field: 'quest' })
+      }
+      return ok('catalog.install', {
+        quest,
+        recipes: wsResolved.recipes,
+        installedQuestPaths: [],
+        installedRecipePaths: [],
+      })
+    }
+
+    // Bundled quest: install it, preserving an already-authored workspace quest manifest.
     const questPath = join(root, '.waypoint', 'quests', `${quest}.yaml`)
     const questAlreadyAuthored = await access(questPath).then(() => true).catch(() => false)
-    const catalog = await loadBundledWaypointCatalog()
-    // Validate the quest exists in the bundled catalog before attempting install.
-    const resolved = catalog.resolveQuestRecipes(quest)
-    if (!resolved.ok) {
-      throw new EngineError(resolved.message, { code: 'NOT_FOUND', field: 'quest' })
-    }
     const result = await ctx.session.mutate(() =>
-      installQuestCatalog(root, catalog, { quest, preserveExistingQuest: questAlreadyAuthored }),
+      installQuestCatalog(root, bundled, { quest, preserveExistingQuest: questAlreadyAuthored }),
     )
     return ok('catalog.install', {
       quest: result.quest,

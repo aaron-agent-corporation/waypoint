@@ -76,6 +76,35 @@ describe('workspace catalog resolution (engine-host)', () => {
     expect(started.route.quest).toBe('authored-quest')
   })
 
+  // FT2: catalog.install must succeed (no-op) for an authored-only quest that is
+  // not in the bundled catalog, and must return installedQuestPaths: [].
+  it('catalog.install is a no-op success for an authored-only quest', async () => {
+    // Promote + approve the recipe the quest references
+    const recipeDraft = { kind: 'recipe', path: 'recipes/authored-recipe.yaml', yaml: RECIPE_YAML }
+    const promotedRecipe = (await host.dispatch('author.promote', { draft: recipeDraft })) as unknown as {
+      proposalId: string
+    }
+    await host.dispatch('author.approveProposal', { id: promotedRecipe.proposalId })
+
+    // Promote + approve the quest
+    const questDraft = { kind: 'quest', path: 'quests/authored-quest.yaml', yaml: QUEST_YAML }
+    const promotedQuest = (await host.dispatch('author.promote', { draft: questDraft })) as unknown as {
+      proposalId: string
+    }
+    await host.dispatch('author.approveProposal', { id: promotedQuest.proposalId })
+
+    // catalog.install on the authored-only quest must not throw and must be a no-op
+    const installed = (await host.dispatch('catalog.install', { quest: 'authored-quest' })) as unknown as {
+      ok: boolean
+      quest: unknown
+      installedQuestPaths: string[]
+      installedRecipePaths: string[]
+    }
+    expect(installed.ok).toBe(true)
+    expect(installed.installedQuestPaths).toEqual([])
+    expect(installed.installedRecipePaths).toEqual([])
+  })
+
   // N1: a single malformed authored manifest must not blank the listing nor abort
   // the start of an unrelated valid quest. Discovery surfaces skip-and-warn.
   it('skips and warns on a malformed authored manifest without breaking unrelated work', async () => {
