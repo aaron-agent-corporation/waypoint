@@ -1,10 +1,33 @@
+import { RecipeCard } from './RecipeCard'
+import { resolveRecipe } from '../recipe'
 import { useStore } from '../store'
 
 export function TaskDetail() {
+  const selectedRecipeSlug = useStore((s) => s.selectedRecipeSlug)
   const selectedTaskId = useStore((s) => s.selectedTaskId)
   const task = useStore((s) => s.tasks.find((t) => t.id === selectedTaskId))
+  const routes = useStore((s) => s.routes)
+  const selectedRouteId = useStore((s) => s.selectedRouteId)
+  const recipesByQuest = useStore((s) => s.recipesByQuest)
+  const recipesAll = useStore((s) => s.recipesAll)
 
-  if (!task) return <div style={{ padding: 12, fontSize: 13 }}>Select a task to see details.</div>
+  if (selectedRecipeSlug) {
+    const quest = routes.find((r) => r.id === selectedRouteId)?.quest
+    const recipe = resolveRecipe(selectedRecipeSlug, quest, { recipesByQuest, recipesAll })
+    return (
+      <div style={{ borderTop: '1px solid #ddd', overflow: 'auto' }}>
+        {task ? (
+          <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 12px', margin: 0, padding: '8px 12px 0', fontSize: 12 }}>
+            <dt>task</dt><dd>{task.plan_ref}</dd>
+            <dt>status</dt><dd>{task.status}</dd>
+          </dl>
+        ) : null}
+        <RecipeCard recipe={recipe} slug={selectedRecipeSlug} />
+      </div>
+    )
+  }
+
+  if (!task) return <div style={{ padding: 12, fontSize: 13 }}>Select a node or recipe.</div>
 
   return (
     <div style={{ padding: 12, fontSize: 13, borderTop: '1px solid #ddd' }}>

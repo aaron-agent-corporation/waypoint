@@ -7,6 +7,7 @@ import type {
   WaypointFolderRoute,
   WaypointFolderTask,
 } from './engine/types'
+import { recipeSlugOf, type Recipe } from './recipe'
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'error'
 
@@ -35,6 +36,12 @@ interface UiState {
   sessionsError: string | null
   routesError: string | null
   error: string | null
+  selectedRecipeSlug: string | null
+  recipeScope: 'route' | 'all'
+  recipesByQuest: Record<string, Recipe[]>
+  recipesAll: Recipe[] | null
+  recipesWarningsAll: string[] | null
+  recipesError: string | null
 
   applyMessage(msg: EngineWsMessage): void
   /**
@@ -51,6 +58,11 @@ interface UiState {
   setSessionsError(e: string | null): void
   setRoutesError(e: string | null): void
   setError(e: string | null): void
+  selectRecipe(slug: string | null): void
+  setRecipeScope(scope: 'route' | 'all'): void
+  setQuestRecipes(quest: string, recipes: Recipe[]): void
+  setAllRecipes(recipes: Recipe[], warnings: string[]): void
+  setRecipesError(e: string | null): void
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
@@ -70,6 +82,12 @@ export const useStore = create<UiState>((set, get) => ({
   sessionsError: null,
   routesError: null,
   error: null,
+  selectedRecipeSlug: null,
+  recipeScope: 'route',
+  recipesByQuest: {},
+  recipesAll: null,
+  recipesWarningsAll: null,
+  recipesError: null,
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
@@ -126,7 +144,15 @@ export const useStore = create<UiState>((set, get) => ({
   setSessionsError: (sessionsError) => set({ sessionsError }),
   setRoutesError: (routesError) => set({ routesError }),
   setError: (error) => set({ error }),
-  selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null }),
-  selectTask: (selectedTaskId) => set({ selectedTaskId }),
+  selectRecipe: (selectedRecipeSlug) => set({ selectedRecipeSlug, selectedTaskId: null }),
+  setRecipeScope: (recipeScope) => set({ recipeScope }),
+  setQuestRecipes: (quest, recipes) => set({ recipesByQuest: { ...get().recipesByQuest, [quest]: recipes } }),
+  setAllRecipes: (recipesAll, recipesWarningsAll) => set({ recipesAll, recipesWarningsAll }),
+  setRecipesError: (recipesError) => set({ recipesError }),
+  selectRoute: (selectedRouteId) => set({ selectedRouteId, selectedTaskId: null, selectedRecipeSlug: null }),
+  selectTask: (selectedTaskId) => {
+    const task = get().tasks.find((t) => t.id === selectedTaskId)
+    set({ selectedTaskId, selectedRecipeSlug: task ? recipeSlugOf(task) : null })
+  },
   setActiveSession: (activeSessionId) => set({ activeSessionId }),
 }))
