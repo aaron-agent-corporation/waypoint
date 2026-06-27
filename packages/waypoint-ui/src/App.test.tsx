@@ -474,6 +474,38 @@ describe('App', () => {
     expect(allCalls).toHaveLength(1)
   })
 
+  it('populates routeEventsByRoute from the flat route.events envelope (shape contract — Resume regression pin)', async () => {
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+    client.responses['tasks.list'] = { ok: true, action: 'tasks.list', tasks: [] }
+    client.responses['routes.list'] = { ok: true, action: 'routes.list', routes: [] }
+    const baseCmd = client.cmd.bind(client)
+    client.cmd = (async (name: string, payload?: unknown) => {
+      if (name === 'route.events') {
+        // The engine returns a FLAT array under `events`, NOT a nested { items: [...] } page.
+        return { ok: true, action: 'route.events', events: [{ id: '1', route_id: 'route-b', kind: 'route.paused', created_at: 't' }] }
+      }
+      return baseCmd(name, payload)
+    }) as never
+
+    render(<App client={client} />)
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+
+    // Emit a snapshot with a blocked route — the effect fires and fetches route.events.
+    act(() => {
+      client.emit({
+        type: 'snapshot', apiVersion: '1', seq: 1,
+        routes: [{ id: 'route-b', quest: 'q', status: 'blocked', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+        tasks: [],
+      })
+    })
+
+    // The flat envelope must be read correctly: events array has length 1.
+    await waitFor(() => expect(useStore.getState().routeEventsByRoute['route-b']).toHaveLength(1))
+    expect(useStore.getState().routeEventsByRoute['route-b'][0].kind).toBe('route.paused')
+  })
+
   it('drops a late snapshot delivered after the subscription is cleaned up', async () => {
     vi.useFakeTimers()
     try {

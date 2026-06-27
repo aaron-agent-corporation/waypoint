@@ -205,23 +205,28 @@ function Console() {
   // event lifecycle so the Pause/Resume control can derive true paused-provenance.
   // Re-fetched when routesEpoch advances (a pause/resume bumps it), so the cache
   // tracks the live lifecycle. active/terminal routes need no events.
+  // blockedKey is a stable string derived from blocked route ids — depending on the
+  // whole routesList array would cause a refetch on every snapshot (new array identity)
+  // even when the blocked set hasn't changed. blockedKey changes only when a route
+  // enters/leaves blocked, which is exactly when we want to re-fetch.
+  const blockedKey = routesList.filter((r) => r.status === 'blocked').map((r) => r.id).join(',')
   useEffect(() => {
     let cancelled = false
-    const blocked = routesList.filter((r) => r.status === 'blocked')
+    const blocked = useStore.getState().routes.filter((r) => r.status === 'blocked')
     void Promise.all(
       blocked.map(async (r) => {
         try {
-          const env = (await client.cmd('route.events', { routeId: r.id })) as { ok: boolean; error?: string; events?: { items?: WaypointFolderRouteEvent[] } }
+          const env = (await client.cmd('route.events', { routeId: r.id })) as { ok: boolean; error?: string; events?: WaypointFolderRouteEvent[] }
           if (cancelled) return
-          const page = listField<'events', { items?: WaypointFolderRouteEvent[] }>(env, 'route.events', 'events')
-          setRouteEvents(r.id, page?.items ?? [])
+          const events = listField<'events', WaypointFolderRouteEvent[]>(env, 'route.events', 'events')
+          setRouteEvents(r.id, events ?? [])
         } catch {
           /* a route-events fetch failure leaves prior provenance intact; surfaced nowhere blocking */
         }
       }),
     )
     return () => { cancelled = true }
-  }, [client, routesList, routesEpoch, setRouteEvents])
+  }, [client, blockedKey, routesEpoch, setRouteEvents])
 
   // Per-source rows so dismissing a recovered source can't hide a still-active
   // outage on another (routesError has no independent poll, so a shared Dismiss
