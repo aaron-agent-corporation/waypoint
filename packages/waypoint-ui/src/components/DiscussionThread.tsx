@@ -5,19 +5,23 @@ import { useEngineCommand } from '../engine/useEngineCommand'
 import type { TaskDiscussionMessagePage, WaypointTaskDiscussionMessage } from '../engine/types'
 import { listField } from '../lib/engine'
 
+const toMessage = (err: unknown): string => err instanceof Error ? err.message : String(err)
+
 export function DiscussionThread({ taskId }: { taskId: string }) {
   const client = useClient()
   const { run, pending } = useEngineCommand()
   const [items, setItems] = useState<readonly WaypointTaskDiscussionMessage[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
 
   const load = useCallback(async () => {
     try {
       const env = (await client.cmd('discuss.list', { taskId })) as { ok: boolean; error?: string; discussion?: TaskDiscussionMessagePage }
       const page = listField<'discussion', TaskDiscussionMessagePage>(env, 'discuss.list', 'discussion')
+      setError(null)
       setItems(page?.items ?? [])
-    } catch {
-      setItems([])
+    } catch (err) {
+      setError(toMessage(err))
     }
   }, [client, taskId])
 
@@ -34,7 +38,9 @@ export function DiscussionThread({ taskId }: { taskId: string }) {
   return (
     <div style={{ padding: 12, fontSize: 13 }}>
       <h4 style={{ margin: '0 0 8px' }}>Discussion</h4>
-      {items === null ? (
+      {error != null ? (
+        <div style={{ color: '#b00' }}>Failed to load discussion: {error}</div>
+      ) : items === null ? (
         <div style={{ color: '#666' }}>Loading…</div>
       ) : items.length === 0 ? (
         <div style={{ color: '#666' }}>No messages yet.</div>

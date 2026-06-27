@@ -40,6 +40,19 @@ describe('AgentChat proposal approval', () => {
     await waitFor(() => expect(client.calls.find((c) => c.name === 'author.approveProposal')?.payload).toEqual({ id: 'prop-7' }))
   })
 
+  it('replaces ConfirmAction with approved indicator after approval and prevents re-approval', async () => {
+    const client = new FakeEngineClient()
+    client.responses['author.approveProposal'] = { ok: true, action: 'author.approveProposal', proposalId: 'prop-42', path: 'recipes/x.yaml' } as never
+    seedTranscript(JSON.stringify({ proposalId: 'prop-42' }))
+    render(<ClientProvider client={client}><AgentChat /></ClientProvider>)
+    // Before approval: button is present
+    fireEvent.click(screen.getByRole('button', { name: /approve proposal/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+    // After approval: ConfirmAction gone, approved indicator shown
+    await waitFor(() => expect(screen.queryByRole('button', { name: /approve proposal/i })).toBeNull())
+    expect(screen.getByText('Proposal approved')).toBeInTheDocument()
+  })
+
   it('renders no approve button for a tool_result without a proposalId', () => {
     const client = new FakeEngineClient()
     seedTranscript(JSON.stringify({ result: 'ok' }))

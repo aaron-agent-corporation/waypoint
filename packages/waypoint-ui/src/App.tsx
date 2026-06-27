@@ -231,8 +231,9 @@ function Console() {
             events = listField<'events', WaypointFolderRouteEvent[]>(full, 'route.events', 'events') ?? events
           }
           setRouteEvents(r.id, events)
-        } catch {
+        } catch (err) {
           /* a route-events fetch failure leaves prior provenance intact; surfaced nowhere blocking */
+          console.warn('route.events fetch failed for route', r.id, err)
         }
       }),
     )

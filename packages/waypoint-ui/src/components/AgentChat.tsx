@@ -33,6 +33,7 @@ export function AgentChat() {
   const setActiveSession = useStore((s) => s.setActiveSession)
   const [intent, setIntent] = useState('')
   const [busy, setBusy] = useState(false)
+  const [approvedProposalIds, setApprovedProposalIds] = useState<Set<string>>(() => new Set())
   const approve = useEngineCommand()
 
   async function send(e: React.FormEvent) {
@@ -67,12 +68,18 @@ export function AgentChat() {
               <li key={`${event.sessionId}-${event.idx ?? event.id}`}>
                 <span>← {String(data.toolName ?? '')}: {String(data.text ?? '')}</span>
                 {pid ? (
-                  <ConfirmAction
-                    label="Approve proposal"
-                    confirmLabel="Confirm"
-                    disabled={approve.pending}
-                    onConfirm={() => void approve.run('author.approveProposal', { id: pid })}
-                  />
+                  approvedProposalIds.has(pid) ? (
+                    <span style={{ color: '#666' }}>Proposal approved</span>
+                  ) : (
+                    <ConfirmAction
+                      label="Approve proposal"
+                      confirmLabel="Confirm"
+                      disabled={approve.pending}
+                      onConfirm={() => void approve.run('author.approveProposal', { id: pid }).then(() => {
+                        setApprovedProposalIds((prev) => new Set(prev).add(pid))
+                      })}
+                    />
+                  )
                 ) : null}
               </li>
             )

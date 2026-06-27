@@ -17,6 +17,7 @@ export function StartQuest() {
   const { run, pending } = useEngineCommand()
   const [open, setOpen] = useState(false)
   const [quests, setQuests] = useState<CatalogQuest[] | null>(null)
+  const [questsError, setQuestsError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
 
   const openPicker = async () => {
@@ -24,9 +25,11 @@ export function StartQuest() {
     if (quests === null) {
       try {
         const env = (await client.cmd('catalog.quests')) as { ok: boolean; error?: string; quests?: CatalogQuest[] }
+        setQuestsError(null)
         setQuests(listField<'quests', CatalogQuest[]>(env, 'catalog.quests', 'quests') ?? [])
       } catch (err) {
         useStore.getState().setControlError(toMessage(err))
+        setQuestsError(toMessage(err))
         setQuests([])
       }
     }
@@ -62,7 +65,7 @@ export function StartQuest() {
                   ) : null}
                 </li>
               ))}
-              {quests.length === 0 ? <li>No quests.</li> : null}
+              {questsError != null ? <li style={{ color: '#b00' }}>Failed to load quests: {questsError}</li> : quests.length === 0 ? <li>No quests.</li> : null}
             </ul>
           )}
           <button type="button" onClick={() => { setOpen(false); setSelected(null) }}>Close</button>

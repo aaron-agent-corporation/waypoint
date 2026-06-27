@@ -22,6 +22,14 @@ describe('DiscussionThread', () => {
     expect(client.calls.find((c) => c.name === 'discuss.list')?.payload).toEqual({ taskId: 'task-d' })
   })
 
+  it('shows error message when discuss.list fetch fails, not a false-empty state', async () => {
+    const client = new FakeEngineClient()
+    client.responses['discuss.list'] = { ok: false, action: 'discuss.list', error: 'discuss boom' } as never
+    render(<ClientProvider client={client}><DiscussionThread taskId="task-d" /></ClientProvider>)
+    expect(await screen.findByText(/Failed to load discussion: discuss boom/)).toBeInTheDocument()
+    expect(screen.queryByText('No messages yet.')).toBeNull()
+  })
+
   it('posts a message with no author field and refetches', async () => {
     const client = new FakeEngineClient()
     client.responses['discuss.list'] = page([]) as never

@@ -94,4 +94,15 @@ describe('StartQuest', () => {
 
     await waitFor(() => expect(useStore.getState().controlError).toBe('quests boom'))
   })
+
+  it('shows quests-error line when catalog.quests fails, not a false-empty state', async () => {
+    const client = new FakeEngineClient()
+    client.responses['catalog.quests'] = { ok: false, action: 'catalog.quests', error: 'quests boom' } as never
+
+    renderWith(client)
+    fireEvent.click(screen.getByRole('button', { name: /start quest/i }))
+
+    expect(await screen.findByText(/Failed to load quests: quests boom/)).toBeInTheDocument()
+    expect(screen.queryByText('No quests.')).toBeNull()
+  })
 })
