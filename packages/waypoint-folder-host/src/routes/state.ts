@@ -196,8 +196,10 @@ async function assertDecidesCurrentGate(
   route: WaypointFolderRoute,
   node: string,
 ): Promise<void> {
-  // No current node → nothing to enforce against.
-  if (route.current_node == null) return
+  // No current node → route was never started; do not allow a gate decision to be written.
+  if (route.current_node == null) {
+    throw new Error(`gate.decide: route ${route.id} has no current gate to decide`)
+  }
   // Fast path: node matches current_node directly.
   if (node === route.current_node) return
   // Accept the id of the task sitting at current_node as an alternate identity.

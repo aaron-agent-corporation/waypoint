@@ -201,6 +201,50 @@ describe('route state controls', () => {
     expect(eventsAfterApprove.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(1)
   })
 
+  it('rejectRouteGate on active route (open gate task) throws for wrong node', async () => {
+    // Symmetric mirror of the approve test above: verifies that rejectRouteGate also enforces
+    // assertDecidesCurrentGate when the route is active and the gate task is still 'open'.
+    const projectRoot = await tempProject()
+    // Create an active route with current_node set.
+    const route = await createWaypointRoute(projectRoot, {
+      quest: 'waypoint',
+      current_node: 'human_plan_gate',
+      subject: { type: 'project', id: 'local' },
+      now: new Date('2026-05-07T16:30:00.000Z'),
+    })
+    // Gate task is 'open' (not 'blocked') — the engine is still running.
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-gate-open-002',
+        route_id: route.id,
+        plan_ref: 'human_plan_gate',
+        title: 'Human plan gate',
+        phase: 'planning',
+        wave: 1,
+        kind: 'gate',
+        status: 'open',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+      },
+    ])
+
+    // Wrong node must throw even though the gate task is still 'open'.
+    await expect(
+      rejectRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale reject on non-current gate',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched.
+    const afterWrong = await getWaypointRoute(projectRoot, route.id)
+    expect(afterWrong).toMatchObject({ status: 'active', current_node: 'human_plan_gate' })
+    const eventsAfterWrong = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterWrong.items.filter((e) => e.kind === 'route.gate.rejected')).toHaveLength(0)
+  })
+
   it('pauses and resumes a route with append-only events', async () => {
     const projectRoot = await tempProject()
     const route = await createRoute(projectRoot)
