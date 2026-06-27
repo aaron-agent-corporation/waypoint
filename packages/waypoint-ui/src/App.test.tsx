@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
-import type { EngineWsMessage, WaypointFolderRoute } from './engine/types'
+import type { EngineWsMessage, WaypointFolderRoute, WaypointFolderRouteEvent } from './engine/types'
+import { routeIsPaused } from './routeStatus'
 import { useStore } from './store'
 import { FakeEngineClient } from './test/fake-client'
 
@@ -504,6 +505,50 @@ describe('App', () => {
     // The flat envelope must be read correctly: events array has length 1.
     await waitFor(() => expect(useStore.getState().routeEventsByRoute['route-b']).toHaveLength(1))
     expect(useStore.getState().routeEventsByRoute['route-b'][0].kind).toBe('route.paused')
+  })
+
+  it('fetches the full event log when route.events total > first page (B3 — Resume on long routes)', async () => {
+    // Build 60 events: indices 0–58 are non-lifecycle (route.note), index 59 is route.paused.
+    // The engine default page is 50 (oldest-first), so the first page misses the paused event.
+    const allEvents: WaypointFolderRouteEvent[] = Array.from({ length: 60 }, (_, i) => ({
+      id: String(i),
+      route_id: 'route-long',
+      kind: i === 59 ? 'route.paused' : 'route.note',
+      created_at: 't',
+    }))
+
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+    client.responses['tasks.list'] = { ok: true, action: 'tasks.list', tasks: [] }
+    client.responses['routes.list'] = { ok: true, action: 'routes.list', routes: [] }
+    const baseCmd = client.cmd.bind(client)
+    client.cmd = (async (name: string, payload?: unknown) => {
+      if (name === 'route.events') {
+        const p = payload as { routeId?: string; limit?: number; offset?: number } | undefined
+        const limit = p?.limit ?? 50
+        const offset = p?.offset ?? 0
+        const page = allEvents.slice(offset, offset + limit)
+        return { ok: true, action: 'route.events', events: page, total: allEvents.length, limit, offset }
+      }
+      return baseCmd(name, payload)
+    }) as never
+
+    render(<App client={client} />)
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+
+    // Emit a snapshot with a blocked route — the route.events effect fires.
+    act(() => {
+      client.emit({
+        type: 'snapshot', apiVersion: '1', seq: 1,
+        routes: [{ id: 'route-long', quest: 'q', status: 'blocked', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+        tasks: [],
+      })
+    })
+
+    // The effect must fetch the full 60 events (not just the first 50).
+    await waitFor(() => expect(useStore.getState().routeEventsByRoute['route-long']).toHaveLength(60))
+    expect(routeIsPaused(useStore.getState().routeEventsByRoute['route-long'])).toBe(true)
   })
 
   it('drops a late snapshot delivered after the subscription is cleaned up', async () => {

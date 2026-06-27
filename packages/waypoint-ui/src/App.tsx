@@ -216,10 +216,21 @@ function Console() {
     void Promise.all(
       blocked.map(async (r) => {
         try {
-          const env = (await client.cmd('route.events', { routeId: r.id })) as { ok: boolean; error?: string; events?: WaypointFolderRouteEvent[] }
+          const first = (await client.cmd('route.events', { routeId: r.id })) as {
+            ok: boolean; error?: string; events?: WaypointFolderRouteEvent[]; total?: number
+          }
           if (cancelled) return
-          const events = listField<'events', WaypointFolderRouteEvent[]>(env, 'route.events', 'events')
-          setRouteEvents(r.id, events ?? [])
+          let events = listField<'events', WaypointFolderRouteEvent[]>(first, 'route.events', 'events') ?? []
+          if (typeof first.total === 'number' && first.total > events.length) {
+            // The latest lifecycle event (route.paused/route.resumed) may lie past the first
+            // page (default 50, oldest-first); fetch the complete log so Resume derives correctly.
+            const full = (await client.cmd('route.events', { routeId: r.id, limit: first.total })) as {
+              ok: boolean; error?: string; events?: WaypointFolderRouteEvent[]
+            }
+            if (cancelled) return
+            events = listField<'events', WaypointFolderRouteEvent[]>(full, 'route.events', 'events') ?? events
+          }
+          setRouteEvents(r.id, events)
         } catch {
           /* a route-events fetch failure leaves prior provenance intact; surfaced nowhere blocking */
         }
