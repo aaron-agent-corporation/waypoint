@@ -141,6 +141,72 @@ describe('Waypoint Beads route transitions', () => {
     ).rejects.toThrow('Cannot resolve human gate attorney-handoff-gate with resume; use waypoint gate --approve')
   })
 
+  it('throws and performs no mutation when approving a non-current beads gate', async () => {
+    const projectRoot = await beadsProject('referral-package')
+    const catalog = await loadBundledWaypointCatalog()
+    const instantiated = await instantiateWaypointRouteInBeads(catalog, {
+      quest: 'referral-package',
+      routeId: 'route-referral',
+      subject: { type: 'folder', id: 'referral-fixture' },
+      client: createRecordingIssueClient(),
+    })
+    // All tasks closed except the route root and a non-gate task, so current_node is NOT the gate
+    const nonGateTask = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind !== 'route' && issue.spec.metadata.waypoint.kind !== 'gate')
+    expect(nonGateTask).toBeTruthy()
+    const statuses = closedExcept(instantiated, ['route:referral-package', nonGateTask!.logicalId])
+    // Inject the gate as open so requireTask finds it, but current_node will be nonGateTask
+    const gateIssue = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'gate')
+    expect(gateIssue).toBeTruthy()
+    const statusesWithGateOpen = { ...statuses, [gateIssue!.logicalId]: 'open' as const }
+    const beadsReader = snapshotReader(snapshotFromInstantiation(instantiated, statusesWithGateOpen))
+    const beadsMutator = createRecordingMutator()
+
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: 'route-referral',
+        node: 'attorney-handoff-gate',
+        beadsReader,
+        beadsMutator,
+      }),
+    ).rejects.toThrow('is not the current gate of route')
+
+    expect(beadsMutator.comments).toEqual([])
+    expect(beadsMutator.closes).toEqual([])
+  })
+
+  it('throws and performs no mutation when rejecting a non-current beads gate', async () => {
+    const projectRoot = await beadsProject('referral-package')
+    const catalog = await loadBundledWaypointCatalog()
+    const instantiated = await instantiateWaypointRouteInBeads(catalog, {
+      quest: 'referral-package',
+      routeId: 'route-referral',
+      subject: { type: 'folder', id: 'referral-fixture' },
+      client: createRecordingIssueClient(),
+    })
+    // All tasks closed except the route root and a non-gate task, so current_node is NOT the gate
+    const nonGateTask = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind !== 'route' && issue.spec.metadata.waypoint.kind !== 'gate')
+    expect(nonGateTask).toBeTruthy()
+    const statuses = closedExcept(instantiated, ['route:referral-package', nonGateTask!.logicalId])
+    // Inject the gate as open so requireTask finds it, but current_node will be nonGateTask
+    const gateIssue = instantiated.issues.find((issue) => issue.spec.metadata.waypoint.kind === 'gate')
+    expect(gateIssue).toBeTruthy()
+    const statusesWithGateOpen = { ...statuses, [gateIssue!.logicalId]: 'open' as const }
+    const beadsReader = snapshotReader(snapshotFromInstantiation(instantiated, statusesWithGateOpen))
+    const beadsMutator = createRecordingMutator()
+
+    await expect(
+      rejectRouteGate(projectRoot, {
+        routeId: 'route-referral',
+        node: 'attorney-handoff-gate',
+        beadsReader,
+        beadsMutator,
+      }),
+    ).rejects.toThrow('is not the current gate of route')
+
+    expect(beadsMutator.comments).toEqual([])
+    expect(beadsMutator.statusUpdates).toEqual([])
+  })
+
   it('pauses and resumes the Beads route issue without closing task blockers', async () => {
     const projectRoot = await beadsProject('waypoint')
     const catalog = await loadBundledWaypointCatalog()

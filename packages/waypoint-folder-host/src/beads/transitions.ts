@@ -22,6 +22,7 @@ export async function approveWaypointBeadsRouteGate(
   const run = await loadRun(projectRoot, input.routeId, input)
   const gate = requireTask(run, input.node)
   if (gate.kind !== 'gate') throw new Error(`Beads task is not a gate: ${input.node}`)
+  assertBeadsDecidesCurrentGate(run, gate, input.node)
 
   const verification = await verifyWaypointBeadsTaskCompletion(gate, {
     approved_gate_ids: [gate.beads_id],
@@ -49,6 +50,7 @@ export async function rejectWaypointBeadsRouteGate(
   const run = await loadRun(projectRoot, input.routeId, input)
   const gate = requireTask(run, input.node)
   if (gate.kind !== 'gate') throw new Error(`Beads task is not a gate: ${input.node}`)
+  assertBeadsDecidesCurrentGate(run, gate, input.node)
 
   const mutator = mutationClient(projectRoot, input)
   const note = routeDecisionComment('rejected', run.route.id, gate, input.note)
@@ -143,6 +145,25 @@ function currentResolvableTask(run: WaypointBeadsRunReconstruction): WaypointBea
 
 function isSupportedResolvableTask(task: WaypointBeadsRunTask): boolean {
   return task.kind === 'wait' || task.kind === 'gate' || (task.metadata.waypoint.artifacts?.length ?? 0) > 0
+}
+
+/**
+ * The engine is the source of truth for gate decisions: a beads gate decision must
+ * target the route's CURRENT gate. A stale render, a replayed command, or a non-UI
+ * caller must not decide a non-current gate (which would advance/block the wrong
+ * node). Mirrors the folder-backend assertDecidesCurrentGate (state.ts). Throws
+ * before any mutation, so the route is left untouched.
+ */
+function assertBeadsDecidesCurrentGate(run: WaypointBeadsRunReconstruction, gate: WaypointBeadsRunTask, node: string): void {
+  const current = run.route.current_node
+  if (current == null) {
+    throw new Error(`gate.decide: route ${run.route.id} has no current gate to decide`)
+  }
+  const decidesCurrent =
+    gate.plan_ref === current || gate.beads_id === current || gate.id === current || node === current
+  if (!decidesCurrent) {
+    throw new Error(`gate.decide: node "${node}" is not the current gate of route ${run.route.id}`)
+  }
 }
 
 function assertAllowsTransition(verification: WaypointBeadsTaskCompletionVerification): void {
