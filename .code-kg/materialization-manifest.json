@@ -2,7 +2,7 @@
   "version": 1,
   "tool_version": "0.1.0",
   "project_root": ".",
-  "generated_at": "2026-06-27T18:23:01.396Z",
+  "generated_at": "2026-06-27T20:00:52.507Z",
   "sections": {
     "lat": {
       "stable_id": "lat",
@@ -17,7 +17,7 @@
       "source_spans": [],
       "generated_hash": "sha256:a3390f95fda4e3f8e45d819a33fdfccefd36d201bf02ac8fdea7cce2c2d10291",
       "current_hash": "sha256:a3390f95fda4e3f8e45d819a33fdfccefd36d201bf02ac8fdea7cce2c2d10291",
-      "last_seen_graph_hash": "sha256:f0b40befe49515906f2714b882a1d6937f291f96981b6ad287f4a526fbc98756"
+      "last_seen_graph_hash": "sha256:ac410117e57078e23aab250a2edd57602d1af3bc6caf6044ef6164f375de8476"
     },
     "architecture": {
       "stable_id": "architecture",
@@ -1645,7 +1645,7 @@
       "source_spans": [],
       "generated_hash": "sha256:ea881ed52ef1d84ccd03f0bab9674be79a44ead2692635a188371da9389c6c1e",
       "current_hash": "sha256:ea881ed52ef1d84ccd03f0bab9674be79a44ead2692635a188371da9389c6c1e",
-      "last_seen_graph_hash": "sha256:f0b40befe49515906f2714b882a1d6937f291f96981b6ad287f4a526fbc98756"
+      "last_seen_graph_hash": "sha256:ac410117e57078e23aab250a2edd57602d1af3bc6caf6044ef6164f375de8476"
     },
     "tests.tests": {
       "stable_id": "tests.tests",
