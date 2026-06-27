@@ -396,6 +396,47 @@ describe('App', () => {
     expect(allCalls).toBe(2)
   })
 
+  it('recovers the recipes banner Retry in ROUTE scope (epoch re-drives the quest fetch)', async () => {
+    let questCalls = 0
+    const client = new FakeEngineClient()
+    client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }
+    client.responses['agent.list'] = { ok: true, action: 'agent.list', sessions: [] }
+    client.responses['routes.list'] = { ok: true, action: 'routes.list', routes: [] }
+    client.responses['tasks.list'] = { ok: true, action: 'tasks.list', tasks: [] }
+    const baseCmd = client.cmd.bind(client)
+    client.cmd = (async (name: string, payload?: unknown) => {
+      if (name === 'catalog.recipes' && (payload as { quest?: string } | undefined)?.quest === 'code-review') {
+        questCalls += 1
+        return questCalls <= 1
+          ? { ok: false, action: 'catalog.recipes', error: 'quest fetch blew up' }
+          : { ok: true, action: 'catalog.recipes', recipes: [{ slug: 'reviewer', name: 'Code Reviewer' }], warnings: [] }
+      }
+      return baseCmd(name, payload)
+    }) as never
+
+    render(<App client={client} />)
+    await waitFor(() => expect(screen.getByText('Routes')).toBeInTheDocument())
+
+    // Populate routes via a snapshot, then select the route → first quest fetch fails → banner.
+    act(() => {
+      client.emit({
+        type: 'snapshot', apiVersion: '1', seq: 1,
+        routes: [{ id: 'route-001', quest: 'code-review', status: 'active', current_node: null, subject: { type: 'project', id: 'local' }, created_at: 't', updated_at: 't' }],
+        tasks: [],
+      })
+    })
+    act(() => { useStore.getState().selectRoute('route-001') })
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('quest fetch blew up')
+    expect(useStore.getState().recipesByQuest['code-review']).toBeUndefined()
+
+    // Retry → epoch bump → the quest fetch re-drives and succeeds.
+    await userEvent.click(within(alert).getByRole('button', { name: 'Retry' }))
+    await waitFor(() => expect(useStore.getState().recipesByQuest['code-review']).toEqual([{ slug: 'reviewer', name: 'Code Reviewer' }]))
+    expect(useStore.getState().recipesError).toBeNull()
+    expect(questCalls).toBe(2)
+  })
+
   it('fetches quest recipes once on route select and refetches once on All scope toggle (cache/dedup)', async () => {
     const client = new FakeEngineClient()
     client.responses['meta.health'] = { ok: true, action: 'meta.health', workspaceOpen: true, brain: 'fake' }

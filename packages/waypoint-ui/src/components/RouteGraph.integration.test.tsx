@@ -10,12 +10,19 @@
  */
 
 import { render, waitFor } from '@testing-library/react'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { buildRouteGraph } from '../graph/build-graph'
 import { useStore } from '../store'
 import { RouteGraph } from './RouteGraph'
 
 // ─── jsdom polyfills required by @xyflow/react ───────────────────────────────
+// Installed in beforeAll and RESTORED in afterAll so the fixed 800×600 rect and
+// the global stubs cannot leak into other layout-sensitive suites (e.g. if
+// Vitest's per-file isolation is ever turned off).
+
+const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+const addedGlobals: string[] = []
 
 beforeAll(() => {
   // ReactFlow uses ResizeObserver to track node dimensions.
@@ -30,6 +37,7 @@ beforeAll(() => {
       writable: true,
       configurable: true,
     })
+    addedGlobals.push('ResizeObserver')
   }
 
   // ReactFlow reads bounding rects to position nodes/edges; jsdom returns zeros
@@ -66,6 +74,7 @@ beforeAll(() => {
         dispatchEvent: () => false,
       }),
     })
+    addedGlobals.push('matchMedia')
   }
 
   // DOMMatrixReadOnly is used by some SVG internals in @xyflow/react.
@@ -88,6 +97,17 @@ beforeAll(() => {
       writable: true,
       configurable: true,
     })
+    addedGlobals.push('DOMMatrixReadOnly')
+  }
+})
+
+afterAll(() => {
+  // Restore the real getBoundingClientRect and remove only the stubs we added,
+  // so this file's jsdom shims never bleed into other suites.
+  Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
+  for (const name of addedGlobals) {
+    if (name === 'matchMedia') delete (window as unknown as Record<string, unknown>)[name]
+    else delete (globalThis as unknown as Record<string, unknown>)[name]
   }
 })
 
@@ -208,30 +228,15 @@ describe('RouteGraph integration (real @xyflow/react)', () => {
     expect(container.textContent).toContain('slice-verify')
   })
 
-  it('edge data is wired in the graph (edges container rendered)', () => {
-    useStore.setState({
-      selectedRouteId: ROUTE_ID,
-      routes: [route],
-      tasks,
-      recipesByQuest: { [QUEST]: [{ slug: RECIPE_SLUG, name: RECIPE_NAME }] },
-    })
-
-    const { container } = render(
-      <div style={{ width: 1024, height: 768 }}>
-        <RouteGraph />
-      </div>,
-    )
-
-    // @xyflow/react renders edges only after ResizeObserver fires to measure
-    // node dimensions — which never fires in jsdom because there is no layout
-    // engine. The edges container (.react-flow__edges) IS rendered immediately
-    // and its presence confirms ReactFlow's edge pipeline is wired up.
-    // Asserting actual SVG <path> elements would require a real browser.
-    //
-    // The meaningful guard is already covered by the handle test above: if
-    // GraphNode lacked <Handle> elements the edge pipeline would silently drop
-    // all edges even in a real browser — and the handle count would be 0.
-    expect(container.querySelector('.react-flow__edges')).not.toBeNull()
+  it('produces a chaining edge between the two tasks (deterministic, library-agnostic)', () => {
+    // NOTE: do NOT assert `.react-flow__edges` presence — ReactFlow renders that
+    // container unconditionally (even with zero edges), so it proves nothing about
+    // edge production. Assert edge production on the pure builder instead, which is
+    // deterministic and independent of the jsdom renderer (the real-renderer guard
+    // is the `.react-flow__handle` count above — handles are the edge anchors).
+    const { edges } = buildRouteGraph(tasks)
+    expect(edges).toHaveLength(1)
+    expect(edges[0]).toMatchObject({ source: 'task-A', target: 'task-B' })
   })
 
   it('shows empty hint when no route is selected (sanity)', () => {
