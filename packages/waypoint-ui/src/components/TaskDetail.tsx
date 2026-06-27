@@ -14,6 +14,10 @@ export function TaskDetail() {
   if (selectedRecipeSlug) {
     const quest = routes.find((r) => r.id === selectedRouteId)?.quest
     const recipe = resolveRecipe(selectedRecipeSlug, quest, { recipesByQuest, recipesAll })
+    // Distinguish "not fetched yet" (show Loading…) from "fetched, genuinely
+    // absent" (show not-found): the relevant cache has resolved only when the
+    // quest list exists or the global list has loaded.
+    const cacheResolved = (quest != null && recipesByQuest[quest] !== undefined) || recipesAll !== null
     return (
       <div style={{ borderTop: '1px solid #ddd', overflow: 'auto' }}>
         {task ? (
@@ -22,7 +26,7 @@ export function TaskDetail() {
             <dt>status</dt><dd>{task.status}</dd>
           </dl>
         ) : null}
-        <RecipeCard recipe={recipe} slug={selectedRecipeSlug} />
+        <RecipeCard recipe={recipe} slug={selectedRecipeSlug} loading={!recipe && !cacheResolved} />
       </div>
     )
   }

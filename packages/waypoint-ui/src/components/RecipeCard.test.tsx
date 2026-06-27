@@ -28,9 +28,22 @@ describe('RecipeCard', () => {
     expect(screen.getByText('No prompt defined.')).toBeInTheDocument()
   })
 
-  it('renders a not-found message when the recipe is undefined', () => {
+  it('renders a not-found message when the recipe is undefined and not loading', () => {
     render(<RecipeCard recipe={undefined} slug="ghost" />)
     expect(screen.getByText(/not found in the loaded catalog/)).toBeInTheDocument()
     expect(screen.getByText('ghost')).toBeInTheDocument()
+  })
+
+  it('shows a loading message (not "not found") while the catalog is still loading', () => {
+    render(<RecipeCard recipe={undefined} slug="pending" loading />)
+    expect(screen.getByText(/Loading recipe/)).toBeInTheDocument()
+    expect(screen.queryByText(/not found in the loaded catalog/)).not.toBeInTheDocument()
+    expect(screen.getByText('pending')).toBeInTheDocument()
+  })
+
+  it('renders every tool chip even when tool names repeat (stable keys)', () => {
+    render(<RecipeCard recipe={{ slug: 'dup', name: 'Dup', tools: ['Read', 'Read', 'Grep'] }} slug="dup" />)
+    expect(screen.getAllByText('Read')).toHaveLength(2)
+    expect(screen.getByText('Grep')).toBeInTheDocument()
   })
 })

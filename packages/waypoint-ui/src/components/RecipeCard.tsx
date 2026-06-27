@@ -1,10 +1,14 @@
 import type { Recipe } from '../recipe'
 
-export function RecipeCard({ recipe, slug }: { recipe: Recipe | undefined; slug: string }) {
+export function RecipeCard({ recipe, slug, loading }: { recipe: Recipe | undefined; slug: string; loading?: boolean }) {
   if (!recipe) {
     return (
       <div style={{ padding: 12, fontSize: 13 }}>
-        Recipe <code>{slug}</code> not found in the loaded catalog.
+        {loading ? (
+          <>Loading recipe <code>{slug}</code>…</>
+        ) : (
+          <>Recipe <code>{slug}</code> not found in the loaded catalog.</>
+        )}
       </div>
     )
   }
@@ -16,9 +20,9 @@ export function RecipeCard({ recipe, slug }: { recipe: Recipe | undefined; slug:
       <p style={{ margin: '0 0 8px' }}>{recipe.description || 'No description'}</p>
       <div style={{ marginBottom: 8 }}>
         {tools.length > 0 ? (
-          tools.map((t) => (
+          tools.map((t, i) => (
             <span
-              key={t}
+              key={`${t}-${i}`}
               style={{ display: 'inline-block', background: '#eee', borderRadius: 4, padding: '1px 6px', marginRight: 4, fontSize: 12 }}
             >
               {t}
