@@ -106,18 +106,21 @@ describe('extractBrainResult', () => {
 // The UI's `proposalIdOf` (AgentChat.tsx) is the mirror of this path; both must stay in sync.
 // A drift in either the decoder's data.text shape or extractBrainResult's JSON.parse path
 // fails here rather than silently dead-rendering the Approve button.
+
+// Shared fixture: minimal Pi tool_execution_end record carrying a proposalId in its result text.
+const B2_RESULT_TEXT = JSON.stringify({ proposalId: 'recipe/foo', status: 'pending' })
+const B2_PI_RECORD =
+  JSON.stringify({
+    type: 'tool_execution_end',
+    toolName: 'waypoint_author_promote',
+    isError: false,
+    result: { content: [{ type: 'text', text: B2_RESULT_TEXT }] },
+  }) + '\n'
+
 describe('tool_result → proposalId contract (B2)', () => {
   it('decoder emits agent.tool_result whose data.text JSON-parses to the proposalId', () => {
-    // Build a minimal Pi tool_execution_end record carrying a proposalId in its result text.
-    const resultText = JSON.stringify({ proposalId: 'recipe/foo', status: 'pending' })
-    const piRecord = JSON.stringify({
-      type: 'tool_execution_end',
-      toolName: 'waypoint_author_promote',
-      isError: false,
-      result: { content: [{ type: 'text', text: resultText }] },
-    })
     const decoder = new PiStreamDecoder({ now: fixedNow })
-    const events = decoder.push(piRecord + '\n')
+    const events = decoder.push(B2_PI_RECORD)
     const toolResult = events.find((e) => e.kind === 'agent.tool_result')
     expect(toolResult).toBeDefined()
     // data.text is the raw JSON string — same shape the UI's proposalIdOf reads.
@@ -125,15 +128,8 @@ describe('tool_result → proposalId contract (B2)', () => {
   })
 
   it('extractBrainResult surfaces proposalId from the decoded event stream', () => {
-    const resultText = JSON.stringify({ proposalId: 'recipe/foo', status: 'pending' })
-    const piRecord = JSON.stringify({
-      type: 'tool_execution_end',
-      toolName: 'waypoint_author_promote',
-      isError: false,
-      result: { content: [{ type: 'text', text: resultText }] },
-    })
     const decoder = new PiStreamDecoder({ now: fixedNow })
-    const events = decoder.push(piRecord + '\n')
+    const events = decoder.push(B2_PI_RECORD)
     const result = extractBrainResult(events)
     expect(result.proposalId).toBe('recipe/foo')
   })

@@ -50,11 +50,19 @@ describe('engine-host run/watch commands (folder)', () => {
 
     // RouteBroadcaster fed the hub from the durable log on run.start.
     expect(received.length).toBeGreaterThan(0)
+  })
 
+  it('route.events paging: limit=total returns the complete log (B1)', async () => {
     // B1: pin the two-call paging contract the UI depends on.
     // Pause + resume to append two more events (route.paused, route.resumed) so the
     // log has ≥3 entries; then limit=1 proves total > page, and limit=total proves
     // the full log is retrievable in one call.
+    const started = (await host.dispatch('run.start', { quest: 'waypoint' })) as unknown as {
+      ok: boolean
+      route: { id: string; quest: string; status: string }
+    }
+    expect(started.ok).toBe(true)
+
     const routeId = started.route.id
     await host.dispatch('run.pause', { routeId, reason: 'b1-test' })
     await host.dispatch('run.resume', { routeId })

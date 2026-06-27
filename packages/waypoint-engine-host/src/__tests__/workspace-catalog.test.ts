@@ -108,6 +108,22 @@ describe('workspace catalog resolution (engine-host)', () => {
     expect(installed.installedRecipePaths).toEqual([])
   })
 
+  // FT2b: catalog.install on a BUNDLED quest must return quest as { slug } object,
+  // proving both the authored-only branch and the bundled branch agree on the shape.
+  it('catalog.install returns { slug } shape for a bundled quest', async () => {
+    const installed = (await host.dispatch('catalog.install', { quest: 'waypoint' })) as unknown as {
+      ok: boolean
+      quest: unknown
+      installedQuestPaths: string[]
+      installedRecipePaths: string[]
+    }
+    expect(installed.ok).toBe(true)
+    expect(installed.quest).toEqual({ slug: 'waypoint' })
+    // Bundled install may write paths; the shape contract is what matters here.
+    expect(Array.isArray(installed.installedQuestPaths)).toBe(true)
+    expect(Array.isArray(installed.installedRecipePaths)).toBe(true)
+  })
+
   // N1: a single malformed authored manifest must not blank the listing nor abort
   // the start of an unrelated valid quest. Discovery surfaces skip-and-warn.
   it('skips and warns on a malformed authored manifest without breaking unrelated work', async () => {
