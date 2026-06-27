@@ -5,6 +5,7 @@ import type {
   AgentSessionSummary,
   EngineWsMessage,
   WaypointFolderRoute,
+  WaypointFolderRouteEvent,
   WaypointFolderTask,
 } from './engine/types'
 import { recipeSlugOf, type Recipe } from './recipe'
@@ -49,6 +50,7 @@ interface UiState {
    */
   recipesEpoch: number
   controlError: string | null
+  routeEventsByRoute: Record<string, WaypointFolderRouteEvent[]>
 
   applyMessage(msg: EngineWsMessage): void
   /**
@@ -75,6 +77,7 @@ interface UiState {
   selectRoute(id: string | null): void
   selectTask(id: string | null): void
   setActiveSession(id: string | null): void
+  setRouteEvents(routeId: string, events: WaypointFolderRouteEvent[]): void
 }
 
 export const useStore = create<UiState>((set, get) => ({
@@ -99,6 +102,7 @@ export const useStore = create<UiState>((set, get) => ({
   recipesError: null,
   recipesEpoch: 0,
   controlError: null,
+  routeEventsByRoute: {},
 
   applyMessage(msg) {
     if (msg.type === 'snapshot') {
@@ -168,4 +172,5 @@ export const useStore = create<UiState>((set, get) => ({
     set({ selectedTaskId, selectedRecipeSlug: task ? recipeSlugOf(task) : null })
   },
   setActiveSession: (activeSessionId) => set({ activeSessionId }),
+  setRouteEvents: (routeId, events) => set({ routeEventsByRoute: { ...get().routeEventsByRoute, [routeId]: events } }),
 }))

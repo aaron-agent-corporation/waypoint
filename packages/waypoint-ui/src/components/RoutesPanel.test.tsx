@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -81,6 +81,33 @@ describe('RoutesPanel recipes section', () => {
     renderPanel()
     expect(screen.getByText(/Couldn't load recipes/)).toBeInTheDocument()
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
+  })
+})
+
+describe('RoutesPanel Pause/Resume', () => {
+  it('shows Pause for an active route and issues run.pause', async () => {
+    const client = new FakeEngineClient()
+    useStore.setState({ routes: [route('route-1', 'q')] })
+    render(<ClientProvider client={client}><RoutesPanel /></ClientProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
+    await waitFor(() => expect(client.calls.some((c) => c.name === 'run.pause' && (c.payload as { routeId: string }).routeId === 'route-1')).toBe(true))
+  })
+
+  it('shows Resume for a blocked route with paused-provenance, and neither for a gate-blocked route', () => {
+    const blocked = { ...route('route-2', 'q'), status: 'blocked' as const }
+    useStore.setState({
+      routes: [blocked],
+      routeEventsByRoute: { 'route-2': [{ id: '1', route_id: 'route-2', kind: 'route.paused', created_at: 't' } as never] },
+    })
+    const client = new FakeEngineClient()
+    const { rerender } = render(<ClientProvider client={client}><RoutesPanel /></ClientProvider>)
+    expect(screen.getByRole('button', { name: 'Resume' })).toBeInTheDocument()
+
+    // gate-blocked (no pause events) → neither Pause nor Resume
+    useStore.setState({ routeEventsByRoute: { 'route-2': [{ id: '1', route_id: 'route-2', kind: 'route.started', created_at: 't' } as never] } })
+    rerender(<ClientProvider client={client}><RoutesPanel /></ClientProvider>)
+    expect(screen.queryByRole('button', { name: 'Resume' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Pause' })).toBeNull()
   })
 })
 

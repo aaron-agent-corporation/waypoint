@@ -1,4 +1,6 @@
 import { useStore } from '../store'
+import { useEngineCommand } from '../engine/useEngineCommand'
+import { routeIsPaused } from '../routeStatus'
 import { StartQuest } from './StartQuest'
 
 export function RoutesPanel() {
@@ -8,6 +10,19 @@ export function RoutesPanel() {
   const activeSessionId = useStore((s) => s.activeSessionId)
   const selectRoute = useStore((s) => s.selectRoute)
   const setActiveSession = useStore((s) => s.setActiveSession)
+
+  const routeEventsByRoute = useStore((s) => s.routeEventsByRoute)
+  const { run, pending } = useEngineCommand()
+
+  const lifecycleControl = (r: { id: string; status: string }) => {
+    if (r.status === 'active') {
+      return <button type="button" disabled={pending} onClick={() => void run('run.pause', { routeId: r.id })}>Pause</button>
+    }
+    if (r.status === 'blocked' && routeIsPaused(routeEventsByRoute[r.id] ?? [])) {
+      return <button type="button" disabled={pending} onClick={() => void run('run.resume', { routeId: r.id })}>Resume</button>
+    }
+    return null
+  }
 
   const recipeScope = useStore((s) => s.recipeScope)
   const setRecipeScope = useStore((s) => s.setRecipeScope)
@@ -52,14 +67,15 @@ export function RoutesPanel() {
       </h3>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {routes.map((r) => (
-          <li key={r.id}>
+          <li key={r.id} style={{ display: 'flex', alignItems: 'center' }}>
             <button
               type="button"
               onClick={() => selectRoute(r.id)}
-              style={{ fontWeight: r.id === selectedRouteId ? 700 : 400, width: '100%', textAlign: 'left' }}
+              style={{ fontWeight: r.id === selectedRouteId ? 700 : 400, flex: 1, textAlign: 'left' }}
             >
               {r.id} · {r.status}
             </button>
+            {lifecycleControl(r)}
           </li>
         ))}
         {routes.length === 0 ? <li>(no routes)</li> : null}

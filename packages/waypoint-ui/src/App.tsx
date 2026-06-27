@@ -7,7 +7,7 @@ import { RoutesPanel } from './components/RoutesPanel'
 import { TaskDetail } from './components/TaskDetail'
 import { ClientProvider, useClient } from './engine/context'
 import type { BrowserEngineClient } from './engine/client'
-import type { AgentSessionSummary, WaypointFolderRoute, WaypointFolderTask } from './engine/types'
+import type { AgentSessionSummary, WaypointFolderRoute, WaypointFolderRouteEvent, WaypointFolderTask } from './engine/types'
 import { listField } from './lib/engine'
 import type { Recipe } from './recipe'
 import { useStore } from './store'
@@ -44,6 +44,7 @@ function Console() {
   const bumpRecipesEpoch = useStore((s) => s.bumpRecipesEpoch)
   const controlError = useStore((s) => s.controlError)
   const setControlError = useStore((s) => s.setControlError)
+  const setRouteEvents = useStore((s) => s.setRouteEvents)
   const activeQuest = routesList.find((r) => r.id === selectedRouteId)?.quest
 
   // Pure fetchers: they never touch the store. The caller applies the result
@@ -199,6 +200,28 @@ function Console() {
       cancelled = true
     }
   }, [client, recipeScope, activeQuest, recipesEpoch, setQuestRecipes, setAllRecipes, setRecipesError])
+
+  // Blocked routes are status-ambiguous (pause vs gate vs autopilot). Fetch their
+  // event lifecycle so the Pause/Resume control can derive true paused-provenance.
+  // Re-fetched when routesEpoch advances (a pause/resume bumps it), so the cache
+  // tracks the live lifecycle. active/terminal routes need no events.
+  useEffect(() => {
+    let cancelled = false
+    const blocked = routesList.filter((r) => r.status === 'blocked')
+    void Promise.all(
+      blocked.map(async (r) => {
+        try {
+          const env = (await client.cmd('route.events', { routeId: r.id })) as { ok: boolean; error?: string; events?: { items?: WaypointFolderRouteEvent[] } }
+          if (cancelled) return
+          const page = listField<'events', { items?: WaypointFolderRouteEvent[] }>(env, 'route.events', 'events')
+          setRouteEvents(r.id, page?.items ?? [])
+        } catch {
+          /* a route-events fetch failure leaves prior provenance intact; surfaced nowhere blocking */
+        }
+      }),
+    )
+    return () => { cancelled = true }
+  }, [client, routesList, routesEpoch, setRouteEvents])
 
   // Per-source rows so dismissing a recovered source can't hide a still-active
   // outage on another (routesError has no independent poll, so a shared Dismiss
