@@ -34,13 +34,16 @@ export async function installQuestCatalog(
     await copyCatalogFile(resolved.questEntry.path, questTarget)
   }
 
-  // Recipes are catalog-owned and are installed unconditionally — even when
-  // `preserveExistingQuest` is set and the quest manifest is preserved.
-  // This is intentional: an authored quest manifest stays untouched while its
-  // recipes always track the catalog version.
+  // Recipes are workspace-wins: an already-present recipe file is preserved (it may
+  // carry operator edits that are not in the bundled catalog and not re-derivable),
+  // so installation never clobbers it. The first install of a quest populates its
+  // recipes; subsequent Starts leave existing recipe files untouched. A recipe is
+  // (re)written only when it is missing at the target.
   const installedRecipePaths: string[] = []
   for (const entry of resolved.recipeEntries) {
     const target = join(paths.waypointDir, 'recipes', entry.relativePath)
+    const recipeExists = await access(target).then(() => true).catch(() => false)
+    if (recipeExists) continue
     await copyCatalogFile(entry.path, target)
     installedRecipePaths.push(toProjectRelative(projectRoot, target))
   }

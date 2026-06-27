@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -49,6 +49,33 @@ describe('bundled Waypoint catalog', () => {
     expect(result.installedQuestPaths).toEqual(['.waypoint/quests/waypoint.yaml'])
     expect(result.installedRecipePaths).toContain('.waypoint/recipes/waypoint/doc-writer.yaml')
     expect(result.installedRecipePaths).toHaveLength(result.recipes.length)
+  })
+
+  // workspace-wins: an operator-edited recipe must survive a second install (Start)
+  it('preserves an operator-edited recipe file on re-install (workspace-wins)', async () => {
+    const projectRoot = await makeTempProject()
+    const catalog = await loadBundledWaypointCatalog()
+
+    // First install: all recipes are written (no pre-existing files)
+    const first = await installQuestCatalog(projectRoot, catalog, { quest: 'waypoint' })
+    expect(first.installedRecipePaths).toHaveLength(first.recipes.length)
+
+    // Operator overwrites one installed recipe with custom content
+    const operatorContent = '# OPERATOR EDIT\n'
+    const editedRelPath = first.installedRecipePaths[0]
+    if (!editedRelPath) throw new Error('expected at least one installed recipe path')
+    const editedAbsPath = join(projectRoot, editedRelPath)
+    await writeFile(editedAbsPath, operatorContent, 'utf8')
+
+    // Second install (re-Start): must NOT overwrite the operator-edited recipe
+    const second = await installQuestCatalog(projectRoot, catalog, { quest: 'waypoint' })
+
+    // All recipes pre-exist — none are newly written
+    expect(second.installedRecipePaths).toHaveLength(0)
+
+    // The operator edit must be intact
+    const survived = await readFile(editedAbsPath, 'utf8')
+    expect(survived).toBe(operatorContent)
   })
 
   // P2-1: the curated, immutable bundle must fail loud on a malformed manifest
