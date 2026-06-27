@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -10,6 +10,17 @@ import { AgentChat } from './AgentChat'
 const initial = useStore.getState()
 beforeEach(() => useStore.setState(initial, true))
 
+function seedTranscript(text: string) {
+  useStore.setState({
+    activeSessionId: 'agent-1',
+    transcripts: {
+      'agent-1': [
+        { id: 'e1', sessionId: 'agent-1', kind: 'agent.tool_result', at: 't', idx: 0, data: { toolName: 'author_promote', text } } as never,
+      ],
+    },
+  })
+}
+
 function renderChat(client: FakeEngineClient) {
   return render(
     <ClientProvider client={client}>
@@ -17,6 +28,25 @@ function renderChat(client: FakeEngineClient) {
     </ClientProvider>,
   )
 }
+
+describe('AgentChat proposal approval', () => {
+  it('renders Approve proposal for a tool_result carrying a proposalId and approves on confirm', async () => {
+    const client = new FakeEngineClient()
+    client.responses['author.approveProposal'] = { ok: true, action: 'author.approveProposal', proposalId: 'prop-7', path: 'recipes/x.yaml' } as never
+    seedTranscript(JSON.stringify({ proposalId: 'prop-7' }))
+    render(<ClientProvider client={client}><AgentChat /></ClientProvider>)
+    fireEvent.click(screen.getByRole('button', { name: /approve proposal/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+    await waitFor(() => expect(client.calls.find((c) => c.name === 'author.approveProposal')?.payload).toEqual({ id: 'prop-7' }))
+  })
+
+  it('renders no approve button for a tool_result without a proposalId', () => {
+    const client = new FakeEngineClient()
+    seedTranscript(JSON.stringify({ result: 'ok' }))
+    render(<ClientProvider client={client}><AgentChat /></ClientProvider>)
+    expect(screen.queryByRole('button', { name: /approve proposal/i })).toBeNull()
+  })
+})
 
 describe('AgentChat', () => {
   it('authors a session on submit, then renders streamed transcript events', async () => {
