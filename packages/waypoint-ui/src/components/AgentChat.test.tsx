@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { ClientProvider } from '../engine/context'
 import { useStore } from '../store'
 import { FakeEngineClient } from '../test/fake-client'
-import { AgentChat } from './AgentChat'
+import { AgentChat, proposalIdOf } from './AgentChat'
 
 const initial = useStore.getState()
 beforeEach(() => useStore.setState(initial, true))
@@ -58,6 +58,28 @@ describe('AgentChat proposal approval', () => {
     seedTranscript(JSON.stringify({ result: 'ok' }))
     render(<ClientProvider client={client}><AgentChat /></ClientProvider>)
     expect(screen.queryByRole('button', { name: /approve proposal/i })).toBeNull()
+  })
+})
+
+// B2: pin the tool_result → proposalId contract.
+// Engine-side mirror: pi-stream-decoder.ts `idsFromToolResultText` — same JSON.parse(text).proposalId path.
+// Both sides must stay in sync; a drift here fails this test rather than silently dead-rendering the Approve button.
+describe('proposalIdOf (UI contract mirror of pi-stream-decoder idsFromToolResultText)', () => {
+  it('extracts proposalId from a well-formed JSON tool result text', () => {
+    expect(proposalIdOf({ text: JSON.stringify({ proposalId: 'recipe/foo' }) })).toBe('recipe/foo')
+  })
+
+  it('returns null for a JSON result without a proposalId field', () => {
+    expect(proposalIdOf({ text: JSON.stringify({ status: 'pending' }) })).toBeNull()
+  })
+
+  it('returns null (no throw) for non-JSON text', () => {
+    expect(proposalIdOf({ text: 'not json at all' })).toBeNull()
+  })
+
+  it('returns null for a missing or non-string text field', () => {
+    expect(proposalIdOf({ text: undefined })).toBeNull()
+    expect(proposalIdOf({})).toBeNull()
   })
 })
 

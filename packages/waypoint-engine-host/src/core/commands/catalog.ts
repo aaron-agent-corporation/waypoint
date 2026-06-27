@@ -57,7 +57,7 @@ export function registerCatalogCommands(bus: CommandBus, ctx: EngineContext): vo
         throw new EngineError(bundledResolved.message, { code: 'NOT_FOUND', field: 'quest' })
       }
       return ok('catalog.install', {
-        quest,
+        quest: { slug: quest },
         recipes: wsResolved.recipes,
         installedQuestPaths: [],
         installedRecipePaths: [],

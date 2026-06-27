@@ -133,7 +133,7 @@ describe('TaskDetail dispatcher', () => {
 
   it('does not render gate controls for a gate that is not the route current blocked gate', () => {
     const gateRoute = { ...route, status: 'blocked' as const, current_node: 'other-gate' }
-    const historicalGate: WaypointFolderTask = { id: 'task-h', route_id: 'route-001', plan_ref: 'old-gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'complete' as any, created_at: 't', updated_at: 't' }
+    const historicalGate: WaypointFolderTask = { id: 'task-h', route_id: 'route-001', plan_ref: 'old-gate', title: 't', phase: 'x', wave: 0, kind: 'gate', status: 'done', created_at: 't', updated_at: 't' }
     useStore.setState({ routes: [gateRoute], selectedRouteId: 'route-001', tasks: [historicalGate], selectedTaskId: 'task-h', selectedRecipeSlug: null })
     render(<ClientProvider client={new FakeEngineClient()}><TaskDetail /></ClientProvider>)
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()

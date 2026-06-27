@@ -101,6 +101,9 @@ describe('workspace catalog resolution (engine-host)', () => {
       installedRecipePaths: string[]
     }
     expect(installed.ok).toBe(true)
+    // N6: authored-only branch must return quest as { slug } object, not a bare string,
+    // matching InstallQuestCatalogResult.quest and the bundled-path branch shape.
+    expect(installed.quest).toEqual({ slug: 'authored-quest' })
     expect(installed.installedQuestPaths).toEqual([])
     expect(installed.installedRecipePaths).toEqual([])
   })

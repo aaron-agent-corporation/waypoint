@@ -101,3 +101,40 @@ describe('extractBrainResult', () => {
     expect(result.error).toMatch(/terminal/)
   })
 })
+
+// B2: pin the tool_result → proposalId contract end-to-end through the real decoder.
+// The UI's `proposalIdOf` (AgentChat.tsx) is the mirror of this path; both must stay in sync.
+// A drift in either the decoder's data.text shape or extractBrainResult's JSON.parse path
+// fails here rather than silently dead-rendering the Approve button.
+describe('tool_result → proposalId contract (B2)', () => {
+  it('decoder emits agent.tool_result whose data.text JSON-parses to the proposalId', () => {
+    // Build a minimal Pi tool_execution_end record carrying a proposalId in its result text.
+    const resultText = JSON.stringify({ proposalId: 'recipe/foo', status: 'pending' })
+    const piRecord = JSON.stringify({
+      type: 'tool_execution_end',
+      toolName: 'waypoint_author_promote',
+      isError: false,
+      result: { content: [{ type: 'text', text: resultText }] },
+    })
+    const decoder = new PiStreamDecoder({ now: fixedNow })
+    const events = decoder.push(piRecord + '\n')
+    const toolResult = events.find((e) => e.kind === 'agent.tool_result')
+    expect(toolResult).toBeDefined()
+    // data.text is the raw JSON string — same shape the UI's proposalIdOf reads.
+    expect(JSON.parse(toolResult!.data!.text as string)).toMatchObject({ proposalId: 'recipe/foo' })
+  })
+
+  it('extractBrainResult surfaces proposalId from the decoded event stream', () => {
+    const resultText = JSON.stringify({ proposalId: 'recipe/foo', status: 'pending' })
+    const piRecord = JSON.stringify({
+      type: 'tool_execution_end',
+      toolName: 'waypoint_author_promote',
+      isError: false,
+      result: { content: [{ type: 'text', text: resultText }] },
+    })
+    const decoder = new PiStreamDecoder({ now: fixedNow })
+    const events = decoder.push(piRecord + '\n')
+    const result = extractBrainResult(events)
+    expect(result.proposalId).toBe('recipe/foo')
+  })
+})

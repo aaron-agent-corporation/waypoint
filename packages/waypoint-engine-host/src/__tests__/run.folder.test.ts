@@ -50,6 +50,30 @@ describe('engine-host run/watch commands (folder)', () => {
 
     // RouteBroadcaster fed the hub from the durable log on run.start.
     expect(received.length).toBeGreaterThan(0)
+
+    // B1: pin the two-call paging contract the UI depends on.
+    // Pause + resume to append two more events (route.paused, route.resumed) so the
+    // log has ≥3 entries; then limit=1 proves total > page, and limit=total proves
+    // the full log is retrievable in one call.
+    const routeId = started.route.id
+    await host.dispatch('run.pause', { routeId, reason: 'b1-test' })
+    await host.dispatch('run.resume', { routeId })
+
+    const small = (await host.dispatch('route.events', { routeId, limit: 1 })) as unknown as {
+      events: unknown[]
+      total: number
+      limit: number
+      offset: number
+    }
+    expect(small.events).toHaveLength(1)
+    expect(small.total).toBeGreaterThan(small.events.length) // true count exceeds the page
+
+    const full = (await host.dispatch('route.events', { routeId, limit: small.total })) as unknown as {
+      events: unknown[]
+      total: number
+    }
+    expect(full.events).toHaveLength(small.total) // second call returns the complete log
+    expect(full.total).toBe(small.total)
   })
 
   it('route.get returns NOT_FOUND for an unknown route', async () => {

@@ -16,7 +16,7 @@ function renderEvent(event: AgentEventRecord) {
   return <span>{event.kind}</span>
 }
 
-function proposalIdOf(data: { toolName?: unknown; text?: unknown }): string | null {
+export function proposalIdOf(data: { toolName?: unknown; text?: unknown }): string | null {
   if (typeof data?.text !== 'string') return null
   try {
     const parsed = JSON.parse(data.text) as { proposalId?: unknown }
