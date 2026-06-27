@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { useClient } from '../engine/context'
 import { useEngineCommand } from '../engine/useEngineCommand'
 import { listField } from '../lib/engine'
+import { useStore } from '../store'
+
+const toMessage = (err: unknown): string => err instanceof Error ? err.message : String(err)
 
 interface CatalogQuest {
   readonly slug: string
@@ -22,7 +25,8 @@ export function StartQuest() {
       try {
         const env = (await client.cmd('catalog.quests')) as { ok: boolean; error?: string; quests?: CatalogQuest[] }
         setQuests(listField<'quests', CatalogQuest[]>(env, 'catalog.quests', 'quests') ?? [])
-      } catch {
+      } catch (err) {
+        useStore.getState().setControlError(toMessage(err))
         setQuests([])
       }
     }

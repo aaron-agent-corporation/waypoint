@@ -49,4 +49,14 @@ describe('StartQuest', () => {
     await waitFor(() => expect(useStore.getState().controlError).toBe('install boom'))
     expect(client.calls.some((c) => c.name === 'run.start')).toBe(false)
   })
+
+  it('surfaces catalog.quests fetch error to controlError', async () => {
+    const client = new FakeEngineClient()
+    client.responses['catalog.quests'] = { ok: false, action: 'catalog.quests', error: 'quests boom' } as never
+
+    renderWith(client)
+    fireEvent.click(screen.getByRole('button', { name: /start quest/i }))
+
+    await waitFor(() => expect(useStore.getState().controlError).toBe('quests boom'))
+  })
 })
