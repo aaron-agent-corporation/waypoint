@@ -1,11 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 
-import type { WaypointFolderTask } from './engine/types'
+import type { CatalogRecipeManifest, WaypointFolderTask } from './engine/types'
 import { recipeSlugOf, resolveRecipe, type Recipe } from './recipe'
 
 function task(metadata: WaypointFolderTask['metadata']): Pick<WaypointFolderTask, 'metadata'> {
   return { metadata }
 }
+
+describe('Recipe type', () => {
+  it('is derived from the wire manifest so a manifest is assignable to Recipe', () => {
+    // Compile-time guard: a full CatalogRecipeManifest must satisfy Recipe, and
+    // Recipe must carry exactly the five picked manifest fields (no drift).
+    expectTypeOf<CatalogRecipeManifest>().toMatchTypeOf<Recipe>()
+    expectTypeOf<Recipe>().toEqualTypeOf<Pick<CatalogRecipeManifest, 'slug' | 'name' | 'description' | 'prompt' | 'tools'>>()
+  })
+})
 
 describe('recipeSlugOf', () => {
   it('reads the nested folder-host path metadata.waypoint.recipe.slug', () => {

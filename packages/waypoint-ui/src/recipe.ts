@@ -1,13 +1,11 @@
-import type { WaypointFolderTask } from './engine/types'
+import type { CatalogRecipeManifest, WaypointFolderTask } from './engine/types'
 
-/** The five recipe-manifest fields the UI renders (subset of the wire manifest). */
-export interface Recipe {
-  readonly slug: string
-  readonly name: string
-  readonly description?: string
-  readonly prompt?: string
-  readonly tools?: readonly string[]
-}
+/**
+ * The recipe-manifest fields the UI renders. Derived from the wire manifest
+ * (`CatalogRecipeManifest`) rather than re-declared, so the UI shape cannot
+ * drift from what `catalog.recipes` actually returns.
+ */
+export type Recipe = Pick<CatalogRecipeManifest, 'slug' | 'name' | 'description' | 'prompt' | 'tools'>
 
 /**
  * The single place the backend-specific recipe-slug path is encoded. Folder-host

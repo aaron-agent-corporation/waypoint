@@ -38,6 +38,7 @@ export { loadWorkspaceWaypointCatalog } from './catalog/workspace.ts'
 export type {
   BundledWaypointCatalog,
   CatalogEntryError,
+  CatalogRecipeManifest,
   LoadEntriesOptions,
   ResolveCatalogQuestRecipesResult,
   WaypointCatalogEntry,
