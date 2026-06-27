@@ -48,6 +48,7 @@ export async function approveRouteGate(projectRoot: string, input: RouteGateDeci
   if ((await routeBackend(projectRoot)) === 'beads') return approveWaypointBeadsRouteGate(projectRoot, input)
 
   const route = await requireRoute(projectRoot, input.routeId)
+  await assertDecidesCurrentGate(projectRoot, route, input.node)
   const previousNode = route.current_node
   const nextNode = input.nextNode ?? route.current_node
   const updated = await updateWaypointRoute(projectRoot, route.id, {
@@ -73,6 +74,7 @@ export async function rejectRouteGate(projectRoot: string, input: RouteGateDecis
   if ((await routeBackend(projectRoot)) === 'beads') return rejectWaypointBeadsRouteGate(projectRoot, input)
 
   const route = await requireRoute(projectRoot, input.routeId)
+  await assertDecidesCurrentGate(projectRoot, route, input.node)
   const updated = await updateWaypointRoute(projectRoot, route.id, {
     status: 'blocked',
     current_node: input.node,
@@ -179,6 +181,38 @@ async function requireRoute(projectRoot: string, routeId: string): Promise<Waypo
   const route = await getWaypointRoute(projectRoot, routeId)
   if (!route) throw new Error(`Route not found: ${routeId}`)
   return route
+}
+
+/**
+ * The engine is the source of truth for gate decisions: a decision must target
+ * the route's CURRENT blocked gate. A stale UI render, a replayed command, or a
+ * non-UI caller must not decide a non-current gate (which would unblock the live
+ * route or block at the wrong node). Throws when `node` does not identify the
+ * current blocked gate; the caller has not mutated anything yet, so the route
+ * stays in its prior (blocked) state.
+ *
+ * When there is no blocked gate task (e.g. the route is active and tasks are
+ * open), the check is a no-op — the route is not in a gate-blocked state and
+ * the decision is allowed to proceed normally.
+ */
+async function assertDecidesCurrentGate(
+  projectRoot: string,
+  route: WaypointFolderRoute,
+  node: string,
+): Promise<void> {
+  const currentGate = await currentBlockedTask(projectRoot, route)
+  // No blocked gate task → route is not gate-blocked; allow the decision.
+  if (currentGate == null) return
+  // Route is gate-blocked: the decision must target the current blocked gate.
+  const decidesCurrent =
+    route.current_node != null &&
+    currentGate.plan_ref === route.current_node &&
+    (node === currentGate.plan_ref || node === currentGate.id)
+  if (!decidesCurrent) {
+    throw new Error(
+      `gate.decide: node "${node}" is not the current blocked gate of route ${route.id}`,
+    )
+  }
 }
 
 async function currentBlockedTask(projectRoot: string, route: WaypointFolderRoute): Promise<WaypointFolderTask | null> {

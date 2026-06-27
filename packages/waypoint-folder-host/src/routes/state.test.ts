@@ -33,10 +33,35 @@ async function writeRequiredArtifact(projectRoot: string): Promise<void> {
   await writeFile(join(projectRoot, 'referral-package-build', 'attorney-handoff', 'START_HERE.html'), '<html>resolved</html>', 'utf8')
 }
 
+async function createBlockedGateRoute(projectRoot: string) {
+  const route = await createWaypointRoute(projectRoot, {
+    quest: 'waypoint',
+    current_node: 'human_plan_gate',
+    status: 'blocked',
+    subject: { type: 'project', id: 'local' },
+    now: new Date('2026-05-07T16:30:00.000Z'),
+  })
+  await writeTaskState(projectRoot, [
+    {
+      id: 'task-gate-001',
+      route_id: route.id,
+      plan_ref: 'human_plan_gate',
+      title: 'Human plan gate',
+      phase: 'planning',
+      wave: 1,
+      kind: 'gate',
+      status: 'blocked',
+      created_at: '2026-05-07T16:30:00.000Z',
+      updated_at: '2026-05-07T16:30:00.000Z',
+    },
+  ])
+  return route
+}
+
 describe('route state controls', () => {
   it('approves a gate, advances the current node, and appends an event', async () => {
     const projectRoot = await tempProject()
-    const route = await createRoute(projectRoot)
+    const route = await createBlockedGateRoute(projectRoot)
 
     const updated = await approveRouteGate(projectRoot, {
       routeId: route.id,
@@ -60,7 +85,7 @@ describe('route state controls', () => {
 
   it('rejects a gate, blocks the route, and records the note', async () => {
     const projectRoot = await tempProject()
-    const route = await createRoute(projectRoot)
+    const route = await createBlockedGateRoute(projectRoot)
 
     const updated = await rejectRouteGate(projectRoot, {
       routeId: route.id,
@@ -75,6 +100,48 @@ describe('route state controls', () => {
       kind: 'route.gate.rejected',
       payload: { node: 'human_plan_gate', note: 'Plan needs work', previous_node: 'human_plan_gate' },
     })
+  })
+
+  it('approveRouteGate throws when node is not the current blocked gate', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current blocked gate/)
+
+    // Route must remain untouched
+    const current = await getWaypointRoute(projectRoot, route.id)
+    expect(current).toMatchObject({ status: 'blocked', current_node: 'human_plan_gate' })
+    // No events appended
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(0)
+  })
+
+  it('rejectRouteGate throws when node is not the current blocked gate', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    await expect(
+      rejectRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click',
+        now: new Date('2026-05-07T16:32:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current blocked gate/)
+
+    // Route must remain untouched
+    const current = await getWaypointRoute(projectRoot, route.id)
+    expect(current).toMatchObject({ status: 'blocked', current_node: 'human_plan_gate' })
+    // No events appended
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.filter((e) => e.kind === 'route.gate.rejected')).toHaveLength(0)
   })
 
   it('pauses and resumes a route with append-only events', async () => {
