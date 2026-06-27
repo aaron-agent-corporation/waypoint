@@ -1,6 +1,8 @@
 import { RecipeCard } from './RecipeCard'
+import { ConfirmAction } from './ConfirmAction'
 import { resolveRecipe } from '../recipe'
 import { useStore } from '../store'
+import { useEngineCommand } from '../engine/useEngineCommand'
 
 export function TaskDetail() {
   const selectedRecipeSlug = useStore((s) => s.selectedRecipeSlug)
@@ -10,6 +12,8 @@ export function TaskDetail() {
   const selectedRouteId = useStore((s) => s.selectedRouteId)
   const recipesByQuest = useStore((s) => s.recipesByQuest)
   const recipesAll = useStore((s) => s.recipesAll)
+  const { run, pending } = useEngineCommand()
+  const route = useStore((s) => s.routes.find((r) => r.id === (task?.route_id ?? '')))
 
   if (selectedRecipeSlug) {
     const quest = routes.find((r) => r.id === selectedRouteId)?.quest
@@ -51,6 +55,26 @@ export function TaskDetail() {
           <summary>metadata</summary>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{JSON.stringify(task.metadata, null, 2)}</pre>
         </details>
+      ) : null}
+      {task.kind === 'gate' ? (
+        <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+          {(() => {
+            const node = route?.current_node ?? task.plan_ref ?? task.id
+            return (
+              <>
+                <button type="button" disabled={pending} onClick={() => void run('gate.decide', { routeId: task.route_id, node, decision: 'approve' })}>
+                  Approve
+                </button>
+                <ConfirmAction
+                  label="Reject"
+                  withNote
+                  disabled={pending}
+                  onConfirm={(note) => void run('gate.decide', { routeId: task.route_id, node, decision: 'reject', ...(note ? { note } : {}) })}
+                />
+              </>
+            )
+          })()}
+        </div>
       ) : null}
     </div>
   )
