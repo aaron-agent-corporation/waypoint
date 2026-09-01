@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import cliPackage from '../package.json' with { type: 'json' }
 import { runAdhocCommand } from './commands/adhoc.ts'
@@ -279,7 +280,24 @@ async function readDefaultStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8')
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+/** npm exposes the bin as a .bin SYMLINK, so argv[1] is the shim path while
+ *  import.meta.url is the realpath — a naive string compare silently skips the
+ *  whole CLI (exit 0, no output) for every npm-installed user. Compare
+ *  realpaths; if the entry cannot be resolved, fall back to the raw path. */
+function invokedAsMain(): boolean {
+  const entry = process.argv[1]
+  if (!entry) return false
+  const self = fileURLToPath(import.meta.url)
+  let resolvedEntry = entry
+  try {
+    resolvedEntry = realpathSync(entry)
+  } catch {
+    // keep the raw path
+  }
+  return self === resolvedEntry || self === entry
+}
+
+if (invokedAsMain()) {
   // rsc-2ff: fail loud (dev checkout only) when the built dist is older than
   // src — a stale dist runs old code and errors nowhere near the cause.
   if (guardDistFreshness(import.meta.url, (line) => console.error(line))) {

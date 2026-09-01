@@ -14,6 +14,7 @@
  * those conventions — the runtime enforces nothing else about the tool list
  * except that a `report` tool must exist for the claim seam to work.
  */
+import { realpathSync } from 'node:fs'
 import { createInterface } from 'node:readline'
 import { pathToFileURL } from 'node:url'
 
@@ -106,6 +107,17 @@ function describe(tool: ToolSpec): Record<string, unknown> {
 // A file only serves when it IS argv[1]. The `--case-root` argument is
 // accepted for interface compatibility with host-provided servers; the
 // bundled surface has no per-project state to load.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await serve(process.stdin, process.stdout)
+// argv[1] can arrive through a symlink (npm .bin shims) while import.meta.url
+// is the realpath — resolve before comparing or the server silently no-ops.
+{
+  const entry = process.argv[1]
+  let resolvedEntry: string | undefined
+  try {
+    resolvedEntry = entry ? realpathSync(entry) : undefined
+  } catch {
+    resolvedEntry = entry
+  }
+  if (entry && (import.meta.url === pathToFileURL(resolvedEntry as string).href || import.meta.url === pathToFileURL(entry).href)) {
+    await serve(process.stdin, process.stdout)
+  }
 }

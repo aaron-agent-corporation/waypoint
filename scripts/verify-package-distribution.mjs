@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
 
@@ -137,6 +137,17 @@ try {
   )
   run('node', ['verify.mjs'], { cwd: projectDir })
   run('pnpm', ['exec', 'waypoint', '--version'], { cwd: projectDir })
+
+  // npm exposes the bin as a .bin SYMLINK; pnpm exec wraps it in a script that
+  // passes the real path, which would mask a symlink-sensitive entry guard.
+  // Simulate the npm shape: exec through a symlink and assert real output.
+  const npmStyleBin = join(projectDir, 'node_modules', '.bin', 'waypoint-npm-style')
+  await rm(npmStyleBin, { force: true })
+  await symlink('../@waypoint-engine/cli/dist/bin.js', npmStyleBin)
+  const versionOut = run(npmStyleBin, ['--version'], { cwd: projectDir })
+  if (!versionOut.trim()) {
+    throw new Error('waypoint --version printed nothing through an npm-style symlink shim')
+  }
 
   for (const { manifest, tarball } of packedPackages) {
     console.log(`${manifest.name}@${manifest.version}: ${basename(tarball)}`)
