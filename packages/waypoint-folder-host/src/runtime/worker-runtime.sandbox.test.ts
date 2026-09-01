@@ -5,6 +5,11 @@ import { realpath } from 'node:fs/promises'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+/** The write jail is macOS Seatbelt: successful composition spawns the
+ * worker under /usr/bin/sandbox-exec, so spawn-bearing cases run on darwin
+ * only. Refusal cases stay unguarded — they never reach spawn. */
+const itOnMac = it.skipIf(process.platform !== 'darwin')
+
 import type { WaypointProjectSandboxConfig } from '../project/config.ts'
 import { claimHostPath } from '../sandbox/claim.ts'
 import { SANDBOX_ENV } from '../sandbox/gate.ts'
@@ -251,7 +256,7 @@ describe('WorkerRecipeRuntime — the sandboxed path (rsc-wxk)', () => {
     expect(argv.at(-1)).toContain("'./bin/fake-agent' '-p'")
   })
 
-  it('takes the ordinary host path when the env kill switch disables a configured sandbox', async () => {
+  itOnMac('takes the ordinary host path when the env kill switch disables a configured sandbox', async () => {
     const projectRoot = await tempProject()
     const { command } = await fakeMsb({ projectRoot, failToSpawn: true })
     const runtime = new WorkerRecipeRuntime({

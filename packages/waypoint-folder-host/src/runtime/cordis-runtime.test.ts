@@ -4,6 +4,11 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+/** The write jail is macOS Seatbelt: successful composition spawns the
+ * worker under /usr/bin/sandbox-exec, so spawn-bearing cases run on darwin
+ * only. Refusal cases stay unguarded — they never reach spawn. */
+const itOnMac = it.skipIf(process.platform !== 'darwin')
+
 import { CordisRecipeRuntime } from './cordis-runtime.ts'
 import type { PiAiResolver } from './cordis/llm-pi-ai.ts'
 import type { RecipeManifest } from '@waypoint/core'
@@ -83,7 +88,7 @@ function input(projectRoot: string, over: Record<string, unknown> = {}) {
 }
 
 describe('CordisRecipeRuntime — the turn budget', () => {
-  it("uses the recipe's max_turns and reports exhaustion as `exhausted`, never `finished`", async () => {
+  itOnMac("uses the recipe's max_turns and reports exhaustion as `exhausted`, never `finished`", async () => {
     const root = await project()
     // A model that never stops calling a tool: the only thing that can end this
     // run is the budget, so the budget is what the outcome must name.
@@ -110,7 +115,7 @@ describe('CordisRecipeRuntime — the turn budget', () => {
 })
 
 describe('CordisRecipeRuntime — outcome discipline', () => {
-  it('fails a run that ended without a report, however the model signed off', async () => {
+  itOnMac('fails a run that ended without a report, however the model signed off', async () => {
     const root = await project()
     const output = await runtimeFor().runRecipe(input(root))
     expect(output.status).toBe('failed')
@@ -121,7 +126,7 @@ describe('CordisRecipeRuntime — outcome discipline', () => {
     expect(output.runtime).toBe('cordis')
   })
 
-  it('a prose sign-off gets ONE nudge, and a report on the nudged turn finishes the run', async () => {
+  itOnMac('a prose sign-off gets ONE nudge, and a report on the nudged turn finishes the run', async () => {
     // Witnessed live (item 54, 2026-08-30): a small-codex worker on a
     // multi-tool closed surface does the work, then signs off in text without
     // calling `report`. The nudge turns that from a claimless failure into a
@@ -164,13 +169,13 @@ describe('CordisRecipeRuntime — outcome discipline', () => {
     expect(output.status).toBe('finished')
   })
 
-  it('puts the composition digest on the record even on a failure', async () => {
+  itOnMac('puts the composition digest on the record even on a failure', async () => {
     const root = await project()
     const output = await runtimeFor().runRecipe(input(root))
     expect(output.composition_digest).toMatch(/^[0-9a-f]{16}$/)
   })
 
-  it('reports the same digest for two dispatches of one recipe', async () => {
+  itOnMac('reports the same digest for two dispatches of one recipe', async () => {
     const root = await project()
     const a = await runtimeFor().runRecipe(input(root))
     const b = await runtimeFor().runRecipe(input(root, { taskId: 't2', prompt: 'Something else entirely.' }))
@@ -195,7 +200,7 @@ describe('CordisRecipeRuntime — outcome discipline', () => {
     expect(output.close_reason).toContain('no-such-skill')
   })
 
-  it('reports `stopped` when the dispatch is aborted, never `finished`', async () => {
+  itOnMac('reports `stopped` when the dispatch is aborted, never `finished`', async () => {
     const root = await project()
     const controller = new AbortController()
     controller.abort()
@@ -204,7 +209,7 @@ describe('CordisRecipeRuntime — outcome discipline', () => {
     expect(output.close_reason).toBe('run aborted')
   })
 
-  it('reports `finished` only when a claim on disk says so', async () => {
+  itOnMac('reports `finished` only when a claim on disk says so', async () => {
     const root = await project()
     await mkdir(join(root, '.waypoint', 'claims', 'r1'), { recursive: true })
     await writeFile(
@@ -216,7 +221,7 @@ describe('CordisRecipeRuntime — outcome discipline', () => {
     expect(output.close_reason).toBe('8 widgets processed')
   })
 
-  it('fails when the claim says anything other than finished', async () => {
+  itOnMac('fails when the claim says anything other than finished', async () => {
     const root = await project()
     await mkdir(join(root, '.waypoint', 'claims', 'r1'), { recursive: true })
     await writeFile(

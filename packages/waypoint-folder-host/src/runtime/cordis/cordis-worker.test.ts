@@ -4,6 +4,11 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+/** The write jail is macOS Seatbelt: successful composition spawns the
+ * worker under /usr/bin/sandbox-exec, so spawn-bearing cases run on darwin
+ * only. Refusal cases stay unguarded — they never reach spawn. */
+const itOnMac = it.skipIf(process.platform !== 'darwin')
+
 import { composeCordisWorker, cordisScratchDir, cordisTmpDir, CordisCompositionError } from './compose.ts'
 import { CordisCompositionError as MergeError } from './composition.ts'
 import type { RecipeManifest } from '@waypoint/core'
@@ -102,7 +107,7 @@ async function compose(
 }
 
 describe('cordis composition — skills are loaded, not prose', () => {
-  it('mounts a prompt section carrying the file content verbatim, with its source path', async () => {
+  itOnMac('mounts a prompt section carrying the file content verbatim, with its source path', async () => {
     const worker = await compose()
     try {
       const section = worker.ctx.systemPrompt.sections().find((s) => s.id === 'skill:cite-discipline')
@@ -133,7 +138,7 @@ describe('cordis composition — skills are loaded, not prose', () => {
     await expect(compose({ skills: ['/etc/passwd'] })).rejects.toThrow(/escapes its skills root/)
   })
 
-  it('resolves a NAMESPACED skill name, which is how the bundle groups them', async () => {
+  itOnMac('resolves a NAMESPACED skill name, which is how the bundle groups them', async () => {
     const fx = await fixture()
     await mkdir(join(fx.projectRoot, 'skills', 'bundle'), { recursive: true })
     await writeFile(join(fx.projectRoot, 'skills', 'bundle', 'cite-discipline.md'), 'Namespaced.\n')
@@ -146,7 +151,7 @@ describe('cordis composition — skills are loaded, not prose', () => {
     }
   })
 
-  it('takes the FIRST root that has the skill, so an operator copy beats the bundle', async () => {
+  itOnMac('takes the FIRST root that has the skill, so an operator copy beats the bundle', async () => {
     const fx = await fixture()
     const override = join(fx.projectRoot, 'override')
     await mkdir(override, { recursive: true })
@@ -175,7 +180,7 @@ describe('cordis composition — skills are loaded, not prose', () => {
     }
   })
 
-  it('falls through to a later root when the first does not have the skill', async () => {
+  itOnMac('falls through to a later root when the first does not have the skill', async () => {
     const fx = await fixture()
     const worker = await composeCordisWorker({
       recipe: recipe(),
@@ -206,7 +211,7 @@ describe('cordis composition — skills are loaded, not prose', () => {
 })
 
 describe('cordis composition — references are enforced, not described', () => {
-  it('reads a named reference and refuses everything else, naming what is available', async () => {
+  itOnMac('reads a named reference and refuses everything else, naming what is available', async () => {
     const worker = await compose()
     try {
       const ok = await worker.ctx.tools.execute(call('read_reference', { name: 'reference/vocabulary.md' }))
@@ -223,7 +228,7 @@ describe('cordis composition — references are enforced, not described', () => 
     }
   })
 
-  it('mounts NO read tool at all when the recipe declares no references', async () => {
+  itOnMac('mounts NO read tool at all when the recipe declares no references', async () => {
     const worker = await compose({ references: [] })
     try {
       expect(worker.ctx.tools.list().map((t) => t.name)).not.toContain('read_reference')
@@ -246,7 +251,7 @@ describe('cordis composition — the four layers', () => {
     await expect(compose({}, { access: { secrets: 'rw' } })).rejects.toThrow(/does not declare/)
   })
 
-  it('accepts a dispatch that narrows them', async () => {
+  itOnMac('accepts a dispatch that narrows them', async () => {
     const worker = await compose({}, { access: { case: 'ro' } })
     try {
       expect(Object.keys(worker.plan.roots)).toEqual(['case'])
@@ -266,7 +271,7 @@ describe('cordis composition — the four layers', () => {
 })
 
 describe('cordis composition — the activation guard', () => {
-  it('refuses a named tool the surface did not mount, rather than downgrading quietly', async () => {
+  itOnMac('refuses a named tool the surface did not mount, rather than downgrading quietly', async () => {
     // `beta` is real, but group 'one' does not serve it.
     await expect(compose({ tools: ['alpha', 'beta'] })).rejects.toThrow(CordisCompositionError)
     await expect(compose({ tools: ['alpha', 'beta'] })).rejects.toThrow(
@@ -274,11 +279,11 @@ describe('cordis composition — the activation guard', () => {
     )
   })
 
-  it('names the tool_group in the refusal, since that is nearly always the cause', async () => {
+  itOnMac('names the tool_group in the refusal, since that is nearly always the cause', async () => {
     await expect(compose({ tools: ['beta'] })).rejects.toThrow(/tool_group 'one'/)
   })
 
-  it('does not treat surface tools the recipe left unnamed as a failure', async () => {
+  itOnMac('does not treat surface tools the recipe left unnamed as a failure', async () => {
     const worker = await compose({ tools: [] })
     try {
       expect(worker.ctx.tools.list().length).toBeGreaterThan(1)
@@ -289,7 +294,7 @@ describe('cordis composition — the activation guard', () => {
 })
 
 describe('cordis composition — the policy fence', () => {
-  it('refuses a mounted tool the recipe never named, and says so by name', async () => {
+  itOnMac('refuses a mounted tool the recipe never named, and says so by name', async () => {
     // `gamma` is served by group 'one' but not named by this recipe. Least
     // privilege alone would not catch it — the tool IS mounted.
     const worker = await compose({ tools: ['alpha'] })
@@ -305,7 +310,7 @@ describe('cordis composition — the policy fence', () => {
     }
   })
 
-  it('always lets the report seam through, even when the recipe never named it', async () => {
+  itOnMac('always lets the report seam through, even when the recipe never named it', async () => {
     // A recipe that forgot `report` would otherwise fail with "never filed a
     // claim" — a message that names the symptom and hides the cause.
     const worker = await compose({ tools: ['alpha'] })
@@ -321,7 +326,7 @@ describe('cordis composition — the policy fence', () => {
     }
   })
 
-  it('lets a named tool through', async () => {
+  itOnMac('lets a named tool through', async () => {
     const worker = await compose({ tools: ['alpha'] })
     try {
       const outcome = await worker.ctx.tools.execute(call('alpha'))
@@ -333,7 +338,7 @@ describe('cordis composition — the policy fence', () => {
 })
 
 describe('cordis composition — the report seam', () => {
-  it('names the claim FILE to the tool server, not just the directory to the jail', async () => {
+  itOnMac('names the claim FILE to the tool server, not just the directory to the jail', async () => {
     // Found in vivo, not in a test: the first real run granted the claim dir to
     // the jail and never set WAYPOINT_CLAIM_PATH, so the worker did all the work
     // and could not be heard — every run would have failed with "the run ended
@@ -357,7 +362,7 @@ describe('cordis composition — the report seam', () => {
 })
 
 describe('cordis composition — determinism', () => {
-  it('gives two dispatches of one recipe an identical digest and byte-identical prompt', async () => {
+  itOnMac('gives two dispatches of one recipe an identical digest and byte-identical prompt', async () => {
     const fx = await fixture()
     const a = await compose({}, { routeId: 'r1', taskId: 't1', prompt: 'first instruction' }, fx)
     const b = await compose({}, { routeId: 'r9', taskId: 't9', prompt: 'a totally different instruction' }, fx)
@@ -370,7 +375,7 @@ describe('cordis composition — determinism', () => {
     }
   })
 
-  it('changes the digest when a skill is added', async () => {
+  itOnMac('changes the digest when a skill is added', async () => {
     const fx = await fixture()
     const a = await compose({}, {}, fx)
     const b = await compose({ skills: ['cite-discipline', 'terse-reporting'] }, {}, fx)
@@ -382,7 +387,7 @@ describe('cordis composition — determinism', () => {
     }
   })
 
-  it('changes the digest when a skill FILE changes, though the recipe did not', async () => {
+  itOnMac('changes the digest when a skill FILE changes, though the recipe did not', async () => {
     const fx = await fixture()
     const a = await compose({}, {}, fx)
     await writeFile(join(fx.projectRoot, 'skills', 'cite-discipline.md'), 'A different discipline entirely.\n')
@@ -399,7 +404,7 @@ describe('cordis composition — determinism', () => {
 })
 
 describe('cordis composition — teardown', () => {
-  it('removes the MCP tools on dispose, and keeps the sections that are not the MCP fiber’s', async () => {
+  itOnMac('removes the MCP tools on dispose, and keeps the sections that are not the MCP fiber’s', async () => {
     const worker = await compose()
     expect(worker.ctx.tools.list().map((t) => t.name)).toContain('alpha')
     await worker.dispose()
