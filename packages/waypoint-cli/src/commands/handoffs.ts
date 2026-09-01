@@ -1,4 +1,4 @@
-import { loadBundledHandoffManifests, type HandoffManifest } from '@waypoint/core'
+import { loadBundledHandoffManifests, type HandoffManifest } from '@waypoint-engine/core'
 
 import type { WaypointCliIo } from '../bin.ts'
 import { loadCliCatalog } from './catalog-io.ts'

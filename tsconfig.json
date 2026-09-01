@@ -24,11 +24,11 @@
     "outDir": "./dist",
     "noEmit": true,
     "paths": {
-      "@waypoint/core": ["./src/index.ts"],
-      "@waypoint/folder-host": ["./packages/waypoint-folder-host/src/index.ts"],
-      "@waypoint/cli": ["./packages/waypoint-cli/src/index.ts"],
-      "@waypoint/kernel": ["./packages/waypoint-kernel/src/index.ts"],
-      "@waypoint/worker-tools": ["./packages/waypoint-worker-tools/src/index.ts"]
+      "@waypoint-engine/core": ["./src/index.ts"],
+      "@waypoint-engine/folder-host": ["./packages/waypoint-folder-host/src/index.ts"],
+      "@waypoint-engine/cli": ["./packages/waypoint-cli/src/index.ts"],
+      "@waypoint-engine/kernel": ["./packages/waypoint-kernel/src/index.ts"],
+      "@waypoint-engine/worker-tools": ["./packages/waypoint-worker-tools/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "examples/**/*.ts", "packages/**/*.ts"],

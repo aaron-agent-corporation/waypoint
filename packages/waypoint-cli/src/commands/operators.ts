@@ -1,6 +1,6 @@
 import { dirname } from 'node:path'
 
-import { loadBundledOperators, resolveOperatorInstructions, type OperatorManifest } from '@waypoint/core'
+import { loadBundledOperators, resolveOperatorInstructions, type OperatorManifest } from '@waypoint-engine/core'
 
 import type { WaypointCliIo } from '../bin.ts'
 

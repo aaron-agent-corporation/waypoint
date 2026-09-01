@@ -4,10 +4,10 @@ import { resolve } from 'node:path'
 export default defineConfig({
   resolve: {
     alias: {
-      '@waypoint/core': resolve(import.meta.dirname, 'src/index.ts'),
-      '@waypoint/folder-host': resolve(import.meta.dirname, 'packages/waypoint-folder-host/src/index.ts'),
-      '@waypoint/cli': resolve(import.meta.dirname, 'packages/waypoint-cli/src/index.ts'),
-      '@waypoint/kernel': resolve(import.meta.dirname, 'packages/waypoint-kernel/src/index.ts'),
+      '@waypoint-engine/core': resolve(import.meta.dirname, 'src/index.ts'),
+      '@waypoint-engine/folder-host': resolve(import.meta.dirname, 'packages/waypoint-folder-host/src/index.ts'),
+      '@waypoint-engine/cli': resolve(import.meta.dirname, 'packages/waypoint-cli/src/index.ts'),
+      '@waypoint-engine/kernel': resolve(import.meta.dirname, 'packages/waypoint-kernel/src/index.ts'),
     },
   },
   test: {

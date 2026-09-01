@@ -21,7 +21,7 @@ const repoRoot = resolve(import.meta.dirname, '..')
  * guard to EVERY package src entry (docs/PLAN.md item 23).
  */
 const ENTRIES = [
-  'src/index.ts', // @waypoint/core core
+  'src/index.ts', // @waypoint-engine/core core
   'packages/waypoint-cli/src/index.ts',
   'packages/waypoint-cli/src/bin.ts',
   'packages/waypoint-folder-host/src/index.ts',

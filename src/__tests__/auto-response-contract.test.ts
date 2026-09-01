@@ -6,7 +6,7 @@ import {
   type WaypointDiscussionMessageAuthoredBy,
 } from '../discussion/auto-response-contract.ts'
 
-describe('@waypoint/core discussion/auto-response-contract', () => {
+describe('@waypoint-engine/core discussion/auto-response-contract', () => {
   it('exposes the authored-by enum values', () => {
     expect(new Set(WAYPOINT_DISCUSSION_MESSAGE_AUTHORED_BY_VALUES)).toEqual(
       new Set(['user', 'agent']),

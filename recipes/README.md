@@ -23,7 +23,7 @@ recipes/
 
 ## Schema
 
-See `packages/@waypoint/core/src/recipes/manifest.ts`.
+See `packages/@waypoint-engine/core/src/recipes/manifest.ts`.
 Minimum required: `schema_version`, `slug`, `name`, `prompt`.
 
 ## Prompt convention (rsc-4jf)

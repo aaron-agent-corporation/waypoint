@@ -1,4 +1,4 @@
-import { listWaypointAutopilotRuns, runWaypointAutopilot } from '@waypoint/folder-host'
+import { listWaypointAutopilotRuns, runWaypointAutopilot } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

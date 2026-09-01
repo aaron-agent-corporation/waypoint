@@ -25,9 +25,9 @@ import { mkdir, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 
-import { agentLoopPlugin } from '@waypoint/kernel'
+import { agentLoopPlugin } from '@waypoint-engine/kernel'
 
 import { resolveBundledCatalogRoot } from '../catalog/bundled.ts'
 import { claimHostPath, readSandboxClaim } from '../sandbox/claim.ts'
@@ -144,7 +144,7 @@ async function bundledSkillsRoot(): Promise<string> {
  *  arrive through the `toolServer` config as their own MCP server. */
 function bundledToolServer(): string {
   const require = createRequire(import.meta.url)
-  const pkg = require.resolve('@waypoint/worker-tools/package.json')
+  const pkg = require.resolve('@waypoint-engine/worker-tools/package.json')
   return join(dirname(pkg), 'dist', 'mcp-server.js')
 }
 

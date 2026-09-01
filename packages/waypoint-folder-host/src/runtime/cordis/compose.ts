@@ -1,6 +1,6 @@
 /**
  * Recipe + project + dispatch -> a composed cordis worker, on the shared
- * kernel (`@waypoint/kernel`, Phase A of
+ * kernel (`@waypoint-engine/kernel`, Phase A of
  * docs/designs/cordis-adoption-plan.md).
  *
  * Every refusal here is a COMPOSE-TIME failure with the cause named. The
@@ -26,7 +26,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { Context } from 'cordis'
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 import {
   llmCorePlugin,
   outputBudgetPlugin,
@@ -35,7 +35,7 @@ import {
   sessionsPlugin,
   systemPromptPlugin,
   toolsCorePlugin,
-} from '@waypoint/kernel'
+} from '@waypoint-engine/kernel'
 
 import { cordisReferencesPlugin, cordisSkillsPlugin } from './capabilities.ts'
 import { cordisMcpTools } from './mcp-tools.ts'

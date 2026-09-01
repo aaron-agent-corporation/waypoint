@@ -1,4 +1,4 @@
-import { spineTierReport } from '@waypoint/folder-host'
+import { spineTierReport } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

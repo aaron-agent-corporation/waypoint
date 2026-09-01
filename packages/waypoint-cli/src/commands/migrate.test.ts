@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { parse as yamlParse } from 'yaml'
 
-import { deriveProjectSchemaName } from '@waypoint/folder-host'
+import { deriveProjectSchemaName } from '@waypoint-engine/folder-host'
 
 import { runWaypointCli } from '../bin'
 import { makeIo, PostgresTestProjects, silentIo } from '../testing/backend-harness'

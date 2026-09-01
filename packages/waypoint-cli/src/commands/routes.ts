@@ -1,4 +1,4 @@
-import { listWaypointRuntimeOpenDispatches, listWaypointRuntimeRoutes, listWaypointRuntimeTasks, readRouteEvents } from '@waypoint/folder-host'
+import { listWaypointRuntimeOpenDispatches, listWaypointRuntimeRoutes, listWaypointRuntimeTasks, readRouteEvents } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

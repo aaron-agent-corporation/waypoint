@@ -9,8 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // workspace path (project found), plus expected vs unexpected error classification.
 const state = vi.hoisted(() => ({ projectRoot: null as string | null, thrown: null as Error | null }))
 
-vi.mock('@waypoint/folder-host', async (orig) => {
-  const actual = await orig<typeof import('@waypoint/folder-host')>()
+vi.mock('@waypoint-engine/folder-host', async (orig) => {
+  const actual = await orig<typeof import('@waypoint-engine/folder-host')>()
   const fail = async () => {
     throw state.thrown ?? new Error('unexpected')
   }
@@ -22,7 +22,7 @@ vi.mock('@waypoint/folder-host', async (orig) => {
   }
 })
 
-import { CatalogLoadError } from '@waypoint/folder-host'
+import { CatalogLoadError } from '@waypoint-engine/folder-host'
 
 import { runWaypointCli } from '../bin.ts'
 import { runQuestsCommand } from './quests.ts'

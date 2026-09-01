@@ -2,7 +2,7 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { WaypointProjectSandboxConfig } from '../project/config.ts'

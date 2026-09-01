@@ -13,7 +13,7 @@ import { join } from 'node:path'
 
 import pg from 'pg'
 
-import { dropProjectSchemas } from '@waypoint/folder-host'
+import { dropProjectSchemas } from '@waypoint-engine/folder-host'
 
 /** The Console-managed local Postgres — see the folder-host harness for why
  * the `waypoint` role (not the login user) is the one that works. */

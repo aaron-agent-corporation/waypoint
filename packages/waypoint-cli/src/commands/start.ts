@@ -1,4 +1,4 @@
-import { startQuestRoute } from '@waypoint/folder-host'
+import { startQuestRoute } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

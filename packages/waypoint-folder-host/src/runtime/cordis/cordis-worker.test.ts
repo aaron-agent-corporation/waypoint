@@ -11,8 +11,8 @@ const itOnMac = it.skipIf(process.platform !== 'darwin')
 
 import { composeCordisWorker, cordisScratchDir, cordisTmpDir, CordisCompositionError } from './compose.ts'
 import { CordisCompositionError as MergeError } from './composition.ts'
-import type { RecipeManifest } from '@waypoint/core'
-import type { CordisToolCall } from '@waypoint/kernel'
+import type { RecipeManifest } from '@waypoint-engine/core'
+import type { CordisToolCall } from '@waypoint-engine/kernel'
 import type { WaypointProjectRootConfig } from '../../project/config.ts'
 
 /**

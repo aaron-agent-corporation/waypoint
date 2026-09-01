@@ -20,7 +20,7 @@ GSD is historical inspiration and compatibility naming in some docs/catalog asse
 
 Primary directories:
 
-- `src/` — `@waypoint/core`, the portable runtime.
+- `src/` — `@waypoint-engine/core`, the portable runtime.
   - `commands/` — command grammar parsing.
   - `contracts/` — host interfaces such as store, authz, event bus, recipe runtime, clock, and ID generator.
   - `discussion/` — task-scoped discussion metadata and auto-response contracts.

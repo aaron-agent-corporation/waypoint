@@ -1,6 +1,6 @@
 import { Context } from 'cordis'
 import { describe, expect, it } from 'vitest'
-import { llmCorePlugin } from '@waypoint/kernel'
+import { llmCorePlugin } from '@waypoint-engine/kernel'
 
 import { buildCordisPiAiAdapter, cordisLlmPiAi, type PiAiResolver } from './llm-pi-ai.ts'
 

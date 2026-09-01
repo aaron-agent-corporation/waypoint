@@ -6,7 +6,7 @@ import {
   loadWorkspaceWaypointCatalog,
   readWaypointProjectConfig,
   startAdhocRoute,
-} from '@waypoint/folder-host'
+} from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

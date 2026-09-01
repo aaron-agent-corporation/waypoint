@@ -1,4 +1,4 @@
-import { buildWaypointTaskDiscussionConversationId } from '@waypoint/core'
+import { buildWaypointTaskDiscussionConversationId } from '@waypoint-engine/core'
 
 import { insertWaypointTasksPg, listWaypointTasksPg, updateWaypointTaskPg } from '../postgres/store.ts'
 

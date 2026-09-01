@@ -1,4 +1,4 @@
-import { isDurablePostgresRouteBackend, runWaypointBridge } from '@waypoint/folder-host'
+import { isDurablePostgresRouteBackend, runWaypointBridge } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

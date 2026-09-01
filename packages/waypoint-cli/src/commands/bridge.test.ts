@@ -17,7 +17,7 @@ import {
   runWaypointBridge,
   type WaypointBridgeRecipeRuntime,
   type WaypointBridgeRecipeRuntimeInput,
-} from '@waypoint/folder-host'
+} from '@waypoint-engine/folder-host'
 
 import { runWaypointCli } from '../bin'
 import { makeIo, silentIo } from '../testing/backend-harness'
@@ -745,7 +745,7 @@ describe('durable dispatch bridge + gates (B3/B4, real pg_durable engine)', () =
 
   async function seedRouteWithDispatches(pool: pg.Pool, cwd: string, schema: string, count: number): Promise<void> {
     // Ensure the schema DDL exists without starting an engine instance.
-    const { latestDurableTaskAttempt } = await import('@waypoint/folder-host')
+    const { latestDurableTaskAttempt } = await import('@waypoint-engine/folder-host')
     await latestDurableTaskAttempt(cwd, 'no-such-task')
     const now = new Date().toISOString()
     await pool.query(
@@ -823,7 +823,7 @@ describe('durable dispatch bridge + gates (B3/B4, real pg_durable engine)', () =
       }))
       await runWaypointBridge(cwd, { once: true, runtime })
 
-      const { latestDurableTaskAttempt } = await import('@waypoint/folder-host')
+      const { latestDurableTaskAttempt } = await import('@waypoint-engine/folder-host')
       const attempt = await latestDurableTaskAttempt(cwd, 'task-w4-1')
       expect(attempt?.close_reason).toBe('failed')
       expect(attempt?.failure_detail).toContain('deterministic step exited 2: cite-check: FAILED')
@@ -942,7 +942,7 @@ process.stdin.on('end', async () => {
 
       // Select the worker runtime in the project config — the same file an
       // operator would edit.
-      const { parseWaypointProjectConfig, serializeWaypointProjectConfig } = await import('@waypoint/folder-host')
+      const { parseWaypointProjectConfig, serializeWaypointProjectConfig } = await import('@waypoint-engine/folder-host')
       const configPath = join(cwd, '.waypoint', 'config.yaml')
       const config = parseWaypointProjectConfig(await readFile(configPath, 'utf8'))
       await writeFile(

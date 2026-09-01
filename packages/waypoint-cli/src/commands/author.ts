@@ -7,7 +7,7 @@ import type {
   GenerateAuthoringHandoffDraftInput,
   GenerateAuthoringQuestDraftInput,
   GenerateAuthoringRecipeDraftInput,
-} from '@waypoint/core'
+} from '@waypoint-engine/core'
 
 import type { WaypointCliIo } from '../bin.ts'
 
@@ -60,7 +60,7 @@ async function runBrainstorm(args: readonly string[], io: WaypointCliIo): Promis
     return 1
   }
 
-  const { getAuthoringQuestionnaire } = await import('@waypoint/core')
+  const { getAuthoringQuestionnaire } = await import('@waypoint-engine/core')
   const questionnaire = getAuthoringQuestionnaire({ kind, domain })
   if (json) {
     io.stdout(JSON.stringify(questionnaire, null, 2))
@@ -96,7 +96,7 @@ async function runDesign(args: readonly string[], io: WaypointCliIo): Promise<nu
   const cwd = io.cwd ?? process.cwd()
   const raw = await readFile(resolve(cwd, answersPath), 'utf8')
   const answers = JSON.parse(raw) as Partial<GenerateAuthoringDesignSpecInput>
-  const { generateAuthoringDesignSpec } = await import('@waypoint/core')
+  const { generateAuthoringDesignSpec } = await import('@waypoint-engine/core')
   const generated = generateAuthoringDesignSpec(normalizeDesignInput(answers))
   const targetPath = resolve(cwd, writeSpec)
   await mkdir(dirname(targetPath), { recursive: true })
@@ -171,7 +171,7 @@ async function runRecipeDraft(args: readonly string[], io: WaypointCliIo): Promi
     return 1
   }
 
-  const { generateAuthoringRecipeDraft } = await import('@waypoint/core')
+  const { generateAuthoringRecipeDraft } = await import('@waypoint-engine/core')
   const draft = generateAuthoringRecipeDraft(input)
   return printDraftResult(draft, args, io)
 }
@@ -190,7 +190,7 @@ async function runQuestDraft(args: readonly string[], io: WaypointCliIo): Promis
     return 1
   }
 
-  const { generateAuthoringQuestDraft } = await import('@waypoint/core')
+  const { generateAuthoringQuestDraft } = await import('@waypoint-engine/core')
   const draft = generateAuthoringQuestDraft(input)
   return printDraftResult(draft, args, io)
 }
@@ -209,7 +209,7 @@ async function runHandoffDraft(args: readonly string[], io: WaypointCliIo): Prom
     return 1
   }
 
-  const { generateAuthoringHandoffDraft } = await import('@waypoint/core')
+  const { generateAuthoringHandoffDraft } = await import('@waypoint-engine/core')
   const draft = generateAuthoringHandoffDraft(input)
   return printDraftResult(draft, args, io)
 }

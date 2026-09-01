@@ -1,4 +1,4 @@
-import type { WaypointProjectWorkerLaneConfig } from '@waypoint/folder-host'
+import type { WaypointProjectWorkerLaneConfig } from '@waypoint-engine/folder-host'
 
 // The settled model-class registry (docs/MODEL-ROUTING.md) scaffolded as every
 // new project's default `runtime.worker.model_args` map, so a recipe's

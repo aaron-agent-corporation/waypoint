@@ -46,7 +46,7 @@ Record block's `metadata.runner` for Record-carrying quests. Explicit
 
 ## Schema
 
-See `packages/@waypoint/core/src/quests/manifest.ts` for the full type.
+See `packages/@waypoint-engine/core/src/quests/manifest.ts` for the full type.
 Minimum required: `schema_version`, `slug`, `name`, `workflow`.
 
 ## Example

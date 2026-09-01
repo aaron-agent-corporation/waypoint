@@ -1,4 +1,4 @@
-import { resolveWaypointRouteBlocker, resumeWaypointRoute } from '@waypoint/folder-host'
+import { resolveWaypointRouteBlocker, resumeWaypointRoute } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

@@ -10,7 +10,7 @@ import {
 } from './cordis-only.ts'
 import { CordisRecipeRuntime } from './cordis-runtime.ts'
 import { WorkerRecipeRuntime } from './worker-runtime.ts'
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 
 /**
  * Worker-harness fail-closed enforcement. A retired value FAILS, never warns,

@@ -1,5 +1,5 @@
 /**
- * @waypoint/kernel — the shared Cordis agent kernel
+ * @waypoint-engine/kernel — the shared Cordis agent kernel
  * (docs/designs/cordis-adoption-plan.md, Phase A).
  *
  * This package is the substrate BOTH sides compose on: the Waypoint worker

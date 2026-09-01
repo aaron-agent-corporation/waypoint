@@ -32,7 +32,7 @@ records:
 
 ## What is NOT derived from GSD
 
-- `@waypoint/core` — original work. No GSD code was ported.
+- `@waypoint-engine/core` — original work. No GSD code was ported.
 - `packages/waypoint-core/**` — original.
 - `examples/**` — original.
 - `docs/**` — original (though plans may reference GSD by name).

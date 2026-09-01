@@ -1,4 +1,4 @@
-import { getWaypointRuntimeRoute, readWaypointRuntimeRouteEvents } from '@waypoint/folder-host'
+import { getWaypointRuntimeRoute, readWaypointRuntimeRouteEvents } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

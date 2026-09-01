@@ -6,7 +6,7 @@ import { parse as yamlParse } from 'yaml'
 import {
   parseRecipeManifest,
   questIsAvailable,
-} from '@waypoint/core'
+} from '@waypoint-engine/core'
 import { loadWorkspaceWaypointCatalog } from '../catalog/workspace.ts'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { execFile } from 'node:child_process'

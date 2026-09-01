@@ -54,14 +54,14 @@ try {
         type: 'module',
         private: true,
         dependencies: {
-          '@waypoint/core': fileSpec(coreTarball),
-          '@waypoint/folder-host': fileSpec(folderHostTarball),
-          '@waypoint/cli': fileSpec(cliTarball),
+          '@waypoint-engine/core': fileSpec(coreTarball),
+          '@waypoint-engine/folder-host': fileSpec(folderHostTarball),
+          '@waypoint-engine/cli': fileSpec(cliTarball),
         },
         pnpm: {
           overrides: {
-            '@waypoint/core': fileSpec(coreTarball),
-            '@waypoint/folder-host': fileSpec(folderHostTarball),
+            '@waypoint-engine/core': fileSpec(coreTarball),
+            '@waypoint-engine/folder-host': fileSpec(folderHostTarball),
           },
         },
       },

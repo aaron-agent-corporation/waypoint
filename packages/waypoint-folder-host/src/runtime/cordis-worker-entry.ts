@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
 
 import { registerBunOAuthFlows } from '@earendil-works/pi-ai/bun-oauth'
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 
 import type { WaypointProjectRootConfig } from '../project/config.ts'
 import { BROKER_ENV, brokeredResolverFactory } from './pi-cred-broker.ts'

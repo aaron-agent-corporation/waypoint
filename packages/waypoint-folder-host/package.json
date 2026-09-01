@@ -1,5 +1,5 @@
 {
-  "name": "@waypoint/folder-host",
+  "name": "@waypoint-engine/folder-host",
   "version": "0.1.2",
   "private": false,
   "description": "Postgres-backed reference host for the Waypoint durable workflow runtime.",
@@ -17,8 +17,8 @@
     "@earendil-works/pi-ai": "0.80.10",
     "@earendil-works/pi-coding-agent": "0.80.10",
     "@fly/sprites": "0.2.0",
-    "@waypoint/core": "workspace:*",
-    "@waypoint/kernel": "workspace:*",
+    "@waypoint-engine/core": "workspace:*",
+    "@waypoint-engine/kernel": "workspace:*",
     "cordis": "4.0.0-rc.8",
     "pdf-lib": "^1.17.1",
     "pg": "^8.22.0",

@@ -357,7 +357,7 @@ async function findBundledCatalogRoot(): Promise<string> {
     current = parent
   }
 
-  current = dirname(fileURLToPath(import.meta.resolve('@waypoint/core')))
+  current = dirname(fileURLToPath(import.meta.resolve('@waypoint-engine/core')))
   for (let depth = 0; depth < 10; depth += 1) {
     if (await hasCatalogYamlFiles(current)) {
       return current

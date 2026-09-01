@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { parseRecipeManifest } from '@waypoint/core'
+import { parseRecipeManifest } from '@waypoint-engine/core'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 
 import { runWaypointAutopilot } from '../autopilot/run.ts'

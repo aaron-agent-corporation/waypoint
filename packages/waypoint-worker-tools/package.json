@@ -1,5 +1,5 @@
 {
-  "name": "@waypoint/worker-tools",
+  "name": "@waypoint-engine/worker-tools",
   "version": "0.1.0",
   "private": false,
   "description": "The bundled closed tool surface for sandboxed workflow workers \u2014 the `report` claim seam every attempt ends through.",

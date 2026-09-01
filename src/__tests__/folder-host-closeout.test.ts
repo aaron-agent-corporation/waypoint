@@ -34,11 +34,11 @@ describe('folder host closeout', () => {
 
     expect(cliPackage.private).toBe(false)
     expect(cliPackage.bin.waypoint).toBe('./dist/bin.js')
-    expect(cliPackage.dependencies['@waypoint/core']).toBe('workspace:*')
-    expect(cliPackage.dependencies['@waypoint/folder-host']).toBe('workspace:*')
+    expect(cliPackage.dependencies['@waypoint-engine/core']).toBe('workspace:*')
+    expect(cliPackage.dependencies['@waypoint-engine/folder-host']).toBe('workspace:*')
 
     expect(hostPackage.private).toBe(false)
     expect(hostPackage.main).toBe('./dist/index.js')
-    expect(hostPackage.dependencies['@waypoint/core']).toBe('workspace:*')
+    expect(hostPackage.dependencies['@waypoint-engine/core']).toBe('workspace:*')
   })
 })

@@ -1,4 +1,4 @@
-import { cancelWaypointRoute, findAbandonedRoutes, getWaypointRuntimeRoute, reapAbandonedRoutes } from '@waypoint/folder-host'
+import { cancelWaypointRoute, findAbandonedRoutes, getWaypointRuntimeRoute, reapAbandonedRoutes } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

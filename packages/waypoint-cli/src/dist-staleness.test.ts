@@ -76,7 +76,7 @@ describe('dist staleness guard (rsc-2ff)', () => {
   /**
    * A source run used to be skipped outright, on the belief that running from
    * source is never stale. It is not: only the RUNNING package loads from
-   * source, and every `@waypoint/*` import resolves through that package's
+   * source, and every `@waypoint-engine/*` import resolves through that package's
    * `main`, which is dist. `~/.waypoint/bin/runner` — the shim on every worker's
    * PATH, and how the deployed bridge starts — execs `waypoint-cli/src/bin.ts`, so
    * the guard was skipping the one configuration that ships.

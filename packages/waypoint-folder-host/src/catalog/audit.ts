@@ -21,7 +21,7 @@
 
 import { readFile } from 'node:fs/promises'
 
-import { parseRecipeManifest } from '@waypoint/core'
+import { parseRecipeManifest } from '@waypoint-engine/core'
 
 import { resolveCordisSkills } from '../runtime/cordis/composition.ts'
 import type { BundledWaypointCatalog } from './bundled.ts'

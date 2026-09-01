@@ -34,7 +34,7 @@ import {
   resolveWaypointRouteBlocker,
   runWaypointBridge,
   startQuestRoute,
-} from '@waypoint/folder-host'
+} from '@waypoint-engine/folder-host'
 
 import { PostgresTestProjects } from '../testing/backend-harness'
 

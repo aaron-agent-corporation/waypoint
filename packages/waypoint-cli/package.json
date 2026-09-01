@@ -1,5 +1,5 @@
 {
-  "name": "@waypoint/cli",
+  "name": "@waypoint-engine/cli",
   "version": "0.1.2",
   "private": false,
   "description": "Command-line interface for the Waypoint durable workflow runtime.",
@@ -16,8 +16,8 @@
     }
   },
   "dependencies": {
-    "@waypoint/core": "workspace:*",
-    "@waypoint/folder-host": "workspace:*"
+    "@waypoint-engine/core": "workspace:*",
+    "@waypoint-engine/folder-host": "workspace:*"
   },
   "files": [
     "dist",

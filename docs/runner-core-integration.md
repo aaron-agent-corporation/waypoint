@@ -1,11 +1,11 @@
-# Integrating `@waypoint/core` in a new system
+# Integrating `@waypoint-engine/core` in a new system
 
 This guide documents how to embed the host-agnostic Waypoint runtime
-core (`@waypoint/core`) in any system.
+core (`@waypoint-engine/core`) in any system.
 
 ## What the core provides
 
-`@waypoint/core` ships only pure runtime/orchestration logic:
+`@waypoint-engine/core` ships only pure runtime/orchestration logic:
 
 - **Envelope contracts**
   - `makeErrorEnvelope(error, details?)`
@@ -34,7 +34,7 @@ host-specific types**. It is deliberately portable.
 ## Minimum integration steps
 
 1. **Add the package** (inside this repo: TS path alias
-   `@waypoint/core` → `packages/runner-core/src/index.ts`).
+   `@waypoint-engine/core` → `packages/runner-core/src/index.ts`).
 2. **Implement host adapters** for whichever contracts your host uses:
    - Storage: translate core `WaypointRouteRecord`/`WaypointEventRecord`
      to your database schema.
@@ -136,7 +136,7 @@ import {
   loadQuestsFromDirectory,
   loadRecipesFromDirectory,
   resolveQuestRecipes,
-} from '@waypoint/core'
+} from '@waypoint-engine/core'
 
 const questsResult = await loadQuestsFromDirectory('./quests')
 const recipesResult = await loadRecipesFromDirectory('./recipes')
@@ -206,7 +206,7 @@ pnpm exec vitest run examples/runner-host-minimal/src/
 ```
 
 A boundary test in that example (`boundaries.test.ts`) fails if
-`host.ts` ever imports anything other than `@waypoint/core` or a Node
+`host.ts` ever imports anything other than `@waypoint-engine/core` or a Node
 built-in, which is the primary long-term guard against regressions.
 
 See also `examples/quest-recipe-demo/` (end-to-end Quest + Recipe
@@ -225,7 +225,7 @@ under a project-local `.waypoint/` directory.
   core contract test packs (`packages/runner-core/src/__tests__/*`)
   as specification and add host-level compliance tests that exercise
   the adapter against those contracts.
-- **Versioning:** Treat `@waypoint/core` exports as the stable public
+- **Versioning:** Treat `@waypoint-engine/core` exports as the stable public
   API; internal file layout can change without consumer impact.
 - **Envelope discipline:** Use core helpers (`makeErrorEnvelope`,
   `normalizeValidationDetails`) everywhere. Never hand-format error
@@ -239,7 +239,7 @@ under a project-local `.waypoint/` directory.
 
 A host is Waypoint-ready when:
 
-1. It consumes orchestration logic only through `@waypoint/core`.
+1. It consumes orchestration logic only through `@waypoint-engine/core`.
 2. It implements required `IWaypointStore`, `IWaypointAuthz`,
    `IEventBus`, and (optionally) `IRecipeRuntime` adapters.
 3. Its command/API error responses match the Waypoint envelope contract.

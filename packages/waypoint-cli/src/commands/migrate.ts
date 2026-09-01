@@ -1,4 +1,4 @@
-import { migrateFolderProjectToPostgres } from '@waypoint/folder-host'
+import { migrateFolderProjectToPostgres } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

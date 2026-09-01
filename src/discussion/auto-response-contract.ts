@@ -2,7 +2,7 @@
  * Waypoint discussion auto-response contract.
  *
  * Shared types for the MC → operator-host auto-response webhook surface.
- * Kept in `@waypoint/core` so both sides of the wire reference the same shapes.
+ * Kept in `@waypoint-engine/core` so both sides of the wire reference the same shapes.
  *
  * Host adapters MUST NOT extend these types in ways that break wire compatibility
  * without bumping `schema_version`.

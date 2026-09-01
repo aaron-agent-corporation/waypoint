@@ -85,7 +85,7 @@ const isEmittedJs = (name: string): boolean => name.endsWith('.js')
  * on every worker's PATH, and the way the deployed bridge starts — execs
  * `waypoint-cli/src/bin.ts` under `--experimental-strip-types`. That looks like a
  * source run, so this guard skipped it entirely. But a source run only loads
- * the RUNNING package from source; every `@waypoint/*` import resolves
+ * the RUNNING package from source; every `@waypoint-engine/*` import resolves
  * through that package's `main`, which is dist. So the deployed bridge runs
  * src for the CLI and stale dist for the folder host — the exact split the
  * guard was written to catch, in the exact configuration it declined to look at.

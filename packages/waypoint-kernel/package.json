@@ -1,5 +1,5 @@
 {
-  "name": "@waypoint/kernel",
+  "name": "@waypoint-engine/kernel",
   "version": "0.1.0",
   "private": false,
   "description": "Shared Cordis agent kernel \u2014 service contracts + base plugins composed by both the Waypoint worker runtime (runtime.kind: cordis) and the Waypoint brain (docs/designs/cordis-adoption-plan.md, Phase A).",

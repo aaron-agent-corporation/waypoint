@@ -1,4 +1,4 @@
-import { explainWaypointTool, listWaypointToolsForOperator, type WaypointToolDefinition } from '@waypoint/core'
+import { explainWaypointTool, listWaypointToolsForOperator, type WaypointToolDefinition } from '@waypoint-engine/core'
 
 import type { WaypointCliIo } from '../bin.ts'
 

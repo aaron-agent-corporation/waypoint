@@ -1,4 +1,4 @@
-import { pauseWaypointRoute } from '@waypoint/folder-host'
+import { pauseWaypointRoute } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

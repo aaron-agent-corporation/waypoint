@@ -34,7 +34,7 @@ construction — many projects share one Postgres without seeing each other.
 ## Layout
 
 ```
-src/                          # @waypoint/core — portable runtime contracts + catalogs
+src/                          # @waypoint-engine/core — portable runtime contracts + catalogs
   envelope/                   # error envelope + validation-details normalization
   commands/                   # command grammar parser (/waypoint ... slash grammar)
   contracts/                  # host interfaces (event bus, clock/id, store)
@@ -43,12 +43,12 @@ src/                          # @waypoint/core — portable runtime contracts + 
   operators/, quests/, handoffs/, tools/  # manifest parsing + registries
 
 packages/
-  waypoint-cli/               # the `waypoint` CLI (@waypoint/cli)
-  waypoint-folder-host/       # the local folder host (@waypoint/folder-host):
+  waypoint-cli/               # the `waypoint` CLI (@waypoint-engine/cli)
+  waypoint-folder-host/       # the local folder host (@waypoint-engine/folder-host):
                               #   postgres stores, pg_durable compiler + bridge,
                               #   worker runtimes (pi, cordis, deterministic), sandboxing
-  waypoint-kernel/            # sandboxed worker kernel (@waypoint/kernel)
-  waypoint-worker-tools/      # MCP tool surface for workers (@waypoint/worker-tools)
+  waypoint-kernel/            # sandboxed worker kernel (@waypoint-engine/kernel)
+  waypoint-worker-tools/      # MCP tool surface for workers (@waypoint-engine/worker-tools)
 
 quests/ recipes/ operators/ handoffs/   # bundled catalog content
 tools/prose/                  # markdown → quest manifest compiler (+ lint, gate)

@@ -36,7 +36,7 @@ import type {
   CordisLlmRequest,
   CordisToolCall,
   CordisUsage,
-} from '@waypoint/kernel'
+} from '@waypoint-engine/kernel'
 
 export interface CordisPiAiConfig {
   /** pi provider id, e.g. 'openai-codex'. */

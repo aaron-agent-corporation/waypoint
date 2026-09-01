@@ -18,7 +18,7 @@ import {
   writeWizardOrganizationPlan,
   writeWizardOrganizedCasePackage,
   writeWizardQuestions,
-} from '@waypoint/core'
+} from '@waypoint-engine/core'
 
 import type { WaypointCliIo } from '../bin'
 import type {
@@ -27,7 +27,7 @@ import type {
   WizardDomain,
   WizardShadowRecord,
   WizardOrganizationPlan,
-} from '@waypoint/core'
+} from '@waypoint-engine/core'
 
 export async function runWizardCommand(args: readonly string[], io: WaypointCliIo): Promise<number> {
   const [subcommand] = args

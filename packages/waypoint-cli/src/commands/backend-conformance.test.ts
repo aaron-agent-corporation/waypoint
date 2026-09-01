@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import pg from 'pg'
 
-import { cancelSchemaDurableInstances } from '@waypoint/folder-host'
+import { cancelSchemaDurableInstances } from '@waypoint-engine/folder-host'
 
 import { runWaypointCli } from '../bin'
 import { makeIo, requireTestPostgresUrl, silentIo } from '../testing/backend-harness'

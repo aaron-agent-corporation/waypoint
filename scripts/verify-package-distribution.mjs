@@ -72,11 +72,11 @@ try {
 
   run('pnpm', ['build'])
 
-  const coreTarball = await packPackage(repoRoot, 'waypoint-core-')
-  const kernelTarball = await packPackage(join(repoRoot, 'packages/waypoint-kernel'), 'waypoint-kernel-')
-  const folderHostTarball = await packPackage(join(repoRoot, 'packages/waypoint-folder-host'), 'waypoint-folder-host-')
-  const cliTarball = await packPackage(join(repoRoot, 'packages/waypoint-cli'), 'waypoint-cli-')
-  const workerToolsTarball = await packPackage(join(repoRoot, 'packages/waypoint-worker-tools'), 'waypoint-worker-tools-')
+  const coreTarball = await packPackage(repoRoot, 'waypoint-engine-core-')
+  const kernelTarball = await packPackage(join(repoRoot, 'packages/waypoint-kernel'), 'waypoint-engine-kernel-')
+  const folderHostTarball = await packPackage(join(repoRoot, 'packages/waypoint-folder-host'), 'waypoint-engine-folder-host-')
+  const cliTarball = await packPackage(join(repoRoot, 'packages/waypoint-cli'), 'waypoint-engine-cli-')
+  const workerToolsTarball = await packPackage(join(repoRoot, 'packages/waypoint-worker-tools'), 'waypoint-engine-worker-tools-')
 
   const packedPackages = [
     { tarball: coreTarball, manifest: readPackedJson(coreTarball, 'package/package.json') },
@@ -97,19 +97,19 @@ try {
         type: 'module',
         private: true,
         dependencies: {
-          '@waypoint/core': fileSpec(coreTarball),
-          '@waypoint/kernel': fileSpec(kernelTarball),
-          '@waypoint/folder-host': fileSpec(folderHostTarball),
-          '@waypoint/cli': fileSpec(cliTarball),
+          '@waypoint-engine/core': fileSpec(coreTarball),
+          '@waypoint-engine/kernel': fileSpec(kernelTarball),
+          '@waypoint-engine/folder-host': fileSpec(folderHostTarball),
+          '@waypoint-engine/cli': fileSpec(cliTarball),
         },
         pnpm: {
-          // Local tarballs do not provide a registry index for exact transitive @waypoint/* deps.
+          // Local tarballs do not provide a registry index for exact transitive @waypoint-engine/* deps.
           // The manifest checks above prove packed packages are publishable; these overrides let the
           // clean temp project simulate registry resolution without reaching npmjs.org.
           overrides: {
-            '@waypoint/core': fileSpec(coreTarball),
-            '@waypoint/kernel': fileSpec(kernelTarball),
-            '@waypoint/folder-host': fileSpec(folderHostTarball),
+            '@waypoint-engine/core': fileSpec(coreTarball),
+            '@waypoint-engine/kernel': fileSpec(kernelTarball),
+            '@waypoint-engine/folder-host': fileSpec(folderHostTarball),
           },
         },
       },
@@ -122,9 +122,9 @@ try {
 
   await writeFile(
     join(projectDir, 'verify.mjs'),
-    `import { parseQuestManifest, createQuestRegistry } from '@waypoint/core'\n` +
-      `import { loadBundledWaypointCatalog, formatCatalogEntryWarning } from '@waypoint/folder-host'\n` +
-      `import { runWaypointCli } from '@waypoint/cli'\n` +
+    `import { parseQuestManifest, createQuestRegistry } from '@waypoint-engine/core'\n` +
+      `import { loadBundledWaypointCatalog, formatCatalogEntryWarning } from '@waypoint-engine/folder-host'\n` +
+      `import { runWaypointCli } from '@waypoint-engine/cli'\n` +
       `const checks = { parseQuestManifest, createQuestRegistry, loadBundledWaypointCatalog, formatCatalogEntryWarning, runWaypointCli }\n` +
       `for (const [name, value] of Object.entries(checks)) {\n` +
       `  if (typeof value !== 'function') throw new Error(name + ' export missing')\n` +

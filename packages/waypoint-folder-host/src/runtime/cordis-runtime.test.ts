@@ -11,7 +11,7 @@ const itOnMac = it.skipIf(process.platform !== 'darwin')
 
 import { CordisRecipeRuntime } from './cordis-runtime.ts'
 import type { PiAiResolver } from './cordis/llm-pi-ai.ts'
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 
 /**
  * Outcome derivation, driven by a FAKE model stream — no credentials, no

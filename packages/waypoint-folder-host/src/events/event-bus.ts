@@ -1,4 +1,4 @@
-import type { IEventBus } from '@waypoint/core'
+import type { IEventBus } from '@waypoint-engine/core'
 
 import { appendRouteEvent } from './jsonl.ts'
 

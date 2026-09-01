@@ -25,7 +25,7 @@ import { createHash } from 'node:crypto'
 import { readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 
 import type { RecipeModelClass } from '../work-order.ts'
 import type { WaypointProjectRootConfig } from '../../project/config.ts'

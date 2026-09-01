@@ -1,4 +1,4 @@
-import { writeWaypointRunDossier } from '@waypoint/folder-host'
+import { writeWaypointRunDossier } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 

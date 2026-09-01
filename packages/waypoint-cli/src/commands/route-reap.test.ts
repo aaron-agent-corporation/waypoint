@@ -8,7 +8,7 @@ import {
   installQuestCatalog,
   loadBundledWaypointCatalog,
   startQuestRoute,
-} from '@waypoint/folder-host'
+} from '@waypoint-engine/folder-host'
 
 import { runWaypointCli } from '../bin'
 import { makeIo, PostgresTestProjects, silentIo } from '../testing/backend-harness'

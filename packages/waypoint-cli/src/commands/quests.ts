@@ -1,5 +1,5 @@
-import { questIsAvailable } from '@waypoint/core'
-import { formatCatalogEntryWarning } from '@waypoint/folder-host'
+import { questIsAvailable } from '@waypoint-engine/core'
+import { formatCatalogEntryWarning } from '@waypoint-engine/folder-host'
 
 import type { WaypointCliIo } from '../bin.ts'
 import { loadCliCatalog } from './catalog-io.ts'

@@ -26,13 +26,13 @@ function extractImports(source: string): string[] {
 }
 
 describe('folder host package boundaries', () => {
-  it('allows only @waypoint/core, package-internal relative imports, and Node built-ins', () => {
+  it('allows only @waypoint-engine/core, package-internal relative imports, and Node built-ins', () => {
     const entrypoint = resolve(srcRoot, 'index.ts')
     const source = readFileSync(entrypoint, 'utf8')
     const imports = extractImports(source)
 
     const disallowed = imports.filter((specifier) => {
-      if (specifier === '@waypoint/core' || specifier.startsWith('@waypoint/core/')) return false
+      if (specifier === '@waypoint-engine/core' || specifier.startsWith('@waypoint-engine/core/')) return false
       if (nodeBuiltins.has(specifier)) return false
       if (specifier.startsWith('.')) return false
       return true

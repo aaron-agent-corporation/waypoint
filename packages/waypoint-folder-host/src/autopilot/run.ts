@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readFile, readdir, stat } from 'node:fs/promises'
 import { isAbsolute, join, normalize } from 'node:path'
 
-import { parseRecipeManifest } from '@waypoint/core'
+import { parseRecipeManifest } from '@waypoint-engine/core'
 import { appendRouteEvent } from '../events/jsonl.ts'
 import { isDurablePostgresRouteBackend } from '../project/backend.ts'
 import { readWaypointProjectConfig } from '../project/config.ts'
@@ -17,7 +17,7 @@ import { NullRecipeRuntime, UnconfiguredRecipeRuntime } from '../runtime/null-ru
 import { WorkerRecipeRuntime } from '../runtime/worker-runtime.ts'
 import { loadWorkspaceWaypointCatalog } from '../catalog/workspace.ts'
 
-import type { RecipeManifest } from '@waypoint/core'
+import type { RecipeManifest } from '@waypoint-engine/core'
 import type {
   RunWaypointAutopilotOptions,
   RunWaypointAutopilotResult,

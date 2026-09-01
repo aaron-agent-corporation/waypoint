@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { initWaypointProject } from '@waypoint/folder-host'
+import { initWaypointProject } from '@waypoint-engine/folder-host'
 import { runWorkersCommand } from './workers.ts'
 
 function makeIo(cwd: string) {

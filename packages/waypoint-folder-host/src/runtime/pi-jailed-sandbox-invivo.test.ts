@@ -34,7 +34,7 @@ const execFileAsync = promisify(execFile)
  *
  *   deploy/sandbox/pi-worker-image/build.sh      # builds + loads the image
  *   export WAYPOINT_PI_INVIVO=1                      # and a `pi /login` Codex cred in ~/.pi
- *   pnpm --filter @waypoint/folder-host exec vitest run \
+ *   pnpm --filter @waypoint-engine/folder-host exec vitest run \
  *     src/runtime/pi-jailed-sandbox-invivo.test.ts
  *
  * ASSERTS PLUMBING, NOT CLEVERNESS (the rsc-wxk precedent): that the worker
