@@ -1,6 +1,6 @@
 {
   "name": "@waypoint-engine/core",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": false,
   "description": "Waypoint \u2014 host-agnostic, Postgres-backed durable workflow execution runtime for TypeScript.",
   "type": "module",

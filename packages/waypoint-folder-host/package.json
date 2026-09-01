@@ -1,6 +1,6 @@
 {
   "name": "@waypoint-engine/folder-host",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": false,
   "description": "Postgres-backed reference host for the Waypoint durable workflow runtime.",
   "type": "module",
