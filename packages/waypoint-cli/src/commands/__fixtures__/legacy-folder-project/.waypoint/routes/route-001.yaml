@@ -1,0 +1,29 @@
+schema_version: 1
+route:
+  id: route-001
+  quest: runner
+  status: blocked
+  current_node: plan-approval-gate
+  subject:
+    type: project
+    id: local
+  created_at: 2026-07-13T03:23:58.756Z
+  updated_at: 2026-07-13T03:23:58.944Z
+  metadata:
+    runner:
+      workflow: workflows/runner.yaml
+      recipes:
+        - runner-doc-writer
+        - runner-project-researcher
+        - runner-roadmapper
+        - runner-assumptions-analyzer
+        - runner-codebase-mapper
+        - runner-phase-researcher
+        - runner-planner
+        - runner-plan-checker
+        - runner-executor
+        - runner-verifier
+        - runner-doc-synthesizer
+        - runner-code-reviewer
+    backend:
+      route: folder

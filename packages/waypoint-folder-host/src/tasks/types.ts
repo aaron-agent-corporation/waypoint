@@ -1,0 +1,32 @@
+export type WaypointFolderTaskStatus = 'open' | 'in_progress' | 'blocked' | 'done' | 'failed' | 'cancelled'
+export type WaypointFolderTaskKind =
+  | 'recipe'
+  | 'discussion'
+  | 'gate'
+  | 'checkpoint'
+  | 'wait'
+  | 'handoff'
+  | 'artifact'
+  | 'node'
+  | 'delay'
+  | 'timer'
+  | 'dependency'
+  | 'system'
+
+export interface WaypointFolderTask {
+  readonly id: string
+  readonly route_id: string
+  readonly plan_ref: string
+  readonly title: string
+  readonly phase: string
+  readonly wave: number | null
+  readonly kind: WaypointFolderTaskKind
+  readonly status: WaypointFolderTaskStatus
+  readonly created_at: string
+  readonly updated_at: string
+  readonly metadata?: Record<string, unknown>
+}
+
+export interface WaypointFolderTaskState {
+  readonly tasks: readonly WaypointFolderTask[]
+}

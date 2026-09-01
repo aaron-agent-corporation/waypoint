@@ -1,0 +1,86 @@
+schema_version: 1
+plans:
+  - id: plan-001
+    phase: initialize
+    ref: initialize-context
+    title: Gather project context and starting constraints
+    status: pending
+    created_at: 2026-07-13T03:23:58.713Z
+    updated_at: 2026-07-13T03:23:58.713Z
+  - id: plan-002
+    phase: initialize
+    ref: initialize-roadmap
+    title: Draft initial roadmap and Quest adoption notes
+    status: pending
+    created_at: 2026-07-13T03:23:58.715Z
+    updated_at: 2026-07-13T03:23:58.715Z
+  - id: plan-003
+    phase: discuss
+    ref: discuss-objective
+    title: Run task-scoped discussion to clarify objective and acceptance criteria
+    status: pending
+    created_at: 2026-07-13T03:23:58.719Z
+    updated_at: 2026-07-13T03:23:58.719Z
+  - id: plan-004
+    phase: discuss
+    ref: discuss-assumptions
+    title: Surface assumptions, risks, and open decisions
+    status: pending
+    created_at: 2026-07-13T03:23:58.721Z
+    updated_at: 2026-07-13T03:23:58.721Z
+  - id: plan-005
+    phase: plan
+    ref: plan-research
+    title: Research the phase and draft an executable plan
+    status: pending
+    created_at: 2026-07-13T03:23:58.725Z
+    updated_at: 2026-07-13T03:23:58.725Z
+  - id: plan-006
+    phase: plan
+    ref: plan-approval-gate
+    title: Human approval gate before execution begins
+    status: pending
+    created_at: 2026-07-13T03:23:58.728Z
+    updated_at: 2026-07-13T03:23:58.728Z
+  - id: plan-007
+    phase: execute
+    ref: execute-slice
+    title: Execute approved work in dependency-aware slices
+    status: pending
+    created_at: 2026-07-13T03:23:58.733Z
+    updated_at: 2026-07-13T03:23:58.733Z
+  - id: plan-008
+    phase: execute
+    ref: execute-checkpoint
+    title: Checkpoint evidence, commits, and remaining work
+    status: pending
+    created_at: 2026-07-13T03:23:58.736Z
+    updated_at: 2026-07-13T03:23:58.736Z
+  - id: plan-009
+    phase: verify
+    ref: verify-work
+    title: Validate deliverables against acceptance criteria
+    status: pending
+    created_at: 2026-07-13T03:23:58.741Z
+    updated_at: 2026-07-13T03:23:58.741Z
+  - id: plan-010
+    phase: verify
+    ref: verify-approval-gate
+    title: Human verification gate and issue triage
+    status: pending
+    created_at: 2026-07-13T03:23:58.744Z
+    updated_at: 2026-07-13T03:23:58.744Z
+  - id: plan-011
+    phase: ship
+    ref: ship-prep
+    title: Prepare docs, review notes, and final handoff
+    status: pending
+    created_at: 2026-07-13T03:23:58.751Z
+    updated_at: 2026-07-13T03:23:58.751Z
+  - id: plan-012
+    phase: ship
+    ref: ship-approval-gate
+    title: Final human ship approval gate
+    status: pending
+    created_at: 2026-07-13T03:23:58.754Z
+    updated_at: 2026-07-13T03:23:58.754Z

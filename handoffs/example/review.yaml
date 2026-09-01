@@ -1,0 +1,21 @@
+schema_version: 1
+slug: example-review-handoffs
+name: Example Review Handoffs
+description: Example handoff graph — a worker hands finished work to a human reviewer. Local, no side effects.
+handoffs:
+  - slug: worker-to-human-deliverable-review
+    from: worker
+    to: human-review
+    trigger: deliverable_ready
+    required_artifacts:
+      - build/deliverable.md
+    gate: human_review
+
+  - slug: worker-to-human-final-archive
+    from: worker
+    to: archive-handler
+    trigger: work_completed
+    required_artifacts:
+      - build/deliverable.md
+      - build/summary.md
+    gate: human_archive_approval

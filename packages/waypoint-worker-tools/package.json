@@ -1,0 +1,24 @@
+{
+  "name": "@waypoint/worker-tools",
+  "version": "0.1.0",
+  "private": false,
+  "description": "The bundled closed tool surface for sandboxed workflow workers — the `report` claim seam every attempt ends through.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mcp-server": {
+      "types": "./dist/mcp-server.d.ts",
+      "import": "./dist/mcp-server.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
+}

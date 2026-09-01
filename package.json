@@ -1,0 +1,53 @@
+{
+  "name": "@waypoint/core",
+  "version": "0.1.2",
+  "private": false,
+  "description": "Waypoint \u2014 host-agnostic, Postgres-backed durable workflow execution runtime for TypeScript.",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "cli": "node packages/waypoint-cli/src/bin.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "docs:catalog": "node --import ./scripts/ts-src-loader.mjs scripts/generate-quest-catalog.mjs",
+    "reap:schemas": "node --import ./scripts/ts-src-loader.mjs packages/waypoint-folder-host/scripts/reap-residual-schemas.mjs",
+    "docs:catalog:check": "node --import ./scripts/ts-src-loader.mjs scripts/generate-quest-catalog.mjs --check",
+    "smoke:folder-host": "node scripts/folder-host-smoke.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/stage-package-builds.mjs",
+    "clean": "rm -rf dist packages/waypoint-folder-host/dist packages/waypoint-cli/dist",
+    "prepack": "pnpm clean && pnpm build",
+    "verify:built-imports": "node scripts/verify-built-package-imports.mjs",
+    "verify:package-distribution": "node scripts/verify-package-distribution.mjs",
+    "smoke:install": "node scripts/local-install-smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "yaml": "^2.6.1"
+  },
+  "packageManager": "pnpm@10.2.1",
+  "files": [
+    "dist",
+    "docs",
+    "quests",
+    "recipes",
+    "operators",
+    "handoffs",
+    "third_party/gsd",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}

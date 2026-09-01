@@ -1,0 +1,420 @@
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { appendRouteEvent, readRouteEvents } from '../events/jsonl'
+import { initWaypointProject } from '../project/init'
+import { insertWaypointTasksPg } from '../postgres/store'
+import { updateWaypointTask } from '../tasks/store'
+import type { WaypointFolderTask } from '../tasks/types'
+import { PostgresTestProjects } from '../testing/postgres'
+import { createWaypointRoute, getWaypointRoute, updateWaypointRoute } from './store'
+import { approveRouteGate, pauseWaypointRoute, presentGateChangeset, rejectRouteGate, resolveWaypointRouteBlocker, resumeWaypointRoute } from './state'
+
+const pgProjects = new PostgresTestProjects()
+
+async function tempProject(): Promise<string> {
+  const root = await pgProjects.mkProjectRoot('runner-route-state-')
+  // Item 25: an unconfigured directory refuses postgres resolution, so a
+  // test project must be a real project. durable: false — this suite
+  // exercises the non-durable gate controls (--next-node et al.), which a
+  // durable run rejects by design.
+  await initWaypointProject(root, { quest: 'runner', backend: 'postgres', postgres: { durable: false } })
+  return root
+}
+
+async function createRoute(projectRoot: string) {
+  return createWaypointRoute(projectRoot, {
+    quest: 'runner',
+    current_node: 'human_plan_gate',
+    subject: { type: 'project', id: 'local' },
+    now: new Date('2026-05-07T16:30:00.000Z'),
+  })
+}
+
+async function writeTaskState(projectRoot: string, tasks: WaypointFolderTask[]): Promise<void> {
+  await insertWaypointTasksPg(projectRoot, tasks)
+}
+
+async function writeRequiredArtifact(projectRoot: string): Promise<void> {
+  await mkdir(join(projectRoot, 'referral-package-build', 'attorney-handoff'), { recursive: true })
+  await writeFile(join(projectRoot, 'referral-package-build', 'attorney-handoff', 'START_HERE.html'), '<html>resolved</html>', 'utf8')
+}
+
+async function createBlockedGateRoute(projectRoot: string) {
+  const route = await createWaypointRoute(projectRoot, {
+    quest: 'runner',
+    current_node: 'human_plan_gate',
+    status: 'blocked',
+    subject: { type: 'project', id: 'local' },
+    now: new Date('2026-05-07T16:30:00.000Z'),
+  })
+  await writeTaskState(projectRoot, [
+    {
+      id: 'task-gate-001',
+      route_id: route.id,
+      plan_ref: 'human_plan_gate',
+      title: 'Human plan gate',
+      phase: 'planning',
+      wave: 1,
+      kind: 'gate',
+      status: 'blocked',
+      created_at: '2026-05-07T16:30:00.000Z',
+      updated_at: '2026-05-07T16:30:00.000Z',
+    },
+  ])
+  return route
+}
+
+describe('route state controls', () => {
+  beforeAll(() => pgProjects.setEnv())
+  afterAll(async () => {
+    await pgProjects.cleanup()
+  })
+
+  it('approves a gate, advances the current node, and appends an event', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    const updated = await approveRouteGate(projectRoot, {
+      routeId: route.id,
+      node: 'human_plan_gate',
+      note: 'Plan accepted',
+      nextNode: 'execute',
+      now: new Date('2026-05-07T16:31:00.000Z'),
+    })
+
+    expect(updated).toMatchObject({ id: 'route-001', status: 'active', current_node: 'execute' })
+    expect(await getWaypointRoute(projectRoot, route.id)).toMatchObject({ status: 'active', current_node: 'execute' })
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items).toHaveLength(1)
+    expect(events.items[0]).toMatchObject({
+      id: 'event-001',
+      route_id: 'route-001',
+      kind: 'route.gate.approved',
+      payload: { node: 'human_plan_gate', note: 'Plan accepted', previous_node: 'human_plan_gate', next_node: 'execute' },
+    })
+  })
+
+  it('changeset gate: refuses without a digest, refuses a stale digest, binds the verified manifest (rsc-7rw)', async () => {
+    const projectRoot = await tempProject()
+    const route = await createWaypointRoute(projectRoot, {
+      quest: 'runner',
+      current_node: 'approval-gate',
+      status: 'blocked',
+      subject: { type: 'project', id: 'local' },
+      now: new Date('2026-05-07T16:30:00.000Z'),
+    })
+    await mkdir(join(projectRoot, 'build'), { recursive: true })
+    await writeFile(join(projectRoot, 'build', 'report.md'), 'reviewed bytes', 'utf8')
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-001',
+        route_id: route.id,
+        plan_ref: 'produce-report',
+        title: 'Produce the report',
+        phase: 'work',
+        wave: 1,
+        kind: 'recipe',
+        status: 'done',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+        metadata: { runner: { output_artifacts: ['build/report.md'] } },
+      },
+      {
+        id: 'task-002',
+        route_id: route.id,
+        plan_ref: 'approval-gate',
+        title: 'Approval gate',
+        phase: 'work',
+        wave: 2,
+        kind: 'gate',
+        status: 'blocked',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+        metadata: { runner: { gate: { required: true, kind: 'approval', approves: 'changeset' } } },
+      },
+    ])
+
+    // No digest → refused; the error carries the current digest for the caller.
+    await expect(
+      approveRouteGate(projectRoot, { routeId: route.id, node: 'approval-gate' }),
+    ).rejects.toThrow(/approves a changeset: pass --changeset-digest/)
+
+    const presented = await presentGateChangeset(projectRoot, route.id, 'approval-gate')
+    expect(presented.approves).toBe('changeset')
+    expect(presented.changeset?.manifest.map((entry) => entry.path)).toEqual(['build/report.md'])
+
+    // Bytes change after review → the presented digest is stale → refused (TOCTOU close).
+    await writeFile(join(projectRoot, 'build', 'report.md'), 'changed after review', 'utf8')
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'approval-gate',
+        changesetDigest: presented.changeset!.digest,
+      }),
+    ).rejects.toThrow(/stale changeset/)
+
+    // Re-present, approve with the fresh digest → binding lands on the event.
+    const fresh = await presentGateChangeset(projectRoot, route.id, 'approval-gate')
+    const updated = await approveRouteGate(projectRoot, {
+      routeId: route.id,
+      node: 'approval-gate',
+      changesetDigest: fresh.changeset!.digest,
+      now: new Date('2026-05-07T16:35:00.000Z'),
+    })
+    expect(updated.status).toBe('active')
+    const events = await readRouteEvents(projectRoot, route.id)
+    const approvedEvent = events.items.find((event) => event.kind === 'route.gate.approved')
+    expect(approvedEvent?.payload).toMatchObject({
+      node: 'approval-gate',
+      changeset: {
+        algorithm: 'sha256-manifest-v1',
+        digest: fresh.changeset!.digest,
+        manifest: [{ path: 'build/report.md', sha256: expect.any(String) }],
+      },
+    })
+  })
+
+  it('rejects a gate, blocks the route, and records the note', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    const updated = await rejectRouteGate(projectRoot, {
+      routeId: route.id,
+      node: 'human_plan_gate',
+      note: 'Plan needs work',
+      now: new Date('2026-05-07T16:32:00.000Z'),
+    })
+
+    expect(updated).toMatchObject({ id: 'route-001', status: 'blocked', current_node: 'human_plan_gate' })
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items[0]).toMatchObject({
+      kind: 'route.gate.rejected',
+      payload: { node: 'human_plan_gate', note: 'Plan needs work', previous_node: 'human_plan_gate' },
+    })
+  })
+
+  it('approveRouteGate throws when node is not the current blocked gate', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched
+    const current = await getWaypointRoute(projectRoot, route.id)
+    expect(current).toMatchObject({ status: 'blocked', current_node: 'human_plan_gate' })
+    // No events appended
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(0)
+  })
+
+  it('rejectRouteGate throws when node is not the current blocked gate', async () => {
+    const projectRoot = await tempProject()
+    const route = await createBlockedGateRoute(projectRoot)
+
+    await expect(
+      rejectRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click',
+        now: new Date('2026-05-07T16:32:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched
+    const current = await getWaypointRoute(projectRoot, route.id)
+    expect(current).toMatchObject({ status: 'blocked', current_node: 'human_plan_gate' })
+    // No events appended
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.filter((e) => e.kind === 'route.gate.rejected')).toHaveLength(0)
+  })
+
+  it('approveRouteGate on active route (open gate task) throws for wrong node, approves for current node', async () => {
+    // This test pins the strengthened guard: under the old implementation, when the route
+    // is active and the gate task is still 'open' (not 'blocked'), assertDecidesCurrentGate
+    // would no-op and the wrong-node call would silently succeed. With the fix it must throw.
+    const projectRoot = await tempProject()
+    // Create an active route (status defaults to 'active') with current_node set.
+    const route = await createWaypointRoute(projectRoot, {
+      quest: 'runner',
+      current_node: 'human_plan_gate',
+      subject: { type: 'project', id: 'local' },
+      now: new Date('2026-05-07T16:30:00.000Z'),
+    })
+    // Gate task is 'open' (not 'blocked') — the engine is still running.
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-gate-open-001',
+        route_id: route.id,
+        plan_ref: 'human_plan_gate',
+        title: 'Human plan gate',
+        phase: 'planning',
+        wave: 1,
+        kind: 'gate',
+        status: 'open',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+      },
+    ])
+
+    // Wrong node must throw even though the gate task is still 'open'.
+    await expect(
+      approveRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale click on non-current gate',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched.
+    const afterWrong = await getWaypointRoute(projectRoot, route.id)
+    expect(afterWrong).toMatchObject({ status: 'active', current_node: 'human_plan_gate' })
+    const eventsAfterWrong = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterWrong.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(0)
+
+    // Happy path: correct node (current_node) must succeed even with the gate task 'open'.
+    const updated = await approveRouteGate(projectRoot, {
+      routeId: route.id,
+      node: 'human_plan_gate',
+      note: 'Plan approved while still active',
+      nextNode: 'execute',
+      now: new Date('2026-05-07T16:31:30.000Z'),
+    })
+    expect(updated).toMatchObject({ status: 'active', current_node: 'execute' })
+    const eventsAfterApprove = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterApprove.items.filter((e) => e.kind === 'route.gate.approved')).toHaveLength(1)
+  })
+
+  it('rejectRouteGate on active route (open gate task) throws for wrong node', async () => {
+    // Symmetric mirror of the approve test above: verifies that rejectRouteGate also enforces
+    // assertDecidesCurrentGate when the route is active and the gate task is still 'open'.
+    const projectRoot = await tempProject()
+    // Create an active route with current_node set.
+    const route = await createWaypointRoute(projectRoot, {
+      quest: 'runner',
+      current_node: 'human_plan_gate',
+      subject: { type: 'project', id: 'local' },
+      now: new Date('2026-05-07T16:30:00.000Z'),
+    })
+    // Gate task is 'open' (not 'blocked') — the engine is still running.
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-gate-open-002',
+        route_id: route.id,
+        plan_ref: 'human_plan_gate',
+        title: 'Human plan gate',
+        phase: 'planning',
+        wave: 1,
+        kind: 'gate',
+        status: 'open',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+      },
+    ])
+
+    // Wrong node must throw even though the gate task is still 'open'.
+    await expect(
+      rejectRouteGate(projectRoot, {
+        routeId: route.id,
+        node: 'some_other_gate',
+        note: 'Stale reject on non-current gate',
+        now: new Date('2026-05-07T16:31:00.000Z'),
+      }),
+    ).rejects.toThrow(/gate\.decide.*some_other_gate.*not the current gate/)
+
+    // Route must remain untouched.
+    const afterWrong = await getWaypointRoute(projectRoot, route.id)
+    expect(afterWrong).toMatchObject({ status: 'active', current_node: 'human_plan_gate' })
+    const eventsAfterWrong = await readRouteEvents(projectRoot, route.id)
+    expect(eventsAfterWrong.items.filter((e) => e.kind === 'route.gate.rejected')).toHaveLength(0)
+  })
+
+  it('pauses and resumes a route with append-only events', async () => {
+    const projectRoot = await tempProject()
+    const route = await createRoute(projectRoot)
+    await appendRouteEvent(projectRoot, route.id, { kind: 'route.started', now: new Date('2026-05-07T16:30:01.000Z') })
+
+    await pauseWaypointRoute(projectRoot, {
+      routeId: route.id,
+      reason: 'Waiting on review',
+      now: new Date('2026-05-07T16:33:00.000Z'),
+    })
+    const resumed = await resumeWaypointRoute(projectRoot, {
+      routeId: route.id,
+      now: new Date('2026-05-07T16:34:00.000Z'),
+    })
+
+    expect(resumed).toMatchObject({ id: 'route-001', status: 'active' })
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.map((event) => event.kind)).toEqual(['route.started', 'route.paused', 'route.resumed'])
+    expect(events.items[1]).toMatchObject({ payload: { reason: 'Waiting on review', previous_status: 'active' } })
+    expect(events.items[2]).toMatchObject({ payload: { previous_status: 'blocked' } })
+  })
+
+  it('resolves a required artifact blocker after the missing artifact exists', async () => {
+    const projectRoot = await tempProject()
+    const route = await createRoute(projectRoot)
+    await updateWaypointRoute(projectRoot, route.id, { status: 'blocked', current_node: 'start-here-draft' })
+    await writeTaskState(projectRoot, [
+      {
+        id: 'task-001',
+        route_id: route.id,
+        plan_ref: 'start-here-draft',
+        title: 'Draft START_HERE dashboard',
+        phase: 'handoff',
+        wave: 1,
+        kind: 'recipe',
+        status: 'blocked',
+        created_at: '2026-05-07T16:30:00.000Z',
+        updated_at: '2026-05-07T16:30:00.000Z',
+        metadata: {
+          runner: {
+            output_artifacts: [{ path: 'referral-package-build/attorney-handoff/START_HERE.html' }],
+            missing_artifacts: ['referral-package-build/attorney-handoff/START_HERE.html'],
+            block_reason: 'required_artifacts_missing',
+          },
+        },
+      },
+    ])
+
+    await expect(
+      resolveWaypointRouteBlocker(projectRoot, {
+        routeId: route.id,
+        note: 'Agent finished the missing package artifact',
+        now: new Date('2026-05-07T16:35:00.000Z'),
+      }),
+    ).rejects.toThrow(/Missing required artifacts/)
+
+    await writeRequiredArtifact(projectRoot)
+    const resolved = await resolveWaypointRouteBlocker(projectRoot, {
+      routeId: route.id,
+      note: 'Agent finished the missing package artifact',
+      now: new Date('2026-05-07T16:36:00.000Z'),
+    })
+
+    expect(resolved).toMatchObject({ status: 'active', current_node: 'start-here-draft' })
+    const task = await updateWaypointTask(projectRoot, 'task-001', {})
+    expect(task).toMatchObject({ status: 'open' })
+    expect(task.metadata?.runner).not.toHaveProperty('missing_artifacts')
+    expect(task.metadata?.runner).not.toHaveProperty('block_reason')
+    const events = await readRouteEvents(projectRoot, route.id)
+    expect(events.items.at(-1)).toMatchObject({
+      kind: 'route.blocker.resolved',
+      payload: {
+        task_id: 'task-001',
+        node: 'start-here-draft',
+        note: 'Agent finished the missing package artifact',
+      },
+    })
+  })
+})

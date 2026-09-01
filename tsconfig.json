@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "types": ["node", "vitest/globals"],
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": ".",
+    "outDir": "./dist",
+    "noEmit": true,
+    "paths": {
+      "@waypoint/core": ["./src/index.ts"],
+      "@waypoint/folder-host": ["./packages/waypoint-folder-host/src/index.ts"],
+      "@waypoint/cli": ["./packages/waypoint-cli/src/index.ts"],
+      "@waypoint/kernel": ["./packages/waypoint-kernel/src/index.ts"],
+      "@waypoint/worker-tools": ["./packages/waypoint-worker-tools/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "examples/**/*.ts", "packages/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

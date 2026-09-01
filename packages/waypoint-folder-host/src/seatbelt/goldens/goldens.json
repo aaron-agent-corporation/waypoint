@@ -1,0 +1,44 @@
+{
+  "comment": "Pins the TS seatbelt compiler's output (../profile.ts). Originally generated from the Go compiler via goldengen; Go parity is RETIRED as of the ro-hole emission (rsc-w0z). To regenerate: run the compiler over goldens/fixtures.json and write each result's profile-or-error here keyed by case name.",
+  "cases": {
+    "dedupe-and-sort": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/aa\"))\n(allow file-write* (subpath \"/_sbparity/mm\"))\n(allow file-write* (subpath \"/_sbparity/zz\"))\n"
+    },
+    "descendant-carveout": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/case-source/03-medical/output\"))\n"
+    },
+    "disjoint-ro-rw": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/shadow\"))\n"
+    },
+    "ro-hole-ancestor": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity\"))\n(deny file-write* (subpath \"/_sbparity/case-source\"))\n"
+    },
+    "ro-hole-nested-scratch": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity\"))\n(deny file-write* (subpath \"/_sbparity/.waypoint\"))\n(allow file-write* (subpath \"/_sbparity/.waypoint/scratch/task\"))\n"
+    },
+    "err-empty-path": {
+      "error": "seatbelt: root \"x\" has no path (fail closed)"
+    },
+    "err-equal-paths": {
+      "error": "seatbelt: root \"a\" (rw) and root \"b\" (ro) resolve to the same path \"/_sbparity/same\" — contradictory grant (fail closed)"
+    },
+    "err-invalid-access": {
+      "error": "seatbelt: root \"x\" has invalid access \"readwrite\" (want ro|rw)"
+    },
+    "header-only": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n"
+    },
+    "sbpl-string-escaping": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/we\\\\ird\\\"dir/out\"))\n"
+    },
+    "sibling-prefix-not-ancestor": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/foo\"))\n"
+    },
+    "single-rw": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/shadow\"))\n"
+    },
+    "unclean-path-normalized": {
+      "profile": "(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath \"/_sbparity/a/c\"))\n"
+    }
+  }
+}

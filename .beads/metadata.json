@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "waypoint",
+  "project_id": "320d8dd8-421a-4dbc-bf0d-c7f9f17f324d"
+}

@@ -1,0 +1,84 @@
+schema_version: 1
+slug: code-review
+name: Code Review Quest
+workflow: workflows/runner/code-review.yaml
+description: Waypoint catalog Quest port of gsd:code-review for source review loop for changed files with optional fix iteration.
+
+recipes:
+  - runner-code-reviewer
+  - runner-code-fixer
+
+metadata:
+  source:
+    project: get-shit-done-cc
+    license: MIT
+  tags:
+    - runner-port
+    - quest-catalog
+  source_port:
+    scope: command_informed_sub_quest
+    category: audit_review
+    role: audit / review sub-Quest
+    source_command: commands/gsd/code-review.md
+    source_command_name: gsd:code-review
+    intent: Review changed source for bugs, security, and quality issues; optionally route findings to fixes.
+    operator_interaction: command arguments, review gates, and follow-up decisions when required
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - This command is modeled as a catalog Quest using only current schema fields.
+      - Detailed command flags and execution semantics remain metadata/docs until first-class runtime support is added.
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Code Review Quest loop
+          phases:
+            - phase_key: '10'
+              phase_slug: code_review
+              lifecycle_phase: code_review
+              plans:
+                - plan_ref: code-review-intake
+                  title: Capture inputs and current context
+                  wave: 10
+                  metadata:
+                    runner:
+                      node:
+                        type: checkpoint
+                - plan_ref: code-review-run-code-reviewer
+                  title: Run Code Reviewer
+                  wave: 20
+                  metadata:
+                    runner:
+                      recipe:
+                        slug: runner-code-reviewer
+                      review:
+                        independent: true
+                        checks:
+                          - findings_severity_classified
+                          - every_finding_cites_file_and_line
+                      node:
+                        type: recipe
+                - plan_ref: code-review-run-code-fixer
+                  title: Run Code Fixer
+                  wave: 21
+                  metadata:
+                    runner:
+                      recipe:
+                        slug: runner-code-fixer
+                      review:
+                        independent: true
+                        checks:
+                          - each_fix_committed_atomically
+                          - fixes_verified_against_review_findings
+                      node:
+                        type: recipe
+                - plan_ref: code-review-report
+                  title: Produce operator-facing output and next actions
+                  wave: 30
+                  metadata:
+                    runner:
+                      node:
+                        type: checkpoint

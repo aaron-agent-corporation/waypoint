@@ -1,0 +1,30 @@
+{
+  "name": "@waypoint/cli",
+  "version": "0.1.2",
+  "private": false,
+  "description": "Command-line interface for the Waypoint local folder host.",
+  "type": "module",
+  "bin": {
+    "waypoint": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@waypoint/core": "workspace:*",
+    "@waypoint/folder-host": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "devDependencies": {
+    "@types/pg": "^8.20.0",
+    "pg": "^8.22.0"
+  }
+}

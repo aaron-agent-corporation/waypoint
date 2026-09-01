@@ -1,0 +1,8 @@
+schema_version: 1
+milestones:
+  - id: milestone-001
+    workstream: delivery
+    key: v1
+    title: Main Quest loop
+    created_at: 2026-07-13T03:23:58.709Z
+    updated_at: 2026-07-13T03:23:58.709Z

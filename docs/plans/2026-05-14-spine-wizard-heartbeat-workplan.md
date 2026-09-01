@@ -1,0 +1,143 @@
+# Spine Wizard Heartbeat Workplan
+
+Created: 2026-05-14T00:38:18Z
+
+## Purpose
+
+This file is the autonomous heartbeat control surface for implementing Spine Wizard from:
+
+- PRD: `docs/prds/spine-wizard-prd.md`
+- Implementation plan: `docs/plans/2026-05-14-spine-wizard-implementation-plan.md`
+
+The heartbeat runner should use this file to decide the next incomplete slice, execute exactly the next practical slice or contiguous sub-slice, verify it, commit it, push it, and then stop until the next scheduled heartbeat.
+
+## Operating rules
+
+1. Start every heartbeat by running:
+   - `git log --oneline -5`
+   - `git status --short --branch`
+   - `git pull --ff-only`
+2. Re-read this workplan plus the PRD and implementation plan before choosing work.
+3. Use TDD for production code:
+   - write the failing test first;
+   - run it and capture the RED failure;
+   - implement the minimum code;
+   - run focused tests and relevant gates.
+4. Never claim RED/GREEN, commits, pushes, or passing tests unless the command output is visible in that heartbeat run.
+5. Commit only when relevant tests pass.
+6. Push after each green commit.
+7. Update this file in the same commit as the slice when a task status changes.
+8. Do not mutate user source folders. Wizard source files are read-only inputs.
+9. Do not mark FirmVault landmarks directly. Apply approved facts only through existing safe FirmVault state APIs.
+10. If blocked, commit no partial broken production changes; report the blocker with real command output.
+
+## Stop rule
+
+Pause the heartbeat after WW9 is complete and all final gates pass:
+
+- `pnpm smoke:spine-wizard-firmvault`
+- full relevant Vitest suite
+- `pnpm build`
+- `pnpm verify:built-imports`
+- branch pushed and clean/synced with `origin/main`
+
+Final report title should be:
+
+`Spine Wizard Complete`
+
+## Task ledger
+
+Statuses: `pending`, `in_progress`, `completed`, `blocked`.
+
+### WW1 — Wizard core schemas and path safety
+
+- [x] WW1.1 — Add Wizard shadow and scan types
+  - Files: `src/wizard/types.ts`, `src/wizard/__tests__/types.test.ts`, `src/index.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/types.test.ts`
+- [x] WW1.2 — Add source path and target path safety helpers
+  - Files: `src/wizard/paths.ts`, `src/wizard/__tests__/paths.test.ts`, `src/index.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/paths.test.ts`
+- [x] WW1.3 — Add Wizard frontmatter serialization contract
+  - Files: `src/wizard/shadow-frontmatter.ts`, `src/wizard/__tests__/shadow-frontmatter.test.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/shadow-frontmatter.test.ts`
+  - Completed: `pnpm exec vitest run src/wizard/__tests__/types.test.ts src/wizard/__tests__/paths.test.ts src/wizard/__tests__/shadow-frontmatter.test.ts` passed with 13 tests on 2026-05-14.
+
+### WW2 — Read-only Wizard scan
+
+- [x] WW2.1 — Implement recursive source inventory
+  - Files: `src/wizard/scan.ts`, `src/wizard/__tests__/scan.test.ts`, `src/index.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/scan.test.ts`
+  - Completed: read-only recursive inventory with deterministic ordering, sha256, size, extension, and media hints on 2026-05-14.
+- [x] WW2.2 — Add file hashing and media-ish metadata
+  - Completed: `src/wizard/scan.ts` records sha256, size, extension, `media_type`, and `media_hint`; `pnpm exec vitest run src/wizard/__tests__/scan.test.ts` passed with 1 test on 2026-05-14.
+- [x] WW2.3 — Add `runner wizard scan --source <path> --domain <domain> --json`
+  - Completed: repo already contained `packages/spine-cli/src/commands/wizard.ts` plus `bin.ts` dispatch/help; `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts` passed with 4 tests on 2026-05-14.
+
+### WW3 — Markdown shadow generation
+
+- [x] WW3.1 — Implement deterministic shadow markdown writer
+  - Files: `src/wizard/shadows.ts`, `src/wizard/__tests__/shadows.test.ts`
+  - Focused gate: `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts`
+  - Completed: 4/4 tests passing on 2026-05-14. Deterministic markdown shadows with frontmatter, safe paths, PII metadata, domain-aware rejection.
+- [x] WW3.2 — Add basic PII metadata and safe extracted-text/stub body behavior
+  - Completed: shadows now record raw-text exclusion, source-content policy, extraction stub metadata, and safe stub body text; `pnpm exec vitest run src/wizard/__tests__/shadows.test.ts src/wizard/__tests__/shadow-frontmatter.test.ts packages/spine-cli/src/commands/wizard.test.ts` passed with 11 tests on 2026-05-14.
+- [x] WW3.3 — Add `runner wizard shadow --source <path> --target <case-root> --domain <domain> --json`
+  - Completed: CLI `wizard shadow` now scans read-only input, writes markdown shadows under the target case `.runner/shadows`, returns JSON paths/records, and appears in help; `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts src/wizard/__tests__/shadows.test.ts` passed with 9 tests on 2026-05-14.
+
+### WW4 — FirmVault classifier and proposed fact mappings
+
+- [x] WW4.1 — Add FirmVault shadow categories and filename/path classifier
+  - Completed: added canonical PRD category registry, deterministic filename/path classifier, and wired shadow generation to use classifier categories; `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 25 tests on 2026-05-14.
+- [x] WW4.2 — Add proposed fact mapping generator
+  - Completed: added deterministic review-only FirmVault proposed fact mapper for fee agreements, HIPAA authorizations, and police reports; unknown/unsupported categories propose no facts; `pnpm exec vitest run src/wizard/__tests__/firmvault-facts.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 22 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+- [x] WW4.3 — Add missing-doc checklist and ambiguity detection
+  - Completed: added deterministic FirmVault missing-document checklist and ambiguity detector for unknown classifications/duplicate proposed facts; `pnpm exec vitest run src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts src/wizard/__tests__/firmvault-classifier.test.ts src/wizard/__tests__/shadows.test.ts` passed with 24 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+
+### WW5 — Wizard Q&A loop
+
+- [x] WW5.1 — Add question model persistence under `.runner/wizard/questions.yaml`
+  - Completed: added deterministic ambiguity-to-question generation, one-at-a-time next-question selection with answer suppression, YAML persistence under `.runner/wizard/questions.yaml`, and core exports; `pnpm exec vitest run src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 7 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+- [x] WW5.2 — Add `runner wizard questions --case <case-root> --json`
+  - Completed: added CLI question retrieval from `.runner/wizard/questions.yaml`, JSON/human output, and top-level help entry; `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts src/wizard/__tests__/questions.test.ts` passed with 9 tests on 2026-05-14.
+- [x] WW5.3 — Add `runner wizard answer --case <case-root> --question <id> --answer <text> --json`
+  - Completed: added answer persistence to `.runner/wizard/answers.yaml`, CLI `wizard answer`, and answer-aware `wizard questions`; `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts src/wizard/__tests__/questions.test.ts` passed with 10 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+
+### WW6 — Adoption plan generation
+
+- [x] WW6.1 — Generate `.runner/wizard/adoption-plan.yaml`
+  - Completed: added Wizard adoption plan builder and YAML writer under `.runner/wizard/adoption-plan.yaml`; proposed facts are forced to `approved: false` in generated plans and safety boundaries are recorded. `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 9 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+- [x] WW6.2 — Include source inventory, shadow map, classifications, Q&A, proposed facts, missing docs, warnings, and approvals
+  - Completed: adoption plans now include source inventory, shadow map, classification summary, Q&A summary, approval summary, proposed facts, missing-doc checklist, and warnings; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts src/wizard/__tests__/firmvault-review.test.ts src/wizard/__tests__/firmvault-facts.test.ts` passed with 10 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+- [x] WW6.3 — Add `runner wizard plan --case <case-root> --json`
+  - Completed: added CLI `wizard plan` generation from existing `.runner/shadows`, persisted one-question-at-a-time ambiguity questions, wrote `.runner/wizard/adoption-plan.yaml` (or safe `--write-plan` override), and returned JSON/human summaries; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts packages/spine-cli/src/commands/wizard.test.ts` passed with 14 tests on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+
+### WW7 — Approved apply through FirmVault state APIs
+
+- [x] WW7.1 — Add plan approval/approved_fact handling
+  - Completed: added immutable `approveWizardProposedFacts(plan, factRefs)` helper that marks selected proposed facts approved by id/fact slug, preserves unselected facts as unapproved, refreshes approval counts, and exports it from core; `pnpm exec vitest run src/wizard/__tests__/plan.test.ts src/wizard/__tests__/questions.test.ts packages/spine-cli/src/commands/wizard.test.ts` passed with 15 tests on 2026-05-14.
+- [x] WW7.2 — Add `runner wizard apply --case <case-root> --json`
+  - Completed: added FirmVault apply engine plus CLI `wizard apply` reading `.runner/wizard/adoption-plan.yaml`, applying approved facts through safe FirmVault state APIs, and returning post-apply guidance; `pnpm exec vitest run src/wizard/__tests__ packages/spine-cli/src/commands/wizard.test.ts packages/spine-folder-host/src/firmvault/state.test.ts` passed with 73 tests on 2026-05-14.
+- [x] WW7.3 — Confirm unapproved proposed facts remain unapplied
+  - Completed: core and CLI tests assert unapproved proposed facts are reported as skipped with `reason: unapproved` and are not written to FirmVault state; same 73-test Wizard/FirmVault gate passed on 2026-05-14. Full `pnpm typecheck` still has unrelated existing failures in `src/__tests__/firmvault-quest-skeleton.test.ts` and `src/operators/__tests__/instructions.test.ts`.
+
+### WW8 — Smoke, docs, and skill updates
+
+- [x] WW8.1 — Add messy fixture corpus generator
+  - Completed: added synthetic no-PII messy FirmVault source fixture under `examples/spine-wizard/firmvault-messy-source/` plus docs smoke coverage; `pnpm exec vitest run src/__tests__/runner-docs.test.ts --testNamePattern "synthetic no-PII"` passed on 2026-05-14.
+- [x] WW8.2 — Add `pnpm smoke:spine-wizard-firmvault`
+  - Completed: added `scripts/spine-wizard-firmvault-smoke.mjs` plus package script covering Wizard scan → shadow → questions → answer → plan → approved apply → FirmVault guidance, with read-only fixture guard and unapproved-fact skip assertion; `pnpm smoke:spine-wizard-firmvault` passed on 2026-05-14. Adjacent gate `pnpm exec vitest run packages/spine-cli/src/commands/wizard.test.ts src/wizard/__tests__ packages/spine-folder-host/src/firmvault/state.test.ts` passed with 73 tests.
+- [x] WW8.3 — Update docs and paralegal skill with Wizard usage
+  - Completed: added `docs/spine-wizard.md`, updated folder-host command/docs coverage, and patched the paralegal FirmVault Spine skill with the Wizard command rail and safety boundaries; `pnpm exec vitest run src/__tests__/runner-docs.test.ts packages/spine-cli/src/commands/wizard.test.ts` and `pnpm smoke:spine-wizard-firmvault` passed on 2026-05-14.
+
+### WW9 — Final verification and push
+
+- [x] WW9.1 — Run final smoke and full verification gates
+  - Completed: final smoke, Wizard/FirmVault targeted Vitest, full `pnpm test`, `pnpm build`, and `pnpm verify:built-imports` passed on 2026-05-14. Final cleanup aligned folder-host Wizard docs with the CLI help registry and raised the Hermes end-to-end smoke per-test timeout to match observed full-suite timing.
+- [x] WW9.2 — Push clean synced main
+  - Completed: final verification commit was pushed to `origin/main`; local `HEAD` matched remote `refs/heads/main` on 2026-05-14.
+- [x] WW9.3 — Pause heartbeat with final report
+  - Completed: heartbeat paused after final report on 2026-05-14.
+
+## Next heartbeat instruction
+
+Start with WW1.1 unless it is already completed in this ledger and verified by repo state. If WW1.1 is complete, proceed to the first unchecked task in order.

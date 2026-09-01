@@ -1,0 +1,187 @@
+schema_version: 1
+slug: runner
+name: Project Delivery
+workflow: workflows/runner.yaml
+description: 'A bare project-delivery scaffold: initialize → discuss → plan → execute → verify → ship, with human gates at plan, verify and ship. It carries no working steps of its own — every plan is a checkpoint a person or another process fills in, except the discuss step, which opens a task-scoped conversation. This is the neutral lifecycle skeleton, not a workflow anyone is offered: the coding agents it used to dispatch (planner, executor, debugger, code-reviewer, security-auditor and the rest of the get-shit-done-cc port) were dropped on 2026-08-24 when the coding suite was retired.'
+
+recipes:
+  - scaffold-discussion
+
+metadata:
+  runner:
+    user_prompt_names:
+      - Project Delivery
+      - general project workflow
+      - planning and execution
+  source:
+    project: get-shit-done-cc
+    license: MIT
+  tags:
+    - runner-port
+    - quest
+    - lifecycle-port
+  source_port:
+    scope: main_quest_manifest
+    status: >-
+      Coding suite dropped 2026-08-24 (D6). The upstream command mappings and the
+      per-phase recipe assignments went with the recipes they named; what survives
+      is the lifecycle shape. No quest_family, so this is not on the starter menu.
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - Every plan here is a checkpoint but one: the discuss step opens a task-scoped conversation, and its agent (scaffold-discussion) is the quest's only dispatch.
+
+scaffolds:
+  workstreams:
+    - key: delivery
+      name: Delivery
+      milestones:
+        - version_label: v1
+          title: Main Quest loop
+          phases:
+            - phase_key: '00'
+              phase_slug: initialize
+              lifecycle_phase: initialize
+              plans:
+                - plan_ref: initialize-context
+                  title: Gather project context and starting constraints
+                  wave: 10
+                  metadata:
+                    runner:
+                      node:
+                        type: checkpoint
+                - plan_ref: initialize-roadmap
+                  title: Draft initial roadmap and Quest adoption notes
+                  wave: 20
+                  metadata:
+                    runner:
+                      node:
+                        type: checkpoint
+            - phase_key: '10'
+              phase_slug: discuss
+              lifecycle_phase: discuss
+              plans:
+                - plan_ref: discuss-objective
+                  title: Clarify the objective and acceptance criteria
+                  wave: 10
+                  metadata:
+                    runner:
+                      discussion:
+                        enabled: true
+                        agent: scaffold-discussion
+                      node:
+                        type: discussion
+                - plan_ref: discuss-assumptions
+                  title: Surface assumptions, risks, and open decisions
+                  wave: 20
+                  metadata:
+                    runner:
+                      review:
+                        independent: true
+                        checks:
+                          - assumptions_backed_by_codebase_evidence
+                          - risks_and_open_decisions_itemized
+                      node:
+                        type: checkpoint
+            - phase_key: '20'
+              phase_slug: plan
+              lifecycle_phase: plan
+              plans:
+                - plan_ref: plan-research
+                  title: Research the phase and draft an executable plan
+                  wave: 10
+                  metadata:
+                    runner:
+                      review:
+                        independent: true
+                        checks:
+                          - claims_tagged_with_provenance
+                          - research_covers_planner_needs
+                      node:
+                        type: checkpoint
+                - plan_ref: plan-approval-gate
+                  title: Human approval gate before execution begins
+                  wave: 20
+                  metadata:
+                    runner:
+                      gate:
+                        required: true
+                        kind: plan_approval
+                      node:
+                        type: gate
+            - phase_key: '30'
+              phase_slug: execute
+              lifecycle_phase: execute
+              plans:
+                - plan_ref: execute-slice
+                  title: Execute approved work in dependency-aware slices
+                  wave: 10
+                  metadata:
+                    runner:
+                      review:
+                        independent: true
+                        checks:
+                          - work_committed_atomically_per_task
+                          - deviations_from_plan_documented
+                          - completion_claims_backed_by_fresh_output
+                      node:
+                        type: checkpoint
+                - plan_ref: execute-checkpoint
+                  title: Checkpoint evidence, commits, and remaining work
+                  wave: 20
+                  metadata:
+                    runner:
+                      node:
+                        type: checkpoint
+            - phase_key: '40'
+              phase_slug: verify
+              lifecycle_phase: verify
+              plans:
+                - plan_ref: verify-work
+                  title: Validate deliverables against acceptance criteria
+                  wave: 10
+                  metadata:
+                    runner:
+                      review:
+                        independent: true
+                        checks:
+                          - phase_goal_traced_to_delivered_code
+                          - verification_ran_against_live_codebase
+                          - gaps_itemized_with_evidence
+                      node:
+                        type: checkpoint
+                - plan_ref: verify-approval-gate
+                  title: Human verification gate and issue triage
+                  wave: 20
+                  metadata:
+                    runner:
+                      gate:
+                        required: true
+                        kind: verification
+                      node:
+                        type: gate
+            - phase_key: '50'
+              phase_slug: ship
+              lifecycle_phase: ship
+              plans:
+                - plan_ref: ship-prep
+                  title: Prepare docs, review notes, and final handoff
+                  wave: 10
+                  metadata:
+                    runner:
+                      review:
+                        independent: true
+                        checks:
+                          - docs_synthesized_for_handoff
+                          - review_notes_cover_shipped_work
+                      node:
+                        type: checkpoint
+                - plan_ref: ship-approval-gate
+                  title: Final human ship approval gate
+                  wave: 20
+                  metadata:
+                    runner:
+                      gate:
+                        required: true
+                        kind: ship_approval
+                      node:
+                        type: gate

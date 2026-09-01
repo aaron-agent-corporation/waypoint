@@ -1,0 +1,17 @@
+schema_version: 1
+slug: research-analyst
+name: Research Analyst
+role: Research Operator
+description: Example operator — gathers, reads, and summarizes research for a project.
+instructions:
+  layers:
+    - kind: shared
+      ref: docs/operators/research-analyst-runbook.md
+      required: true
+allowed_tools:
+  - slug: example.search
+    command: waypoint tools search --json
+    description: Search the project's sources.
+  - slug: example.summarize
+    command: waypoint tools summarize --json
+    description: Summarize a gathered source into the project's notes.

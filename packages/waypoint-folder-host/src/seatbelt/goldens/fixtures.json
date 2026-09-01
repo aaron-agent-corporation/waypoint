@@ -1,0 +1,179 @@
+{
+  "comment": "Byte-stability fixtures for the Seatbelt profile compiler. Every path is an absolute path under a directory that exists on no host (/_sbparity), so canonicalization resolves the longest existing prefix (/) and re-appends the tail lexically — byte-identical output on every machine. These began as Go-compiler parity goldens (internal/seatbelt, deleted in P4); Go parity is RETIRED as of the ro-hole emission (rsc-w0z) — the Go compiler only ever emitted allows. The TS compiler in ../profile.ts is the implementation of record; the goldens now pin ITS output. Regenerate with the goldengen note in goldens.json.",
+  "cases": [
+    {
+      "name": "header-only",
+      "roots": []
+    },
+    {
+      "name": "single-rw",
+      "roots": [
+        {
+          "name": "shadow",
+          "path": "/_sbparity/shadow",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "disjoint-ro-rw",
+      "roots": [
+        {
+          "name": "case_source",
+          "path": "/_sbparity/case-source",
+          "access": "ro"
+        },
+        {
+          "name": "shadow",
+          "path": "/_sbparity/shadow",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "descendant-carveout",
+      "roots": [
+        {
+          "name": "case_source",
+          "path": "/_sbparity/case-source",
+          "access": "ro"
+        },
+        {
+          "name": "med_out",
+          "path": "/_sbparity/case-source/03-medical/output",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "dedupe-and-sort",
+      "roots": [
+        {
+          "name": "z",
+          "path": "/_sbparity/zz",
+          "access": "rw"
+        },
+        {
+          "name": "a",
+          "path": "/_sbparity/aa",
+          "access": "rw"
+        },
+        {
+          "name": "a-again",
+          "path": "/_sbparity/aa",
+          "access": "rw"
+        },
+        {
+          "name": "m",
+          "path": "/_sbparity/mm",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "sibling-prefix-not-ancestor",
+      "roots": [
+        {
+          "name": "foo",
+          "path": "/_sbparity/foo",
+          "access": "rw"
+        },
+        {
+          "name": "foobar",
+          "path": "/_sbparity/foobar",
+          "access": "ro"
+        }
+      ]
+    },
+    {
+      "name": "sbpl-string-escaping",
+      "roots": [
+        {
+          "name": "weird",
+          "path": "/_sbparity/we\\ird\"dir/out",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "unclean-path-normalized",
+      "roots": [
+        {
+          "name": "messy",
+          "path": "/_sbparity/a/./b/../c",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "ro-hole-ancestor",
+      "roots": [
+        {
+          "name": "scratch",
+          "path": "/_sbparity",
+          "access": "rw"
+        },
+        {
+          "name": "case_source",
+          "path": "/_sbparity/case-source",
+          "access": "ro"
+        }
+      ]
+    },
+    {
+      "name": "ro-hole-nested-scratch",
+      "roots": [
+        {
+          "name": "case_work",
+          "path": "/_sbparity",
+          "access": "rw"
+        },
+        {
+          "name": "machine_state",
+          "path": "/_sbparity/.waypoint",
+          "access": "ro"
+        },
+        {
+          "name": "scratch",
+          "path": "/_sbparity/.waypoint/scratch/task",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "err-equal-paths",
+      "roots": [
+        {
+          "name": "a",
+          "path": "/_sbparity/same",
+          "access": "rw"
+        },
+        {
+          "name": "b",
+          "path": "/_sbparity/same",
+          "access": "ro"
+        }
+      ]
+    },
+    {
+      "name": "err-empty-path",
+      "roots": [
+        {
+          "name": "x",
+          "path": "",
+          "access": "rw"
+        }
+      ]
+    },
+    {
+      "name": "err-invalid-access",
+      "roots": [
+        {
+          "name": "x",
+          "path": "/_sbparity/x",
+          "access": "readwrite"
+        }
+      ]
+    }
+  ]
+}

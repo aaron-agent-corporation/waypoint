@@ -1,0 +1,97 @@
+# Project Delivery
+A bare project-delivery scaffold: initialize → discuss → plan → execute → verify → ship, with human gates at plan, verify and ship. It carries no working steps of its own — every plan is a checkpoint a person or another process fills in, except the discuss step, which opens a task-scoped conversation. This is the neutral lifecycle skeleton, not a workflow anyone is offered: the coding agents it used to dispatch (planner, executor, debugger, code-reviewer, security-auditor and the rest of the get-shit-done-cc port) were dropped on 2026-08-24 when the coding suite was retired.
+
+
+## Catalog details
+Slug: runner
+Workflow: workflows/runner.yaml
+
+## Recipes used
+- scaffold-discussion
+
+## Record
+```yaml
+metadata:
+  runner:
+    user_prompt_names:
+      - Project Delivery
+      - general project workflow
+      - planning and execution
+  source:
+    project: get-shit-done-cc
+    license: MIT
+  tags:
+    - runner-port
+    - quest
+    - lifecycle-port
+  source_port:
+    scope: main_quest_manifest
+    status: >-
+      Coding suite dropped 2026-08-24 (D6). The upstream command mappings and the
+      per-phase recipe assignments went with the recipes they named; what survives
+      is the lifecycle shape. No quest_family, so this is not on the starter menu.
+    runtime_notes:
+      - Quest and Recipe are Waypoint primitives; workflow YAML remains the internal execution substrate.
+      - Every plan here is a checkpoint but one: the discuss step opens a task-scoped conversation, and its agent (scaffold-discussion) is the quest's only dispatch.
+```
+
+## Workstream delivery: Delivery
+
+## Milestone v1: Main Quest loop
+
+## Phase: Initialize (initialize) [key: 00]
+- Gather project context and starting constraints (ref: initialize-context)
+  Wave: 10
+- Draft initial roadmap and Quest adoption notes (ref: initialize-roadmap)
+  Wave: 20
+
+## Phase: Discuss (discuss) [key: 10]
+- Discussion: Clarify the objective and acceptance criteria (ref: discuss-objective)
+  Wave: 10
+  Agent: scaffold-discussion
+- Surface assumptions, risks, and open decisions (ref: discuss-assumptions)
+  Wave: 20
+  Review checks (independent):
+    - assumptions_backed_by_codebase_evidence
+    - risks_and_open_decisions_itemized
+
+## Phase: Plan (plan) [key: 20]
+- Research the phase and draft an executable plan (ref: plan-research)
+  Wave: 10
+  Review checks (independent):
+    - claims_tagged_with_provenance
+    - research_covers_planner_needs
+- Gate: Human approval gate before execution begins (ref: plan-approval-gate)
+  Wave: 20
+  Kind: plan_approval
+
+## Phase: Execute (execute) [key: 30]
+- Execute approved work in dependency-aware slices (ref: execute-slice)
+  Wave: 10
+  Review checks (independent):
+    - work_committed_atomically_per_task
+    - deviations_from_plan_documented
+    - completion_claims_backed_by_fresh_output
+- Checkpoint evidence, commits, and remaining work (ref: execute-checkpoint)
+  Wave: 20
+
+## Phase: Verify (verify) [key: 40]
+- Validate deliverables against acceptance criteria (ref: verify-work)
+  Wave: 10
+  Review checks (independent):
+    - phase_goal_traced_to_delivered_code
+    - verification_ran_against_live_codebase
+    - gaps_itemized_with_evidence
+- Gate: Human verification gate and issue triage (ref: verify-approval-gate)
+  Wave: 20
+  Kind: verification
+
+## Phase: Ship (ship) [key: 50]
+- Prepare docs, review notes, and final handoff (ref: ship-prep)
+  Wave: 10
+  Review checks (independent):
+    - docs_synthesized_for_handoff
+    - review_notes_cover_shipped_work
+- Gate: Final human ship approval gate (ref: ship-approval-gate)
+  Wave: 20
+  Kind: ship_approval

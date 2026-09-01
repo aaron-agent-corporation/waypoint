@@ -1,0 +1,213 @@
+schema_version: 1
+tasks:
+  - id: task-001
+    route_id: route-001
+    plan_ref: initialize-context
+    title: Gather project context and starting constraints
+    phase: initialize
+    wave: 10
+    kind: checkpoint
+    status: done
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.905Z
+    metadata:
+      runner:
+        node:
+          type: checkpoint
+  - id: task-002
+    route_id: route-001
+    plan_ref: initialize-roadmap
+    title: Draft initial roadmap and Quest adoption notes
+    phase: initialize
+    wave: 20
+    kind: checkpoint
+    status: done
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.919Z
+    metadata:
+      runner:
+        node:
+          type: checkpoint
+  - id: task-003
+    route_id: route-001
+    plan_ref: discuss-objective
+    title: Run task-scoped discussion to clarify objective and acceptance criteria
+    phase: discuss
+    wave: 10
+    kind: discussion
+    status: done
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.924Z
+    metadata:
+      runner:
+        discussion:
+          enabled: true
+          agent: runner-doc-writer
+          mode: agent_chat
+          conversation_id: task:3:discussion:runner-doc-writer
+          status: active
+        node:
+          type: discussion
+        autopilot:
+          status: simulated
+          runtime: "null"
+          recipe: runner-doc-writer
+          task_id: task-003
+          route_id: route-001
+  - id: task-004
+    route_id: route-001
+    plan_ref: discuss-assumptions
+    title: Surface assumptions, risks, and open decisions
+    phase: discuss
+    wave: 20
+    kind: recipe
+    status: done
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.933Z
+    metadata:
+      runner:
+        recipe:
+          slug: runner-assumptions-analyzer
+        node:
+          type: recipe
+        autopilot:
+          status: simulated
+          runtime: "null"
+          recipe: runner-assumptions-analyzer
+          task_id: task-004
+          route_id: route-001
+  - id: task-005
+    route_id: route-001
+    plan_ref: plan-research
+    title: Research the phase and draft an executable plan
+    phase: plan
+    wave: 10
+    kind: recipe
+    status: done
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.938Z
+    metadata:
+      runner:
+        recipe:
+          slug: runner-phase-researcher
+        node:
+          type: recipe
+        autopilot:
+          status: simulated
+          runtime: "null"
+          recipe: runner-phase-researcher
+          task_id: task-005
+          route_id: route-001
+  - id: task-006
+    route_id: route-001
+    plan_ref: plan-approval-gate
+    title: Human approval gate before execution begins
+    phase: plan
+    wave: 20
+    kind: gate
+    status: blocked
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.942Z
+    metadata:
+      runner:
+        gate:
+          required: true
+          kind: plan_approval
+        node:
+          type: gate
+  - id: task-007
+    route_id: route-001
+    plan_ref: execute-slice
+    title: Execute approved work in dependency-aware slices
+    phase: execute
+    wave: 10
+    kind: recipe
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        recipe:
+          slug: runner-executor
+        node:
+          type: recipe
+  - id: task-008
+    route_id: route-001
+    plan_ref: execute-checkpoint
+    title: Checkpoint evidence, commits, and remaining work
+    phase: execute
+    wave: 20
+    kind: checkpoint
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        node:
+          type: checkpoint
+  - id: task-009
+    route_id: route-001
+    plan_ref: verify-work
+    title: Validate deliverables against acceptance criteria
+    phase: verify
+    wave: 10
+    kind: recipe
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        recipe:
+          slug: runner-verifier
+        node:
+          type: recipe
+  - id: task-010
+    route_id: route-001
+    plan_ref: verify-approval-gate
+    title: Human verification gate and issue triage
+    phase: verify
+    wave: 20
+    kind: gate
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        gate:
+          required: true
+          kind: verification
+        node:
+          type: gate
+  - id: task-011
+    route_id: route-001
+    plan_ref: ship-prep
+    title: Prepare docs, review notes, and final handoff
+    phase: ship
+    wave: 10
+    kind: recipe
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        recipe:
+          slug: runner-doc-synthesizer
+        node:
+          type: recipe
+  - id: task-012
+    route_id: route-001
+    plan_ref: ship-approval-gate
+    title: Final human ship approval gate
+    phase: ship
+    wave: 20
+    kind: gate
+    status: open
+    created_at: 2026-07-13T03:23:58.758Z
+    updated_at: 2026-07-13T03:23:58.758Z
+    metadata:
+      runner:
+        gate:
+          required: true
+          kind: ship_approval
+        node:
+          type: gate
