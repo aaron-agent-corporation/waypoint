@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      pg_durable:
+        image: ghcr.io/microsoft/pg_durable:0.2.4-pg17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      WAYPOINT_POSTGRES_TEST_URL: postgres://waypoint@127.0.0.1:5433/postgres
+      WAYPOINT_PGDURABLE_TEST_URL: postgres://waypoint@127.0.0.1:5433/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Create waypoint role and grant pg_durable usage
+        run: >
+          psql "postgres://postgres:postgres@127.0.0.1:5433/postgres"
+          -v ON_ERROR_STOP=1
+          -c "CREATE ROLE waypoint LOGIN"
+          -c "GRANT CREATE ON DATABASE postgres TO waypoint"
+          -c "SELECT df.grant_usage('waypoint')"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm build
+
+      - run: pnpm verify:built-imports
+
+      - run: pnpm verify:package-distribution
+
+      - run: pnpm test
+
+      - name: Python tool tests
+        run: |
+          set -e
+          for dir in tools/prose tools/safe-evidence; do
+            (cd "$dir" && for f in test_*.py; do python3 "$f"; done)
+          done
