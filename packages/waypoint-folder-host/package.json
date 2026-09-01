@@ -2,7 +2,7 @@
   "name": "@waypoint/folder-host",
   "version": "0.1.2",
   "private": false,
-  "description": "Filesystem-backed local folder host for Waypoint projects.",
+  "description": "Postgres-backed reference host for the Waypoint durable workflow runtime.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,5 +32,11 @@
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "esbuild": "0.28.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaron-agent-corporation/waypoint.git",
+    "directory": "packages/waypoint-folder-host"
   }
 }

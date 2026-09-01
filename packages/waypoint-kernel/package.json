@@ -2,7 +2,7 @@
   "name": "@waypoint/kernel",
   "version": "0.1.0",
   "private": false,
-  "description": "Shared Cordis agent kernel — service contracts + base plugins composed by both the Waypoint worker runtime (runtime.kind: cordis) and the Waypoint brain (docs/designs/cordis-adoption-plan.md, Phase A).",
+  "description": "Shared Cordis agent kernel \u2014 service contracts + base plugins composed by both the Waypoint worker runtime (runtime.kind: cordis) and the Waypoint brain (docs/designs/cordis-adoption-plan.md, Phase A).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,5 +19,11 @@
   "files": [
     "dist",
     "package.json"
-  ]
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaron-agent-corporation/waypoint.git",
+    "directory": "packages/waypoint-kernel"
+  }
 }

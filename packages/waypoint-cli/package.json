@@ -2,7 +2,7 @@
   "name": "@waypoint/cli",
   "version": "0.1.2",
   "private": false,
-  "description": "Command-line interface for the Waypoint local folder host.",
+  "description": "Command-line interface for the Waypoint durable workflow runtime.",
   "type": "module",
   "bin": {
     "waypoint": "./dist/bin.js"
@@ -26,5 +26,11 @@
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "pg": "^8.22.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaron-agent-corporation/waypoint.git",
+    "directory": "packages/waypoint-cli"
   }
 }

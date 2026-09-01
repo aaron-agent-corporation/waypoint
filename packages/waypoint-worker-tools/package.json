@@ -2,7 +2,7 @@
   "name": "@waypoint/worker-tools",
   "version": "0.1.0",
   "private": false,
-  "description": "The bundled closed tool surface for sandboxed workflow workers — the `report` claim seam every attempt ends through.",
+  "description": "The bundled closed tool surface for sandboxed workflow workers \u2014 the `report` claim seam every attempt ends through.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,5 +20,11 @@
   "files": [
     "dist",
     "package.json"
-  ]
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaron-agent-corporation/waypoint.git",
+    "directory": "packages/waypoint-worker-tools"
+  }
 }
