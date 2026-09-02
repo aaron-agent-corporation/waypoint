@@ -1,5 +1,9 @@
 # Waypoint
 
+[![CI](https://github.com/aaron-agent-corporation/waypoint/actions/workflows/ci.yml/badge.svg)](https://github.com/aaron-agent-corporation/waypoint/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@waypoint-engine/cli)](https://www.npmjs.com/package/@waypoint-engine/cli)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Waypoint is a host-agnostic, Postgres-backed durable workflow runtime for
 TypeScript — in the family of Temporal or DBOS, but built around three
 opinions:
@@ -17,6 +21,34 @@ opinions:
    approves or rejects through the CLI; deadline waits arm a clock and a
    condition and take whichever resolves first; every decision is recorded as
    an event in the project's own schema.
+
+## Install
+
+The CLI:
+
+```bash
+npm install -g @waypoint-engine/cli   # gives you the `waypoint` command
+```
+
+Embed the runtime in your own TypeScript host instead:
+
+```bash
+npm install @waypoint-engine/core     # portable contracts + catalogs
+npm install @waypoint-engine/folder-host  # the Postgres-backed reference host
+```
+
+Either way, durable runs need Postgres 17 with the
+[pg_durable](https://github.com/microsoft/pg_durable) extension — the
+quickest local instance is the published image:
+
+```bash
+docker run -d --name waypoint-pg -p 5433:5432 \
+  -e POSTGRES_PASSWORD=secret \
+  ghcr.io/microsoft/pg_durable:pg17
+```
+
+See [`docs/waypoint-folder-host.md`](docs/waypoint-folder-host.md) for the
+role/grant setup the CLI expects.
 
 ## What a run looks like
 
